@@ -33,3 +33,8 @@ L'unique chemin de récupération des données (EX-19 à EX-22) ; le bogue le pl
 ## Hors périmètre
 
 - Tout effacer et purge (015)
+
+## Notes du ticket 007d (2026-11-26)
+
+- Après une restauration par copie de fichier, lancer un `VACUUM` : le fichier restauré apporte ses propres pages libérées, que `secure_delete` ne nettoie pas.
+- L'écran de récupération (EX-22) ne traite pas `SECURE_DELETE_OFF` ni `FOREIGN_KEYS_OFF` comme une base abîmée à remplacer : ce sont des problèmes de configuration, le fichier est sain.

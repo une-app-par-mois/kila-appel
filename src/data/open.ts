@@ -4,8 +4,12 @@ import { log } from '@/data/log';
 import { migrate } from '@/data/migrations';
 
 export const FOREIGN_KEYS_OFF = 'Clés étrangères inactives';
+export const SECURE_DELETE_OFF = 'Effacement des données supprimées inactif';
 
-/** Active les clés étrangères (hors transaction, sinon SQLite l'ignore), puis applique les migrations. */
+/**
+ * Active les clés étrangères (hors transaction, sinon SQLite l'ignore) et l'effacement des données
+ * supprimées dans le fichier, puis applique les migrations.
+ */
 export const prepareDatabase = async (db: Db): Promise<Db> => {
   await db.execute('PRAGMA foreign_keys = ON');
   const rows = await db.query<{ foreign_keys: number }>('PRAGMA foreign_keys');
@@ -13,6 +17,11 @@ export const prepareDatabase = async (db: Db): Promise<Db> => {
     // SEC-11 : sans clés étrangères, les suppressions en cascade ne se feraient pas.
     throw new Error(FOREIGN_KEYS_OFF);
   }
+  // ABS-05 (ticket 007d) : SQLite écrit des zéros sur ce qu'il supprime, au lieu de laisser les
+  // anciennes valeurs dans les pages libérées du fichier.
+  await db.execute('PRAGMA secure_delete = ON');
+  const secure = await db.query<{ secure_delete: number }>('PRAGMA secure_delete');
+  if (secure[0]?.secure_delete !== 1) throw new Error(SECURE_DELETE_OFF);
   await migrate(db);
   return db;
 };

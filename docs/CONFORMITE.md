@@ -27,7 +27,7 @@ Données personnelles, règles des stores, droit de l'UE, licences, et liste des
 | Durée de conservation (CNIL, sport amateur : 3 ans au plus après la fin de l'adhésion) | Conservation réglable, 3 saisons par défaut, purge (EX-24) |
 | Droit d'accès d'une famille | Export CSV filtrable (EX-31) |
 | Droit de rectification | Fiche membre modifiable (EX-03) |
-| Droit à l'effacement | Suppression réelle d'un membre et de ses présences (ABS-05, EX-03) |
+| Droit à l'effacement | Suppression réelle d'un membre et de ses présences (ABS-05, EX-03) ; valeurs effacées aussi dans le fichier de base (`secure_delete`, ticket 007d) |
 | Sécurité | Données dans l'espace privé de l'appli ; avertissement à chaque sortie de données (SEC-09) |
 | Information des familles | Modèle de mention d'information à copier par le club, publié sur GitHub Pages (décision du 2026-11-26) ; rien dans l'appli |
 
