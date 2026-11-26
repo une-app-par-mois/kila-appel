@@ -12,6 +12,8 @@ import {
   type MemberListItem,
   membersRepo,
 } from '@/data/membersRepo';
+import { seasonsRepo } from '@/data/seasonsRepo';
+import { startInSeason } from '@/domain/formats';
 import type { MemberInput } from '@/domain/validation';
 import { notifyDataChanged } from '@/hooks/dataChanged';
 import { useDatabase } from '@/hooks/useDatabase';
@@ -20,7 +22,10 @@ import { useLoaded } from '@/hooks/useLoaded';
 const useRepos = () => {
   const db = useDatabase();
   return useMemo(
-    () => (db ? { members: membersRepo(db), enrollments: enrollmentsRepo(db) } : null),
+    () =>
+      db
+        ? { members: membersRepo(db), enrollments: enrollmentsRepo(db), seasons: seasonsRepo(db) }
+        : null,
     [db],
   );
 };
@@ -52,16 +57,8 @@ export const useMembers = ({
   );
   const { value, loadFailed } = useLoaded<MemberListItem[]>(load, 'MEMBERS_LOAD_FAILED');
   const members = useMemo(() => value && filterByQuery(value, query), [value, query]);
-  const change = useChange(repos);
 
-  /** Crée un membre (inscrit au groupe choisi à `today`) et rend son identifiant. */
-  const create = useCallback(
-    (input: MemberInput, groupId: number | null = null) =>
-      change((r) => r.members.create(input, { groupId, today })),
-    [change, today],
-  );
-
-  return { members, loadFailed, create };
+  return { members, loadFailed };
 };
 
 /** Création seule, sans lire la liste (écran Nouveau membre). */
@@ -121,9 +118,17 @@ export const useMember = (id: number, today: string) => {
     (enrollmentId: number) => change((r) => r.enrollments.cancel(enrollmentId, today)),
     [change, today],
   );
-  /** Inscrit à un groupe à partir d'aujourd'hui (décision du porteur du 2026-11-26). */
+  /**
+   * Inscrit à un groupe à partir d'aujourd'hui, ramené dans la saison active (décisions du porteur
+   * du 2026-11-26, EX-04).
+   */
   const enrollIn = useCallback(
-    (groupId: number) => change((r) => r.enrollments.enroll(groupId, [id], today)),
+    (groupId: number) =>
+      // Saison lue hors de l'écriture : si ses dates changent entre-temps, expectEnrollable
+      // refuse la date (DATE_OUTSIDE_SEASON), rien n'est écrit.
+      change(async (r) =>
+        r.enrollments.enroll(groupId, [id], startInSeason(today, await r.seasons.getActive())),
+      ),
     [change, id, today],
   );
   const deletionImpact = useCallback(async (): Promise<MemberDeletionImpact> => {

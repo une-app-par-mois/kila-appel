@@ -2,6 +2,7 @@ import {
   isIsoDate,
   parseDisplayDate,
   previousDay,
+  startInSeason,
   toDisplayDate,
   toIsoDate,
 } from '@/domain/formats';
@@ -112,5 +113,20 @@ describe('previousDay : dernier jour d’une inscription dont la fin est exclue 
 
   it('refuse une date mal écrite (RM-04)', () => {
     expect(() => previousDay('01/12/2026')).toThrow();
+  });
+
+  describe('EX-04 date de début proposée : aujourd’hui, ramené dans la saison', () => {
+    const season = { startDate: '2026-09-01', endDate: '2027-07-31' };
+    it.each([
+      ['2026-11-26', '2026-11-26'],
+      ['2026-07-15', '2026-09-01'],
+      ['2027-08-10', '2027-07-31'],
+      ['2027-07-31', '2027-07-31'],
+    ])('EX-04 le %s donne %s', (today, expected) => {
+      expect(startInSeason(today, season)).toBe(expected);
+    });
+    it('sans saison active : aujourd’hui', () => {
+      expect(startInSeason('2026-11-26', null)).toBe('2026-11-26');
+    });
   });
 });

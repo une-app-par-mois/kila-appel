@@ -126,7 +126,7 @@ export const membersRepo = (db: Db) => ({
         [m.firstName, m.lastName, m.birthDate],
       );
       if (groupId !== null) {
-        await expectEnrollable(tx, groupId, null);
+        await expectEnrollable(tx, groupId, null, startDate);
         await tx.execute(
           'INSERT INTO enrollments (member_id, group_id, start_date) VALUES (?, ?, ?)',
           [id, groupId, startDate],

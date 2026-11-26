@@ -109,7 +109,7 @@ describe('Écrans des inscriptions (EX-04)', () => {
 
   it('« Nouveau membre » depuis l’ajout : groupe préchoisi, date choisie, puis retour à l’ajout', async () => {
     const router = await open(`/groupes/${s.groupId}/inscrire`);
-    await fireEvent.changeText(await screen.findByLabelText(t.enrollment.startDate), '05/01/2099');
+    await fireEvent.changeText(await screen.findByLabelText(t.enrollment.startDate), '05/01/2027');
     await fireEvent.press(await button(t.enrollment.newMember));
     expect(await button(`${t.memberForm.group}, Poussins`)).toBeTruthy();
     await fireEvent.changeText(screen.getByLabelText(t.memberForm.firstName), 'Yanis');
@@ -121,7 +121,7 @@ describe('Écrans des inscriptions (EX-04)', () => {
         db,
         'enrollments',
         "group_id = ? AND start_date = ? AND member_id = (SELECT id FROM members WHERE first_name = 'Yanis')",
-        [s.groupId, '2099-01-05'],
+        [s.groupId, '2027-01-05'],
       ),
     ).toBe(1);
   });

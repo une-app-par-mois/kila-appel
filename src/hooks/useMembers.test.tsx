@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { onDataChanged } from '@/hooks/dataChanged';
-import { useEnrollments, useMember, useMembers } from '@/hooks/useMembers';
+import { useEnrollments, useMember, useMemberCreation, useMembers } from '@/hooks/useMembers';
 
 // La base et les dépôts sont simulés : les dépôts sont testés sur node:sqlite.
 const mockDb = { fake: true };
@@ -31,6 +31,8 @@ jest.mock('@/data/membersRepo', () => ({
   membersRepo: () => mockMembers,
 }));
 jest.mock('@/data/enrollmentsRepo', () => ({ enrollmentsRepo: () => mockEnrollments }));
+const mockSeasons = { getActive: jest.fn() };
+jest.mock('@/data/seasonsRepo', () => ({ seasonsRepo: () => mockSeasons }));
 
 const TODAY = '2026-11-26';
 const input = { firstName: 'Alix', lastName: 'Exemple', birthDate: null };
@@ -38,11 +40,8 @@ const input = { firstName: 'Alix', lastName: 'Exemple', birthDate: null };
 describe('useMembers, useMember, useEnrollments (EX-03, EX-04, CONV-10)', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it('useMembers charge la liste filtrée ; create inscrit au groupe à la date du jour et prévient', async () => {
+  it('useMembers charge la liste filtrée', async () => {
     mockMembers.list.mockResolvedValue([]);
-    mockMembers.create.mockResolvedValue(7);
-    const changed = jest.fn();
-    const stop = onDataChanged(changed);
     const { result } = await renderHook(() =>
       useMembers({ today: TODAY, query: 'ali', groupId: 3 }),
     );
@@ -52,12 +51,23 @@ describe('useMembers, useMember, useEnrollments (EX-03, EX-04, CONV-10)', () => 
       archived: false,
       groupId: 3,
     });
+  });
+
+  it('useMemberCreation inscrit au groupe à la date donnée et prévient', async () => {
+    mockMembers.create.mockResolvedValue(7);
+    const changed = jest.fn();
+    const stop = onDataChanged(changed);
+    const { result } = await renderHook(() => useMemberCreation(TODAY));
     let id = 0;
     await act(async () => {
-      id = await result.current.create(input, 3);
+      id = await result.current(input, 3, '2026-12-01');
     });
     expect(id).toBe(7);
-    expect(mockMembers.create).toHaveBeenCalledWith(input, { groupId: 3, today: TODAY });
+    expect(mockMembers.create).toHaveBeenCalledWith(input, {
+      groupId: 3,
+      today: TODAY,
+      startDate: '2026-12-01',
+    });
     expect(changed).toHaveBeenCalled();
     stop();
   });
@@ -151,6 +161,12 @@ describe('useMembers, useMember, useEnrollments (EX-03, EX-04, CONV-10)', () => 
     });
     expect(mockEnrollments.withdraw).toHaveBeenCalledWith(1, TODAY);
     expect(mockEnrollments.enroll).toHaveBeenCalledWith(3, [7], TODAY);
+    // Saison pas encore commencée : inscrit à son premier jour.
+    mockSeasons.getActive.mockResolvedValue({ startDate: '2027-09-01', endDate: '2028-07-31' });
+    await act(async () => {
+      await result.current.enrollIn(3);
+    });
+    expect(mockEnrollments.enroll).toHaveBeenLastCalledWith(3, [7], '2027-09-01');
   });
 
   it('useEnrollments : inscrits du jour, à venir et candidats du groupe ; inscrire', async () => {
