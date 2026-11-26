@@ -8,9 +8,11 @@ Relevé par la revue de sécurité du 007c ; décision du porteur du 2026-11-26.
 
 - Une date de début d'inscription (ajout à un groupe, nouveau membre inscrit) hors des dates de la saison active est refusée, avec un message
 
+- Décision du porteur du 2026-11-26 : la date proposée est aujourd'hui, ramené au premier ou au dernier jour de la saison active ; même règle pour « + Ajouter à un groupe » depuis la fiche d'un membre.
+
 ## Critères d'acceptation
 
-- [ ] Refus avant le début ou après la fin de la saison, rien n'est écrit (EX-04)
+- [x] Refus avant le début ou après la fin de la saison, rien n'est écrit (EX-04)
 
 ## Tests attendus
 

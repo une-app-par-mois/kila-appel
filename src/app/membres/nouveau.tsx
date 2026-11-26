@@ -6,7 +6,7 @@ import { useRef, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
-import { isIsoDate, parseDisplayDate, toIsoDate } from '@/domain/formats';
+import { isIsoDate, parseDisplayDate, startInSeason, toIsoDate } from '@/domain/formats';
 import { useGroups } from '@/hooks/useGroups';
 import { useMemberCreation } from '@/hooks/useMembers';
 import { useSeasons } from '@/hooks/useSeasons';
@@ -34,9 +34,11 @@ export default function NewMember() {
   const params = useLocalSearchParams<{ groupe?: string; debut?: string; retour?: string }>();
   const presetGroup = params.groupe && /^\d+$/.test(params.groupe) ? Number(params.groupe) : null;
   const today = toIsoDate(new Date());
-  const startDate = params.debut && isIsoDate(params.debut) ? params.debut : today;
   const { seasons } = useSeasons();
   const active = seasons?.find((s) => s.isActive);
+  // Date reçue de l'écran d'ajout, sinon aujourd'hui ramené dans la saison (EX-04).
+  const startDate =
+    params.debut && isIsoDate(params.debut) ? params.debut : startInSeason(today, active);
   const { groups } = useGroups(active?.id ?? null);
   const create = useMemberCreation(today);
   const [firstName, setFirstName] = useState('');

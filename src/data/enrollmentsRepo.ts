@@ -63,13 +63,21 @@ const notEnded = (n: number) => `((e.end_date IS NULL OR e.end_date > ?${n}) AND
  * Groupe où l'on peut inscrire (non archivé, saison active) et membre courant ; sinon NOT_FOUND.
  * Appelé dans la transaction de l'écriture.
  */
-export const expectEnrollable = async (tx: Db, groupId: number, memberId: number | null) => {
-  const [group] = await tx.query<{ id: number }>(
-    `SELECT g.id FROM groups g JOIN seasons s ON s.id = g.season_id
+export const expectEnrollable = async (
+  tx: Db,
+  groupId: number,
+  memberId: number | null,
+  startDate: string,
+) => {
+  const [group] = await tx.query<{ start_date: string; end_date: string }>(
+    `SELECT s.start_date, s.end_date FROM groups g JOIN seasons s ON s.id = g.season_id
      WHERE g.id = ? AND g.archived_at IS NULL AND s.is_active = 1`,
     [groupId],
   );
   if (!group) throw new DataError('NOT_FOUND');
+  // EX-04 (ticket 007e) : début dans les dates de la saison, dernier jour compris.
+  if (startDate < group.start_date || startDate > group.end_date)
+    throw new InputError('DATE_OUTSIDE_SEASON');
   if (memberId === null) return;
   const [member] = await tx.query<{ id: number }>(
     'SELECT id FROM members WHERE id = ? AND archived_at IS NULL',
@@ -155,7 +163,7 @@ export const enrollmentsRepo = (db: Db) => ({
     validateDate(startDate);
     await db.transaction(async (tx) => {
       for (const memberId of memberIds) {
-        await expectEnrollable(tx, groupId, memberId);
+        await expectEnrollable(tx, groupId, memberId, startDate);
         const [taken] = await tx.query<{ id: number }>(
           `SELECT id FROM enrollments e WHERE e.member_id = ?1 AND e.group_id = ?2 AND ${notEnded(3)}`,
           [memberId, groupId, startDate],

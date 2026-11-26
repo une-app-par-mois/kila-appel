@@ -239,4 +239,20 @@ describe('Dépôt des inscriptions (EX-04)', () => {
     await expect(repo.withdraw(id, TODAY)).rejects.toMatchObject({ code: 'NOT_FOUND' });
     await expect(repo.withdraw(9999, TODAY)).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });
+
+  it('EX-04 date de début hors de la saison active refusée, rien n’est écrit ; dernier jour accepté', async () => {
+    const repo = enrollmentsRepo(db);
+    for (const day of ['2026-08-31', '2027-08-01']) {
+      await expect(repo.enroll(s.groupId, [newcomer], day)).rejects.toMatchObject({
+        code: 'DATE_OUTSIDE_SEASON',
+      });
+    }
+    expect(await count(db, 'enrollments', 'member_id = ?', [newcomer])).toBe(0);
+    await repo.enroll(s.groupId, [newcomer], '2027-07-31');
+    const other = await membersRepo(db).create(
+      { firstName: 'Jade', lastName: 'Laurent', birthDate: null },
+      { today: TODAY },
+    );
+    await repo.enroll(s.groupId, [other], '2026-09-01');
+  });
 });

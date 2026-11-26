@@ -12,6 +12,8 @@ import {
   type MemberListItem,
   membersRepo,
 } from '@/data/membersRepo';
+import { seasonsRepo } from '@/data/seasonsRepo';
+import { startInSeason } from '@/domain/formats';
 import type { MemberInput } from '@/domain/validation';
 import { notifyDataChanged } from '@/hooks/dataChanged';
 import { useDatabase } from '@/hooks/useDatabase';
@@ -20,7 +22,10 @@ import { useLoaded } from '@/hooks/useLoaded';
 const useRepos = () => {
   const db = useDatabase();
   return useMemo(
-    () => (db ? { members: membersRepo(db), enrollments: enrollmentsRepo(db) } : null),
+    () =>
+      db
+        ? { members: membersRepo(db), enrollments: enrollmentsRepo(db), seasons: seasonsRepo(db) }
+        : null,
     [db],
   );
 };
@@ -121,9 +126,15 @@ export const useMember = (id: number, today: string) => {
     (enrollmentId: number) => change((r) => r.enrollments.cancel(enrollmentId, today)),
     [change, today],
   );
-  /** Inscrit à un groupe à partir d'aujourd'hui (décision du porteur du 2026-11-26). */
+  /**
+   * Inscrit à un groupe à partir d'aujourd'hui, ramené dans la saison active (décisions du porteur
+   * du 2026-11-26, EX-04).
+   */
   const enrollIn = useCallback(
-    (groupId: number) => change((r) => r.enrollments.enroll(groupId, [id], today)),
+    (groupId: number) =>
+      change(async (r) =>
+        r.enrollments.enroll(groupId, [id], startInSeason(today, await r.seasons.getActive())),
+      ),
     [change, id, today],
   );
   const deletionImpact = useCallback(async (): Promise<MemberDeletionImpact> => {

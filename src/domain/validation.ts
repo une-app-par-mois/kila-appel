@@ -8,6 +8,7 @@ export type InputErrorCode =
   | 'DATE_INVALID'
   | 'DATE_IN_FUTURE'
   | 'END_BEFORE_START'
+  | 'DATE_OUTSIDE_SEASON'
   | 'PHONE_INVALID';
 
 export class InputError extends Error {

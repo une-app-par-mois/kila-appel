@@ -199,4 +199,22 @@ describe('Dépôt des membres (EX-03)', () => {
     await expect(repo.deletionImpact(s.memberId)).rejects.toMatchObject({ code: 'NOT_FOUND' });
     await expect(repo.remove(s.memberId)).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });
+
+  it('EX-04 nouveau membre inscrit hors des dates de la saison active : refusé, rien n’est écrit', async () => {
+    const repo = membersRepo(db);
+    for (const startDate of ['2026-08-31', '2027-08-01']) {
+      await expect(
+        repo.create(
+          { firstName: 'Yanis', lastName: 'Colin', birthDate: null },
+          { groupId: s.groupId, today: TODAY, startDate },
+        ),
+      ).rejects.toMatchObject({ code: 'DATE_OUTSIDE_SEASON' });
+    }
+    expect(await count(db, 'members', "first_name = 'Yanis'")).toBe(0);
+    // Sans groupe, aucune date d'inscription à contrôler.
+    await repo.create(
+      { firstName: 'Yanis', lastName: 'Colin', birthDate: null },
+      { today: TODAY, startDate: '2099-01-01' },
+    );
+  });
 });

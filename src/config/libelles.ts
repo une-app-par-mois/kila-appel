@@ -268,6 +268,7 @@ export const labels = {
     NAME_REQUIRED: 'Indiquez un nom.',
     DATE_INVALID: 'Date à écrire sous la forme JJ/MM/AAAA.',
     DATE_IN_FUTURE: 'Cette date est dans le futur.',
+    DATE_OUTSIDE_SEASON: 'Cette date est en dehors de la saison.',
     END_BEFORE_START: 'La fin doit tomber le jour du début ou après.',
     PHONE_INVALID: 'Numéro à 10 chiffres commençant par 0, ou +33 suivi de 9 chiffres.',
     ALREADY_ENROLLED: 'Un des membres est déjà inscrit à ce groupe.',

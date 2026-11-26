@@ -64,6 +64,20 @@ export const toIsoDate = (date: Date): string => {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 };
 
+/**
+ * EX-04 (décision du porteur du 2026-11-26) : date de début proposée pour une inscription,
+ * aujourd'hui ramené dans les dates de la saison active (premier ou dernier jour) ; sans saison,
+ * aujourd'hui.
+ */
+export const startInSeason = (
+  today: string,
+  season: { startDate: string; endDate: string } | null | undefined,
+): string => {
+  if (!season) return today;
+  if (today < season.startDate) return season.startDate;
+  return today > season.endDate ? season.endDate : today;
+};
+
 /** Veille d'une date stockée : dernier jour d'une inscription dont la fin est exclue (EX-04). */
 export const previousDay = (iso: string): string => {
   if (!isIsoDate(iso)) {

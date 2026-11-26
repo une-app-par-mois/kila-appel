@@ -7,9 +7,10 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
 import { DataError } from '@/data/errors';
-import { parseDisplayDate, toDisplayDate, toIsoDate } from '@/domain/formats';
+import { parseDisplayDate, startInSeason, toDisplayDate, toIsoDate } from '@/domain/formats';
 import { useGroup } from '@/hooks/useGroups';
 import { useEnrollments } from '@/hooks/useMembers';
+import { useSeasons } from '@/hooks/useSeasons';
 import { Button } from '@/ui/Button';
 import { Card } from '@/ui/Card';
 import { errorMessage } from '@/ui/errorMessage';
@@ -26,7 +27,17 @@ export default function Enroll() {
   const today = toIsoDate(new Date());
   const { group, loaded, loadFailed } = useGroup(id);
   const [selected, setSelected] = useState<number[]>([]);
-  const [date, setDate] = useState(toDisplayDate(today));
+  const { seasons } = useSeasons();
+  // Saisie, sinon aujourd'hui ramené dans la saison active (EX-04, ticket 007e).
+  const [typed, setDate] = useState<string | null>(null);
+  const date =
+    typed ??
+    toDisplayDate(
+      startInSeason(
+        today,
+        seasons?.find((s) => s.isActive),
+      ),
+    );
   // Candidats libres à la date saisie : l'inscription y est refusée sinon (chevauchement).
   const startDate = parseDisplayDate(date);
   const {
@@ -61,7 +72,8 @@ export default function Enroll() {
       await enroll(ids, startDate);
       back();
     } catch (e) {
-      setFormError(errorMessage(e));
+      if ((e as { code?: string }).code === 'DATE_OUTSIDE_SEASON') setDateError(errorMessage(e));
+      else setFormError(errorMessage(e));
       saving.current = false;
       setBusy(false);
     }

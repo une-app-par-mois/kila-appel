@@ -31,6 +31,8 @@ jest.mock('@/data/membersRepo', () => ({
   membersRepo: () => mockMembers,
 }));
 jest.mock('@/data/enrollmentsRepo', () => ({ enrollmentsRepo: () => mockEnrollments }));
+const mockSeasons = { getActive: jest.fn() };
+jest.mock('@/data/seasonsRepo', () => ({ seasonsRepo: () => mockSeasons }));
 
 const TODAY = '2026-11-26';
 const input = { firstName: 'Alix', lastName: 'Exemple', birthDate: null };
@@ -151,6 +153,12 @@ describe('useMembers, useMember, useEnrollments (EX-03, EX-04, CONV-10)', () => 
     });
     expect(mockEnrollments.withdraw).toHaveBeenCalledWith(1, TODAY);
     expect(mockEnrollments.enroll).toHaveBeenCalledWith(3, [7], TODAY);
+    // Saison pas encore commencée : inscrit à son premier jour.
+    mockSeasons.getActive.mockResolvedValue({ startDate: '2027-09-01', endDate: '2028-07-31' });
+    await act(async () => {
+      await result.current.enrollIn(3);
+    });
+    expect(mockEnrollments.enroll).toHaveBeenLastCalledWith(3, [7], '2027-09-01');
   });
 
   it('useEnrollments : inscrits du jour, à venir et candidats du groupe ; inscrire', async () => {
