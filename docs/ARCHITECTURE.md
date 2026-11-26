@@ -64,23 +64,23 @@ Les identifiants suivent le glossaire du cadrage (colonne « Terme du code »).
 
 | Table | Colonnes principales | Remarques |
 | --- | --- | --- |
-| `season` | id, name, start_date, end_date, is_active | Une seule active (index unique partiel) |
-| `member` | id, last_name, first_name, birth_date?, archived_at? | Seuls nom et prénom obligatoires (ABS-03) |
-| `emergency_contact` | id, member_id, label, phone, position | `ON DELETE CASCADE` depuis `member` |
-| `group` | id, season_id, name, archived_at? | |
-| `enrollment` | id, member_id, group_id, start_date, end_date? | Cascade depuis `member` et `group` |
-| `slot` | id, season_id, weekday?, start_time, duration_min, place?, name? | `weekday` nul = créneau ponctuel |
-| `slot_date` | slot_id, date | Dates d'un créneau ponctuel (F-10) |
-| `slot_group` | slot_id, group_id | Plusieurs groupes par créneau (F-11) |
-| `session` | id, season_id, slot_id?, date, start_time, state, comment? | `state` ∈ recorded, prepared, cancelled, unscheduled ; `slot_id` nul = appel sans créneau (EX-39) ; unique (slot_id, date) (RM-05) |
-| `session_group` | session_id, group_id | Groupes figés au jour de la séance |
-| `attendance` | session_id, member_id, status | `status` ∈ present, absent, late, excused ; cascade depuis `member` et `session` |
-| `roll_call_draft` | slot_id?, date, group_ids, statuses, comment, updated_at | Un seul brouillon à la fois (EX-14) |
-| `alert_ack` | member_id, streak_length, acked_at | Alerte traitée à ce niveau de série (EX-26) |
-| `setting` | key, value | Réglages (ADR-002) |
+| `seasons` | id, name, start_date, end_date, is_active | Une seule active (index unique partiel) |
+| `members` | id, last_name, first_name, birth_date?, archived_at? | Seuls nom et prénom obligatoires (ABS-03) |
+| `emergency_contacts` | id, member_id, label, phone, position | `ON DELETE CASCADE` depuis `members` |
+| `groups` | id, season_id, name, archived_at? | |
+| `enrollments` | id, member_id, group_id, start_date, end_date? | Cascade depuis `members` et `groups` |
+| `slots` | id, season_id, weekday?, start_time, duration_min, place?, name? | `weekday` nul = créneau ponctuel |
+| `slot_dates` | slot_id, date | Dates d'un créneau ponctuel (F-10) |
+| `slot_groups` | slot_id, group_id | Plusieurs groupes par créneau (F-11) |
+| `sessions` | id, season_id, slot_id?, date, start_time, state, comment? | `state` ∈ recorded, prepared, cancelled, unscheduled ; `slot_id` nul = appel sans créneau (EX-39) ; unique (slot_id, date) (RM-05) |
+| `session_groups` | session_id, group_id | Groupes figés au jour de la séance |
+| `attendances` | session_id, member_id, status | `status` ∈ present, absent, late, excused ; cascade depuis `members` et `sessions` |
+| `roll_call_drafts` | slot_id?, date, group_ids, statuses, comment, updated_at | Un seul brouillon à la fois (EX-14) |
+| `alert_acks` | member_id, streak_length, acked_at | Alerte traitée à ce niveau de série (EX-26) |
+| `settings` | key, value | Réglages (ADR-002) |
 
 - Dates en texte `AAAA-MM-JJ`, heures `HH:MM` (RM-04) ; conversion d'affichage dans `src/domain/formats.ts` seulement.
-- **Séances calculées à la volée** (ADR-004) : une ligne `session` n'existe qu'une fois l'appel enregistré, préparé, annulé ou marqué non planifié.
+- **Séances calculées à la volée** (ADR-004) : une ligne `sessions` n'existe qu'une fois l'appel enregistré, préparé, annulé ou marqué non planifié.
 - Requêtes toujours paramétrées ; `PRAGMA foreign_keys = ON` à chaque ouverture.
 
 ### 4.2 Migrations
@@ -132,12 +132,13 @@ Liste fermée de ce qu'un journal peut contenir : code d'erreur, nom de l'opéra
 | NF-04 fiabilité | Brouillon en base ; restauration vérifiée avant remplacement ; tests de données sur vraie base |
 | NF-05 plateformes | Portrait verrouillé ; colonne de 640 pt au plus sur tablette |
 | NF-06 accessibilité | Jetons de la charte ; tailles qui suivent le système ; libellé + icône par statut |
-| NF-08 volume | Agrégats calculés en SQL, index sur `attendance(member_id)`, `session(date)` ; jeu de test de 500 membres et 3 saisons |
+| NF-08 volume | Agrégats calculés en SQL, index sur `attendances(member_id)`, `sessions(date)` ; jeu de test de 500 membres et 3 saisons |
 
-## Points à vérifier en relisant
+## Décisions du porteur
 
-1. **ADR-008** : tests de la couche données avec le module `node:sqlite` intégré à Node 22 (aucune dépendance), à confirmer au ticket d'outillage : il faut que les mêmes requêtes tournent sur `node:sqlite` et `expo-sqlite`.
-2. **`roll_call_draft`** : le brouillon dans une table à part plutôt que comme une séance à l'état « brouillon », pour qu'aucune requête de statistiques ne puisse le compter.
-3. **ADR-009** : la gratuité des runners macOS standard pour un dépôt public est vérifiée (sources dans l'ADR) ; reste à vérifier la signature iOS sans EAS (certificats et profils à créer par le porteur dans son compte Apple), au ticket de build.
-4. Noms de tables et colonnes en anglais, d'après le glossaire ; `group` est un mot réservé SQL et devra être entre guillemets (ou renommé `class_group`, à trancher).
-5. Format du fichier de sauvegarde : la base SQLite brute (`.db`), lisible par tout outil SQLite.
+- 2026-11-26 : réglages dans SQLite, état React seul, icônes lucide-react-native, polices en fichiers `.ttf`, schéma complet dès la migration 1, builds sur GitHub Actions seul ; brouillon dans une table à part (`roll_call_drafts`) ; **noms de tables au pluriel** (évite le mot réservé `group`) ; tests de données avec `node:sqlite`, à confirmer au ticket d'outillage ; sauvegarde au format base SQLite brute (`.db`).
+
+## Questions ouvertes
+
+- Signature iOS sans EAS (ADR-009) : au ticket de build.
+- Compatibilité des requêtes entre `node:sqlite` et `expo-sqlite` (ADR-008) : au ticket d'outillage.

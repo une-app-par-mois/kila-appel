@@ -8,7 +8,7 @@ Modifier un créneau ne doit jamais altérer l'historique ; pré-générer les s
 
 ## Décision
 
-Les occurrences d'un créneau sont calculées par une fonction pure du domaine (créneau + période → dates). Une ligne `session` n'existe qu'une fois l'appel enregistré, préparé, annulé ou marqué non planifié.
+Les occurrences d'un créneau sont calculées par une fonction pure du domaine (créneau + période → dates). Une ligne `sessions` n'existe qu'une fois l'appel enregistré, préparé, annulé ou marqué non planifié.
 
 ## Options écartées
 

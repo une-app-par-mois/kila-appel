@@ -8,7 +8,7 @@ Il faut une base locale fiable ; les réglages doivent suivre la sauvegarde.
 
 ## Décision
 
-expo-sqlite pour tout, réglages compris (table `setting`). Requêtes SQL écrites à la main, paramétrées, dans les dépôts de `src/data/`.
+expo-sqlite pour tout, réglages compris (table `settings`). Requêtes SQL écrites à la main, paramétrées, dans les dépôts de `src/data/`.
 
 ## Options écartées
 
