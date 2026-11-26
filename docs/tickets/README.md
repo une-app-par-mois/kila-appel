@@ -34,9 +34,9 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 007b | [Écrans des membres](007b-ecrans-membres.md) | 1 | F-01 | oui | fusionné dans le groupe |
 | 007c | [Écrans des inscriptions](007c-inscriptions.md) | 1 | F-01 | non | fusionné dans le groupe |
 | 007d | [Effacement dans le fichier](007d-effacement-securise.md) | 1 | — | oui | fusionné dans le groupe |
-| 007e | [Inscription dans les dates de la saison](007e-dates-inscription.md) | 1 | F-01 | non | à faire |
+| 007e | [Inscription dans les dates de la saison](007e-dates-inscription.md) | 1 | F-01 | non | en cours |
 | 008 | [Contacts d'urgence : données](008-contacts-urgence.md) | 1 | F-01 | non | fusionné dans le groupe |
-| 008b | [Contacts d'urgence : écrans](008b-ecrans-contacts.md) | 1 | F-01 | non | en cours |
+| 008b | [Contacts d'urgence : écrans](008b-ecrans-contacts.md) | 1 | F-01 | non | fusionné dans le groupe |
 | 009 | [Créneaux récurrents](009-creneaux-recurrents.md) | 1 | F-02 | non | à faire |
 | 010 | [Écran d'appel et enregistrement](010-appel.md) | 1 | F-02 | non | à faire |
 | 011 | [Brouillon d'appel](011-brouillon-appel.md) | 1 | F-02 | oui | à faire |

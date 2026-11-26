@@ -1,6 +1,6 @@
 # 007e — Inscription dans les dates de la saison
 
-Statut : à faire · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : en cours · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Relevé par la revue de sécurité du 007c ; décision du porteur du 2026-11-26.
 
