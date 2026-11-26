@@ -3,7 +3,7 @@
 // suivent, chacun parti du dernier enregistré ; une saisie non quittée s'enregistre en sortant.
 // Groupes en cours ou à venir (EX-04) : « Retirer » à une date ; « Ajouter à un groupe » inscrit
 // aujourd'hui (décision du porteur du 2026-11-26). Archiver ou désarchiver ; supprimer après une
-// confirmation qui dit ce qui sera effacé (ABS-05). Section Contacts : ticket 008.
+// confirmation qui dit ce qui sera effacé (ABS-05). Contacts d'urgence : MemberContacts (EX-05).
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { labels } from '@/config/libelles';
@@ -16,6 +16,7 @@ import { useSeasons } from '@/hooks/useSeasons';
 import { Button } from '@/ui/Button';
 import { ConfirmDialog } from '@/ui/ConfirmDialog';
 import { errorMessage } from '@/ui/errorMessage';
+import { MemberContacts } from '@/ui/MemberContacts';
 import { MemberGroups } from '@/ui/MemberGroups';
 import { Screen } from '@/ui/Screen';
 import { TextField } from '@/ui/TextField';
@@ -62,8 +63,9 @@ export default function MemberSheet() {
   const [busy, setBusy] = useState(false);
   // Dernière version enregistrée, saisie en cours, file des enregistrements.
   const saved = useRef<MemberInput | null>(null);
+  // Saisie en cours, tenue à jour dès la frappe : une sortie de champ juste après ne doit pas
+  // lire la valeur du rendu précédent.
   const current = useRef(values);
-  current.current = values;
   const queue = useRef(Promise.resolve());
   const removedRef = useRef(false);
 
@@ -74,11 +76,13 @@ export default function MemberSheet() {
       lastName: member.lastName,
       birthDate: member.birthDate,
     };
-    setValues({
+    const filled = {
       firstName: member.firstName,
       lastName: member.lastName,
       birthDate: member.birthDate ? toDisplayDate(member.birthDate) : '',
-    });
+    };
+    current.current = filled;
+    setValues(filled);
     setFilledId(member.id);
   }, [member, filledId]);
 
@@ -97,8 +101,13 @@ export default function MemberSheet() {
     [updateOnLeave],
   );
 
+  const show = (next: Record<Field, string>) => {
+    current.current = next;
+    setValues(next);
+  };
+
   const edit = (field: Field) => (value: string) => {
-    setValues((v) => ({ ...v, [field]: value }));
+    show({ ...current.current, [field]: value });
     setErrors((e) => ({ ...e, [field]: undefined }));
   };
 
@@ -116,7 +125,7 @@ export default function MemberSheet() {
         await update(input);
         saved.current = input;
         // Nom et prénom affichés tels qu'enregistrés (sans espaces autour).
-        if (field !== 'birthDate') setValues((v) => ({ ...v, [field]: input[field] }));
+        if (field !== 'birthDate') show({ ...current.current, [field]: input[field] });
       } catch (e) {
         setErrors((errs) => ({ ...errs, [field]: errorMessage(e) }));
       }
@@ -200,6 +209,11 @@ export default function MemberSheet() {
             onChangeText={edit('birthDate')}
             onBlur={() => saveField('birthDate')}
             error={errors.birthDate}
+          />
+          <MemberContacts
+            memberId={member.id}
+            memberName={name}
+            onError={(e) => setFormError(errorMessage(e))}
           />
           <MemberGroups
             memberName={name}

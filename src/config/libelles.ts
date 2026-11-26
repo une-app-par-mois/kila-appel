@@ -165,6 +165,29 @@ export const labels = {
     submit: (n: number) => (n === 0 ? 'Inscrire' : `Inscrire ${plural(n, 'membre', 'membres')}`),
     noCandidate: 'Tous les membres sont déjà inscrits à ce groupe.',
   },
+  contacts: {
+    title: 'Contacts d’urgence',
+    none: (member: string) => `Aucun contact d’urgence pour ${member}.`,
+    add: 'Ajouter un contact',
+    /** Poignée ≡ : glisser, ou actions du lecteur d'écran. */
+    handle: (contact: string) => `Déplacer ${contact}`,
+    moveUp: 'Monter',
+    moveDown: 'Descendre',
+  },
+  contactForm: {
+    title: 'Contact d’urgence',
+    label: 'Qui est-ce ?',
+    phone: 'Téléphone',
+    delete: 'Supprimer ce contact',
+  },
+  emergency: {
+    title: 'Contact d’urgence',
+    entry: 'Contact d’urgence : rechercher un membre',
+    search: 'Rechercher un membre',
+    call: 'Appeler',
+    callLabel: (contact: string) => `Appeler ${contact}`,
+    callFailed: 'L’appel n’a pas pu s’ouvrir sur cet appareil.',
+  },
   memberGroups: {
     title: 'Groupes',
     period: (since: string, until: string | null) =>

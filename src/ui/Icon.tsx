@@ -7,7 +7,10 @@ import Check from 'lucide-react-native/icons/check';
 import ChevronDown from 'lucide-react-native/icons/chevron-down';
 import ChevronLeft from 'lucide-react-native/icons/chevron-left';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
+import Grip from 'lucide-react-native/icons/grip-horizontal';
+import Phone from 'lucide-react-native/icons/phone';
 import Plus from 'lucide-react-native/icons/plus';
+import Search from 'lucide-react-native/icons/search';
 import Trash2 from 'lucide-react-native/icons/trash-2';
 import { theme } from '@/config/theme';
 
@@ -20,6 +23,10 @@ const ICONS = {
   /** Champ de choix « ▾ » (maquettes). */
   choices: ChevronDown,
   delete: Trash2,
+  /** Poignée ≡ pour glisser (maquette Fiche membre). */
+  grip: Grip,
+  phone: Phone,
+  search: Search,
   unarchive: ArchiveRestore,
 } as const;
 

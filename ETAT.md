@@ -12,9 +12,9 @@ Réévaluation (PLAN §6) : moins de 2 h de porteur pour 6 h prévues ; 1,5 h pa
 
 ## Prochaines étapes
 
-1. **Ticket 008** (contacts d'urgence, données) sur `ticket/008-contacts-donnees`, puis 008b (écrans, glisser-déposer : deux dépendances à proposer) et 007e (dates de saison). 007b, 007c, 007d fusionnés dans le groupe. APK du jalon (667bbbf) installé sur l'A55 ; l'APK suivant vérifiera l'ouverture de la base avec secure_delete.
+1. **Ticket 007e** (dates dans la saison) à démarrer. 008b (écrans des contacts, glisser-déposer) terminé, PR vers le groupe. APK local de 008b audité conforme (SHA-256 `976feabc…`, aucune permission nouvelle) ; **à installer sur l'A55** : glisser la poignée ≡, « Appeler », et secure_delete à vérifier.
    - `@expo/devtools` est dans le bundle de production : client WebSocket d'expo-sqlite, appelé seulement si `__DEV__` (jamais en production) ; INTERNET absente du binaire. Pas une violation d'ABS-01.
-2. Tickets 008 à 016 du jalon 1, puis PR du jalon vers `main`.
+2. Tickets 009 à 016 du jalon 1, puis PR du jalon vers `main`.
 
 ## Points d'attention
 

@@ -1,12 +1,16 @@
 // Paramètres (maquette) : écran d'accueil provisoire jusqu'au ticket 012 (barre d'onglets).
-// Seules les lignes qui mènent à un écran existant (décision du porteur du 2026-11-26).
+// Seules les lignes qui mènent à un écran existant (décision du porteur du 2026-11-26). En tête,
+// l'entrée de la recherche d'un contact d'urgence, à sa place dans l'accueil du 012 (EX-06).
 import { useRouter } from 'expo-router';
+import { Pressable, StyleSheet, Text } from 'react-native';
 import { labels } from '@/config/libelles';
+import { theme } from '@/config/theme';
 import { toIsoDate } from '@/domain/formats';
 import { useGroups } from '@/hooks/useGroups';
 import { useMembers } from '@/hooks/useMembers';
 import { useSeasons } from '@/hooks/useSeasons';
 import { Card } from '@/ui/Card';
+import { Icon } from '@/ui/Icon';
 import { ListRow } from '@/ui/ListRow';
 import { Screen, Section } from '@/ui/Screen';
 
@@ -23,6 +27,15 @@ export default function Settings() {
       title={t.title}
       error={loadFailed || groupsFailed || membersFailed ? labels.common.loadFailed : undefined}
     >
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={labels.emergency.entry}
+        onPress={() => router.push('/urgence')}
+        style={({ pressed }) => [styles.search, pressed && styles.pressed]}
+      >
+        <Icon name="search" />
+        <Text style={styles.searchText}>{labels.emergency.entry}</Text>
+      </Pressable>
       <Section title={t.organisation} />
       <Card>
         <ListRow
@@ -58,3 +71,25 @@ export default function Settings() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  search: {
+    minHeight: theme.minTouchTarget,
+    flexDirection: 'row',
+    alignItems: 'center',
+    columnGap: theme.spacing * 2,
+    paddingHorizontal: theme.spacing * 3,
+    marginVertical: theme.spacing * 1.5,
+    backgroundColor: theme.colors.blanc,
+    borderWidth: 1.5,
+    borderColor: theme.colors.quadrillage,
+    borderRadius: theme.radii.champ,
+  },
+  pressed: { opacity: 0.6 },
+  searchText: {
+    flex: 1,
+    fontFamily: theme.fonts.text,
+    fontSize: 16,
+    color: theme.colors.texteSecondaire,
+  },
+});

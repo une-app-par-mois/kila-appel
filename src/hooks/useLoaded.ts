@@ -1,6 +1,6 @@
 // Lecture partagée par les hooks de données (CONV-10) : une action qui échoue est relayée à
 // l'écran ; tout écran ouvert recharge après une modification (dataChanged) ; à chaque changement
-// de lecture, la valeur est vidée et une réponse tardive de l'ancienne ignorée.
+// de lecture, la valeur est vidée (sauf `keepPrevious`) et une réponse tardive de l'ancienne ignorée.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { log } from '@/data/log';
 import { onDataChanged } from '@/hooks/dataChanged';
@@ -10,6 +10,8 @@ export const useLoaded = <T>(
   load: (() => Promise<T>) | null,
   failureCode: string,
   details = {},
+  /** Garde la valeur précédente pendant la nouvelle lecture (recherche pendant la frappe). */
+  keepPrevious = false,
 ) => {
   const [value, setValue] = useState<T | null>(null);
   // Vrai dès la première lecture réussie : distingue « en cours » de « introuvable ».
@@ -35,12 +37,12 @@ export const useLoaded = <T>(
   }, [load, failureCode]);
 
   useEffect(() => {
-    setValue(null);
+    if (!keepPrevious) setValue(null);
     setLoaded(false);
     setLoadFailed(false);
     void reload();
     return onDataChanged(() => void reload());
-  }, [reload]);
+  }, [reload, keepPrevious]);
 
   return { value, loaded, loadFailed };
 };
