@@ -26,6 +26,16 @@ const NETWORK = new Set([
   'loadAsync',
   'useFonts',
 ]);
+// SEC-01, ABS-01 : composants de react-native-svg qui chargent un SVG par une adresse (décision du
+// porteur du 2026-11-26 : dépendance acceptée, ces imports interdits).
+const SVG_LOADERS = new Set([
+  'SvgUri',
+  'SvgCssUri',
+  'SvgFromUri',
+  'LocalSvg',
+  'WithLocalSvg',
+  'fetchText',
+]);
 const REMOTE_URI = /^(https?|wss?):/i;
 const PUSH_TOKEN = new Set(['getExpoPushTokenAsync', 'getDevicePushTokenAsync']);
 
@@ -81,7 +91,9 @@ const check = (file: string, source: string): Violation[] => {
     if (!isTest && file !== THEME_FILE && text !== undefined && COLOR.test(text)) {
       add('CONV-16', node);
     }
-    if (ts.isIdentifier(node) && NETWORK.has(node.text)) add('SEC-01', node);
+    if (ts.isIdentifier(node) && (NETWORK.has(node.text) || SVG_LOADERS.has(node.text))) {
+      add('SEC-01', node);
+    }
     // globalThis['fetch'] : le nom passe par une chaîne.
     if (ts.isElementAccessExpression(node)) {
       const key = literalText(node.argumentExpression);
@@ -164,6 +176,10 @@ describe('SEC-01 aucun appel réseau, SEC-03 aucun jeton de notification', () =>
     ['SEC-01', "const i = { source: { uri: 'https://exemple.invalid/a.png' } };"],
     ['SEC-01', "await Font.loadAsync({ plex: 'https://exemple.invalid/p.ttf' });"],
     ['SEC-01', 'const [loaded] = useFonts(fonts);'],
+    ['SEC-01', "import { SvgUri } from 'react-native-svg';"],
+    ['SEC-01', "import { SvgCssUri as S } from 'react-native-svg/css';"],
+    ['SEC-01', 'const s = svg.SvgFromUri;'],
+    ['SEC-01', "import { LocalSvg } from 'react-native-svg/css';"],
     ['SEC-03', 'await Notifications.getExpoPushTokenAsync();'],
     ['SEC-03', "import { getDevicePushTokenAsync } from 'expo-notifications';"],
   ])('%s repère : %s', (rule, source) => {

@@ -19,9 +19,9 @@ Composants réutilisables de la charte, avant les premiers écrans.
 
 ## Critères d'acceptation
 
-- [ ] Composants conformes à la charte (couleurs, rayons, zone d'appui de 44 × 44 pt, NF-06)
-- [ ] Confirmation : titre, ce qui sera effacé, action destructive distincte
-- [ ] Aucun texte ni couleur en dur (CONV-03, CONV-16)
+- [x] Composants conformes à la charte (couleurs, rayons, zone d'appui de 44 × 44 pt, NF-06)
+- [x] Confirmation : titre, ce qui sera effacé, action destructive distincte
+- [x] Aucun texte ni couleur en dur (CONV-03, CONV-16)
 
 ## Tests attendus
 

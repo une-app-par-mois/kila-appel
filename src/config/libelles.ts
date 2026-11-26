@@ -11,6 +11,8 @@ export const labels = {
     excused: jetons.statuts.excused.libelle,
     preparedPresent: jetons.statuts.preparedPresent.libelle,
   },
+  /** Libellé lu par le lecteur d'écran pour une ligne de liste à sous-titre. */
+  rowAccessibility: (title: string, subtitle: string) => `${title}, ${subtitle}`,
   sessionStates: {
     cancelled: jetons.etatsSeance.cancelled.libelle,
     unscheduled: jetons.etatsSeance.unscheduled.libelle,
