@@ -73,9 +73,10 @@ Apple et Google demandent de déclarer si l'éditeur est un **commerçant** (*tr
 ## 7. Licences
 
 - **Code du dépôt** : MIT (fichier `LICENSE`).
-- **Licences acceptées pour une dépendance** : MIT, ISC, BSD, Apache-2.0 ; **polices** : SIL OFL 1.1. **Refusées sans décision du porteur** : GPL, LGPL, AGPL, SSPL et toute licence copyleft.
+- **Licences acceptées pour une dépendance** : MIT, ISC, BSD, Apache-2.0, et (décision du porteur du 2026-11-26) 0BSD, BlueOak-1.0.0, CC0-1.0, Unlicense ; une double licence est acceptée si l'une des deux l'est ; **polices** : SIL OFL 1.1. **Refusées sans décision du porteur** : GPL, LGPL, AGPL, SSPL et toute licence copyleft.
 - **Registre** : la liste des licences embarquées est générée depuis les dépendances réellement présentes dans le build et affichée dans l'appli (EX-42) ; elle est mise à jour dans le même ticket que toute nouvelle dépendance, police ou ressource.
 - Polices IBM Plex : fichier de licence OFL livré à côté des `.ttf` (ADR-001).
+- **Périmètre du registre** (décision du porteur du 2026-11-26) : paquets du bundle JavaScript exporté et polices, par `scripts/licences.js` ; les bibliothèques natives (Gradle, CocoaPods) font l'objet d'un inventaire à part (§8).
 
 ## 8. Actions avant le lancement
 
@@ -89,6 +90,7 @@ Apple et Google demandent de déclarer si l'éditeur est un **commerçant** (*tr
 | Déclarer le public cible 18+ (Play) et remplir le questionnaire d'âge (Apple) | Porteur | À la soumission |
 | Auditer les permissions et l'absence de chiffrement sur les binaires | IA (CI), porteur (lecture) | Fin de jalon et chaque version |
 | Générer le registre des licences | IA | Chaque version |
+| Inventorier les licences des bibliothèques natives (Gradle, CocoaPods : AndroidX, Kotlin, OkHttp, Hermes…) et les ajouter au registre affiché (EX-42), décision du porteur du 2026-11-26 | IA | Avant la première soumission |
 | Préparer un jeu de données fictif pour la revue des stores (une appli vide est souvent refusée) | IA | Avant la première soumission |
 
 ## 9. Sources (consultées le 2026-11-26)

@@ -23,6 +23,10 @@ const GROUP_NOTHING_ELSE = 'Seul le groupe sera effacé : il n’a ni inscriptio
 /** Ce que la suppression d'un groupe effacera (EX-02, ARCHITECTURE §4.1). */
 export type GroupDeletionCounts = { enrollments: number; slots: number; sessions: number };
 
+/** Maquette : la licence seule dans la liste, écrite en entier pour les polices. */
+const licenceName = (e: { license: string }) =>
+  e.license === 'OFL-1.1' ? 'SIL Open Font License 1.1' : e.license;
+
 export const labels = {
   appName: 'Ki&La',
   statuses: {
@@ -48,7 +52,18 @@ export const labels = {
     activeSeason: (name: string) => `Active : ${name}`,
     noActiveSeason: 'Aucune saison active',
     groups: 'Groupes',
+    about: 'À propos',
+    licences: 'Licences',
     groupCount: (n: number) => (n === 0 ? 'Aucun groupe' : plural(n, 'groupe', 'groupes')),
+  },
+  licences: {
+    title: 'Licences',
+    generated: 'Liste générée depuis les dépendances réellement embarquées',
+    subtitle: licenceName,
+    detailSubtitle: (e: { license: string; version: string }) =>
+      e.version === '' ? licenceName(e) : `${licenceName(e)} · ${e.version}`,
+    missingText: (license: string, author?: string) =>
+      `Ce paquet ne fournit pas le texte de sa licence. Licence : ${license}${author ? ` · ${author}` : ''}.`,
   },
   groups: {
     title: 'Groupes',

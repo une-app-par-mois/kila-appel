@@ -43,6 +43,10 @@ export default function Settings() {
           onPress={() => router.push('/groupes')}
         />
       </Card>
+      <Section title={t.about} />
+      <Card>
+        <ListRow title={t.licences} onPress={() => router.push('/licences')} />
+      </Card>
     </Screen>
   );
 }

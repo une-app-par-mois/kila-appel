@@ -12,8 +12,9 @@ Réévaluation (PLAN §6) : moins de 2 h de porteur pour 6 h prévues ; 1,5 h pa
 
 ## Prochaines étapes
 
-1. **Ticket 006d** (écrans des groupes, zone sensible) sur `ticket/006d-ecrans-groupes`. Ticket 006c fusionné dans le groupe (PR #12).
-2. Tickets 006e à 016 du jalon 1, puis PR du jalon vers `main`.
+1. **Ticket 006e** (licences embarquées, EX-42) : revue corrigée, PR vers le groupe. APK du jalon (667bbbf) installé sur l'A55 du porteur.
+   - Point d'attention : le bundle de production contient `@expo/devtools` (client WebSocket des outils de développement, inactif hors développement ; INTERNET absente du binaire). À examiner avec le porteur avant la PR du jalon. Ticket 006d fusionné dans le groupe (PR #13). APK du jalon construit (667bbbf, audit conforme), à installer quand un appareil est branché.
+2. Tickets 007 à 016 du jalon 1, puis PR du jalon vers `main`.
 
 ## Points d'attention
 
