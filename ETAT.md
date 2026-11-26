@@ -12,13 +12,13 @@ Dernière mise à jour : 2026-11-26
 
 ## Prochaines étapes
 
-1. Ticket 001 : `/code-review`, test manuel `npx expo start` par le porteur, push (débloqué), PR vers `groupe/jalon-0-outillage`.
-2. Pousser `ticket/000-mise-en-route` et décider du sort de la PR n°1 (proposition au porteur).
+1. Ticket 001 : test manuel `npx expo start` par le porteur, puis fusion de la PR du ticket dans `groupe/jalon-0-outillage`.
+2. PR n°1 fermée sans fusion (décision du 2026-11-26) : la PR du jalon 0 vers `main` porte la préparation ; `ticket/000-mise-en-route` reste en local, non poussée au-delà de son état distant.
 3. Jalon 0 : tickets 002 à 004 ; prétest de fin de jalon ; réévaluation du calendrier (`docs/PLAN.md` §6).
 
 ## Points d'attention
 
-- Hook pre-push : il lance `scripts/test.sh` sur la **copie de travail**, pas sur les commits envoyés ; la CI reste la vérification qui fait foi.
+- Hook pre-push : il lance `scripts/test.sh` sur la **copie de travail**, pas sur les commits envoyés ; la CI reste la vérification qui fait foi. `groupe/jalon-0-outillage` a été poussée sur `e9c39bc` (documents seuls, sans test.sh réel) depuis la copie verte du ticket 001, par décision du porteur du 2026-11-26.
 - `noFloatingPromises` est une règle expérimentale (nursery) de Biome 2.6.9 : à surveiller à chaque mise à jour de Biome.
 - `npm audit` : 22 vulnérabilités moyennes, aucune élevée, dans l'outillage de build d'Expo (`@expo/fingerprint`) ; CI à `--audit-level=high`.
 - **Lancer Claude Code depuis `kila-appel/`** : depuis le dossier parent, les interdictions de `.claude/settings.json` ne s'appliquent pas.

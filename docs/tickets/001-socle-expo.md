@@ -23,10 +23,10 @@ Installer la pile validée (ADR-001) et rendre `scripts/test.sh` réel, pour que
 
 ## Critères d'acceptation
 
-- [ ] `./scripts/test.sh` passe en local et échoue si un test échoue ou si la couverture baisse
-- [ ] Le hook pre-push laisse passer un push de la branche
-- [ ] `formats.ts` convertit `AAAA-MM-JJ` ↔ `JJ/MM/AAAA` et refuse une date invalide (RM-04)
-- [ ] Aucune dépendance hors de `docs/ARCHITECTURE.md` §2
+- [x] `./scripts/test.sh` passe en local et échoue si un test échoue ou si la couverture baisse
+- [x] Le hook pre-push laisse passer un push de la branche
+- [x] `formats.ts` convertit `AAAA-MM-JJ` ↔ `JJ/MM/AAAA` et refuse une date invalide (RM-04)
+- [x] Aucune dépendance hors de `docs/ARCHITECTURE.md` §2
 
 ## Tests attendus
 
