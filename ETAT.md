@@ -12,9 +12,9 @@ Réévaluation (PLAN §6) : moins de 2 h de porteur pour 6 h prévues ; 1,5 h pa
 
 ## Prochaines étapes
 
-1. **Ticket 006e** (licences embarquées, EX-42) : revue corrigée, PR vers le groupe. APK du jalon (667bbbf) installé sur l'A55 du porteur.
-   - Point d'attention : le bundle de production contient `@expo/devtools` (client WebSocket des outils de développement, inactif hors développement ; INTERNET absente du binaire). À examiner avec le porteur avant la PR du jalon. Ticket 006d fusionné dans le groupe (PR #13). APK du jalon construit (667bbbf, audit conforme), à installer quand un appareil est branché.
-2. Tickets 007 à 016 du jalon 1, puis PR du jalon vers `main`.
+1. **Ticket 007** (membres et inscriptions, données) sur `ticket/007-membres-inscriptions`, puis 007b (écrans des membres, maquette Membres à modifier : recherche) et 007c (inscriptions). Ticket 006e fusionné dans le groupe (PR #14). APK du jalon (667bbbf) installé sur l'A55 du porteur.
+   - `@expo/devtools` est dans le bundle de production : client WebSocket d'expo-sqlite, appelé seulement si `__DEV__` (jamais en production) ; INTERNET absente du binaire. Pas une violation d'ABS-01.
+2. Tickets 008 à 016 du jalon 1, puis PR du jalon vers `main`.
 
 ## Points d'attention
 
