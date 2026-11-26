@@ -1,6 +1,6 @@
 # Cadrage — Ki&La (appel)
 
-Statut : ✅ validé le 2026-11-26
+Statut : ✅ validé le 2026-11-26 · Révision du glossaire (5 entrées « séance … » et « Attendu ») validée le 2026-11-26
 
 Mois : 2026-11 · App n°1 · Origine de l'idée : moi
 
@@ -62,6 +62,11 @@ Un mot par notion. Le terme du code (en anglais, décision du 2026-11-26) est le
 | inscription | L'appartenance d'un membre à un groupe, avec une date de début et une date de fin | `Enrollment` | adhésion, affectation |
 | créneau | Rendez-vous d'un ou plusieurs groupes : hebdomadaire (récurrent) ou à une ou plusieurs dates (ponctuel) | `Slot` | cours, horaire, plage |
 | séance | Une occurrence datée d'un créneau. Elle n'existe en base qu'une fois l'appel enregistré | `Session` | cours, leçon, entraînement |
+| séance enregistrée | Séance dont l'appel est enregistré ; la seule qui compte dans l'historique et les statistiques | `recorded` | séance validée, faite |
+| séance préparée | Séance à venir dont l'appel est saisi d'avance (Attendu, Excusé) ; comptée nulle part | `prepared` | brouillon |
+| séance annulée | Séance prévue qui n'a pas eu lieu ; rétablissable | `cancelled` | supprimée |
+| séance non planifiée | Date proposée par un créneau mais absente du calendrier (vacances, salle fermée) ; rétablissable | `unscheduled` | annulée |
+| Attendu | Libellé affiché pendant la préparation à la place de Présent ; enregistré comme Présent | `present` (affiché « Attendu ») | prévu |
 | appel | L'action de relever les présences d'une séance, et son résultat | `RollCall` | pointage, relevé |
 | brouillon d'appel | Un appel commencé et pas encore enregistré, conservé même si l'appli est fermée | `RollCallDraft` | appel en cours |
 | présence | Le statut d'un membre à une séance : Présent, Absent, Retard ou Excusé | `Attendance` (`present`, `absent`, `late`, `excused`) | pointage |
@@ -121,6 +126,7 @@ Les parties du code où une erreur touche les données, la sécurité ou l'exact
 
 ## Décisions du porteur
 
+- 2026-11-26 : révision du glossaire, ajout de séance enregistrée, préparée, annulée, non planifiée et du libellé « Attendu » (suite au PRD, EX-36 et EX-38).
 - 2026-11-26 : niveau renforcé ; dépôt public `une-app-par-mois/kila-appel` ; besoin, utilisateur, contexte et niveau technique ; périmètre F-01 à F-14 dans la v1, par jalons ; import par photo en boîte à idées ; Expo + React Native + TypeScript ; termes du code en anglais (glossaire validé tel quel) ; mode de CI par jalon ; pas de chiffrement dans l'appli ; données et conservation comme l'ancienne version ; zones sensibles ; critères de réussite (iOS sur simulateur) ; risques ; pas de verrouillage ; français seul ; nouvelle appli avec nouveau nom de paquet.
 
 ## Questions ouvertes

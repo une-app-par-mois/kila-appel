@@ -45,6 +45,7 @@ Priorité : toutes les exigences sont dans la v1 (décision du 2026-11-26). Le j
 | EX-12 | Ajouter un membre pendant l'appel | Un nouveau membre peut être créé et inscrit au groupe sans quitter l'appel. |
 | EX-13 | Commenter la séance | Un commentaire libre facultatif, au niveau de la séance uniquement (ABS-03). |
 | EX-14 | Conserver le **brouillon d'appel** | Chaque changement est conservé aussitôt. Après une fermeture forcée de l'appli ou un redémarrage de l'appareil, l'appel est retrouvé tel quel à la réouverture. Le brouillon disparaît à l'enregistrement ou si l'encadrant l'abandonne explicitement. |
+| EX-39 | Faire l'appel sans créneau | L'encadrant choisit un groupe et une date ; la séance enregistrée n'est rattachée à aucun créneau et compte comme les autres. |
 | EX-15 | Enregistrer l'appel | Un appui enregistre la séance et ses présences, puis affiche une confirmation. |
 
 ### F-03 — Historique et sauvegarde
@@ -112,7 +113,7 @@ Priorité : toutes les exigences sont dans la v1 (décision du 2026-11-26). Le j
 | NF-02 | Hors ligne | Toutes les fonctionnalités marchent en mode avion ; aucune requête réseau (ABS-01) |
 | NF-03 | Confidentialité | Permission INTERNET absente du binaire Android de production ; déclarations « aucune donnée collectée » |
 | NF-04 | Fiabilité des données | Aucun appel perdu (EX-14) ; cycle sauvegarde → effacement → restauration identique sur Android réel |
-| NF-05 | Plateformes | Android et iOS, téléphone et tablette, portrait (l'orientation paysage sur tablette reste à trancher) |
+| NF-05 | Plateformes | Android et iOS, téléphone et tablette, en portrait seulement |
 | NF-06 | Accessibilité | Statuts jamais distingués par la seule couleur ; zones d'appui d'au moins 44 × 44 points ; textes lisibles avec la taille de police agrandie du système |
 | NF-07 | Langue | Français seul ; tous les libellés dans un seul fichier |
 | NF-08 | Volume | Fluide avec 500 membres et 3 saisons d'historique |
@@ -127,26 +128,13 @@ Serveur, compte, synchronisation, chiffrement dans l'appli, verrouillage à l'ou
 
 ## 8. Écarts relevés
 
-- 2026-11-26 : EX-36 et EX-38 (version de l'ancienne appli, décision du porteur) introduisent des notions absentes du glossaire du cadrage validé : **séance préparée** (`prepared`), **séance annulée** (`cancelled`), **séance non planifiée** (`unscheduled`), **séance enregistrée** (`recorded`), et le libellé « Attendu ». Proposition d'ajout au glossaire, à valider par le porteur avant de modifier le cadrage.
+- 2026-11-26 : EX-36 et EX-38 introduisaient des notions absentes du glossaire : **séance enregistrée**, **préparée**, **annulée**, **non planifiée** et le libellé « Attendu ». Ajoutées au glossaire du cadrage, révision validée par le porteur le 2026-11-26.
 
 ## 9. Questions ouvertes
 
-- Tablette : orientation paysage, mise en page sur deux colonnes ? (→ maquettes)
 - Ordre exact des statuts au fil des appuis (EX-10) : Présent → Absent → Retard → Excusé comme l'ancienne version ? (→ maquettes)
 - Contenu exact du rapport PDF (EX-32). (→ ticket F-09)
-- Appel sans créneau (« séance exceptionnelle » de l'ancienne version : choisir un groupe et une date) : à garder ? (→ porteur)
 
 ## Décisions du porteur
 
-- 2026-11-26 : EX-09 (créneau en cours ou le plus proche), EX-36 et EX-38 (version de l'ancienne appli), RM-01, RM-06, EX-21, EX-23, EX-06, NF-06 et NF-08 validés tels que proposés.
-
-## Points à vérifier en relisant
-
-Choix qui viennent de moi (souvent repris de l'ancienne version), à confirmer ou corriger :
-
-1. **EX-06** : la recherche de contact d'urgence depuis l'accueil, en 2 appuis.
-2. **EX-09** : quelle séance l'appli propose à l'ouverture.
-3. **EX-17, EX-33** : les appels manquants, qu'un créneau récurrent ne réclame pas avant sa création, mais qu'un créneau ponctuel réclame.
-4. **EX-21** : le rappel de sauvegarde à 30 jours ; **EX-23** : la double confirmation de « tout effacer ».
-5. **RM-01** (« — » sans séance), **RM-06** (fin de saison au 31 juillet).
-6. **NF-05**, **NF-06** et **NF-08** : les chiffres (44 points, 500 membres) sont des propositions.
+- 2026-11-26 : EX-09 (créneau en cours ou le plus proche), EX-36 et EX-38 (version de l'ancienne appli), RM-01, RM-06, EX-21, EX-23, EX-06, NF-06 et NF-08 validés tels que proposés. EX-17 et EX-33 gardés ; tablette en portrait seul (NF-05) ; appel sans créneau ajouté (EX-39).
