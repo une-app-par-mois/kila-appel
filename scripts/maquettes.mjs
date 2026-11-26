@@ -23,6 +23,8 @@ const membres = [
 // Chaque écran : id, lot, titre, exigences couvertes, onglet actif, contenu HTML.
 const ecrans = [];
 const ecran = (id, lot, titre, exigences, onglet, corps) => ecrans.push({ id, lot, titre, exigences, onglet, corps });
+// Écrans validés au lot 1 et modifiés au lot 2 : à revalider.
+const MODIFIES = ['parametres', 'creneaux', 'accueil'];
 
 const go = (id, txt, cls = 'btn-p') => `<button class="${cls}" data-go="${id}">${txt}</button>`;
 const section = (t) => `<h3 class="section">${t}</h3>`;
@@ -60,7 +62,7 @@ ${carte(`
 ${ligne('<span class="rouge">●</span> Benjamins lundi', 'Lundi 24 nov. · 18:00', 'data-go="appel"')}
 `)}
 ${carte(`<div class="l-titre">Pas de sauvegarde depuis 34 jours</div><div class="l-sous">Vos données ne vivent que sur cet appareil.</div>${go('donnees', 'Sauvegarder maintenant', 'btn-s')}`, 'bandeau')}
-<p class="note">Lot 2 : la frise des séances (F-12) et les alertes d'assiduité (F-04) prendront place ici.</p>`);
+<p class="note">Version finale avec frise et alertes : <a class="lien" data-go="accueil-complet">Accueil complet</a> (lot 2).</p>`);
 
 // 03 — Recherche contact d'urgence
 ecran('urgence', 1, "Recherche d'un contact d'urgence", 'EX-06, EX-05', 'accueil', `
@@ -132,6 +134,8 @@ ecran('parametres', 1, 'Paramètres', 'EX-01 à EX-07, EX-19 à EX-24', 'paramet
 ${titre('Paramètres')}
 ${section('Organisation')}
 ${carte(`${ligne('Saisons', 'Active : 2026-2027', 'data-go="saisons"')}${ligne('Groupes', '3 groupes', 'data-go="groupes"')}${ligne('Membres', '65 membres', 'data-go="membres"')}${ligne('Créneaux', '3 créneaux', 'data-go="creneaux"')}`)}
+${section('Réglages')}
+${carte(`${ligne('Relance', 'Activée · 30 min', 'data-go="relance"')}${ligne("Alertes d'assiduité", 'Après 3 absences', 'data-go="assiduite"')}`)}
 ${section('Données')}
 ${carte(`${ligne('Sauvegarde et restauration', 'Dernière : il y a 34 jours', 'data-go="donnees"')}${ligne('Conservation', '3 saisons', 'data-go="donnees"')}${ligne('Tout effacer', '', 'data-go="tout-effacer"')}`)}
 ${section('À propos')}
@@ -176,14 +180,15 @@ ${titre('Membres', 'parametres')}
 <input class="champ" placeholder="🔍 Rechercher un membre">
 <div class="filtres"><span class="filtre on">Tous les groupes</span><span class="filtre">Archivés (4)</span></div>
 ${carte(membres.slice(0, 7).map((p, i) => ligne(`${p.prenom} ${p.nom}`, ['Poussins mercredi', 'Benjamins lundi', 'Poussins mercredi', 'Adultes jeudi', 'Poussins mercredi', 'Benjamins lundi', 'Aucun groupe'][i], 'data-go="membre"')).join(''))}
-<div class="duo">${go('membres', 'Importer (CSV)', 'btn-s tiers')}${go('membre-nouveau', 'Nouveau membre', 'btn-p deuxtiers')}</div>
+<div class="duo">${go('import', 'Importer (CSV)', 'btn-s tiers')}${go('membre-nouveau', 'Nouveau membre', 'btn-p deuxtiers')}</div>
 <p class="note">« Importer (CSV) » : lot 2 (F-07).</p>`);
 
 // 14a — Liste des créneaux (EX-07)
 ecran('creneaux', 1, 'Créneaux', 'EX-07', 'parametres', `
 ${titre('Créneaux', 'parametres')}
 ${carte(`${ligne('Mercredi 14:00 – 15:30', 'Poussins mercredi · Gymnase Jean-Moulin', 'data-go="creneau-modif"')}${ligne('Lundi 18:00 – 19:30', 'Benjamins lundi · Dojo municipal', 'data-go="creneau"')}${ligne('Jeudi 20:00 – 21:30', 'Adultes jeudi · Dojo municipal', 'data-go="creneau"')}`)}
-${go('creneau', 'Nouveau créneau')}`);
+<div class="duo">${go('creneau', 'Chaque semaine', 'btn-s tiers')}${go('creneau-ponctuel', 'Nouveau créneau', 'btn-p deuxtiers')}</div>
+${carte(ligne('Stage de Noël', '27, 28 et 29/12 · Poussins et Benjamins', 'data-go="creneau-ponctuel"'))}`);
 
 // 12 — Fiche membre (EX-03, EX-04, EX-05)
 ecran('membre', 1, 'Fiche membre', 'EX-03, EX-04, EX-05', 'parametres', `
@@ -352,13 +357,183 @@ ${section("Appel d'un groupe vide")}${carte(`<p>Ce groupe n'a aucun membre à ap
 ${section("Membre sans contact d'urgence")}${carte(`<p>Aucun contact d'urgence pour Léo Garcia.</p>${go('contact', '+ Ajouter un contact', 'btn-s')}`)}`);
 
 // 17 — Annuler une séance (lot 2, F-13) : laissée en lien depuis l'accueil, page d'attente
-ecran('annuler', 2, 'Annuler une séance', 'EX-38 (lot 2)', 'accueil', `
-${titre('Que s\'est-il passé ?', 'accueil')}
-<p class="note">Lot 2 : maquette à venir (F-13).</p>`);
+// ========== Lot 2 : F-04 à F-14 ==========
+const barre = (p, r, e, a) => `<div class="barre"><i class="s-present" style="width:${p}%"></i><i class="s-late" style="width:${r}%"></i><i class="s-excused" style="width:${e}%"></i><i class="s-absent" style="width:${a}%"></i></div>`;
+const taux = (t) => `<span class="mono taux">${t}</span>`;
+const frise = () => {
+  const jours = [['Lun 24', 'manquant', 'Benjamins'], ['Mer 19', 'fait', 'Poussins'], ['Jeu 20', 'fait', 'Adultes'], ['Mer 26', 'maintenant', 'Poussins'], ['Jeu 27', 'preparee', 'Adultes'], ['Lun 01', 'avenir', 'Benjamins'], ['Mer 03', 'annulee', 'Poussins']];
+  const lib = { manquant: 'Appel manquant', fait: 'Fait', maintenant: 'Maintenant', preparee: 'Préparée', avenir: 'À venir', annulee: 'Annulée' };
+  return `<div class="frise">${jours.map(([d, k, g]) => `<div class="pastel f-${k}" data-go="${k === 'manquant' || k === 'maintenant' ? 'appel' : k === 'avenir' || k === 'preparee' ? 'preparation' : k === 'fait' ? 'seance' : 'seance-annulee'}"><div class="mono">${d}</div><div class="l-titre">${g}</div><div class="etat">${lib[k]}</div></div>`).join('')}</div>`;
+};
 
-ecran('stats', 2, 'Statistiques', 'EX-27 (lot 2)', 'stats', `
+// F-12, F-04 — Accueil complet
+ecran('accueil-complet', 2, 'Accueil complet (frise et alertes)', 'EX-35, EX-25, EX-09, EX-17', 'accueil', `
+${titre('Mercredi 26 nov.')}
+<div class="recherche" data-go="urgence">🔍 Contact d'urgence : rechercher un membre</div>
+${frise()}
+<p class="note">Frise : 28 jours en arrière, 7 en avant, défilement horizontal ; centrée sur aujourd'hui.</p>
+${section('Maintenant')}
+${carte(`<div class="l-titre gros">Poussins mercredi</div><div class="l-sous">14:00 – 15:30 · Gymnase Jean-Moulin · 22 membres</div><div class="duo">${go('annuler', 'Annuler', 'btn-s tiers')}${go('appel', "Faire l'appel", 'btn-p deuxtiers')}</div>`)}
+${section("Alertes d'assiduité")}
+${carte(`<div class="rang" data-go="alerte"><div><div class="l-titre">Hugo Moreau</div><div class="l-sous">Poussins mercredi</div></div><span class="rouge mono">4 absences</span></div><div class="rang" data-go="alerte"><div><div class="l-titre">Rose André</div><div class="l-sous">Benjamins lundi</div></div><span class="rouge mono">3 absences</span></div>`)}`);
+
+// F-04 — Traiter une alerte
+ecran('alerte', 2, "Alerte d'assiduité", 'EX-25, EX-26', 'accueil', `
+${titre('Hugo Moreau', 'accueil-complet')}
+<div class="l-sous sous-titre">Poussins mercredi · 4 absences non excusées de suite</div>
+${carte(`<div class="l-sous">Dernières séances</div><div class="cases">${['absent', 'absent', 'absent', 'absent', 'present', 'excused'].map((k) => `<span class="cas s-${k}">${ico[k]}</span>`).join('')}</div><p class="l-sous">De la plus récente à la plus ancienne.</p>`)}
+${go('urgence', "Voir ses contacts d'urgence", 'btn-s')}
+${go('accueil-complet', 'Marquer comme traitée')}
+<p class="note">L'alerte réapparaît si la série s'allonge (EX-26).</p>`);
+
+// F-05 — Statistiques
+ecran('stats', 2, 'Statistiques', 'EX-27, RM-01', 'stats', `
 ${titre('Statistiques')}
-<p class="note">Lot 2 : maquette à venir (F-05, F-09, F-14).</p>`);
+<div class="filtres"><span class="filtre on">Saison</span><span class="filtre">Ce mois</span><span class="filtre" data-go="periode">Dates…</span></div>
+<div class="deux">${carte(`<div class="l-sous">Taux de présence</div><div class="chiffre mono">87 %</div>`)}${carte(`<div class="l-sous">Séances</div><div class="chiffre mono">112</div>`)}</div>
+${section('Par groupe')}
+${carte(`<div data-go="stats-groupe" class="sg"><div class="rang"><span class="l-titre">Poussins mercredi</span>${taux('91 %')}</div>${barre(84, 7, 4, 5)}</div><div data-go="stats-groupe" class="sg"><div class="rang"><span class="l-titre">Benjamins lundi</span>${taux('82 %')}</div>${barre(74, 8, 5, 13)}</div><div data-go="stats-groupe" class="sg"><div class="rang"><span class="l-titre">Adultes jeudi</span>${taux('—')}</div><p class="l-sous">Aucune séance sur la période.</p></div>`)}
+<div class="legende">${['present', 'late', 'excused', 'absent'].map((k) => `<span><i class="carre s-${k}"></i>${st[k].libelle}</span>`).join('')}</div>
+<div class="duo">${go('export-csv', 'Exporter (CSV)', 'btn-s tiers')}${go('rapport', 'Rapport PDF', 'btn-s deuxtiers')}</div>
+<p class="note">« — » et non 0 % sans séance (RM-01).</p>`);
+
+ecran('periode', 2, 'Choix d\'une période', 'EX-27', 'stats', `
+${titre('Période', 'stats')}
+<div class="deux"><div><label>Du</label><div class="champ mono">01/09/2026</div></div><div><label>Au</label><div class="champ mono">26/11/2026</div></div></div>
+${go('stats', 'Appliquer')}`);
+
+// F-05, F-14 — Groupe : membres et podium
+ecran('stats-groupe', 2, 'Statistiques d\'un groupe (podium)', 'EX-27, EX-37', 'stats', `
+${titre('Poussins mercredi', 'stats')}
+<div class="l-sous sous-titre">Saison 2026-2027 · 12 séances</div>
+${section('Podium')}
+${carte(`<div class="podium"><div class="marche m2"><div class="mono">2</div>Emma D.<br><span class="mono">96 %</span></div><div class="marche m1"><div class="mono">1</div>Léa M. · Zoé B.<br><span class="mono">100 %</span></div><div class="marche m3"><div class="mono">3</div>Jules L.<br><span class="mono">92 %</span></div></div><p class="l-sous">Ex æquo au même rang.</p>`)}
+${section('Par membre')}
+${carte([['Zoé Blanc', '100 %'], ['Emma Durand', '96 %'], ['Jules Lefebvre', '92 %'], ['Léa Michel', '100 %'], ['Hugo Moreau', '58 %']].map(([n, t]) => `<div class="rang" data-go="stats-membre"><span>${n}</span>${taux(t)}</div>`).join(''))}
+<p class="l-sous">Triés par nom ; 22 membres.</p>`);
+
+ecran('stats-membre', 2, "Statistiques d'un membre", 'EX-27', 'stats', `
+${titre('Hugo Moreau', 'stats-groupe')}
+<div class="l-sous sous-titre">Poussins mercredi · saison 2026-2027</div>
+${carte(`<div class="chiffre mono">58 %</div>${barre(50, 8, 8, 34)}<p class="l-sous mono">6 présent · 1 retard · 1 excusé · 4 absent</p>`)}
+${section('Séance par séance')}
+${carte(`<div class="cases">${['present', 'present', 'late', 'present', 'excused', 'present', 'present', 'present', 'absent', 'absent', 'absent', 'absent'].map((k) => `<span class="cas s-${k}">${ico[k]}</span>`).join('')}<span class="cas vide"></span></div><p class="l-sous">Case vide : séance hors inscription.</p>`)}`);
+
+// F-06 — Relance
+ecran('relance', 2, 'Réglage de la relance', 'EX-28, EX-29', 'parametres', `
+${titre('Relance', 'parametres')}
+${carte(`<div class="rang"><div><div class="l-titre">Me relancer si l'appel n'est pas fait</div><div class="l-sous">Notification sur cet appareil, jamais envoyée ailleurs</div></div><span class="interrupteur on"></span></div><div class="rang"><span>Après</span><span class="champ mini mono">30 min ▾</span><span>le début du créneau</span></div>`)}
+${carte(`<div class="l-titre">Notifications refusées dans les réglages du téléphone</div><p class="l-sous">La relance est activée ici mais ne peut pas s'afficher.</p>${go('relance', 'Ouvrir les réglages du téléphone', 'btn-s')}`, 'bandeau')}
+<p class="note">L'interrupteur montre l'état effectif : préférence et permission du système (EX-29).</p>`);
+
+ecran('permission', 2, 'Demande de permission de notification', 'EX-29', 'parametres', `
+${titre('Autoriser les notifications ?', 'relance')}
+${carte(`<p>Pour vous relancer quand un appel n'est pas fait, l'appli doit afficher des notifications.</p><p class="l-sous">Elles nomment le groupe, jamais un membre. Rien n'est envoyé hors de l'appareil.</p>`)}
+${go('relance', 'Continuer')}${go('relance', 'Pas maintenant', 'btn-s')}
+<p class="note">Affiché à l'activation de la relance, juste avant la demande du système.</p>`);
+
+ecran('notification', 2, 'Relance sur l\'écran verrouillé', 'EX-28, ABS-04', null, `
+<div class="verrou"><div class="mono heure">14:30</div>${carte(`<div class="l-sous">Ki&La · maintenant</div><div class="l-titre">Appel non fait : Poussins mercredi</div><div class="l-sous">Le créneau a commencé à 14:00.</div>`)}</div>
+<p class="note">Le groupe seul, jamais un nom de membre. Un appui ouvre l'appel.</p>`);
+
+ecran('assiduite', 2, "Réglage des alertes d'assiduité", 'EX-25', 'parametres', `
+${titre("Alertes d'assiduité", 'parametres')}
+${carte(`<div class="rang"><span>Alerter après</span><span class="champ mini mono">3 ▾</span><span>absences de suite</span></div><p class="l-sous">Seules les absences non excusées comptent.</p>`)}`);
+
+// F-07 — Import CSV
+ecran('import', 2, 'Import CSV : choisir le fichier', 'EX-30', 'parametres', `
+${titre('Importer des membres', 'membres')}
+${carte(`<p>Préparez un tableau (Excel, LibreOffice…) avec une ligne par membre, enregistré au format <b>CSV</b>.</p><table class="exemple mono"><tr><th>nom</th><th>prenom</th><th>date_naissance</th><th>telephone</th><th>groupe</th></tr><tr><td>Colin</td><td>Yanis</td><td>02/05/2016</td><td>0600000003</td><td>Poussins mercredi</td></tr></table><p class="l-sous">Seuls nom et prénom sont obligatoires. Les autres colonnes sont ignorées.</p>`)}
+${go('import-apercu', 'Choisir le fichier…')}`);
+
+ecran('import-apercu', 2, 'Import CSV : aperçu', 'EX-30', 'parametres', `
+${titre('Aperçu', 'import')}
+<div class="carte compteur mono"><span>24 lignes</span><span>21 à importer</span><span class="rouge">1 invalide</span><span>2 doublons</span></div>
+${section('Doublons')}
+${carte(`<div class="rang"><div><div class="l-titre">Léo Garcia</div><div class="l-sous mono">14/03/2017 · déjà dans l'appli</div></div><span class="filtre on">Ignorer</span></div><div class="rang"><div><div class="l-titre">Zoé Blanc</div><div class="l-sous mono">déjà dans l'appli</div></div><span class="filtre on">Ignorer</span></div>`)}
+${section('Ligne invalide')}
+${carte(`<div class="rang"><div><div class="l-titre">Ligne 17</div><div class="l-sous">Prénom manquant</div></div></div>`)}
+${go('import-resultat', 'Importer 21 membres')}
+<p class="note">Rien n'est écrit avant ce bouton.</p>`);
+
+ecran('import-resultat', 2, 'Import CSV : résultat', 'EX-30', 'parametres', `
+${titre('21 membres importés', 'membres')}
+${carte(`<p>21 membres ajoutés, dont 18 inscrits à leur groupe. 2 doublons ignorés, 1 ligne invalide.</p>`)}
+${go('membres', 'Voir les membres')}`);
+
+ecran('import-erreur', 2, 'Import CSV : fichier illisible', 'EX-30', 'parametres', `
+${titre('Fichier non reconnu', 'import')}
+${carte(`<p>Ce fichier ne contient pas de colonnes « nom » et « prenom ». Rien n'a été importé.</p>`, 'bandeau')}
+${go('import', 'Choisir un autre fichier')}`);
+
+// F-08, F-09 — Exports
+ecran('export-csv', 2, 'Export CSV des présences', 'EX-31', 'stats', `
+${titre('Exporter les présences', 'stats')}
+<label>Groupe</label><div class="champ">Tous les groupes ▾</div>
+<div class="deux"><div><label>Du</label><div class="champ mono">01/09/2026</div></div><div><label>Au</label><div class="champ mono">26/11/2026</div></div></div>
+${carte(`<p>Le fichier contient les noms des membres et leurs présences, <b>en clair</b>. Partagez-le seulement avec qui doit le recevoir.</p>`, 'bandeau')}
+${go('export-csv', 'Exporter (2 418 lignes)')}`);
+
+ecran('rapport', 2, 'Rapport PDF', 'EX-32', 'stats', `
+${titre('Rapport PDF', 'stats')}
+<label>Période</label><div class="champ">Saison 2026-2027 ▾</div>
+<label>Groupes</label><div class="champ">Tous les groupes ▾</div>
+${carte(`<div class="feuille"><div class="l-titre">Ki&La · Rapport de présence</div><div class="l-sous mono">01/09/2026 – 26/11/2026</div><div class="barre"><i class="s-present" style="width:80%"></i><i class="s-late" style="width:7%"></i><i class="s-excused" style="width:5%"></i><i class="s-absent" style="width:8%"></i></div><div class="l-sous">Synthèse, puis une page par groupe…</div></div>`)}
+${go('rapport', 'Créer et partager le PDF')}
+<p class="note">Format A4. Contenu exact : question ouverte du PRD (→ ticket F-09).</p>`);
+
+// F-10, F-11 — Créneau ponctuel et plusieurs groupes
+ecran('creneau-ponctuel', 2, 'Créneau ponctuel (plusieurs groupes)', 'EX-33, EX-34', 'parametres', `
+${titre('Nouveau créneau', 'creneaux')}
+<div class="bascule"><span>Chaque semaine</span><span class="on">À des dates précises</span></div>
+<label>Dates</label><div class="filtres"><span class="filtre on mono">27/12</span><span class="filtre on mono">28/12</span><span class="filtre on mono">29/12</span><span class="filtre">+ date</span></div>
+<div class="deux"><div><label>Début</label><div class="champ mono">10:00</div></div><div><label>Durée</label><div class="champ mono">3 h</div></div></div>
+<label>Groupes</label><div class="filtres"><span class="filtre on">Poussins mercredi</span><span class="filtre on">Benjamins lundi</span><span class="filtre">Adultes jeudi</span></div>
+<label>Nom <span class="facultatif">facultatif</span></label><div class="champ">Stage de Noël</div>
+${go('creneaux', 'Enregistrer le créneau')}
+<p class="note">Récurrent ou ponctuel : un seul formulaire ; plusieurs groupes possibles dans les deux cas. Un ponctuel réclame un appel pour chacune de ses dates passées (EX-33).</p>`);
+
+ecran('appel-multi', 2, 'Appel de plusieurs groupes', 'EX-34', 'appel', `
+${titre('Stage de Noël', 'accueil-complet')}
+<div class="l-sous sous-titre">Sam. 27/12/2026 · 10:00 · 2 groupes</div>
+${section('Poussins mercredi')}
+${carte(membres.slice(0, 3).map((p) => `<div class="rang"><span class="nom">${p.prenom} ${p.nom}</span>${pastille('present')}</div>`).join(''))}
+${section('Benjamins lundi')}
+${carte(membres.slice(3, 6).map((p, i) => `<div class="rang"><span class="nom">${p.prenom} ${p.nom}</span>${pastille(i === 1 ? 'absent' : 'present')}</div>`).join(''))}
+${go('historique', "Enregistrer l'appel")}
+<p class="note">Chaque présence compte pour le groupe du membre (RM-03).</p>`);
+
+// F-13 — Préparer, annuler, rétablir
+ecran('preparation', 2, "Préparation d'un appel", 'EX-36', 'appel', `
+${titre('Adultes jeudi', 'accueil-complet')}
+<div class="l-sous sous-titre">Jeu. 27/11/2026 · 20:00 · <b>préparation</b></div>
+${carte(`<p class="l-sous">La séance n'a pas commencé : notez les excusés à l'avance. Elle ne compte nulle part avant d'être enregistrée le jour venu.</p>`)}
+${carte(membres.slice(0, 5).map((p, i) => `<div class="rang"><span class="nom">${p.prenom} ${p.nom}</span>${pastille(i === 2 ? 'excused' : 'preparedPresent')}</div>`).join(''))}
+${go('accueil-complet', 'Enregistrer la préparation')}
+<p class="note">Deux statuts seulement : Attendu ↔ Excusé. La relance part quand même.</p>`);
+
+ecran('annuler', 2, 'Annuler une séance', 'EX-38', 'accueil', `
+${titre("Que s'est-il passé ?", 'accueil-complet')}
+<div class="l-sous sous-titre">Poussins mercredi · mer. 26/11/2026 · 14:00</div>
+${go('accueil-complet', 'La séance a été annulée', 'btn-s choix')}
+${go('accueil-complet', 'Aucune séance prévue ce jour-là', 'btn-s choix')}
+<p class="l-sous">Vacances, salle fermée…</p>
+${go('accueil-complet', 'Garder la séance')}
+<p class="note">Annulée et non planifiée : pas de relance, rien dans les statistiques, distinguées dans l'historique. Possible tant que la séance n'a pas commencé.</p>`);
+
+ecran('seance-annulee', 2, "Séance annulée : rétablir", 'EX-38', 'historique', `
+${titre('Poussins mercredi', 'historique')}
+<div class="l-sous sous-titre">Mer. 03/12/2026 · <span class="gris">Annulée</span></div>
+${carte(`<p>Cette séance est marquée annulée. Elle ne réclame pas d'appel et ne compte pas dans les statistiques.</p>`)}
+${go('accueil-complet', 'Rétablir la séance', 'btn-s')}
+<p class="note">Une préparation déjà posée revient intacte.</p>`);
+
+ecran('vides-lot2', 2, 'États vides du lot 2', 'EX-25, EX-27', null, `
+${titre('États vides')}
+${section("Alertes d'assiduité")}${carte(`<p>Aucune alerte : personne n'a manqué ${'3'} séances de suite.</p>`)}
+${section('Statistiques')}${carte(`<p>Pas encore de statistiques : elles apparaissent après le premier appel enregistré.</p>${go('appel', "Faire l'appel")}`)}
+${section('Frise')}${carte(`<p>Aucun créneau déclaré : la frise se remplira dès votre premier créneau.</p>${go('creneau', 'Nouveau créneau')}`)}
+${section('Export sur une période sans séance')}${carte(`<p>Aucune présence sur cette période : rien à exporter.</p>`)}`);
 
 // ---------- Page ----------
 const ecransJson = JSON.stringify(ecrans.map(({ id, lot, titre: t, exigences }) => ({ id, lot, titre: t, exigences })));
@@ -412,7 +587,18 @@ label{display:block;font-size:14px;color:var(--texte2);margin:12px 0 4px}.facult
 .filtres{display:flex;gap:8px;margin:8px 0}.filtre{border:1.5px solid var(--quad);border-radius:20px;padding:6px 12px;background:#fff;font-size:14px}.filtre.on{border-color:var(--encre);color:var(--encre);font-weight:600}
 .pastille{min-width:84px;text-align:center;border-radius:${j.rayons.pastille}px;padding:8px 10px;font-weight:600;font-size:14px;white-space:nowrap}
 ${Object.entries(st).map(([k, v]) => `.s-${k}{background:${v.fond};color:${v.texte};${v.bordure ? `border:1.5px solid ${v.bordure};` : ''}}`).join('')}
-.case{width:30px;height:30px;border-radius:8px;border:2px solid var(--quad);display:flex;align-items:center;justify-content:center;font-weight:700}.case.on{background:var(--encre);border-color:var(--encre);color:#fff}.carre{display:inline-block;width:10px;height:10px;margin-right:5px;border-radius:2px}
+.case{width:30px;height:30px;border-radius:8px;border:2px solid var(--quad);display:flex;align-items:center;justify-content:center;font-weight:700}.case.on{background:var(--encre);border-color:var(--encre);color:#fff}.barre{display:flex;height:12px;border-radius:4px;overflow:hidden;margin:6px 0 12px}.barre i{display:block;height:100%}
+.taux{font-size:18px;color:var(--encre)}.chiffre{font-size:26px;color:var(--encre)}.legende{display:flex;gap:12px;font-size:13px;color:var(--texte2);flex-wrap:wrap}
+.sg{cursor:pointer}.cases{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}.cas{width:22px;height:22px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:12px}.cas.vide{background:var(--quad)}
+.frise{display:flex;gap:8px;overflow-x:auto;padding:6px 0}.pastel{flex:none;width:92px;background:#fff;border:1px solid var(--quad);border-radius:12px;padding:8px;font-size:12px;cursor:pointer}.pastel .etat{font-weight:600;margin-top:4px}
+.f-manquant{border:1.5px solid var(--marge)}.f-manquant .etat{color:var(--marge)}.f-fait .etat{color:var(--encre)}.f-maintenant{border:2px solid var(--encre)}.f-maintenant .etat{color:var(--encre)}.f-preparee .etat,.f-avenir .etat,.f-annulee .etat{color:var(--texte2)}
+.podium{display:flex;align-items:flex-end;gap:6px;text-align:center;font-size:13px}.marche{flex:1;background:var(--quad);border-radius:8px 8px 0 0;padding:6px 2px}.marche .mono{font-size:20px;color:var(--encre)}.m1{height:120px}.m2{height:96px}.m3{height:80px}
+.interrupteur{width:50px;height:30px;border-radius:15px;background:var(--quad);position:relative;flex:none}.interrupteur.on{background:var(--encre)}.interrupteur.on::after{content:"";position:absolute;right:3px;top:3px;width:24px;height:24px;border-radius:50%;background:#fff}
+.verrou{background:#1b2233;margin:-16px -20px 0 -44px;padding:60px 20px;min-height:500px}.verrou .heure{color:#fff;font-size:56px;text-align:center;margin-bottom:24px}
+.exemple{font-size:11px;border-collapse:collapse;width:100%;margin:8px 0}.exemple th,.exemple td{border:1px solid var(--quad);padding:3px}
+.bascule{display:flex;border:1.5px solid var(--quad);border-radius:12px;overflow:hidden;margin:8px 0}.bascule span{flex:1;text-align:center;padding:10px;background:#fff}.bascule .on{background:var(--encre);color:#fff;font-weight:600}
+.feuille{border:1px solid var(--quad);padding:12px;aspect-ratio:1/1.41;max-height:240px}.btn-s.choix{color:var(--texte);text-align:left}
+.carre{display:inline-block;width:10px;height:10px;margin-right:5px;border-radius:2px}
 .compteur{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px}
 .brouillon{font-size:13px;color:var(--texte2);margin:4px 0 8px}
 .nom{font-size:18px;font-weight:600}
@@ -441,13 +627,14 @@ ${ecrans.map((e) => `<section class="ecran" id="e-${e.id}" hidden><div class="co
 <div class="verdicts" id="verdicts"><button data-v="ok">✓ Validé</button><button data-v="revoir">À revoir</button><button data-v="refuse">Refusé</button></div>
 <label for="r-com">Commentaire</label><textarea id="r-com" placeholder="Ce qui ne va pas, ce qui manque…"></textarea></aside>
 <script>
+const MODIFIES=${JSON.stringify(MODIFIES)};
 const ECRANS=${ecransJson}, MEMBRES=${membresJson}, ST=${statutsJson};
 const ONGLET=${JSON.stringify(Object.fromEntries(ecrans.map((e) => [e.id, e.onglet])))};
 const CLE='kila-maquettes-notes-v1';
 const notes=JSON.parse(localStorage.getItem(CLE)||'{}');
 const sauver=()=>localStorage.setItem(CLE,JSON.stringify(notes));
 let courant='accueil';
-function menu(){document.getElementById('menu').innerHTML=[1,2].map(l=>'<div class="lot">Lot '+l+'</div>'+ECRANS.filter(e=>e.lot===l).map(e=>{const v=(notes[e.id]||{}).verdict;return '<a data-go="'+e.id+'" class="'+(e.id===courant?'on':'')+'">'+e.titre+'<span class="v">'+(v==='ok'?'✓':v==='revoir'?'!':v==='refuse'?'✕':'')+'</span></a>'}).join('')).join('')}
+function menu(){document.getElementById('menu').innerHTML=[1,2].map(l=>'<div class="lot">Lot '+l+'</div>'+ECRANS.filter(e=>e.lot===l).map(e=>{const v=(notes[e.id]||{}).verdict;return '<a data-go="'+e.id+'" class="'+(e.id===courant?'on':'')+'">'+e.titre+(MODIFIES.includes(e.id)?' <i>(modifié lot 2)</i>':'')+'<span class="v">'+(v==='ok'?'✓':v==='revoir'?'!':v==='refuse'?'✕':'')+'</span></a>'}).join('')).join('')}
 function aller(id){if(!document.getElementById('e-'+id))return;courant=id;document.querySelectorAll('.ecran').forEach(s=>s.hidden=s.id!=='e-'+id);
 document.querySelectorAll('.onglet').forEach(o=>o.classList.toggle('on',o.dataset.tab===ONGLET[id]));document.getElementById('onglets').style.display=ONGLET[id]?'flex':'none';
 const e=ECRANS.find(x=>x.id===id);document.getElementById('r-titre').textContent=e.titre;document.getElementById('r-ex').textContent='Couvre : '+e.exigences+' · lot '+e.lot;
