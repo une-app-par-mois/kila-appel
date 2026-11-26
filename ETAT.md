@@ -10,8 +10,8 @@ Dernière mise à jour : 2026-11-26
 
 ## Prochaines étapes
 
-1. Ticket 004 : tests d'abord, build local et audit, `/code-review`, `/security-review`, relecture du porteur, fusion dans le groupe.
-2. PR du jalon 0 vers `main` : CI complète (tests, sécurité, builds Android et iOS) ; APK installé sur le téléphone, migration vue dans `adb logcat` (fin d'ADR-008).
+1. Ticket 004 : `/code-review`, `/security-review`, **relecture du porteur**, puis fusion dans le groupe. Déjà vérifié : APK de version installé et ouvert sur le Galaxy A55, `DB_READY { version: 1 }` dans `adb logcat`, une seule permission (signature), audit en échec avec `CAMERA` ajoutée puis retirée.
+2. PR du jalon 0 vers `main` : CI complète, dont le **premier build iOS** (`macos-26`, jamais essayé : plusieurs essais possibles) et l'APK en artefact.
 3. Prétest de fin de jalon, réévaluation du calendrier (`docs/PLAN.md` §6).
 
 ## Points d'attention
