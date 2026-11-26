@@ -1,18 +1,22 @@
 // Fiche d'un membre (maquette, EX-03) : chaque champ s'enregistre en le quittant s'il est valide,
 // sinon l'erreur reste sous le champ (décision du porteur du 2026-11-26). Les enregistrements se
 // suivent, chacun parti du dernier enregistré ; une saisie non quittée s'enregistre en sortant.
-// Archiver ou désarchiver ; supprimer après une confirmation qui dit ce qui sera effacé (ABS-05).
-// Sections Contacts (008) et Groupes (007c) : à venir.
+// Groupes en cours ou à venir (EX-04) : « Retirer » à une date ; « Ajouter à un groupe » inscrit
+// aujourd'hui (décision du porteur du 2026-11-26). Archiver ou désarchiver ; supprimer après une
+// confirmation qui dit ce qui sera effacé (ABS-05). Section Contacts : ticket 008.
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { labels } from '@/config/libelles';
 import type { MemberDeletionImpact } from '@/data/membersRepo';
 import { parseDisplayDate, toDisplayDate, toIsoDate } from '@/domain/formats';
 import type { MemberInput } from '@/domain/validation';
+import { useGroups } from '@/hooks/useGroups';
 import { useMember } from '@/hooks/useMembers';
+import { useSeasons } from '@/hooks/useSeasons';
 import { Button } from '@/ui/Button';
 import { ConfirmDialog } from '@/ui/ConfirmDialog';
 import { errorMessage } from '@/ui/errorMessage';
+import { MemberGroups } from '@/ui/MemberGroups';
 import { Screen } from '@/ui/Screen';
 import { TextField } from '@/ui/TextField';
 
@@ -39,7 +43,10 @@ export default function MemberSheet() {
   const id = idFrom(useLocalSearchParams<{ id: string }>().id);
   const today = toIsoDate(new Date());
   const member$ = useMember(id, today);
-  const { member, loaded, loadFailed, update, updateOnLeave } = member$;
+  const { member, groups, loaded, loadFailed, update, updateOnLeave } = member$;
+  const { seasons, loadFailed: seasonsFailed } = useSeasons();
+  const active = seasons?.find((s) => s.isActive);
+  const { groups: seasonGroups, loadFailed: groupsFailed } = useGroups(active?.id ?? null);
   const [values, setValues] = useState<Record<Field, string>>({
     firstName: '',
     lastName: '',
@@ -153,12 +160,15 @@ export default function MemberSheet() {
     router.dismissTo('/membres');
   };
 
+  // Groupes de la saison active où il n'est ni inscrit ni attendu.
+  const addable = (seasonGroups ?? []).filter((g) => !groups.some((e) => e.groupId === g.id));
   const name = member ? t.fullName(member.firstName, member.lastName) : labels.members.title;
-  const screenError = loadFailed
-    ? labels.common.loadFailed
-    : loaded && member === null && !removed
-      ? labels.errors.NOT_FOUND
-      : formError;
+  const screenError =
+    loadFailed || seasonsFailed || groupsFailed
+      ? labels.common.loadFailed
+      : loaded && member === null && !removed
+        ? labels.errors.NOT_FOUND
+        : formError;
   return (
     <Screen
       title={name}
@@ -190,6 +200,16 @@ export default function MemberSheet() {
             onChangeText={edit('birthDate')}
             onBlur={() => saveField('birthDate')}
             error={errors.birthDate}
+          />
+          <MemberGroups
+            memberName={name}
+            archived={member.archivedAt !== null}
+            today={today}
+            groups={groups}
+            addable={addable}
+            busy={busy}
+            onAdd={(groupId) => void run(() => member$.enrollIn(groupId))}
+            onWithdraw={member$.withdraw}
           />
           {member.archivedAt === null ? (
             <Button

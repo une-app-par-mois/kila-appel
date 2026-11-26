@@ -38,6 +38,7 @@ describe('Dépôt des inscriptions (EX-04)', () => {
         firstName: 'Alix',
         lastName: 'Exemple',
         startDate: '2026-09-01',
+        endDate: null,
       },
       {
         enrollmentId: expect.any(Number),
@@ -45,6 +46,7 @@ describe('Dépôt des inscriptions (EX-04)', () => {
         firstName: 'Sam',
         lastName: 'Fictif',
         startDate: '2026-09-01',
+        endDate: null,
       },
     ]);
     await membersRepo(db).archive(s.otherMemberId, TODAY);
@@ -58,6 +60,51 @@ describe('Dépôt des inscriptions (EX-04)', () => {
         groupId: s.groupId,
         groupName: 'Poussins',
         startDate: '2026-09-01',
+        endDate: null,
+      },
+    ]);
+  });
+
+  it('inscriptions à venir d’un groupe ; date de fin prévue lue avec les inscrits du jour', async () => {
+    const repo = enrollmentsRepo(db);
+    await repo.enroll(s.groupId, [newcomer], '2027-01-05');
+    await repo.withdraw((await enrollmentOf(s.memberId))?.enrollmentId ?? 0, '2026-12-01');
+    expect(await repo.listUpcomingByGroup(s.groupId, TODAY)).toEqual([
+      {
+        enrollmentId: expect.any(Number),
+        memberId: newcomer,
+        firstName: 'Noah',
+        lastName: 'Girard',
+        startDate: '2027-01-05',
+        endDate: null,
+      },
+    ]);
+    expect(await enrollmentOf(s.memberId)).toMatchObject({ endDate: '2026-12-01' });
+    await membersRepo(db).archive(newcomer, TODAY);
+    expect(await repo.listUpcomingByGroup(s.groupId, TODAY)).toEqual([]);
+  });
+
+  it('groupes d’un membre : en cours et à venir, avec leurs dates', async () => {
+    const repo = enrollmentsRepo(db);
+    const { lastInsertRowId: other } = await db.execute(
+      "INSERT INTO groups (season_id, name) VALUES (?, 'Benjamins lundi')",
+      [s.seasonId],
+    );
+    await repo.enroll(other, [s.memberId], '2027-01-05');
+    expect(await repo.listByMember(s.memberId, TODAY)).toEqual([
+      {
+        enrollmentId: expect.any(Number),
+        groupId: other,
+        groupName: 'Benjamins lundi',
+        startDate: '2027-01-05',
+        endDate: null,
+      },
+      {
+        enrollmentId: expect.any(Number),
+        groupId: s.groupId,
+        groupName: 'Poussins',
+        startDate: '2026-09-01',
+        endDate: null,
       },
     ]);
   });

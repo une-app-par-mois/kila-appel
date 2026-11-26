@@ -1,6 +1,6 @@
 // Nouveau membre (maquette, EX-03) : nom et prénom obligatoires, date de naissance et groupe
 // facultatifs (et dits tels) ; inscrit au groupe choisi à partir d'aujourd'hui. Puis sa fiche.
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { labels } from '@/config/libelles';
@@ -30,6 +30,9 @@ const checkInput = (firstName: string, lastName: string, birth: string) => {
 
 export default function NewMember() {
   const router = useRouter();
+  // Depuis « Ajouter à un groupe » : ce groupe préchoisi, puis retour (décision du 2026-11-26).
+  const params = useLocalSearchParams<{ groupe?: string; retour?: string }>();
+  const presetGroup = params.groupe && /^\d+$/.test(params.groupe) ? Number(params.groupe) : null;
   const today = toIsoDate(new Date());
   const { seasons } = useSeasons();
   const active = seasons?.find((s) => s.isActive);
@@ -38,7 +41,7 @@ export default function NewMember() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [birth, setBirth] = useState('');
-  const [groupId, setGroupId] = useState<number | null>(null);
+  const [groupId, setGroupId] = useState<number | null>(presetGroup);
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const [formError, setFormError] = useState<string | undefined>();
   const saving = useRef(false);
@@ -59,7 +62,8 @@ export default function NewMember() {
     try {
       const birthDate = birth.trim() === '' ? null : parseDisplayDate(birth);
       const id = await create({ firstName, lastName, birthDate }, groupId);
-      router.replace(`/membres/${id}`);
+      if (params.retour === '1' && router.canGoBack()) router.back();
+      else router.replace(`/membres/${id}`);
     } catch (e) {
       const message = errorMessage(e);
       if ((e as { code?: string }).code === 'DATE_IN_FUTURE') setErrors({ birthDate: message });
