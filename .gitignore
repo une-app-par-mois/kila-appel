@@ -42,3 +42,7 @@ Thumbs.db
 
 # Réglages personnels de Claude Code
 .claude/settings.local.json
+
+# Projets natifs : régénérés par expo prebuild à chaque build (ADR-009)
+/android/
+/ios/

@@ -1,6 +1,6 @@
 # 004 — Builds sur la CI et audit des permissions
 
-Statut : à faire · Jalon : 0 · Zone sensible : oui · Trivial : non
+Statut : en cours · Jalon : 0 · Zone sensible : oui · Trivial : non
 
 ## Contexte
 
@@ -22,12 +22,12 @@ Lever le risque d'ADR-009 tôt : APK de développement installable, build iOS de
 
 ## Critères d'acceptation
 
-- [ ] L'APK de développement s'installe et s'ouvre sur le téléphone du porteur
-- [ ] Le build iOS simulateur réussit sur la CI
-- [ ] L'audit échoue si une permission non attendue apparaît (vérifié en en ajoutant une, puis retirée)
-- [ ] `INTERNET` absente de la liste attendue du build de production
-- [ ] La migration 1 s'applique sur le téléphone (base ouverte, `user_version` = 1) : fin de la vérification d'ADR-008
-- [ ] Aucun filtre d’intention de lien profond (`scheme`) dans le manifeste du binaire de production (scheme retiré au ticket 001, ABS-07)
+- [x] L'APK de développement s'installe et s'ouvre sur le téléphone du porteur
+- [ ] Le build iOS simulateur réussit sur la CI (vérifié à la PR du jalon 0 vers `main` : les workflows ne tournent que là)
+- [x] L'audit échoue si une permission non attendue apparaît (vérifié en en ajoutant une, puis retirée)
+- [x] `INTERNET` absente de la liste attendue du build de production
+- [x] La migration 1 s'applique sur le téléphone (base ouverte, `user_version` = 1) : fin de la vérification d'ADR-008
+- [x] Aucun filtre d’intention de lien profond (`scheme`) dans le manifeste du binaire de production (scheme retiré au ticket 001, ABS-07)
 
 ## Tests attendus
 

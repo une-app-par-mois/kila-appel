@@ -17,3 +17,7 @@ Simuler la base (ne teste pas le SQL) ; better-sqlite3 (dépendance native de pl
 ## Conséquences
 
 À confirmer au ticket d'outillage : mêmes requêtes sur `node:sqlite` et `expo-sqlite`.
+
+- **Vérifié le 2026-11-26** : migration 1, cascades et contraintes testées sur `node:sqlite` (SQLite 3.51.3) et, par une imitation fidèle, sur l'adaptateur `expo-sqlite` (ticket 002).
+- **Vérifié le 2026-11-26 sur téléphone** (Samsung Galaxy A55, Android, APK de version du ticket 004) : la base s'ouvre et la migration 1 s'applique avec `expo-sqlite` (SQLite 3.53.3 embarqué). Le journal affiche `[kila] DB_READY { version: 1 }` (`adb logcat`).
+- Non vérifié sur iOS réel : pas d'iPhone au jalon 0 (build simulateur seulement).

@@ -2,7 +2,7 @@
 /** @type {import('jest').Config} */
 module.exports = {
   preset: 'jest-expo',
-  roots: ['<rootDir>/src'],
+  roots: ['<rootDir>/src', '<rootDir>/scripts', '<rootDir>/plugins'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },

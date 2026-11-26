@@ -127,9 +127,10 @@ Locales uniquement. À chaque écriture qui touche créneaux, séances ou régla
 
 ## 6. Permissions et confidentialité
 
-- `blockedPermissions` dans la configuration Expo pour tout ce que l'appli n'utilise pas ; `INTERNET` retirée du binaire de production (ABS-01).
-- **Audit sur le binaire construit** (`aapt2 dump permissions`), pas sur le manifeste : à la CI de fin de jalon et à chaque version.
-- iOS : `ITSAppUsesNonExemptEncryption` = `false` ; aucune habilitation `aps-environment`.
+- `blockedPermissions` dans `app.json` : INTERNET (ABS-01), et les permissions qu'Expo ajoute par défaut sans que l'appli s'en serve (stockage externe, `SYSTEM_ALERT_WINDOW`, `VIBRATE`) ; `permissions: []`.
+- **Audit sur le binaire construit**, pas sur le manifeste : `scripts/audit-apk.js` compare `aapt2 dump permissions` à `config/permissions-attendues.txt` (une seule permission, interne à AndroidX) et vérifie dans le manifeste compilé `allowBackup=false` et l'absence de `android:scheme` sous un `intent-filter`. Le bloc `<queries>` (scheme `https`) ajouté par Expo sert seulement à voir les navigateurs installés : ce n'est pas une entrée. Workflow `builds.yml`, à chaque PR vers `main`.
+- Sauvegarde système Android désactivée (`allowBackup: false`) : les données ne quittent pas l'appareil sans l'export explicite.
+- iOS : `ITSAppUsesNonExemptEncryption` = `false` ; aucune habilitation ; **aucun scheme d'URL** : Expo ajoute toujours le nom de paquet comme scheme, retiré par `plugins/withoutUrlScheme.js` (décision du porteur du 2026-11-26). `scripts/audit-ios.js` vérifie l'Info.plist **du binaire construit**, mais les habilitations sur le fichier du projet généré : le build simulateur n'est pas signé et n'en embarque pas. À contrôler sur le binaire signé au jalon 6.
 
 ## 7. Journaux
 
@@ -146,8 +147,10 @@ Liste fermée de ce qu'un journal peut contenir : code d'erreur, nom de l'opéra
 
 ## 9. Environnements et builds (ADR-009)
 
-- **Développement** : *development build* (`expo-dev-client`), pas Expo Go, pour éprouver notifications et configuration native.
-- **Binaires publiés : construits sur GitHub Actions uniquement** (décision du 2026-11-26) : `expo prebuild`, puis Gradle (Android, runner Linux) et Xcode (iOS, runner macOS) ; empreintes SHA-256 et attestation de provenance dans `release.yml`. Les clés de signature sont des secrets GitHub posés par le porteur, jamais dans le dépôt.
+- **Développement** : `npx expo start` pour le JavaScript ; **pas d'`expo-dev-client`** (il exige INTERNET et le serveur Metro). Sur téléphone, on installe l'**APK de version signé avec la clé de débogage publique** d'Expo : JavaScript embarqué, sans INTERNET, le binaire de production lui-même (décision du porteur du 2026-11-26). Il ne se publie pas : signature au jalon 6.
+- `expo prebuild` régénère `android/` et `ios/` à chaque build ; ils ne sont pas versionnés.
+- **Binaires construits sur GitHub Actions** (`builds.yml`, PR vers `main`) : APK de version et audit sur `ubuntu-24.04`, déposé en artefact (14 jours) ; build simulateur non signé et audit sur `macos-26`. Un build local sert seulement à vérifier avant la PR ; c'est le build de la CI qui fait foi.
+- **Publication** (`release.yml`, tag `vX.Y.Z`, jalon 6) : empreintes SHA-256 et attestation de provenance ; clés de signature en secrets GitHub posés par le porteur, jamais dans le dépôt.
 - `versionCode` / `buildNumber` dérivés du tag de version dans la CI, pour qu'ils ne divergent jamais des consoles.
 
 ## 10. Exigences non fonctionnelles
@@ -166,6 +169,7 @@ Liste fermée de ce qu'un journal peut contenir : code d'erreur, nom de l'opéra
 
 - 2026-11-26 : réglages dans SQLite, état React seul, icônes lucide-react-native, polices en fichiers `.ttf`, schéma complet dès la migration 1, builds sur GitHub Actions seul ; brouillon dans une table à part (`roll_call_drafts`) ; **noms de tables au pluriel** (évite le mot réservé `group`) ; tests de données avec `node:sqlite`, à confirmer au ticket d'outillage ; sauvegarde au format base SQLite brute (`.db`).
 - 2026-11-26 (ticket 001) : dépendances obligatoires d'expo-router et de Jest acceptées ; `react-dom` épinglée en 19.3.0 ; `expo-font` installée au ticket 003 (ABS-07).
+- 2026-11-26 (ticket 004) : binaire de test = APK de version avec la clé de débogage (pas d'`expo-dev-client`) ; migration vérifiée sur le téléphone par `adb logcat` (`[kila] DB_READY`) ; liste des permissions figée et validée ; scheme d'URL iOS retiré par un plugin local ; `actions/setup-java` v6.3.0 et `actions/upload-artifact` v7.0.2 épinglés par empreinte.
 - 2026-11-26 (ticket 003) : **expo-font accepté malgré sa capacité réseau** (`loadAsync` avec une URL) : seule son extension de build est utilisée, `loadAsync` et `useFonts` sont refusés par le contrôle SEC-01 ; polices téléchargées depuis github.com/IBM/plex, renommées d'après leur nom PostScript (même nom sur Android et iOS), empreintes dans `assets/fonts/SOURCES.md` ; journal : code et nombres ou booléens, clés en liste blanche (`…Id`, `…Count`, `version`, `changes`, `durationMs`, `ok`), donnée refusée remplacée par `LOG_REFUSED` sans erreur ; contrôles CONV-03, CONV-16, SEC-01 et SEC-03 par un test qui lit l'arbre syntaxique (`src/staticChecks.test.ts`), CONV-17 par Biome ; types Node des tests déclarés dans `src/node.d.ts`, invisibles pour l'appli (`tsconfig.json` sans les tests, `tsconfig.test.json` avec).
 - 2026-11-26 (ticket 002) : règles de suppression du §4.1 ; groupes et statuts du brouillon en tables filles en cascade (16 tables), brouillon rattaché à sa saison ; règle « dans une transaction, seulement `tx` » ; transactions sur la connexion principale par une file commune aux deux adaptateurs (`withExclusiveTransactionAsync` ouvre une connexion sans clés étrangères) ; séance d'un créneau supprimé sans colonne d'origine ; types de `node:sqlite` déclarés localement (pas de `@types/node`) ; vérification d'ADR-008 complétée sur téléphone au ticket 004.
 
