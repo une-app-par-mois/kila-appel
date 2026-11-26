@@ -90,11 +90,11 @@ Apple et Google demandent de déclarer si l'éditeur est un **commerçant** (*tr
 | Déclarer le public cible 18+ (Play) et remplir le questionnaire d'âge (Apple) | Porteur | À la soumission |
 | Auditer les permissions et l'absence de chiffrement sur les binaires | IA (CI), porteur (lecture) | Fin de jalon et chaque version |
 | Générer le registre des licences | IA | Chaque version |
+| Inventorier les licences des bibliothèques natives (Gradle, CocoaPods : AndroidX, Kotlin, OkHttp, Hermes…) et les ajouter au registre affiché (EX-42), décision du porteur du 2026-11-26 | IA | Avant la première soumission |
 | Préparer un jeu de données fictif pour la revue des stores (une appli vide est souvent refusée) | IA | Avant la première soumission |
 
 ## 9. Sources (consultées le 2026-11-26)
 
-- [ ] Inventaire des licences des bibliothèques natives (Gradle, CocoaPods : AndroidX, Kotlin, OkHttp, Hermes…) et ajout au registre affiché (EX-42), décision du porteur du 2026-11-26
 - Google Play, Sécurité des données : <https://support.google.com/googleplay/android-developer/answer/10787469>
 - Google Play, données utilisateur et politique de confidentialité : <https://support.google.com/googleplay/android-developer/answer/9859455>
 - Google Play, suppression de compte : <https://support.google.com/googleplay/android-developer/answer/13327111>
