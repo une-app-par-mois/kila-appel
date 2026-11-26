@@ -135,7 +135,7 @@ ${carte(`${ligne('Saisons', 'Active : 2026-2027', 'data-go="saisons"')}${ligne('
 ${section('Données')}
 ${carte(`${ligne('Sauvegarde et restauration', 'Dernière : il y a 34 jours', 'data-go="donnees"')}${ligne('Conservation', '3 saisons', 'data-go="donnees"')}${ligne('Tout effacer', '', 'data-go="tout-effacer"')}`)}
 ${section('À propos')}
-${carte(`${ligne('Confidentialité', '')}${ligne("Conditions d'utilisation", '')}${ligne('Licences', '')}`)}`);
+${carte(`${ligne('Confidentialité', '', 'data-go="confidentialite"')}${ligne("Conditions d'utilisation", '', 'data-go="confidentialite"')}${ligne('Licences', '', 'data-go="licences"')}`)}`);
 
 // 10 — Saisons (EX-01)
 ecran('saisons', 1, 'Saisons', 'EX-01', 'parametres', `
@@ -327,6 +327,29 @@ ${carte(`<p>Toutes les données de cet appareil seront effacées <b>définitivem
 <label>Pour confirmer, tapez EFFACER</label><div class="champ mono vide">EFFACER</div>
 <div class="duo">${go('donnees', 'Garder', 'btn-s tiers')}${go('bienvenue', 'Tout effacer', 'btn-p deuxtiers fond-marge')}</div>
 <p class="note">Double confirmation : le bouton, puis le mot à taper.</p>`);
+
+ecran('confidentialite', 1, 'Page légale (confidentialité, conditions)', 'EX-40, EX-41', 'parametres', `
+${titre('Confidentialité', 'parametres')}
+<div class="l-sous sous-titre">Version du 26/11/2026 · aussi en ligne</div>
+${carte(`<h3 class="section">En bref</h3><p><b>Aucune donnée collectée.</b> Tout ce que vous saisissez reste sur cet appareil. L'appli n'envoie rien sur Internet.</p><h3 class="section">Vos membres</h3><p>Texte définitif au document de conformité.</p>`)}
+<p class="note">Même gabarit pour les conditions d'utilisation : texte long, titres de section, aucune action.</p>`);
+
+ecran('licences', 1, 'Licences tierces', 'EX-42', 'parametres', `
+${titre('Licences', 'parametres')}
+${carte(`${ligne('IBM Plex Sans, IBM Plex Mono', 'SIL Open Font License 1.1')}${ligne('React Native', 'MIT')}${ligne('Expo', 'MIT')}${ligne('…', 'Liste générée depuis les dépendances réellement embarquées')}`)}
+<p class="note">Un appui ouvre le texte complet de la licence. Liste indicative : elle sera générée au build.</p>`);
+
+ecran('etats-vides', 1, 'États vides (une carte par liste)', 'P1, NF-06', null, `
+${titre('États vides')}
+<p class="note">Catalogue : chaque carte remplace le contenu de la liste concernée quand elle est vide.</p>
+${section('Groupes')}${carte(`<p>Aucun groupe dans cette saison.</p>${go('groupe-nouveau', 'Créer un groupe')}`)}
+${section('Groupe sans membre')}${carte(`<p>Personne n'est encore inscrit à ce groupe.</p>${go('inscription', 'Ajouter des membres')}`)}
+${section('Membres')}${carte(`<p>Aucun membre pour l'instant.</p>${go('membre-nouveau', 'Nouveau membre')}`)}
+${section('Créneaux')}${carte(`<p>Aucun créneau. Déclarez quand vos groupes se réunissent pour que l'appli propose l'appel au bon moment.</p>${go('creneau', 'Nouveau créneau')}`)}
+${section('Historique')}${carte(`<p>Aucun appel enregistré. Votre premier appel apparaîtra ici.</p>${go('appel', "Faire l'appel")}`)}
+${section('Recherche sans résultat')}${carte(`<p>Aucun membre ne correspond à « xyz ».</p><p class="l-sous">Vérifiez l'orthographe, ou cherchez par le prénom.</p>`)}
+${section("Appel d'un groupe vide")}${carte(`<p>Ce groupe n'a aucun membre à appeler.</p>${go('inscription', 'Ajouter des membres', 'btn-s')}`)}
+${section("Membre sans contact d'urgence")}${carte(`<p>Aucun contact d'urgence pour Léo Garcia.</p>${go('contact', '+ Ajouter un contact', 'btn-s')}`)}`);
 
 // 17 — Annuler une séance (lot 2, F-13) : laissée en lien depuis l'accueil, page d'attente
 ecran('annuler', 2, 'Annuler une séance', 'EX-38 (lot 2)', 'accueil', `

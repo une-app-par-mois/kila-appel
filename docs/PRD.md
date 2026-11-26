@@ -1,6 +1,6 @@
 # PRD — Ki&La (appel)
 
-Statut : ✅ validé le 2026-11-26
+Statut : ✅ validé le 2026-11-26 · Révision 1 (EX-40 à EX-42, pages légales) validée le 2026-11-26
 
 Ce document dit précisément ce que fait la v1. Il s'appuie sur `docs/CADRAGE.md` (validé le 2026-11-26), qui fait foi sur le périmètre et le vocabulaire : les mots en gras ci-dessous sont ceux du glossaire. Chaque exigence a un identifiant (`EX-xx`), rattaché à une fonctionnalité `F-xx`, cité dans le code, les tests et les tickets.
 
@@ -96,6 +96,14 @@ Priorité : toutes les exigences sont dans la v1 (décision du 2026-11-26). Le j
 | EX-38 | F-13 | **Annuler** une séance | « Que s'est-il passé ? », trois issues : « La séance a été annulée » (séance **annulée**), « Aucune séance prévue ce jour-là » (séance **non planifiée** : vacances, salle fermée), « Garder la séance ». Annulée et non planifiée : aucune relance, rien dans les statistiques, distinguées dans l'historique, et rétablissables (une préparation revient intacte). Possible tant que la séance n'a pas commencé, appel enregistré ou non ; impossible une fois la séance commencée et l'appel enregistré, refusé aussi par la base. |
 | EX-37 | F-14 | Afficher le podium d'un groupe | Classement des membres d'un groupe par taux de présence sur la période, ex æquo au même rang. |
 
+### Transverse — pages légales (révision 1 du 2026-11-26)
+
+| ID | Exigence | Critères d'acceptation |
+| --- | --- | --- |
+| EX-40 | Consulter la politique de confidentialité | Accessible depuis Paramètres, lisible hors ligne dans l'appli ; même texte que la version en ligne exigée par les stores. Contenu : document de conformité. |
+| EX-41 | Consulter les conditions d'utilisation | Accessible depuis Paramètres, lisible hors ligne ; dit notamment que les données ne vivent que sur l'appareil et que la sauvegarde est le seul moyen de les retrouver. |
+| EX-42 | Consulter les licences tierces | Accessible depuis Paramètres, hors ligne : chaque bibliothèque, police et ressource redistribuée, avec sa licence et sa mention obligatoire. |
+
 ## 4. Règles métier
 
 - **RM-01** Taux de présence = (Présent + Retard) / (Présent + Retard + Absent). Excusé n'entre pas dans le calcul. Sans séance, le taux s'affiche « — » et non 0 %.
@@ -128,6 +136,7 @@ Serveur, compte, synchronisation, chiffrement dans l'appli, verrouillage à l'ou
 
 ## 8. Écarts relevés
 
+- 2026-11-26 : les maquettes affichaient des pages légales (Confidentialité, Conditions, Licences) sans exigence au PRD. Ajout d'EX-40 à EX-42, révision 1 validée par le porteur.
 - 2026-11-26 : EX-36 et EX-38 introduisaient des notions absentes du glossaire : **séance enregistrée**, **préparée**, **annulée**, **non planifiée** et le libellé « Attendu ». Ajoutées au glossaire du cadrage, révision validée par le porteur le 2026-11-26.
 
 ## 9. Questions ouvertes
