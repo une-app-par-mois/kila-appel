@@ -1,5 +1,9 @@
 // Erreurs des dépôts : un code, jamais une donnée (ABS-04), comme InputError pour les saisies.
-export type DataErrorCode = 'NOT_FOUND' | 'SESSIONS_OUTSIDE_SEASON' | 'DB_NOT_READY';
+export type DataErrorCode =
+  | 'NOT_FOUND'
+  | 'SESSIONS_OUTSIDE_SEASON'
+  | 'ALREADY_ENROLLED'
+  | 'DB_NOT_READY';
 
 export class DataError extends Error {
   constructor(readonly code: DataErrorCode) {
