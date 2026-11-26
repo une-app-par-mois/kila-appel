@@ -1,6 +1,6 @@
 # Sécurité — Ki&La (appel)
 
-Statut : ✅ validé le 2026-11-26
+Statut : 🟡 brouillon complet, en attente de validation · Dernière mise à jour : 2026-11-26
 
 Ce qu'on protège, contre quoi, et comment chaque exigence est vérifiée. S'appuie sur le cadrage, le PRD, l'architecture et les règles ABS-01 à ABS-08 de `CLAUDE.md`. Les exigences `SEC-xx` sont citées dans le code, les tests et les tickets.
 
