@@ -1,6 +1,6 @@
 # Sécurité — Ki&La (appel)
 
-Statut : 🟡 brouillon complet, en attente de relecture · Dernière mise à jour : 2026-11-26
+Statut : ✅ validé le 2026-11-26
 
 Ce qu'on protège, contre quoi, et comment chaque exigence est vérifiée. S'appuie sur le cadrage, le PRD, l'architecture et les règles ABS-01 à ABS-08 de `CLAUDE.md`. Les exigences `SEC-xx` sont citées dans le code, les tests et les tickets.
 
@@ -64,11 +64,8 @@ Ce qu'on protège, contre quoi, et comment chaque exigence est vérifiée. S'app
 1. Signalement privé par l'onglet Security du dépôt (`SECURITY.md`), accusé de réception sous 7 jours.
 2. Le porteur qualifie la gravité ; l'IA reproduit par un test, dans un ticket en zone sensible.
 3. Correctif, nouvelle version, mention dans `AUDIT.md` et les notes de version.
-4. Aucune donnée n'étant collectée, l'éditeur n'a rien à notifier à la CNIL au titre d'une fuite chez lui ; si le défaut a pu exposer des données sur les appareils, les notes de version disent quoi faire (par exemple supprimer d'anciennes sauvegardes).
+4. Hypothèse à vérifier au document de conformité (RGPD, art. 33 et 34) : aucune donnée n'étant collectée, l'éditeur n'aurait rien à notifier à la CNIL au titre d'une fuite chez lui ; si le défaut a pu exposer des données sur les appareils, les notes de version disent quoi faire (par exemple supprimer d'anciennes sauvegardes).
 
-## Points à vérifier en relisant
+## Décisions du porteur
 
-1. **SEC-06** : les limites de l'import (1 Mo, 2 000 lignes) et la prise en charge du Windows-1252.
-2. **SEC-07** : neutralisation des formules à l'export CSV (préfixe `'`), qui modifie légèrement le texte exporté.
-3. **SEC-12** : un module de journal unique, `console.*` interdit ailleurs.
-4. **§6 point 4** : l'analyse « rien à notifier à la CNIL » est une lecture de l'IA, à confirmer au document de conformité.
+- 2026-11-26 : SEC-06 (1 Mo, 2 000 lignes, UTF-8 et Windows-1252), SEC-07 (neutralisation des formules) et SEC-12 (module de journal unique, `console.*` interdit ailleurs) validés tels que proposés ; l'hypothèse CNIL du §6 est renvoyée au document de conformité.
