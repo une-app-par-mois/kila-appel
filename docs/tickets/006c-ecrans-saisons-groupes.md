@@ -22,6 +22,8 @@ Premiers écrans de gestion, sur les dépôts du ticket 006 et les composants du
 - [ ] Écrans conformes aux maquettes ; états vides
 - [ ] La confirmation de suppression d'une saison dit ce qui sera effacé (groupes, créneaux, séances, présences) et que les membres restent (EX-01)
 - [ ] La confirmation de suppression d'un groupe dit ce que fait la base (ARCHITECTURE §4.1) : « Seront effacés : ses inscriptions et ses liens aux créneaux. Les séances, leurs présences et les membres sont conservés. » Le texte de la maquette, qui annonçait l'effacement des séances, est corrigé (décision du porteur du 2026-11-26)
+- [ ] Dates d'une saison refusées (`SESSIONS_OUTSIDE_SEASON`) : « Des séances ont déjà eu lieu hors de ces dates. » (décision du porteur du 2026-11-26)
+- [ ] Échec de chargement (`loadFailed`) : un message à la place du chargement sans fin
 - [ ] Un groupe archivé montre « Désarchiver » à la place d'« Archiver » (absent de la maquette, ajouté par décision du porteur du 2026-11-26)
 
 ## Tests attendus

@@ -3,7 +3,10 @@ import { useGroups } from '@/hooks/useGroups';
 import { useSeasons } from '@/hooks/useSeasons';
 
 // La base et les dépôts sont simulés : les dépôts sont testés sur node:sqlite.
-jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => ({ fake: true }) }));
+const mockDb = { fake: true };
+jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => mockDb }));
+jest.mock('@/data/log', () => ({ log: jest.fn() }));
+const { log } = jest.requireMock('@/data/log') as { log: jest.Mock };
 const mockSeasons = {
   list: jest.fn(),
   create: jest.fn(),
@@ -70,6 +73,35 @@ describe('useSeasons (EX-01, CONV-10)', () => {
     expect(mockSeasons.list).toHaveBeenCalledTimes(1);
   });
 
+  it('signale un échec de chargement (état d’erreur, code au journal) au lieu d’attendre sans fin', async () => {
+    mockSeasons.list.mockRejectedValue(new Error('BROKEN_CONNECTION'));
+    const { result } = await renderHook(() => useSeasons());
+    await waitFor(() => expect(result.current.loadFailed).toBe(true));
+    expect(result.current.seasons).toBeNull();
+    expect(log).toHaveBeenCalledWith('SEASONS_LOAD_FAILED');
+  });
+
+  it('une modification enregistrée n’est pas présentée comme un échec si le rechargement échoue', async () => {
+    mockSeasons.list.mockResolvedValueOnce([]).mockRejectedValue(new Error('BROKEN_CONNECTION'));
+    mockSeasons.create.mockResolvedValue(1);
+    const { result } = await renderHook(() => useSeasons());
+    await waitFor(() => expect(result.current.seasons).toEqual([]));
+    await act(async () => {
+      await result.current.create({ name: 'S', startDate: '2026-09-01', endDate: '2027-07-31' });
+    });
+    expect(result.current.loadFailed).toBe(true);
+  });
+
+  it('garde les mêmes actions d’un rendu à l’autre', async () => {
+    mockSeasons.list.mockResolvedValue([]);
+    const { result, rerender } = await renderHook(() => useSeasons());
+    await waitFor(() => expect(result.current.seasons).toEqual([]));
+    const before = result.current;
+    await rerender({});
+    expect(result.current.create).toBe(before.create);
+    expect(result.current.deletionImpact).toBe(before.deletionImpact);
+  });
+
   it('donne l’impact d’une suppression sans rien modifier', async () => {
     mockSeasons.list.mockResolvedValue([season]);
     mockSeasons.deletionImpact.mockResolvedValue({
@@ -115,6 +147,38 @@ describe('useGroups (EX-02, CONV-10)', () => {
       slots: 1,
       sessions: 31,
     });
+  });
+
+  it('au changement de saison, vide la liste et ignore une réponse tardive de l’ancienne', async () => {
+    let answerSeason1: (groups: unknown[]) => void = () => {};
+    mockGroups.listBySeason.mockImplementation((seasonId: number) =>
+      seasonId === 1
+        ? new Promise((resolve) => {
+            answerSeason1 = resolve;
+          })
+        : Promise.resolve([{ id: 20, seasonId: 2, name: 'Benjamins', archivedAt: null }]),
+    );
+    const { result, rerender } = await renderHook(
+      ({ id }: { id: number | null }) => useGroups(id),
+      {
+        initialProps: { id: 1 as number | null },
+      },
+    );
+    await rerender({ id: 2 });
+    await waitFor(() => expect(result.current.groups?.[0]?.seasonId).toBe(2));
+    await act(async () => {
+      answerSeason1([{ id: 10, seasonId: 1, name: 'Poussins', archivedAt: null }]);
+    });
+    expect(result.current.groups?.[0]?.seasonId).toBe(2);
+    await rerender({ id: null });
+    expect(result.current.groups).toBeNull();
+  });
+
+  it('signale un échec de chargement des groupes', async () => {
+    mockGroups.listBySeason.mockRejectedValue(new Error('BROKEN_CONNECTION'));
+    const { result } = await renderHook(() => useGroups(1));
+    await waitFor(() => expect(result.current.loadFailed).toBe(true));
+    expect(log).toHaveBeenCalledWith('GROUPS_LOAD_FAILED', { seasonId: 1 });
   });
 
   it('ne charge rien sans saison', async () => {

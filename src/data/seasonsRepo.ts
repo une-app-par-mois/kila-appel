@@ -1,8 +1,7 @@
 // Dépôt des saisons (EX-01). Requêtes paramétrées seulement ; la base est passée en paramètre.
 import type { Db } from '@/data/db';
+import { DataError, expectChanged, expectFound } from '@/data/errors';
 import { type SeasonInput, validateSeason } from '@/domain/validation';
-
-export const NOT_FOUND = 'Élément introuvable';
 
 export type Season = {
   id: number;
@@ -12,11 +11,14 @@ export type Season = {
   isActive: boolean;
 };
 
+/** EX-01 : tout ce que la cascade effacera, pour la confirmation. */
 export type SeasonDeletionImpact = {
   groups: number;
+  enrollments: number;
   slots: number;
   sessions: number;
   attendances: number;
+  rollCallDraft: boolean;
 };
 
 type SeasonRow = {
@@ -36,11 +38,6 @@ const toSeason = (row: SeasonRow): Season => ({
 });
 
 const SELECT = 'SELECT id, name, start_date, end_date, is_active FROM seasons';
-
-/** Une modification qui ne touche aucune ligne vise un élément introuvable. */
-export const expectChanged = ({ changes }: { changes: number }): void => {
-  if (changes === 0) throw new Error(NOT_FOUND);
-};
 
 export const seasonsRepo = (db: Db) => ({
   /** De la plus récente à la plus ancienne. */
@@ -62,16 +59,24 @@ export const seasonsRepo = (db: Db) => ({
     return result.lastInsertRowId;
   },
 
-  update: async (id: number, input: SeasonInput): Promise<void> => {
+  /** EX-01 : refusé si des séances tomberaient hors des nouvelles dates (décision du porteur du 2026-11-26). */
+  update: (id: number, input: SeasonInput): Promise<void> => {
     const s = validateSeason(input);
-    expectChanged(
-      await db.execute('UPDATE seasons SET name = ?, start_date = ?, end_date = ? WHERE id = ?', [
-        s.name,
-        s.startDate,
-        s.endDate,
-        id,
-      ]),
-    );
+    return db.transaction(async (tx) => {
+      const [outside] = await tx.query<{ n: number }>(
+        'SELECT COUNT(*) AS n FROM sessions WHERE season_id = ? AND (date < ? OR date > ?)',
+        [id, s.startDate, s.endDate],
+      );
+      if ((outside?.n ?? 0) > 0) throw new DataError('SESSIONS_OUTSIDE_SEASON');
+      expectChanged(
+        await tx.execute('UPDATE seasons SET name = ?, start_date = ?, end_date = ? WHERE id = ?', [
+          s.name,
+          s.startDate,
+          s.endDate,
+          id,
+        ]),
+      );
+    });
   },
 
   /** EX-01 : une seule saison active ; tout ou rien. */
@@ -83,16 +88,21 @@ export const seasonsRepo = (db: Db) => ({
 
   /** EX-01 : ce que la suppression effacera, pour la confirmation. */
   deletionImpact: async (id: number): Promise<SeasonDeletionImpact> => {
-    const [row] = await db.query<SeasonDeletionImpact>(
+    const [row] = await db.query<Omit<SeasonDeletionImpact, 'rollCallDraft'> & { drafts: number }>(
       `SELECT
         (SELECT COUNT(*) FROM groups WHERE season_id = ?1) AS groups,
+        (SELECT COUNT(*) FROM enrollments e JOIN groups g ON g.id = e.group_id
+          WHERE g.season_id = ?1) AS enrollments,
         (SELECT COUNT(*) FROM slots WHERE season_id = ?1) AS slots,
         (SELECT COUNT(*) FROM sessions WHERE season_id = ?1) AS sessions,
         (SELECT COUNT(*) FROM attendances a JOIN sessions s ON s.id = a.session_id
-          WHERE s.season_id = ?1) AS attendances`,
+          WHERE s.season_id = ?1) AS attendances,
+        (SELECT COUNT(*) FROM roll_call_drafts WHERE season_id = ?1) AS drafts
+      FROM seasons WHERE id = ?1`,
       [id],
     );
-    return row ?? { groups: 0, slots: 0, sessions: 0, attendances: 0 };
+    const { drafts, ...counts } = expectFound(row);
+    return { ...counts, rollCallDraft: drafts > 0 };
   },
 
   /** EX-01, ABS-05 : efface la saison et, en cascade, groupes, créneaux, séances, présences. */

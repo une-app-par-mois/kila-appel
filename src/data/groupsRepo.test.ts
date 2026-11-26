@@ -6,7 +6,6 @@ import type { Db } from '@/data/db';
 import { groupsRepo } from '@/data/groupsRepo';
 import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
-import { NOT_FOUND } from '@/data/seasonsRepo';
 
 describe('Dépôt des groupes (EX-02)', () => {
   let db: Db;
@@ -23,29 +22,31 @@ describe('Dépôt des groupes (EX-02)', () => {
     await db.close();
   });
 
-  it('crée des groupes, nom nettoyé, listés par nom', async () => {
+  it('EX-02 crée des groupes, nom nettoyé, triés à la française (accents, casse)', async () => {
     const repo = groupsRepo(db);
     await repo.create(seasonId, ' Poussins mercredi ');
+    await repo.create(seasonId, 'Élite');
     await repo.create(seasonId, 'benjamins');
     expect((await repo.listBySeason(seasonId)).map((g) => g.name)).toEqual([
       'benjamins',
+      'Élite',
       'Poussins mercredi',
     ]);
   });
 
-  it('refuse un nom vide ou une saison inconnue', async () => {
+  it('EX-02 refuse un nom vide ou une saison inconnue', async () => {
     const repo = groupsRepo(db);
     await expect(repo.create(seasonId, '  ')).rejects.toThrow('NAME_REQUIRED');
     await expect(repo.create(seasonId + 99, 'Poussins')).rejects.toThrow();
     expect(await count(db, 'groups')).toBe(0);
   });
 
-  it('renomme un groupe', async () => {
+  it('EX-02 renomme un groupe', async () => {
     const repo = groupsRepo(db);
     const id = await repo.create(seasonId, 'Poussins');
     await repo.rename(id, 'Poussins mercredi');
     expect((await repo.listBySeason(seasonId))[0]?.name).toBe('Poussins mercredi');
-    await expect(repo.rename(id + 99, 'X')).rejects.toThrow(NOT_FOUND);
+    await expect(repo.rename(id + 99, 'X')).rejects.toThrow('NOT_FOUND');
   });
 
   it('EX-02 archive un groupe à la date donnée, puis le désarchive', async () => {
@@ -76,7 +77,8 @@ describe('Dépôt des groupes (EX-02)', () => {
     expect(await count(db, 'members')).toBe(2);
   });
 
-  it('supprimer un groupe inconnu est refusé', async () => {
-    await expect(groupsRepo(db).remove(42)).rejects.toThrow(NOT_FOUND);
+  it('EX-02 supprimer un groupe inconnu, ou demander ce qu’il effacerait, est refusé', async () => {
+    await expect(groupsRepo(db).remove(42)).rejects.toThrow('NOT_FOUND');
+    await expect(groupsRepo(db).deletionImpact(42)).rejects.toThrow('NOT_FOUND');
   });
 });

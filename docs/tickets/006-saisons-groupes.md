@@ -33,6 +33,7 @@ Couche données des saisons (EX-01) et des groupes (EX-02), avec leurs suppressi
 
 - Supprimer un groupe garde ses séances et leurs présences (ARCHITECTURE §4.1, ticket 002) ; la maquette sera corrigée au 006c.
 - « Désarchiver » un groupe est prévu, bien qu'absent de la maquette.
+- Changer les dates d'une saison est refusé si des séances enregistrées tomberaient en dehors (`SESSIONS_OUTSIDE_SEASON`).
 
 ## Hors périmètre
 
