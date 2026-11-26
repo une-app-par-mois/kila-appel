@@ -36,3 +36,5 @@ Statut : à faire · Jalon : 1 · Zone sensible : oui · Trivial : non
 ## Note de la revue de sécurité du ticket 006d (2026-11-26)
 
 - Supprimer un groupe le retire aussi d'un brouillon d'appel en cours (`roll_call_draft_groups` en cascade), sans que la confirmation le dise. Aucune présence perdue (statuts rattachés aux membres). Quand le brouillon existe à l'écran, ajouter « l'appel en cours » au message de suppression d'un groupe.
+- Idem pour un membre supprimé (ticket 007, revue de sécurité) : ses statuts du brouillon partent en cascade (`roll_call_draft_statuses`) ; l'ajouter au message de suppression d'un membre quand le brouillon existe à l'écran.
+- L'appel ne compte que les inscriptions en cours à la date de la séance : `current()` de `src/data/enrollmentsRepo.ts` (début inclus, fin exclue).

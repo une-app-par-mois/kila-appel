@@ -113,6 +113,51 @@ describe('Dépôt des inscriptions (EX-04)', () => {
     });
   });
 
+  it('une inscription future n’est pas en cours, mais le membre n’est plus candidat', async () => {
+    const repo = enrollmentsRepo(db);
+    await repo.enroll(s.groupId, [newcomer], '2027-01-15');
+    expect(await enrollmentOf(newcomer)).toBeUndefined();
+    expect(await repo.candidates(s.groupId, TODAY)).toEqual([]);
+    expect((await membersRepo(db).list({ today: TODAY, query: 'noah' }))[0]?.groups).toEqual([]);
+    expect(await membersRepo(db).list({ today: TODAY, groupId: s.groupId, query: 'noah' })).toEqual(
+      [],
+    );
+    expect((await repo.listByGroup(s.groupId, '2027-01-15')).map((e) => e.memberId)).toContain(
+      newcomer,
+    );
+  });
+
+  it('réinscription au jour d’un retrait futur : jamais deux fois dans le groupe', async () => {
+    const repo = enrollmentsRepo(db);
+    await repo.withdraw((await enrollmentOf(s.memberId))?.enrollmentId ?? 0, '2026-12-15');
+    await repo.enroll(s.groupId, [s.memberId], '2026-12-15');
+    for (const day of [TODAY, '2026-12-14', '2026-12-15', '2027-01-10']) {
+      const ids = (await repo.listByGroup(s.groupId, day)).map((e) => e.memberId);
+      expect(ids.filter((id) => id === s.memberId)).toHaveLength(1);
+    }
+    expect((await membersRepo(db).list({ today: TODAY }))[0]?.groups).toEqual(['Poussins']);
+  });
+
+  it('refuse d’inscrire dans un groupe archivé ou d’une autre saison, ou un membre archivé', async () => {
+    const repo = enrollmentsRepo(db);
+    await db.execute('UPDATE groups SET archived_at = ? WHERE id = ?', [TODAY, s.groupId]);
+    await expect(repo.enroll(s.groupId, [newcomer], TODAY)).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+    });
+    await db.execute('UPDATE groups SET archived_at = NULL WHERE id = ?', [s.groupId]);
+    const [other] = await db.query<{ id: number }>('SELECT id FROM groups WHERE season_id = ?', [
+      s.otherSeasonId,
+    ]);
+    await expect(repo.enroll(other?.id ?? 0, [newcomer], TODAY)).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+    });
+    await membersRepo(db).archive(newcomer, TODAY);
+    await expect(repo.enroll(s.groupId, [newcomer], TODAY)).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+    });
+    expect(await count(db, 'enrollments', 'member_id = ?', [newcomer])).toBe(0);
+  });
+
   it('retrait refusé avant le début, sur une inscription déjà close ou introuvable', async () => {
     const repo = enrollmentsRepo(db);
     const id = (await enrollmentOf(s.memberId))?.enrollmentId ?? 0;

@@ -4,7 +4,8 @@ import { useEnrollments, useMember, useMembers } from '@/hooks/useMembers';
 
 // La base et les dépôts sont simulés : les dépôts sont testés sur node:sqlite.
 const mockDb = { fake: true };
-jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => mockDb }));
+let mockDbReady = true;
+jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => (mockDbReady ? mockDb : null) }));
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
 const { log } = jest.requireMock('@/data/log') as { log: jest.Mock };
 const mockMembers = {
@@ -24,7 +25,10 @@ const mockEnrollments = {
   enroll: jest.fn(),
   withdraw: jest.fn(),
 };
-jest.mock('@/data/membersRepo', () => ({ membersRepo: () => mockMembers }));
+jest.mock('@/data/membersRepo', () => ({
+  ...jest.requireActual('@/data/membersRepo'),
+  membersRepo: () => mockMembers,
+}));
 jest.mock('@/data/enrollmentsRepo', () => ({ enrollmentsRepo: () => mockEnrollments }));
 
 const TODAY = '2026-11-26';
@@ -46,7 +50,6 @@ describe('useMembers, useMember, useEnrollments (EX-03, EX-04, CONV-10)', () => 
       today: TODAY,
       archived: false,
       groupId: 3,
-      query: 'ali',
     });
     let id = 0;
     await act(async () => {
@@ -56,6 +59,30 @@ describe('useMembers, useMember, useEnrollments (EX-03, EX-04, CONV-10)', () => 
     expect(mockMembers.create).toHaveBeenCalledWith(input, { groupId: 3, today: TODAY });
     expect(changed).toHaveBeenCalled();
     stop();
+  });
+
+  it('useMembers : la recherche filtre en mémoire, sans relire la base ni vider la liste', async () => {
+    const alix = { id: 1, firstName: 'Alix', lastName: 'Exemple', archivedAt: null, groups: [] };
+    const sam = { id: 2, firstName: 'Sam', lastName: 'Fictif', archivedAt: null, groups: [] };
+    mockMembers.list.mockResolvedValue([alix, sam]);
+    const { result, rerender } = await renderHook(
+      ({ query }: { query: string }) => useMembers({ today: TODAY, query }),
+      {
+        initialProps: { query: '' },
+      },
+    );
+    await waitFor(() => expect(result.current.members).toHaveLength(2));
+    await rerender({ query: 'ali' });
+    expect(result.current.members).toEqual([alix]);
+    expect(mockMembers.list).toHaveBeenCalledTimes(1);
+  });
+
+  it('useMember.deletionImpact rejette (sans lever) quand la base n’est pas prête', async () => {
+    mockDbReady = false;
+    const { result } = await renderHook(() => useMember(5, TODAY));
+    const promise = result.current.deletionImpact();
+    await expect(promise).rejects.toMatchObject({ code: 'DB_NOT_READY' });
+    mockDbReady = true;
   });
 
   it('useMembers signale un échec de lecture sans donnée au journal (ABS-04)', async () => {

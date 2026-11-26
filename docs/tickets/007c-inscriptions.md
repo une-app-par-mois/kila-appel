@@ -19,6 +19,8 @@ Découpé du ticket 007 le 2026-11-26 (décision du porteur).
 - [ ] Retirer conserve les présences passées (EX-04)
 - [ ] Le nombre de membres d'un groupe compte les inscriptions en cours à la date du jour (fin absente ou à venir), et non plus seulement celles sans date de fin (`groupsRepo.get`)
 
+- [ ] Une inscription future (date choisie après aujourd'hui) est visible quelque part (« à partir du … ») : les listes ne montrent que les inscriptions en cours
+
 ## Tests attendus
 
 - Tests d'écrans sur `node:sqlite`

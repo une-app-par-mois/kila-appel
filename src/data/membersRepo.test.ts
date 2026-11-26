@@ -117,6 +117,13 @@ describe('Dépôt des membres (EX-03)', () => {
         { groupId: 9999, today: TODAY },
       ),
     ).rejects.toThrow();
+    await db.execute('UPDATE groups SET archived_at = ? WHERE id = ?', [TODAY, s.groupId]);
+    await expect(
+      repo.create(
+        { firstName: 'Yanis', lastName: 'Colin', birthDate: null },
+        { groupId: s.groupId, today: TODAY },
+      ),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' });
     expect(await count(db, 'members')).toBe(2);
   });
 
@@ -148,6 +155,10 @@ describe('Dépôt des membres (EX-03)', () => {
     await repo.unarchive(s.memberId);
     expect(await repo.get(s.memberId)).toMatchObject({ archivedAt: null });
     await expect(repo.archive(9999, TODAY)).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    // Archiver deux fois garde la première date.
+    await repo.archive(s.memberId, '2026-09-01');
+    await repo.archive(s.memberId, TODAY);
+    expect(await repo.get(s.memberId)).toMatchObject({ archivedAt: '2026-09-01' });
   });
 
   it('ABS-05 dit ce que la suppression effacera, puis efface vraiment (contacts, présences, inscriptions)', async () => {

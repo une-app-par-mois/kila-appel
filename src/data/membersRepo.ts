@@ -1,5 +1,6 @@
 // Dépôt des membres (EX-03). Requêtes paramétrées seulement ; aucune donnée dans un journal (ABS-04).
 import type { Db } from '@/data/db';
+import { current, expectEnrollable } from '@/data/enrollmentsRepo';
 import { expectChanged, expectFound } from '@/data/errors';
 import { type MemberInput, validateDate, validateMember } from '@/domain/validation';
 
@@ -45,8 +46,19 @@ const toMember = (row: MemberRow): Member => ({
   archivedAt: row.archived_at,
 });
 
-/** Inscription en cours à la date `?` : fin absente, ou fin (exclue) après cette date. */
-const CURRENT = '(e.end_date IS NULL OR e.end_date > ?)';
+/** Recherche par nom ou prénom, sans tenir compte des accents ni de la casse. */
+export const filterByQuery = <T extends { firstName: string; lastName: string }>(
+  members: T[],
+  query: string,
+): T[] => {
+  const wanted = fold(query.trim());
+  if (wanted === '') return members;
+  return members.filter(
+    (m) =>
+      fold(`${m.firstName} ${m.lastName}`).includes(wanted) ||
+      fold(`${m.lastName} ${m.firstName}`).includes(wanted),
+  );
+};
 
 export const membersRepo = (db: Db) => ({
   /** Membres courants (ou archivés), triés par nom puis prénom à la française. */
@@ -57,7 +69,7 @@ export const membersRepo = (db: Db) => ({
        WHERE (archived_at IS NOT NULL) = ?1
          AND (?2 IS NULL OR EXISTS (
            SELECT 1 FROM enrollments e WHERE e.member_id = members.id AND e.group_id = ?2
-             AND (e.end_date IS NULL OR e.end_date > ?3)))
+             AND ${current(3)}))
        ORDER BY id`,
       [archived ? 1 : 0, groupId, today],
     );
@@ -65,16 +77,15 @@ export const membersRepo = (db: Db) => ({
       `SELECT e.member_id, g.name FROM enrollments e
        JOIN groups g ON g.id = e.group_id
        JOIN seasons s ON s.id = g.season_id
-       WHERE s.is_active = 1 AND g.archived_at IS NULL AND ${CURRENT}`,
+       WHERE s.is_active = 1 AND g.archived_at IS NULL AND ${current(1)}`,
       [today],
     );
     const groups = new Map<number, string[]>();
     for (const { member_id, name } of groupRows) {
       groups.set(member_id, [...(groups.get(member_id) ?? []), name]);
     }
-    const wanted = fold(query.trim());
-    return rows
-      .map(
+    return filterByQuery(
+      rows.map(
         (row): MemberListItem => ({
           id: row.id,
           firstName: row.first_name,
@@ -82,17 +93,12 @@ export const membersRepo = (db: Db) => ({
           archivedAt: row.archived_at,
           groups: (groups.get(row.id) ?? []).sort(collator.compare),
         }),
-      )
-      .filter(
-        (m) =>
-          wanted === '' ||
-          fold(`${m.firstName} ${m.lastName}`).includes(wanted) ||
-          fold(`${m.lastName} ${m.firstName}`).includes(wanted),
-      )
-      .sort(
-        (a, b) =>
-          collator.compare(a.lastName, b.lastName) || collator.compare(a.firstName, b.firstName),
-      );
+      ),
+      query,
+    ).sort(
+      (a, b) =>
+        collator.compare(a.lastName, b.lastName) || collator.compare(a.firstName, b.firstName),
+    );
   },
 
   get: async (id: number): Promise<Member | null> => {
@@ -115,6 +121,7 @@ export const membersRepo = (db: Db) => ({
         [m.firstName, m.lastName, m.birthDate],
       );
       if (groupId !== null) {
+        await expectEnrollable(tx, groupId, null);
         await tx.execute(
           'INSERT INTO enrollments (member_id, group_id, start_date) VALUES (?, ?, ?)',
           [id, groupId, today],
@@ -134,10 +141,10 @@ export const membersRepo = (db: Db) => ({
     );
   },
 
-  /** Disparaît des listes et de l'appel ; inscriptions et présences restent. */
+  /** Disparaît des listes et de l'appel ; inscriptions et présences restent. Archivé : date gardée. */
   archive: async (id: number, today: string): Promise<void> => {
     expectChanged(
-      await db.execute('UPDATE members SET archived_at = ? WHERE id = ?', [
+      await db.execute('UPDATE members SET archived_at = COALESCE(archived_at, ?) WHERE id = ?', [
         validateDate(today),
         id,
       ]),

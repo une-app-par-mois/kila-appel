@@ -4,6 +4,7 @@ import { useCallback, useMemo } from 'react';
 import { enrollmentsRepo, type MemberEnrollment } from '@/data/enrollmentsRepo';
 import { DataError } from '@/data/errors';
 import {
+  filterByQuery,
   type Member,
   type MemberDeletionImpact,
   type MemberFilter,
@@ -36,7 +37,7 @@ const useChange = (repos: Repos | null) =>
     [repos],
   );
 
-/** Membres filtrés ; `null` tant que rien n'est chargé. */
+/** Membres filtrés ; `null` tant que rien n'est chargé. La recherche filtre en mémoire. */
 export const useMembers = ({
   today,
   archived = false,
@@ -45,10 +46,11 @@ export const useMembers = ({
 }: MemberFilter) => {
   const repos = useRepos();
   const load = useMemo(
-    () => (repos ? () => repos.members.list({ today, archived, groupId, query }) : null),
-    [repos, today, archived, groupId, query],
+    () => (repos ? () => repos.members.list({ today, archived, groupId }) : null),
+    [repos, today, archived, groupId],
   );
-  const { value: members, loadFailed } = useLoaded<MemberListItem[]>(load, 'MEMBERS_LOAD_FAILED');
+  const { value, loadFailed } = useLoaded<MemberListItem[]>(load, 'MEMBERS_LOAD_FAILED');
+  const members = useMemo(() => value && filterByQuery(value, query), [value, query]);
   const change = useChange(repos);
 
   /** Crée un membre (inscrit au groupe choisi à `today`) et rend son identifiant. */
@@ -90,7 +92,7 @@ export const useMember = (id: number, today: string) => {
   );
   const unarchive = useCallback(() => change((r) => r.members.unarchive(id)), [change, id]);
   const remove = useCallback(() => change((r) => r.members.remove(id)), [change, id]);
-  const deletionImpact = useCallback((): Promise<MemberDeletionImpact> => {
+  const deletionImpact = useCallback(async (): Promise<MemberDeletionImpact> => {
     if (!repos) throw new DataError('DB_NOT_READY');
     return repos.members.deletionImpact(id);
   }, [repos, id]);
