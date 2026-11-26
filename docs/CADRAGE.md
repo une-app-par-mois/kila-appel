@@ -132,4 +132,4 @@ Les parties du code où une erreur touche les données, la sécurité ou l'exact
 ## Questions ouvertes
 
 - Nom de paquet exact (Android et iOS) : avant le premier build.
-- Usage de la marque Ki&La pour la nouvelle appli : à confirmer par le porteur avant la fiche de store.
+- ~~Usage de la marque Ki&La~~ : nom Ki&La conservé, publication sous les comptes Jita Vision (décision du 2026-11-26, voir `docs/CONFORMITE.md`).

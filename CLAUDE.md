@@ -10,6 +10,7 @@ Ce fichier est lu par Claude Code à chaque session. Il fixe le contexte et les 
 - **Cahier des charges** : `docs/CADRAGE.md` (fait foi sur le périmètre, le vocabulaire et les zones sensibles)
 - **Architecture** : `docs/ARCHITECTURE.md` et `docs/adr/` (pile technique fermée, couches, schéma)
 - **Sécurité** : `docs/SECURITE.md` (exigences `SEC-xx` et leur vérification)
+- **Conformité** : `docs/CONFORMITE.md` (RGPD, stores, DSA, licences, actions avant lancement)
 - **Exigences** : `docs/PRD.md` (exigences `EX-xx`, règles métier `RM-xx`, non fonctionnelles `NF-xx`)
 - **Plateforme cible** : Android et iOS, téléphone et tablette, publiée sur Google Play et l'App Store
 - **Stack** : Expo + React Native + TypeScript, SQLite local (versions vérifiées au premier ticket) — dépendances minimales, répandues et maintenues
