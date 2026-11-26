@@ -150,4 +150,46 @@ describe('Écrans des contacts d’urgence (EX-05, EX-06)', () => {
     await open('/contacts/999');
     expect(await screen.findByText(t.errors.NOT_FOUND)).toBeTruthy();
   });
+
+  it('deux déplacements coup sur coup : les deux comptent', async () => {
+    await db.execute(
+      "INSERT INTO emergency_contacts (member_id, label, phone, position) VALUES (?, 'Sa mère', '0600000001', 1), (?, 'Son père', '0600000002', 2)",
+      [s.memberId, s.memberId],
+    );
+    await open(`/membres/${s.memberId}`);
+    const handle = await screen.findByLabelText(t.contacts.handle('Parent'));
+    await fireEvent(handle, 'accessibilityAction', { nativeEvent: { actionName: 'moveDown' } });
+    await fireEvent(screen.getByLabelText(t.contacts.handle('Parent')), 'accessibilityAction', {
+      nativeEvent: { actionName: 'moveDown' },
+    });
+    await waitFor(async () =>
+      expect(await phones(db, s.memberId)).toEqual([
+        'Sa mère 0600000001',
+        'Son père 0600000002',
+        'Parent 0600000000',
+      ]),
+    );
+  });
+
+  it('contacts illisibles : la section le dit au lieu de disparaître', async () => {
+    await db.execute('DROP TABLE emergency_contacts');
+    await open(`/membres/${s.memberId}`);
+    expect(await screen.findByText(t.contacts.title)).toBeTruthy();
+    expect(await screen.findByText(t.common.loadFailed)).toBeTruthy();
+  });
+
+  it('recherche : les résultats restent affichés pendant la frappe suivante', async () => {
+    await open('/urgence');
+    const field = await screen.findByLabelText(t.emergency.search);
+    await fireEvent.changeText(field, 'ali');
+    expect(await screen.findByText('Alix Exemple')).toBeTruthy();
+    await fireEvent.changeText(field, 'alix');
+    expect(screen.getByText('Alix Exemple')).toBeTruthy();
+  });
+
+  it('nouveau contact sans membre valide : introuvable, pas de formulaire', async () => {
+    await open('/contacts/nouveau?membre=abc');
+    expect(await screen.findByText(t.errors.NOT_FOUND)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: t.common.save })).toBeNull();
+  });
 });

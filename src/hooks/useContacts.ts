@@ -61,6 +61,6 @@ export const useContact = (id: number | null) => {
 export const useContactSearch = (query: string, today: string) => {
   const repo = useRepo();
   const load = useMemo(() => (repo ? () => repo.search(query, today) : null), [repo, query, today]);
-  const { value, loadFailed } = useLoaded(load, 'CONTACT_SEARCH_FAILED', {});
+  const { value, loadFailed } = useLoaded(load, 'CONTACT_SEARCH_FAILED', {}, true);
   return { results: value ?? null, loadFailed };
 };

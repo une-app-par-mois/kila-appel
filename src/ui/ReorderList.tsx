@@ -1,7 +1,7 @@
 // Liste réordonnable (maquette Fiche membre, EX-05) : la poignée ≡ se glisse vers le haut ou le bas
 // (react-native-gesture-handler et react-native-reanimated, décision du porteur du 2026-11-26).
 // Le lecteur d'écran a les actions « Monter » et « Descendre » sur la même poignée.
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
@@ -28,28 +28,38 @@ const moved = (ids: number[], from: number, to: number) => {
 export const ReorderList = ({ items, onReorder }: Props) => {
   // Hauteur d'une ligne, mesurée : un glissement d'une hauteur vaut un rang.
   const [rowHeight, setRowHeight] = useState<number>(theme.minTouchTarget);
-  const move = (from: number, steps: number) => {
-    const to = Math.min(items.length - 1, Math.max(0, from + steps));
-    if (to !== from)
-      onReorder(
-        moved(
-          items.map((item) => item.id),
-          from,
-          to,
-        ),
-      );
+  // Ordre affiché, changé dès le déplacement : un deuxième déplacement avant la relecture de la
+  // base part de cet ordre, pas de l'ancien. Une nouvelle liste reçue le remplace.
+  const received = items.map((item) => item.id).join(',');
+  const [order, setOrder] = useState({ received, ids: items.map((item) => item.id) });
+  const ids = order.received === received ? order.ids : items.map((item) => item.id);
+  const latest = useRef(ids);
+  latest.current = ids;
+  const move = (id: number, steps: number) => {
+    const current = latest.current;
+    const from = current.indexOf(id);
+    const to = Math.min(current.length - 1, Math.max(0, from + steps));
+    if (from === -1 || to === from) return;
+    const next = moved(current, from, to);
+    latest.current = next;
+    setOrder({ received, ids: next });
+    onReorder(next);
   };
+  const byId = new Map(items.map((item) => [item.id, item]));
   return (
     <>
-      {items.map((item, index) => (
-        <Row
-          key={item.id}
-          item={item}
-          rowHeight={rowHeight}
-          onMeasure={setRowHeight}
-          onMove={(steps) => move(index, steps)}
-        />
-      ))}
+      {ids.map((id) => {
+        const item = byId.get(id);
+        return item ? (
+          <Row
+            key={id}
+            item={item}
+            rowHeight={rowHeight}
+            onMeasure={setRowHeight}
+            onMove={(steps) => move(id, steps)}
+          />
+        ) : null;
+      })}
     </>
   );
 };
@@ -71,7 +81,8 @@ const Row = ({ item, rowHeight, onMeasure, onMove }: RowProps) => {
     onDeactivate: (event) => {
       'worklet';
       offset.value = 0;
-      scheduleOnRN(onMove, Math.round(event.translationY / rowHeight));
+      // Geste interrompu (le défilement a pris la main) : l'ordre ne change pas.
+      if (!event.canceled) scheduleOnRN(onMove, Math.round(event.translationY / rowHeight));
     },
   });
   const animated = useAnimatedStyle(() => ({

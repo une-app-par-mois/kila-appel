@@ -29,7 +29,7 @@ Chaque ligne vaut validation de la dépendance (ADR-001). **Une dépendance n'es
 | expo-sqlite | 58.0.18 (SQLite 3.53.3 embarqué) | MIT | Base locale | Couche données (002) |
 | react-native-svg | 15.16.0 (fixée par le SDK) | MIT | Dessin, icônes ; ses chargeurs par adresse sont interdits (ABS-01, décision du 2026-11-26) | Installée au ticket 006b |
 | lucide-react-native | 1.81.0 | ISC | Icônes au trait (charte §8), importées une par une ; Jest charge leur version CommonJS | Installée au ticket 006b |
-| react-native-gesture-handler | ~3.3.0 (fixée par le SDK) | MIT | Glisser-déposer des contacts d'urgence (poignée ≡) ; déjà imposée par expo-router | Explicite au ticket 008b |
+| react-native-gesture-handler | 3.3.0 (fixée par le SDK) | MIT | Glisser-déposer des contacts d'urgence (poignée ≡) ; déjà imposée par expo-router | Explicite au ticket 008b |
 | react-native-reanimated | 4.7.1 (fixée par le SDK) | MIT | Animation du déplacement ; déjà imposée par expo-router | Explicite au ticket 008b |
 | react-native-worklets | 0.13.0 (fixée par le SDK) | MIT | Exigée par Reanimated 4 et le cœur d'Expo ; son réseau (« Bundle Mode ») interdit, contrôlé par `staticChecks` (ABS-01) | Explicite au ticket 008b |
 | expo-file-system | ~58.0.14 | MIT | Fichiers de sauvegarde | F-03 |

@@ -20,7 +20,16 @@ type Props = {
 
 export const MemberContacts = ({ memberId, memberName, onError }: Props) => {
   const router = useRouter();
-  const { contacts, reorder } = useMemberContacts(memberId);
+  const { contacts, loadFailed, reorder } = useMemberContacts(memberId);
+  if (loadFailed)
+    return (
+      <>
+        <Section title={labels.contacts.title} />
+        <Card>
+          <Text style={styles.text}>{labels.common.loadFailed}</Text>
+        </Card>
+      </>
+    );
   if (contacts === null) return null;
   return (
     <>

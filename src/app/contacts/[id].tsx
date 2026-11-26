@@ -30,6 +30,8 @@ export default function ContactScreen() {
   const [formError, setFormError] = useState<string | undefined>();
   const saving = useRef(false);
   const [busy, setBusy] = useState(false);
+  // Écrit avec succès, l'écran se ferme : un contact supprimé n'est pas « introuvable ».
+  const [closing, setClosing] = useState(false);
 
   useEffect(() => {
     if (!contact || contact.id === filledId) return;
@@ -48,6 +50,7 @@ export default function ContactScreen() {
     setBusy(true);
     try {
       await action();
+      setClosing(true);
       back();
     } catch (e) {
       const code = (e as { code?: string }).code;
@@ -68,7 +71,8 @@ export default function ContactScreen() {
     void run(() => (isNew ? create(memberId, { label, phone }) : update({ label, phone })));
   };
 
-  const notFound = !isNew && loaded && contact === null;
+  // Nouveau sans membre valide, ou contact absent de la base.
+  const notFound = !closing && (isNew ? memberId === 0 : loaded && contact === null);
   const error = loadFailed
     ? labels.common.loadFailed
     : notFound
@@ -76,7 +80,7 @@ export default function ContactScreen() {
       : formError;
   return (
     <Screen title={t.title} onBack={back} error={error}>
-      {(isNew || contact) && (
+      {((isNew && memberId !== 0) || contact) && (
         <>
           <TextField
             label={t.label}
