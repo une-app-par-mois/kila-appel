@@ -91,7 +91,8 @@ Priorité : toutes les exigences sont dans la v1 (décision du 2026-11-26). Le j
 | EX-33 | F-10 | Gérer les créneaux ponctuels | Un créneau sans jour de semaine, avec une ou plusieurs dates. Il réclame un appel pour chacune de ses dates passées. |
 | EX-34 | F-11 | Réunir plusieurs groupes dans un créneau | Un créneau peut avoir plusieurs groupes ; l'appel liste les membres de tous ses groupes ; chaque présence compte pour le groupe du membre. |
 | EX-35 | F-12 | Afficher la frise des séances | Sur l'accueil, les séances passées et à venir, chacune marquée faite, manquante ou à venir ; un appui ouvre l'appel ou la séance. |
-| EX-36 | F-13 | Préparer un appel, annuler une séance | Préparer : saisir les excusés à l'avance, sans que la séance compte dans les statistiques avant son enregistrement. Annuler : une séance à venir ou non faite est marquée annulée et ne réclame plus d'appel. |
+| EX-36 | F-13 | **Préparer** une séance à venir (7 jours glissants) | Ouvrir l'appel d'une séance qui n'a pas commencé la prépare : seuls deux statuts sont proposés, affichés « Attendu » et « Excusé » (« Attendu » est enregistré comme Présent, il n'y a pas de cinquième statut). Une séance préparée n'est comptée nulle part (statistiques, historique, appel fait) et la relance part quand même. Le jour venu, la préparation est reprise telle quelle et il ne reste qu'à l'enregistrer. |
+| EX-38 | F-13 | **Annuler** une séance | « Que s'est-il passé ? », trois issues : « La séance a été annulée » (séance **annulée**), « Aucune séance prévue ce jour-là » (séance **non planifiée** : vacances, salle fermée), « Garder la séance ». Annulée et non planifiée : aucune relance, rien dans les statistiques, distinguées dans l'historique, et rétablissables (une préparation revient intacte). Possible tant que la séance n'a pas commencé, appel enregistré ou non ; impossible une fois la séance commencée et l'appel enregistré, refusé aussi par la base. |
 | EX-37 | F-14 | Afficher le podium d'un groupe | Classement des membres d'un groupe par taux de présence sur la période, ex æquo au même rang. |
 
 ## 4. Règles métier
@@ -124,11 +125,20 @@ Aucune mesure d'usage dans l'appli (ABS-01). Les indicateurs viennent des consol
 
 Serveur, compte, synchronisation, chiffrement dans l'appli, verrouillage à l'ouverture, données de santé, commentaire au niveau d'un membre, courriel et photo des membres : voir « Hors périmètre » du cadrage.
 
-## 8. Questions ouvertes
+## 8. Écarts relevés
+
+- 2026-11-26 : EX-36 et EX-38 (version de l'ancienne appli, décision du porteur) introduisent des notions absentes du glossaire du cadrage validé : **séance préparée** (`prepared`), **séance annulée** (`cancelled`), **séance non planifiée** (`unscheduled`), **séance enregistrée** (`recorded`), et le libellé « Attendu ». Proposition d'ajout au glossaire, à valider par le porteur avant de modifier le cadrage.
+
+## 9. Questions ouvertes
 
 - Tablette : orientation paysage, mise en page sur deux colonnes ? (→ maquettes)
 - Ordre exact des statuts au fil des appuis (EX-10) : Présent → Absent → Retard → Excusé comme l'ancienne version ? (→ maquettes)
 - Contenu exact du rapport PDF (EX-32). (→ ticket F-09)
+- Appel sans créneau (« séance exceptionnelle » de l'ancienne version : choisir un groupe et une date) : à garder ? (→ porteur)
+
+## Décisions du porteur
+
+- 2026-11-26 : EX-09 (créneau en cours ou le plus proche), EX-36 et EX-38 (version de l'ancienne appli), RM-01, RM-06, EX-21, EX-23, EX-06, NF-06 et NF-08 validés tels que proposés.
 
 ## Points à vérifier en relisant
 
@@ -138,6 +148,5 @@ Choix qui viennent de moi (souvent repris de l'ancienne version), à confirmer o
 2. **EX-09** : quelle séance l'appli propose à l'ouverture.
 3. **EX-17, EX-33** : les appels manquants, qu'un créneau récurrent ne réclame pas avant sa création, mais qu'un créneau ponctuel réclame.
 4. **EX-21** : le rappel de sauvegarde à 30 jours ; **EX-23** : la double confirmation de « tout effacer ».
-5. **EX-36** : « préparer » réduit à la saisie des excusés à l'avance ; l'annulation à une seule issue, au lieu des 3 de l'ancienne version.
-6. **RM-01** (« — » sans séance), **RM-06** (fin de saison au 31 juillet).
-7. **NF-05**, **NF-06** et **NF-08** : les chiffres (44 points, 500 membres) sont des propositions.
+5. **RM-01** (« — » sans séance), **RM-06** (fin de saison au 31 juillet).
+6. **NF-05**, **NF-06** et **NF-08** : les chiffres (44 points, 500 membres) sont des propositions.
