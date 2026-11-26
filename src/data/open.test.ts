@@ -48,7 +48,8 @@ describe('ABS-05 effacement dans le fichier (ticket 007d)', () => {
       );
       await db.execute('DELETE FROM members WHERE id = ?', [id]);
       await db.close();
-      expect(readFileSync(file).includes(Buffer.from(marker))).toBe(false);
+      // Octets décodés en UTF-8 : le nom, en ASCII, se lirait tel quel s'il restait.
+      expect(new TextDecoder().decode(readFileSync(file)).includes(marker)).toBe(false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
