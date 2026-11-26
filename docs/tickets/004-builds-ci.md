@@ -24,10 +24,10 @@ Lever le risque d'ADR-009 tôt : APK de développement installable, build iOS de
 
 - [ ] L'APK de développement s'installe et s'ouvre sur le téléphone du porteur
 - [ ] Le build iOS simulateur réussit sur la CI
-- [ ] L'audit échoue si une permission non attendue apparaît (vérifié en en ajoutant une, puis retirée)
-- [ ] `INTERNET` absente de la liste attendue du build de production
+- [x] L'audit échoue si une permission non attendue apparaît (vérifié en en ajoutant une, puis retirée)
+- [x] `INTERNET` absente de la liste attendue du build de production
 - [ ] La migration 1 s'applique sur le téléphone (base ouverte, `user_version` = 1) : fin de la vérification d'ADR-008
-- [ ] Aucun filtre d’intention de lien profond (`scheme`) dans le manifeste du binaire de production (scheme retiré au ticket 001, ABS-07)
+- [x] Aucun filtre d’intention de lien profond (`scheme`) dans le manifeste du binaire de production (scheme retiré au ticket 001, ABS-07)
 
 ## Tests attendus
 

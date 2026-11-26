@@ -33,7 +33,7 @@ Ce qu'on protège, contre quoi, et comment chaque exigence est vérifiée. S'app
 | ID | Exigence | Vérification |
 | --- | --- | --- |
 | SEC-01 | Aucun appel réseau : aucun client HTTP, `fetch`, `XMLHttpRequest`, WebSocket dans `src/` | Test `src/staticChecks.test.ts` : `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource`, `sendBeacon`, `loadAsync`, `useFonts` (aussi par `obj['…']`), `uri` en `http(s)`/`ws(s)` ; revue des dépendances ; permission INTERNET absente du binaire (ticket 004) |
-| SEC-02 | Permission `INTERNET` absente du binaire Android de production ; liste des permissions égale à la liste attendue | `aapt2 dump permissions` sur l'APK en CI de fin de jalon et de version, comparé à une liste figée dans le dépôt |
+| SEC-02 | Permission `INTERNET` absente du binaire Android de production ; liste des permissions égale à la liste attendue | `scripts/audit-apk.js` (`aapt2 dump permissions`) sur l'APK, workflow `builds.yml` à chaque PR vers `main`, comparé à `config/permissions-attendues.txt` ; testé par `scripts/audit-apk.test.js` et par une permission ajoutée puis retirée (ticket 004) |
 | SEC-03 | `getExpoPushTokenAsync` et `getDevicePushTokenAsync` n'apparaissent nulle part | Test qui cherche ces noms dans `src/` (ADR-007) |
 | SEC-04 | Dépendances : versions exactes, lockfile commité, `npm audit` sans vulnérabilité haute, actions de CI épinglées par empreinte | Workflow « Sécurité » (déjà en place) ; Dependabot |
 | SEC-05 | Toutes les requêtes SQL sont paramétrées ; aucune concaténation de valeur dans une requête | Semgrep + revue ; tests de données avec des noms contenant `'`, `"`, `;` |

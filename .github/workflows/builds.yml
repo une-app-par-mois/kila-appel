@@ -1,0 +1,65 @@
+# Binaires construits sur GitHub Actions (ADR-009), puis audités sur le binaire (SEC-02, ABS-07).
+# Mode de CI par jalon : PR vers main seulement (CLAUDE.md). Rien n'est signé ni publié ici.
+name: Builds
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    name: Android (APK de version, clé de test) et audit
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+          cache: npm
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: "17"
+      - run: npm ci
+      - name: Projet natif (expo prebuild)
+        run: npx expo prebuild --platform android --no-install
+        env:
+          CI: "1"
+      - name: APK de version (JavaScript embarqué, clé de débogage publique)
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon
+      - name: Audit du binaire (permissions, INTERNET, allowBackup, lien profond)
+        run: node scripts/audit-apk.js android/app/build/outputs/apk/release/app-release.apk
+      - name: Empreinte SHA-256
+        run: sha256sum android/app/build/outputs/apk/release/app-release.apk
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: kila-apk-test
+          path: android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 14
+
+  ios:
+    name: iOS (simulateur, non signé) et contrôles
+    runs-on: macos-26 # étiquette explicite, runner standard gratuit en public (ADR-009)
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Projet natif (expo prebuild, pod install)
+        run: npx expo prebuild --platform ios
+        env:
+          CI: "1"
+      - name: Build simulateur sans signature
+        run: >-
+          xcodebuild -workspace ios/KiLa.xcworkspace -scheme KiLa
+          -configuration Release -sdk iphonesimulator -derivedDataPath build
+          CODE_SIGNING_ALLOWED=NO build
+      - name: Contrôles du binaire (ABS-06, ABS-07)
+        run: node scripts/audit-ios.js build/Build/Products/Release-iphonesimulator/KiLa.app ios/KiLa/KiLa.entitlements

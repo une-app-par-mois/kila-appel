@@ -7,10 +7,22 @@
     "userInterfaceStyle": "light",
     "ios": {
       "bundleIdentifier": "com.jitavision.kila",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
-      "package": "com.jitavision.kila"
+      "package": "com.jitavision.kila",
+      "allowBackup": false,
+      "permissions": [],
+      "blockedPermissions": [
+        "android.permission.INTERNET",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.VIBRATE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -25,7 +37,8 @@
             "./assets/fonts/IBMPlexMono-Medm.ttf"
           ]
         }
-      ]
+      ],
+      "./plugins/withoutUrlScheme.js"
     ]
   }
 }
