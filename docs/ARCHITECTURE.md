@@ -84,7 +84,7 @@ Les identifiants suivent le glossaire du cadrage (colonne « Terme du code »).
 | `members` | id, last_name, first_name, birth_date?, archived_at? | Seuls nom et prénom obligatoires (ABS-03) |
 | `emergency_contacts` | id, member_id, label, phone, position | `ON DELETE CASCADE` depuis `members` |
 | `groups` | id, season_id, name, archived_at? | |
-| `enrollments` | id, member_id, group_id, start_date, end_date? | Cascade depuis `members` et `groups` |
+| `enrollments` | id, member_id, group_id, start_date, end_date? | Cascade depuis `members` et `groups` ; inscrit du début (inclus) à la fin (exclue), fin = premier jour sans le membre (décision du porteur du 2026-11-26) |
 | `slots` | id, season_id, weekday?, start_time, duration_min, place?, name?, schedule_from | `weekday` nul = créneau ponctuel ; `schedule_from` = date d'effet de l'horaire : fixée à la création, avancée quand le jour ou l'heure changent, jamais reculée (déclencheur) ; aucune séance réclamée avant (EX-07, EX-08) |
 | `slot_dates` | slot_id, date | Dates d'un créneau ponctuel (F-10) |
 | `slot_groups` | slot_id, group_id | Plusieurs groupes par créneau (F-11) |

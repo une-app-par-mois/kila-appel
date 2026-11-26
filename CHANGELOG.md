@@ -6,6 +6,7 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Ajouté
 
+- Membres et inscriptions (données) : liste avec recherche, filtre par groupe et archivés ; créer avec un groupe facultatif, modifier, archiver, supprimer avec ce qui sera effacé ; inscrire plusieurs membres, retirer à une date — ticket 007.
 - Licences embarquées : écran « À propos › Licences » et texte de chaque licence, registre généré depuis le bundle exporté et les polices (`scripts/licences.js`), vérifié par la CI — ticket 006e.
 - Écrans des groupes : liste de la saison active, archivés, création, fiche (archiver, désarchiver), modification et suppression avec ce qui sera effacé — ticket 006d.
 - Écrans Paramètres (accueil provisoire), Saisons et formulaire de saison, avec la confirmation de suppression qui dit ce qui sera effacé — ticket 006c.

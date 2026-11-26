@@ -150,7 +150,9 @@ export const labels = {
   errors: {
     NAME_REQUIRED: 'Indiquez un nom.',
     DATE_INVALID: 'Date à écrire sous la forme JJ/MM/AAAA.',
+    DATE_IN_FUTURE: 'Cette date est dans le futur.',
     END_BEFORE_START: 'La fin doit tomber le jour du début ou après.',
+    ALREADY_ENROLLED: 'Un des membres est déjà inscrit à ce groupe.',
     SESSIONS_OUTSIDE_SEASON: 'Des séances ont déjà eu lieu hors de ces dates.',
     NOT_FOUND: 'Cet élément n’existe plus.',
     unknown: 'L’opération a échoué. Réessayez.',

@@ -1,4 +1,4 @@
-import { InputError, validateName, validateSeason } from '@/domain/validation';
+import { InputError, validateMember, validateName, validateSeason } from '@/domain/validation';
 
 describe('Validation des saisies avant la base', () => {
   it('retire les espaces autour d’un nom', () => {
@@ -39,5 +39,43 @@ describe('Validation des saisies avant la base', () => {
       expect((error as InputError).code).toBe('DATE_INVALID');
     }
     expect.assertions(2);
+  });
+});
+
+describe('EX-03 validateMember', () => {
+  const today = '2026-11-26';
+  it('nettoie nom et prénom ; date de naissance facultative', () => {
+    expect(
+      validateMember({ firstName: ' Alix ', lastName: ' Exemple ', birthDate: null }, today),
+    ).toEqual({
+      firstName: 'Alix',
+      lastName: 'Exemple',
+      birthDate: null,
+    });
+    expect(
+      validateMember({ firstName: 'Alix', lastName: 'Exemple', birthDate: '2015-03-14' }, today)
+        .birthDate,
+    ).toBe('2015-03-14');
+  });
+
+  it('refuse un nom ou un prénom vide', () => {
+    expect(() =>
+      validateMember({ firstName: ' ', lastName: 'Exemple', birthDate: null }, today),
+    ).toThrow(expect.objectContaining({ code: 'NAME_REQUIRED' }));
+    expect(() =>
+      validateMember({ firstName: 'Alix', lastName: '', birthDate: null }, today),
+    ).toThrow(expect.objectContaining({ code: 'NAME_REQUIRED' }));
+  });
+
+  it('refuse une date de naissance mal écrite (RM-04) ou dans le futur', () => {
+    expect(() =>
+      validateMember({ firstName: 'A', lastName: 'B', birthDate: '14/03/2015' }, today),
+    ).toThrow(expect.objectContaining({ code: 'DATE_INVALID' }));
+    expect(() =>
+      validateMember({ firstName: 'A', lastName: 'B', birthDate: '2026-11-27' }, today),
+    ).toThrow(expect.objectContaining({ code: 'DATE_IN_FUTURE' }));
+    expect(
+      validateMember({ firstName: 'A', lastName: 'B', birthDate: today }, today).birthDate,
+    ).toBe(today);
   });
 });

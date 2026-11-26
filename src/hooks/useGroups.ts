@@ -1,7 +1,7 @@
 // Groupes pour les écrans (EX-02, CONV-10). Même contrat que useSeasons : une action qui échoue
 // est relayée à l'écran ; tout écran ouvert recharge après une modification (dataChanged) ;
 // au changement de saison, la liste est vidée et une réponse tardive de l'ancienne ignorée.
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { DataError } from '@/data/errors';
 import {
   type Group,
@@ -9,51 +9,15 @@ import {
   type GroupDetail,
   groupsRepo,
 } from '@/data/groupsRepo';
-import { log } from '@/data/log';
-import { notifyDataChanged, onDataChanged } from '@/hooks/dataChanged';
+import { notifyDataChanged } from '@/hooks/dataChanged';
 import { useDatabase } from '@/hooks/useDatabase';
+import { useLoaded } from '@/hooks/useLoaded';
 
 type Repo = ReturnType<typeof groupsRepo>;
 
 const useRepo = () => {
   const db = useDatabase();
   return useMemo(() => (db ? groupsRepo(db) : null), [db]);
-};
-
-/** Lit une valeur, garde seulement la dernière réponse, recharge à chaque modification. */
-const useLoaded = <T>(load: (() => Promise<T>) | null, failureCode: string, details = {}) => {
-  const [value, setValue] = useState<T | null>(null);
-  // Vrai dès la première lecture réussie : distingue « en cours » de « introuvable ».
-  const [loaded, setLoaded] = useState(false);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const lastLoad = useRef(0);
-  const detailsRef = useRef(details);
-  detailsRef.current = details;
-
-  const reload = useCallback(async () => {
-    const current = ++lastLoad.current;
-    if (!load) return;
-    try {
-      const result = await load();
-      if (current !== lastLoad.current) return;
-      setValue(result);
-      setLoaded(true);
-      setLoadFailed(false);
-    } catch {
-      log(failureCode, detailsRef.current);
-      if (current === lastLoad.current) setLoadFailed(true);
-    }
-  }, [load, failureCode]);
-
-  useEffect(() => {
-    setValue(null);
-    setLoaded(false);
-    setLoadFailed(false);
-    void reload();
-    return onDataChanged(() => void reload());
-  }, [reload]);
-
-  return { value, loaded, loadFailed };
 };
 
 /** Groupes courants (ou archivés) de la saison ; `null` tant que rien n'est chargé. */
