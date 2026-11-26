@@ -39,7 +39,7 @@ ${titre('Bienvenue')}
 ${carte(`
 <div class="etape faite"><span class="coche">✓</span><div><div class="l-titre">Créer la saison</div><div class="l-sous">Saison 2026-2027, créée automatiquement</div></div></div>
 <div class="etape"><span class="num">2</span><div><div class="l-titre">Créer un groupe</div><div class="l-sous">Par exemple « Poussins mercredi »</div></div></div>
-${go('groupe', 'Créer un groupe')}
+${go('groupe-nouveau', 'Créer un groupe')}
 <div class="etape"><span class="num">3</span><div><div class="l-titre">Ajouter les membres</div></div></div>
 <div class="etape"><span class="num">4</span><div><div class="l-titre">Déclarer les créneaux</div></div></div>
 `)}
@@ -131,7 +131,7 @@ ${carte(membres.slice(0, 5).map((p, i) => `<div class="rang"><span class="nom">$
 ecran('parametres', 1, 'Paramètres', 'EX-01 à EX-07, EX-19 à EX-24', 'parametres', `
 ${titre('Paramètres')}
 ${section('Organisation')}
-${carte(`${ligne('Saisons', 'Active : 2026-2027', 'data-go="saisons"')}${ligne('Groupes', '3 groupes', 'data-go="groupe"')}${ligne('Membres', '65 membres', 'data-go="membre"')}${ligne('Créneaux', '3 créneaux', 'data-go="creneau"')}`)}
+${carte(`${ligne('Saisons', 'Active : 2026-2027', 'data-go="saisons"')}${ligne('Groupes', '3 groupes', 'data-go="groupes"')}${ligne('Membres', '65 membres', 'data-go="membres"')}${ligne('Créneaux', '3 créneaux', 'data-go="creneaux"')}`)}
 ${section('Données')}
 ${carte(`${ligne('Sauvegarde et restauration', 'Dernière : il y a 34 jours', 'data-go="donnees"')}${ligne('Conservation', '3 saisons', 'data-go="donnees"')}${ligne('Tout effacer', '', 'data-go="donnees"')}`)}
 ${section('À propos')}
@@ -149,14 +149,45 @@ ${go('saisons', 'Nouvelle saison', 'btn-s')}
 
 // 11 — Groupe (EX-02, EX-04)
 ecran('groupe', 1, "Groupe et ses membres", 'EX-02, EX-04', 'parametres', `
-${titre('Poussins mercredi', 'parametres')}
+${titre('Poussins mercredi', 'groupes')}
 <div class="l-sous sous-titre">Saison 2026-2027 · 22 membres inscrits</div>
 ${carte(membres.slice(0, 6).map((p) => ligne(`${p.prenom} ${p.nom}`, 'Inscrit depuis le 03/09/2026', 'data-go="membre"')).join(''))}
 <div class="duo">${go('groupe', 'Archiver', 'btn-s tiers')}${go('ajout', 'Ajouter un membre', 'btn-p deuxtiers')}</div>`);
 
+// 11a — Liste des groupes (EX-02)
+ecran('groupes', 1, 'Groupes', 'EX-02', 'parametres', `
+${titre('Groupes', 'parametres')}
+<div class="l-sous sous-titre">Saison 2026-2027</div>
+${carte(`${ligne('Poussins mercredi', '22 membres · mercredi 14:00', 'data-go="groupe"')}${ligne('Benjamins lundi', '18 membres · lundi 18:00', 'data-go="groupe"')}${ligne('Adultes jeudi', '25 membres · jeudi 20:00', 'data-go="groupe"')}`)}
+${go('groupe-nouveau', 'Nouveau groupe')}
+<div class="filtres"><span class="filtre">Voir les groupes archivés (1)</span></div>`);
+
+// 11b — Création d'un groupe (EX-02)
+ecran('groupe-nouveau', 1, "Création d'un groupe", 'EX-02', 'parametres', `
+${titre('Nouveau groupe', 'groupes')}
+<label>Nom du groupe</label><div class="champ actif">Poussins mercredi|</div>
+<p class="aide">Rattaché à la saison active : 2026-2027.</p>
+${go('groupe', 'Créer le groupe')}
+<p class="note">Ensuite : ajouter ses membres, puis déclarer son créneau.</p>`);
+
+// 11c — Liste des membres (EX-03)
+ecran('membres', 1, 'Membres', 'EX-03', 'parametres', `
+${titre('Membres', 'parametres')}
+<input class="champ" placeholder="🔍 Rechercher un membre">
+<div class="filtres"><span class="filtre on">Tous les groupes</span><span class="filtre">Archivés (4)</span></div>
+${carte(membres.slice(0, 7).map((p, i) => ligne(`${p.prenom} ${p.nom}`, ['Poussins mercredi', 'Benjamins lundi', 'Poussins mercredi', 'Adultes jeudi', 'Poussins mercredi', 'Benjamins lundi', 'Aucun groupe'][i], 'data-go="membre"')).join(''))}
+<div class="duo">${go('membres', 'Importer (CSV)', 'btn-s tiers')}${go('ajout', 'Nouveau membre', 'btn-p deuxtiers')}</div>
+<p class="note">« Importer (CSV) » : lot 2 (F-07).</p>`);
+
+// 14a — Liste des créneaux (EX-07)
+ecran('creneaux', 1, 'Créneaux', 'EX-07', 'parametres', `
+${titre('Créneaux', 'parametres')}
+${carte(`${ligne('Mercredi 14:00 – 15:30', 'Poussins mercredi · Gymnase Jean-Moulin', 'data-go="creneau"')}${ligne('Lundi 18:00 – 19:30', 'Benjamins lundi · Dojo municipal', 'data-go="creneau"')}${ligne('Jeudi 20:00 – 21:30', 'Adultes jeudi · Dojo municipal', 'data-go="creneau"')}`)}
+${go('creneau', 'Nouveau créneau')}`);
+
 // 12 — Fiche membre (EX-03, EX-04, EX-05)
 ecran('membre', 1, 'Fiche membre', 'EX-03, EX-04, EX-05', 'parametres', `
-${titre('Léo Garcia', 'groupe')}
+${titre('Léo Garcia', 'membres')}
 <label>Prénom</label><div class="champ">Léo</div>
 <label>Nom</label><div class="champ">Garcia</div>
 <label>Date de naissance <span class="facultatif">facultative</span></label><div class="champ mono">14/03/2017</div>
@@ -175,13 +206,13 @@ ${carte(`<p>Seront effacés <b>définitivement</b> :</p><ul><li>sa fiche et sa d
 
 // 14 — Créneau (EX-07)
 ecran('creneau', 1, 'Créneau récurrent', 'EX-07', 'parametres', `
-${titre('Nouveau créneau', 'parametres')}
+${titre('Nouveau créneau', 'creneaux')}
 <label>Jour</label><div class="jours">${['L', 'M', 'Me', 'J', 'V', 'S', 'D'].map((d) => `<span class="jour ${d === 'Me' ? 'on' : ''}">${d}</span>`).join('')}</div>
 <div class="deux"><div><label>Début</label><div class="champ mono">14:00</div></div><div><label>Durée</label><div class="champ mono">1 h 30</div></div></div>
 <label>Groupe</label><div class="champ">Poussins mercredi ▾</div>
 <label>Lieu <span class="facultatif">facultatif</span></label><div class="champ">Gymnase Jean-Moulin</div>
 <label>Nom <span class="facultatif">facultatif</span></label><div class="champ vide">Par exemple « Technique »</div>
-${go('parametres', 'Enregistrer le créneau')}
+${go('creneaux', 'Enregistrer le créneau')}
 <p class="note">Lot 2 : créneaux ponctuels (F-10) et plusieurs groupes (F-11) s'ajouteront à ce formulaire.</p>`);
 
 // 15 — Données : sauvegarde, restauration, conservation, tout effacer
