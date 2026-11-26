@@ -48,7 +48,18 @@ export const labels = {
     activeSeason: (name: string) => `Active : ${name}`,
     noActiveSeason: 'Aucune saison active',
     groups: 'Groupes',
+    about: 'À propos',
+    licences: 'Licences',
     groupCount: (n: number) => (n === 0 ? 'Aucun groupe' : plural(n, 'groupe', 'groupes')),
+  },
+  licences: {
+    title: 'Licences',
+    generated:
+      'Liste générée depuis les bibliothèques et polices réellement embarquées dans l’appli.',
+    subtitle: (e: { license: string; version: string }) =>
+      e.version === '' ? e.license : `${e.license} · ${e.version}`,
+    missingText: (license: string, author?: string) =>
+      `Ce paquet ne fournit pas le texte de sa licence. Licence : ${license}${author ? ` · ${author}` : ''}.`,
   },
   groups: {
     title: 'Groupes',

@@ -15,9 +15,9 @@ Ajouté le 2026-11-26 (décision du porteur) : EX-42 n'était prévu par aucun t
 
 ## Critères d'acceptation
 
-- [ ] Liste générée depuis les dépendances de production, jamais écrite à la main
-- [ ] Une licence refusée (CONFORMITE §7) fait échouer le script
-- [ ] Écran Licences lisible hors ligne
+- [x] Liste générée depuis les dépendances de production, jamais écrite à la main
+- [x] Une licence refusée (CONFORMITE §7) fait échouer le script
+- [x] Écran Licences lisible hors ligne
 
 ## Tests attendus
 
