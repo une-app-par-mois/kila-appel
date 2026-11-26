@@ -19,6 +19,8 @@ Issu du découpage du ticket 006c (décision du porteur du 2026-11-26).
 - [ ] Un groupe archivé montre « Désarchiver » à la place d'« Archiver » (ajouté par décision du porteur du 2026-11-26)
 - [ ] Sans saison active : « Aucune saison active » et un bouton vers Saisons (texte absent des maquettes, décision du porteur du 2026-11-26)
 
+- [ ] `useGroups` recharge tous les écrans ouverts après une modification, comme `useSeasons` (revue du 006c : une pile native garde les écrans précédents montés) ; supprimer une saison recharge aussi les groupes
+
 ## Tests attendus
 
 - Tests d'écran : liste, archivage, désarchivage, confirmation de suppression

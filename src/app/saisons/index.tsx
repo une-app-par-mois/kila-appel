@@ -1,7 +1,7 @@
 // Saisons (maquette, EX-01) : la saison active porte la pastille ; les autres, « Activer ».
 // Un appui sur une saison ouvre son formulaire.
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { labels } from '@/config/libelles';
 import { toDisplayDate } from '@/domain/formats';
 import { useSeasons } from '@/hooks/useSeasons';
@@ -16,6 +16,10 @@ export default function Seasons() {
   const router = useRouter();
   const { seasons, loadFailed, activate } = useSeasons();
   const [activateFailed, setActivateFailed] = useState(false);
+  // Une liste relue (après n'importe quelle modification) efface l'ancien échec.
+  useEffect(() => {
+    if (seasons !== null) setActivateFailed(false);
+  }, [seasons]);
   const onActivate = (id: number) => {
     setActivateFailed(false);
     activate(id).catch(() => setActivateFailed(true));
@@ -26,7 +30,11 @@ export default function Seasons() {
       ? labels.errors.unknown
       : undefined;
   return (
-    <Screen title={t.title} onBack={() => router.back()} error={error}>
+    <Screen
+      title={t.title}
+      onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+      error={error}
+    >
       {seasons !== null && seasons.length > 0 && (
         <Card>
           {seasons.map((season) => (

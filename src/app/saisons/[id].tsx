@@ -2,7 +2,7 @@
 // Dates saisies en JJ/MM/AAAA (RM-04) ; erreurs sous le champ concerné (CONV-15) ;
 // suppression après une confirmation qui dit ce qui sera effacé.
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
@@ -26,7 +26,7 @@ const toErrors = (error: unknown): Errors => {
     case 'NAME_REQUIRED':
       return { name: E.NAME_REQUIRED };
     case 'DATE_INVALID':
-      return { start: E.DATE_INVALID };
+      return { form: E.DATE_INVALID };
     case 'END_BEFORE_START':
       return { end: E.END_BEFORE_START };
     case 'SESSIONS_OUTSIDE_SEASON':
@@ -56,6 +56,17 @@ export default function SeasonForm() {
   const [filled, setFilled] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
   const [impact, setImpact] = useState<SeasonDeletionImpact | null>(null);
+  // Un enregistrement à la fois (double appui).
+  const saving = useRef(false);
+  const [busy, setBusy] = useState(false);
+  // En modification, le formulaire n'apparaît qu'une fois la saison lue.
+  const ready = seasonId === null ? !loadFailed : season !== undefined;
+  /** Saisie d'un champ : efface son erreur et celle du formulaire. */
+  const onEdit =
+    (field: 'name' | 'start' | 'end', set: (value: string) => void) => (value: string) => {
+      set(value);
+      setErrors((current) => ({ ...current, [field]: undefined, form: undefined }));
+    };
 
   useEffect(() => {
     if (season === undefined || filled) return;
@@ -66,6 +77,7 @@ export default function SeasonForm() {
   }, [season, filled]);
 
   const save = async () => {
+    if (saving.current) return;
     const startDate = parseDisplayDate(start);
     const endDate = parseDisplayDate(end);
     if (startDate === null || endDate === null) {
@@ -75,6 +87,8 @@ export default function SeasonForm() {
       });
       return;
     }
+    saving.current = true;
+    setBusy(true);
     try {
       const input = { name, startDate, endDate };
       if (seasonId === null) await create(input);
@@ -82,6 +96,8 @@ export default function SeasonForm() {
       leave();
     } catch (error) {
       setErrors(toErrors(error));
+      saving.current = false;
+      setBusy(false);
     }
   };
 
@@ -111,41 +127,50 @@ export default function SeasonForm() {
   const screenError = loadFailed ? labels.common.loadFailed : missing ? E.NOT_FOUND : undefined;
   return (
     <Screen title={t.title} onBack={leave} error={screenError}>
-      <TextField label={t.name} value={name} onChangeText={setName} error={errors.name} />
-      <View style={styles.dates}>
-        <View style={styles.date}>
+      {ready && (
+        <>
           <TextField
-            label={t.start}
-            value={start}
-            onChangeText={setStart}
-            placeholder={t.datePlaceholder}
-            error={errors.start}
-            mono
+            label={t.name}
+            value={name}
+            onChangeText={onEdit('name', setName)}
+            error={errors.name}
           />
-        </View>
-        <View style={styles.date}>
-          <TextField
-            label={t.end}
-            value={end}
-            onChangeText={setEnd}
-            placeholder={t.datePlaceholder}
-            error={errors.end}
-            mono
-          />
-        </View>
-      </View>
-      {errors.form !== undefined && (
-        <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={styles.error}>
-          {errors.form}
-        </Text>
-      )}
-      <Button label={labels.common.save} onPress={() => void save()} />
-      {seasonId !== null && season !== undefined && (
-        <Button
-          label={t.delete}
-          variant="destructiveSecondary"
-          onPress={() => void askDeletion()}
-        />
+          <View style={styles.dates}>
+            <View style={styles.date}>
+              <TextField
+                label={t.start}
+                value={start}
+                onChangeText={onEdit('start', setStart)}
+                placeholder={t.datePlaceholder}
+                error={errors.start}
+                mono
+              />
+            </View>
+            <View style={styles.date}>
+              <TextField
+                label={t.end}
+                value={end}
+                onChangeText={onEdit('end', setEnd)}
+                placeholder={t.datePlaceholder}
+                error={errors.end}
+                mono
+              />
+            </View>
+          </View>
+          {errors.form !== undefined && (
+            <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={styles.error}>
+              {errors.form}
+            </Text>
+          )}
+          <Button label={labels.common.save} disabled={busy} onPress={() => void save()} />
+          {seasonId !== null && (
+            <Button
+              label={t.delete}
+              variant="destructiveSecondary"
+              onPress={() => void askDeletion()}
+            />
+          )}
+        </>
       )}
       {season !== undefined && impact !== null && (
         <ConfirmDialog

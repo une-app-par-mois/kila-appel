@@ -73,6 +73,30 @@ describe('Écrans des saisons (EX-01)', () => {
     expect(await screen.findByText('2027-2028')).toBeTruthy();
   });
 
+  it('un double appui sur « Enregistrer » ne crée qu’une saison', async () => {
+    await open('/saisons/nouvelle');
+    await fireEvent.changeText(await screen.findByLabelText(t.seasonForm.name), '2027-2028');
+    await fireEvent.changeText(screen.getByLabelText(t.seasonForm.start), '01/09/2027');
+    await fireEvent.changeText(screen.getByLabelText(t.seasonForm.end), '31/07/2028');
+    const save = screen.getByRole('button', { name: t.common.save });
+    await fireEvent.press(save);
+    await fireEvent.press(save);
+    await waitFor(async () => expect(await count(db, 'seasons', "name = '2027-2028'")).toBe(1));
+  });
+
+  it('le retour de la liste ouverte directement mène à Paramètres', async () => {
+    const router = await open('/saisons');
+    await fireEvent.press(await screen.findByRole('button', { name: t.common.back }));
+    await waitFor(() => expect(router.getPathname()).toBe('/'));
+  });
+
+  it('une saison introuvable : message, ni champ ni « Enregistrer »', async () => {
+    await open('/saisons/999');
+    expect(await screen.findByText(t.errors.NOT_FOUND)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: t.common.save })).toBeNull();
+    expect(screen.queryByLabelText(t.seasonForm.name)).toBeNull();
+  });
+
   it('refuse des dates qui laisseraient une séance hors de la saison', async () => {
     await open(`/saisons/${s.seasonId}`);
     const start = await screen.findByLabelText(t.seasonForm.start);

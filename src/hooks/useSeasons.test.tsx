@@ -62,6 +62,24 @@ describe('useSeasons (EX-01, CONV-10)', () => {
     expect(mockSeasons.list).toHaveBeenCalledTimes(5);
   });
 
+  it('une modification faite sur un écran recharge aussi les autres écrans ouverts', async () => {
+    mockSeasons.list
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValue([season]);
+    mockSeasons.activate.mockResolvedValue(undefined);
+    const list = await renderHook(() => useSeasons());
+    const form = await renderHook(() => useSeasons());
+    await waitFor(() => expect(list.result.current.seasons).toEqual([]));
+    await waitFor(() => expect(form.result.current.seasons).toEqual([]));
+    await act(async () => {
+      await form.result.current.activate(1);
+    });
+    await waitFor(() => expect(list.result.current.seasons).toEqual([season]));
+    await list.unmount();
+    await form.unmount();
+  });
+
   it('relaie une erreur de saisie à l’écran, sans recharger', async () => {
     mockSeasons.list.mockResolvedValue([]);
     mockSeasons.create.mockRejectedValue(new Error('NAME_REQUIRED'));

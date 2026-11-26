@@ -19,7 +19,9 @@ export default function Settings() {
       <Card>
         <ListRow
           title={t.seasons}
-          subtitle={active ? t.activeSeason(active.name) : t.noActiveSeason}
+          subtitle={
+            seasons === null ? undefined : active ? t.activeSeason(active.name) : t.noActiveSeason
+          }
           onPress={() => router.push('/saisons')}
         />
       </Card>
