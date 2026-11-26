@@ -23,6 +23,9 @@ const GROUP_NOTHING_ELSE = 'Seul le groupe sera effacé : il n’a ni inscriptio
 /** Ce que la suppression d'un groupe effacera (EX-02, ARCHITECTURE §4.1). */
 export type GroupDeletionCounts = { enrollments: number; slots: number; sessions: number };
 
+/** Ce que la suppression d'un membre effacera (EX-03, ABS-05). */
+export type MemberDeletionCounts = { contacts: number; attendances: number };
+
 /** Maquette : la licence seule dans la liste, écrite en entier pour les polices. */
 const licenceName = (e: { license: string }) =>
   e.license === 'OFL-1.1' ? 'SIL Open Font License 1.1' : e.license;
@@ -55,6 +58,51 @@ export const labels = {
     about: 'À propos',
     licences: 'Licences',
     groupCount: (n: number) => (n === 0 ? 'Aucun groupe' : plural(n, 'groupe', 'groupes')),
+    members: 'Membres',
+    memberCount: (n: number) => (n === 0 ? 'Aucun membre' : plural(n, 'membre', 'membres')),
+  },
+  members: {
+    title: 'Membres',
+    search: 'Rechercher un membre',
+    allGroups: 'Tous les groupes',
+    groupFilter: 'Groupe',
+    archived: (n: number) => `Archivés (${n})`,
+    noGroup: 'Aucun groupe',
+    create: 'Nouveau membre',
+    empty: 'Aucun membre pour l’instant.',
+    emptyArchived: 'Aucun membre archivé.',
+    noMatch: 'Aucun membre ne correspond à la recherche.',
+  },
+  memberForm: {
+    createTitle: 'Nouveau membre',
+    firstName: 'Prénom',
+    lastName: 'Nom',
+    birthDate: 'Date de naissance',
+    datePlaceholder: 'JJ/MM/AAAA',
+    optionalFeminine: 'facultative',
+    optionalMasculine: 'facultatif',
+    group: 'Groupe',
+    noGroup: 'Aucun groupe',
+    create: 'Créer le membre',
+    contactsLater: 'Les contacts d’urgence s’ajoutent ensuite depuis sa fiche.',
+    fullName: (firstName: string, lastName: string) => `${firstName} ${lastName}`,
+    archive: 'Archiver',
+    unarchive: 'Désarchiver',
+    delete: 'Supprimer',
+  },
+  memberDeletion: {
+    title: (name: string) => `Supprimer ${name} ?`,
+    message: (c: MemberDeletionCounts) => {
+      const parts = [
+        'sa fiche et sa date de naissance',
+        c.contacts === 1 && 'son contact d’urgence',
+        c.contacts > 1 && `ses ${c.contacts} contacts d’urgence`,
+        c.attendances === 1 && 'sa présence',
+        c.attendances > 1 && `ses ${c.attendances} présences`,
+      ].filter((part): part is string => typeof part === 'string');
+      return `Seront effacés définitivement : ${parts.join(' ; ')}.`;
+    },
+    kept: 'Pour le retirer des listes sans rien effacer, utilisez plutôt « Archiver ».',
   },
   licences: {
     title: 'Licences',
