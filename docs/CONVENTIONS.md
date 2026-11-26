@@ -1,6 +1,6 @@
 # Conventions et Definition of Done — Ki&La (appel)
 
-Statut : 🟡 brouillon complet, en attente de relecture · Dernière mise à jour : 2026-11-26
+Statut : ✅ validé le 2026-11-26
 
 Ce que la machine ne vérifie pas encore, l'IA le respecte ; ce qu'elle peut vérifier, on l'ajoute à `scripts/test.sh`, au lint ou à un hook plutôt qu'ici. Chaque règle a un identifiant `CONV-xx`. La colonne « Vérifié par » dit qui la garantit.
 
