@@ -6,13 +6,13 @@ Dernière mise à jour : 2026-11-26
 
 ## En cours
 
-**Ticket 004** (builds sur la CI, audit des permissions, zone sensible) sur `ticket/004-builds-ci`, partie de `groupe/jalon-0-outillage`. Tickets 001 à 003 fusionnés dans le groupe (PR #2 à #4). La branche du jalon part de `ticket/000-mise-en-route` (décision du 2026-11-26, notée dans `CLAUDE.md`) ; PR n°1 fermée sans fusion.
+**Fin du jalon 0** : tickets 001 à 004 fusionnés dans `groupe/jalon-0-outillage` (PR #2 à #5). PR du jalon vers `main` ouverte : première exécution de la CI (tests, sécurité, builds Android et iOS). La branche du jalon part de `ticket/000-mise-en-route` (décision du 2026-11-26, notée dans `CLAUDE.md`) ; PR n°1 fermée sans fusion.
 
 ## Prochaines étapes
 
-1. Ticket 004 : `/code-review`, `/security-review`, **relecture du porteur**, puis fusion dans le groupe. Déjà vérifié : APK de version installé et ouvert sur le Galaxy A55, `DB_READY { version: 1 }` dans `adb logcat`, une seule permission (signature), audit en échec avec `CAMERA` ajoutée puis retirée.
-2. PR du jalon 0 vers `main` : CI complète, dont le **premier build iOS** (`macos-26`, jamais essayé : plusieurs essais possibles) et l'APK en artefact.
-3. Prétest de fin de jalon, réévaluation du calendrier (`docs/PLAN.md` §6).
+1. CI de la PR du jalon : tout vert sur le dernier commit, notamment le **premier build iOS** (`macos-26`). Chaque échec se corrige sur une branche de ticket fusionnée dans le groupe.
+2. Fusion vers `main` (`--squash`) avec l'accord du porteur, une fois tout vert et la branche à jour de `main`. Les tickets 001 à 004 passent alors à « fait ».
+3. Prétest de fin de jalon, réévaluation du calendrier (`docs/PLAN.md` §6), `PROMPTS.md` complété ; puis jalon 1 (ticket 005).
 
 ## Points d'attention
 
