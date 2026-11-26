@@ -1,71 +1,128 @@
-// Groupes d'une saison pour les écrans (EX-02, CONV-10). Même contrat que useSeasons ;
+// Groupes pour les écrans (EX-02, CONV-10). Même contrat que useSeasons : une action qui échoue
+// est relayée à l'écran ; tout écran ouvert recharge après une modification (dataChanged) ;
 // au changement de saison, la liste est vidée et une réponse tardive de l'ancienne ignorée.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DataError } from '@/data/errors';
-import { type Group, type GroupDeletionImpact, groupsRepo } from '@/data/groupsRepo';
+import {
+  type Group,
+  type GroupDeletionImpact,
+  type GroupDetail,
+  groupsRepo,
+} from '@/data/groupsRepo';
 import { log } from '@/data/log';
+import { notifyDataChanged, onDataChanged } from '@/hooks/dataChanged';
 import { useDatabase } from '@/hooks/useDatabase';
 
 type Repo = ReturnType<typeof groupsRepo>;
 
-/** Groupes courants (ou archivés) de la saison ; `null` tant que rien n'est chargé. */
-export const useGroups = (seasonId: number | null, { archived = false } = {}) => {
+const useRepo = () => {
   const db = useDatabase();
-  const repo = useMemo(() => (db ? groupsRepo(db) : null), [db]);
-  const [groups, setGroups] = useState<Group[] | null>(null);
+  return useMemo(() => (db ? groupsRepo(db) : null), [db]);
+};
+
+/** Lit une valeur, garde seulement la dernière réponse, recharge à chaque modification. */
+const useLoaded = <T>(load: (() => Promise<T>) | null, failureCode: string, details = {}) => {
+  const [value, setValue] = useState<T | null>(null);
+  // Vrai dès la première lecture réussie : distingue « en cours » de « introuvable ».
+  const [loaded, setLoaded] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
   const lastLoad = useRef(0);
+  const detailsRef = useRef(details);
+  detailsRef.current = details;
 
-  const ready = useCallback(() => {
-    if (!repo || seasonId === null) throw new DataError('DB_NOT_READY');
-    return { r: repo, seasonId };
-  }, [repo, seasonId]);
-
-  /** Ne lève jamais : un échec est signalé par `loadFailed`. */
   const reload = useCallback(async () => {
-    const load = ++lastLoad.current;
-    if (!repo || seasonId === null) return;
+    const current = ++lastLoad.current;
+    if (!load) return;
     try {
-      const list = await repo.listBySeason(seasonId, { archived });
-      if (load !== lastLoad.current) return;
-      setGroups(list);
+      const result = await load();
+      if (current !== lastLoad.current) return;
+      setValue(result);
+      setLoaded(true);
       setLoadFailed(false);
     } catch {
-      log('GROUPS_LOAD_FAILED', { seasonId });
-      if (load === lastLoad.current) setLoadFailed(true);
+      log(failureCode, detailsRef.current);
+      if (current === lastLoad.current) setLoadFailed(true);
     }
-  }, [repo, seasonId, archived]);
+  }, [load, failureCode]);
 
   useEffect(() => {
-    setGroups(null);
+    setValue(null);
+    setLoaded(false);
     setLoadFailed(false);
     void reload();
+    return onDataChanged(() => void reload());
   }, [reload]);
 
-  const change = useCallback(
-    async (action: (r: Repo, seasonId: number) => Promise<unknown>) => {
-      const { r, seasonId: id } = ready();
-      await action(r, id);
-      await reload();
+  return { value, loaded, loadFailed };
+};
+
+/** Groupes courants (ou archivés) de la saison ; `null` tant que rien n'est chargé. */
+export const useGroups = (seasonId: number | null, { archived = false } = {}) => {
+  const repo = useRepo();
+  const load = useMemo(
+    () => (repo && seasonId !== null ? () => repo.listBySeason(seasonId, { archived }) : null),
+    [repo, seasonId, archived],
+  );
+  const { value: groups, loadFailed } = useLoaded<Group[]>(load, 'GROUPS_LOAD_FAILED', {
+    seasonId: seasonId ?? 0,
+  });
+
+  /** Crée un groupe dans la saison et rend son identifiant. */
+  const create = useCallback(
+    async (name: string): Promise<number> => {
+      if (!repo || seasonId === null) throw new DataError('DB_NOT_READY');
+      const id = await repo.create(seasonId, name);
+      notifyDataChanged();
+      return id;
     },
-    [ready, reload],
+    [repo, seasonId],
   );
 
-  const create = useCallback((name: string) => change((r, id) => r.create(id, name)), [change]);
-  const rename = useCallback(
-    (id: number, name: string) => change((r) => r.rename(id, name)),
-    [change],
-  );
-  const archive = useCallback(
-    (id: number, today: string) => change((r) => r.archive(id, today)),
-    [change],
-  );
-  const unarchive = useCallback((id: number) => change((r) => r.unarchive(id)), [change]);
-  const remove = useCallback((id: number) => change((r) => r.remove(id)), [change]);
-  const deletionImpact = useCallback(
-    (id: number): Promise<GroupDeletionImpact> => ready().r.deletionImpact(id),
+  return { groups, loadFailed, create };
+};
+
+/** Un groupe et ses actions (fiche, modification). */
+export const useGroup = (id: number) => {
+  const repo = useRepo();
+  const load = useMemo(() => (repo ? () => repo.get(id) : null), [repo, id]);
+  const {
+    value: group,
+    loaded,
+    loadFailed,
+  } = useLoaded<GroupDetail | null>(load, 'GROUP_LOAD_FAILED', {
+    groupId: id,
+  });
+
+  const ready = useCallback((): Repo => {
+    if (!repo) throw new DataError('DB_NOT_READY');
+    return repo;
+  }, [repo]);
+  const change = useCallback(
+    async (action: (r: Repo) => Promise<unknown>) => {
+      await action(ready());
+      notifyDataChanged();
+    },
     [ready],
   );
 
-  return { groups, loadFailed, create, rename, archive, unarchive, remove, deletionImpact };
+  const rename = useCallback((name: string) => change((r) => r.rename(id, name)), [change, id]);
+  const archive = useCallback((today: string) => change((r) => r.archive(id, today)), [change, id]);
+  const unarchive = useCallback(() => change((r) => r.unarchive(id)), [change, id]);
+  const remove = useCallback(() => change((r) => r.remove(id)), [change, id]);
+  const deletionImpact = useCallback(
+    (): Promise<GroupDeletionImpact> => ready().deletionImpact(id),
+    [ready, id],
+  );
+
+  return {
+    group,
+    /** Lu au moins une fois : un `group` nul veut alors dire introuvable. */
+    loaded,
+    loadFailed,
+    rename,
+    archive,
+    unarchive,
+    remove,
+    deletionImpact,
+  };
 };

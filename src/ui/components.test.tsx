@@ -246,6 +246,11 @@ describe('Screen', () => {
     expect(screen.getByTestId('screen-scroll')).toBeTruthy();
   });
 
+  it('un sous-titre sous l’en-tête', async () => {
+    await render(<Screen title="Groupes" subtitle={<Text>Saison 2026-2027</Text>} />);
+    expect(screen.getByText('Saison 2026-2027')).toBeTruthy();
+  });
+
   it('sans retour : pas de bouton ; une erreur de chargement s’affiche (CONV-15)', async () => {
     await render(<Screen title="Paramètres" error="Lecture impossible" />);
     expect(screen.queryByRole('button')).toBeNull();

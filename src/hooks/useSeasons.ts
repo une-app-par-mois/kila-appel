@@ -6,16 +6,10 @@ import { DataError } from '@/data/errors';
 import { log } from '@/data/log';
 import { type Season, type SeasonDeletionImpact, seasonsRepo } from '@/data/seasonsRepo';
 import type { SeasonInput } from '@/domain/validation';
+import { notifyDataChanged, onDataChanged } from '@/hooks/dataChanged';
 import { useDatabase } from '@/hooks/useDatabase';
 
 type Repo = ReturnType<typeof seasonsRepo>;
-
-// Chaque écran a son propre état ; une pile native garde les écrans précédents montés. Après
-// une modification, tous les écrans ouverts rechargent (liste, Paramètres, formulaire).
-const listeners = new Set<() => void>();
-const notifyAll = () => {
-  for (const listener of listeners) listener();
-};
 
 export const useSeasons = () => {
   const db = useDatabase();
@@ -47,18 +41,14 @@ export const useSeasons = () => {
 
   useEffect(() => {
     void reload();
-    const listener = () => void reload();
-    listeners.add(listener);
-    return () => {
-      listeners.delete(listener);
-    };
+    return onDataChanged(() => void reload());
   }, [reload]);
 
   // Les rechargements ne lèvent jamais : une action réussie n'est pas présentée comme un échec.
   const change = useCallback(
     async (action: (r: Repo) => Promise<unknown>) => {
       await action(ready());
-      notifyAll();
+      notifyDataChanged();
     },
     [ready],
   );

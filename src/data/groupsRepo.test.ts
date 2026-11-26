@@ -41,6 +41,19 @@ describe('Dépôt des groupes (EX-02)', () => {
     expect(await count(db, 'groups')).toBe(0);
   });
 
+  it('lit un groupe par son identifiant, avec son nombre d’inscriptions en cours', async () => {
+    const s = await seed(db);
+    const repo = groupsRepo(db);
+    expect(await repo.get(s.groupId)).toEqual({
+      id: s.groupId,
+      seasonId: s.seasonId,
+      name: 'Poussins',
+      archivedAt: null,
+      enrollmentCount: 2,
+    });
+    expect(await repo.get(9999)).toBeNull();
+  });
+
   it('EX-02 renomme un groupe', async () => {
     const repo = groupsRepo(db);
     const id = await repo.create(seasonId, 'Poussins');

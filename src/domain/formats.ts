@@ -57,3 +57,9 @@ export const parseDisplayDate = (input: string): string | null => {
   const iso = `${year}-${month}-${day}`;
   return isIsoDate(iso) ? iso : null;
 };
+
+/** Date locale d'un instant → date stockée (le jour affiché sur le téléphone, pas en UTC). */
+export const toIsoDate = (date: Date): string => {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+};
