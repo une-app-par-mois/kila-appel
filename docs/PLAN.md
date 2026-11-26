@@ -1,6 +1,6 @@
 # Plan de projet — Ki&La (appel)
 
-Statut : 🟡 brouillon complet, en attente de relecture · Dernière mise à jour : 2026-11-26
+Statut : ✅ validé le 2026-11-26
 
 Dans quel ordre, en combien de temps, et quand c'est prêt. S'appuie sur tous les documents validés. Le détail des tickets est dans `docs/tickets/` ; seuls les jalons 0 et 1 sont rédigés en détail, les suivants le seront au début du jalon précédent.
 

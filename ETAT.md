@@ -6,23 +6,26 @@ Dernière mise à jour : 2026-11-26
 
 ## En cours
 
-Préparation (niveau renforcé), branche `ticket/000-mise-en-route`. Cadrage, PRD (révision 1) et charte validés le 2026-11-26 ; maquettes : lot 1 (39 écrans) validé le 2026-11-26, lot 2 (22 écrans) et les 3 écrans du lot 1 modifiés validés le 2026-11-26 ; architecture et ADR 001 à 009 validés le 2026-11-26 ; sécurité et conformité validées le 2026-11-26 : conception terminée ; conventions et DoD validées le 2026-11-26 ; ensuite plan de projet ; règles absolues ABS-01 à ABS-08 dans `CLAUDE.md`.
+Préparation (niveau renforcé) **terminée** le 2026-11-26, sur la branche `ticket/000-mise-en-route` (PR n°1, brouillon, non fusionnée). Tous les documents sont validés : cadrage, PRD (révision 1), charte, maquettes (61 écrans), architecture et ADR 001 à 009, sécurité, conformité, conventions et DoD, plan.
+
+Aucun ticket de code en cours.
 
 ## Prochaines étapes
 
-Mise en route d'une nouvelle app (à retirer une fois faites) :
-
-1. Niveau renforcé : remplacer la section « 100 % local » de `CLAUDE.md` par les règles absolues du projet, puis produire les documents de la préparation renforcée (fait : PRD, charte, maquettes, architecture, sécurité, conformité, conventions ; à faire : plan), chacun validé avant le suivant.
-2. Charte et maquettes dans `design/`, validées avant le code.
-3. Compléter `CLAUDE.md` (contexte, commandes), `scripts/test.sh`, `scripts/build.sh`, la mise en place de la stack dans les workflows et `.github/dependabot.yml`.
-4. Écrire les premiers tickets dans `docs/tickets/`.
+1. Ticket 001 (socle Expo, `scripts/test.sh` réel) sur `groupe/jalon-0-outillage` : il débloque le push et la CI.
+2. Pousser `ticket/000-mise-en-route` dès que `scripts/test.sh` passe (beaucoup de commits locaux), puis décider avec le porteur du sort de la PR n°1.
+3. Jalon 0 : tickets 002 à 004 ; prétest de fin de jalon ; réévaluation du calendrier (`docs/PLAN.md` §6).
 
 ## Points d'attention
 
-- Questions ouvertes : nom de paquet exact (cadrage) ; contenu du rapport PDF (PRD).
-- Hooks Git activés le 2026-11-26. `main` protégée le 2026-11-26 (ruleset « main », vérifié par l'API) : PR obligatoire sans approbation, 4 vérifications exigées (tests, gitleaks, Semgrep, dépendances) sur une branche à jour, ni suppression ni force push, aucun contournement.
-- Le hook pre-push lance `scripts/test.sh`, qui échoue tant que la stack n'est pas en place : aucun push possible d'ici là (et `--no-verify` interdit). Les documents de préparation sont commités localement ; le prochain push se décide avec le porteur.
+- **Push bloqué** jusqu'au ticket 001 : le hook pre-push lance `scripts/test.sh`, qui échoue tant que la stack n'existe pas (`--no-verify` interdit).
+- **Lancer Claude Code depuis `kila-appel/`** : depuis le dossier parent, les interdictions de `.claude/settings.json` ne s'appliquent pas.
+- Calendrier sans marge (publication Android fin janvier 2027) : jalons 4 et 5 premiers candidats au report, décision du porteur à la fin du jalon 3.
+- iOS : aucun appareil Apple ni Mac ; publication iOS après un test sur un vrai iPhone (jalon 7).
+- DSA : déclarer Jita Vision commerçant avant le 1er février 2027.
+- Questions ouvertes : nom de paquet (avant le ticket 004) ; contenu du rapport PDF (ticket F-09) ; compatibilité `node:sqlite` / `expo-sqlite` (ticket 002) ; signature iOS sans EAS (jalon 7) ; tranche 16-17 et politique Familles (soumission Play).
+- `main` protégée (ruleset vérifié) ; hooks Git activés.
 
 ## Non vérifié
 
-- Rien de codé pour l'instant.
+- Rien de codé. Polices IBM Plex absentes du poste : les maquettes s'affichent dans la police du système.
