@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ki&La — maquettes (lot 1)</title>
+<style>
+:root{--encre:#1F3A93;--marge:#C83C3C;--papier:#FBFAF6;--quad:#DCE3F0;--blanc:#FFFFFF;--texte:#1B2233;--texte2:#667085;}
+*{box-sizing:border-box}body{margin:0;font-family:"IBM Plex Sans",system-ui,sans-serif;background:#e9ecf2;color:var(--texte);display:flex;gap:24px;padding:24px;align-items:flex-start}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-weight:500}
+nav.menu{width:250px;flex:none;font-size:14px;position:sticky;top:24px}
+nav.menu h2{font-size:15px;margin:0 0 8px}nav.menu a{display:block;padding:5px 8px;border-radius:6px;color:var(--texte);text-decoration:none;cursor:pointer}
+nav.menu a.on{background:var(--encre);color:#fff}nav.menu a .v{float:right}nav.menu .lot{margin:12px 0 4px;color:var(--texte2);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.boutons button{margin:4px 4px 0 0;font:inherit;font-size:13px;padding:5px 8px;border:1px solid #bbb;border-radius:6px;background:#fff;cursor:pointer}
+.appareil{flex:none;width:390px;height:844px;border-radius:36px;border:10px solid #1b2233;overflow:hidden;position:relative;background:var(--papier);box-shadow:0 10px 30px #0003}
+.appareil.tablette{width:834px;height:1112px;border-radius:24px}
+.fond{position:absolute;inset:0;background-image:linear-gradient(var(--quad) 1px,transparent 1px),linear-gradient(90deg,var(--quad) 1px,transparent 1px);background-size:22px 22px;opacity:.6}
+.fond::after{content:"";position:absolute;top:0;bottom:0;left:30px;width:2px;background:var(--marge);opacity:0.55}
+.ecran{position:absolute;inset:0 0 76px 0;overflow-y:auto;padding:16px 20px 24px 44px}
+.colonne{max-width:640px;margin:0 auto}
+.entete{display:flex;align-items:center;gap:8px;margin:8px 0 4px}h1{font-size:30px;font-weight:700;letter-spacing:-.02em;margin:0}
+.retour{font-size:30px;border:none;background:none;color:var(--encre);cursor:pointer;min-width:44px;min-height:44px;margin-left:-12px}
+.sous-titre{margin-bottom:12px}
+.section{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin:20px 0 8px;display:inline-block;border-bottom:2.5px solid var(--marge);padding-bottom:2px}
+.carte{background:var(--blanc);border:1px solid var(--quad);border-radius:16px;box-shadow:0 2px 0 rgba(31,58,147,.06);padding:14px;margin:10px 0}
+.carte.bandeau{border:1.5px solid var(--marge)}
+.l-titre{font-weight:600;font-size:16px}.l-titre.gros{font-size:22px;font-weight:700;letter-spacing:-.01em}.l-sous{color:var(--texte2);font-size:14px}
+.aide{color:var(--texte2);font-size:14px}.note{font-size:12.5px;color:var(--texte2);font-style:italic;border-left:3px solid var(--quad);padding-left:8px}
+.ligne,.rang,.contact{display:flex;justify-content:space-between;align-items:center;min-height:44px;padding:8px 0;border-bottom:1px solid var(--quad);cursor:pointer;gap:8px}
+.ligne:last-child,.rang:last-child,.contact:last-child{border-bottom:none}.chev{color:var(--texte2);font-size:20px}
+.btn-p,.btn-s,.btn-mini,.btn-appel{font:inherit;border-radius:14px;cursor:pointer;min-height:44px}
+.btn-p{display:block;width:100%;height:54px;background:var(--encre);color:#fff;border:none;font-weight:600;font-size:17px;margin:12px 0}
+.btn-p.fond-marge{background:var(--marge)}
+.btn-s{display:block;width:100%;background:#fff;border:1.5px solid var(--quad);color:var(--texte2);font-weight:600;font-size:15px;padding:10px;margin:8px 0}
+.btn-s.danger{color:var(--marge)}
+.btn-mini{background:#fff;border:1.5px solid var(--quad);color:var(--encre);font-weight:600;padding:0 12px}
+.btn-appel{background:var(--encre);color:#fff;border:none;font-weight:600;padding:0 14px}
+.duo{display:flex;gap:10px}.duo .tiers{flex:1}.duo .deuxtiers{flex:2}.duo button{margin:12px 0 0}
+.badge{background:var(--encre);color:#fff;border-radius:10px;padding:3px 10px;font-size:13px;font-weight:600}
+.rouge{color:var(--marge);font-weight:600}.gris{color:var(--texte2);font-weight:600}
+.recherche{background:#fff;border:1.5px solid var(--quad);border-radius:12px;padding:12px;color:var(--texte2);cursor:pointer;margin:8px 0;min-height:44px}
+label{display:block;font-size:14px;color:var(--texte2);margin:12px 0 4px}.facultatif{font-style:italic}
+.champ{display:block;width:100%;background:#fff;border:1.5px solid var(--quad);border-radius:12px;padding:11px 12px;font:inherit;font-size:16px;min-height:44px;margin:6px 0}
+.champ.vide{color:var(--texte2)}.champ.actif{border-color:var(--encre)}.champ.multi{min-height:70px;color:var(--texte2)}.champ.mini{width:auto;display:inline-block;margin:0 6px}
+.deux{display:flex;gap:10px}.deux>div{flex:1}
+.jours{display:flex;gap:6px}.jour{flex:1;text-align:center;border:1.5px solid var(--quad);border-radius:10px;padding:10px 0;background:#fff;font-weight:600}.jour.on{background:var(--encre);color:#fff;border-color:var(--encre)}
+.etape{display:flex;gap:12px;align-items:center;padding:10px 0}.etape.faite .l-titre{color:var(--texte2)}.num,.coche{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;border:2px solid var(--quad)}.coche{background:#2e7d4f;border-color:#2e7d4f;color:#fff}
+.filtres{display:flex;gap:8px;margin:8px 0}.filtre{border:1.5px solid var(--quad);border-radius:20px;padding:6px 12px;background:#fff;font-size:14px}.filtre.on{border-color:var(--encre);color:var(--encre);font-weight:600}
+.pastille{min-width:84px;text-align:center;border-radius:10px;padding:8px 10px;font-weight:600;font-size:14px;white-space:nowrap}
+.s-present{background:#1F3A93;color:#FFFFFF;}.s-absent{background:#C83C3C;color:#FFFFFF;}.s-late{background:#D98E2B;color:#1B2233;}.s-excused{background:#646C7B;color:#FFFFFF;}.s-preparedPresent{background:#FFFFFF;color:#1F3A93;border:1.5px solid #1F3A93;}
+.carre{display:inline-block;width:10px;height:10px;margin-right:5px;border-radius:2px}
+.compteur{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px}
+.brouillon{font-size:13px;color:var(--texte2);margin:4px 0 8px}
+.nom{font-size:18px;font-weight:600}
+.onglets{position:absolute;left:0;right:0;bottom:0;height:76px;background:#fff;border-top:1px solid var(--quad);display:flex;justify-content:space-around;align-items:center}
+.onglet{font-size:12px;font-weight:600;color:var(--texte2);text-align:center;cursor:pointer;min-width:44px;padding-top:6px}.onglet.on{color:var(--encre)}.onglet .i{font-size:20px;display:block}
+.onglet.central .rond{width:58px;height:58px;border-radius:50%;background:var(--encre);color:#fff;display:flex;align-items:center;justify-content:center;font-size:26px;margin:-28px auto 2px;box-shadow:0 6px 14px rgba(31,58,147,.35)}
+.toast{position:absolute;left:50%;bottom:96px;transform:translateX(-50%);background:var(--texte);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;display:none}
+aside.relecture{width:300px;flex:none;position:sticky;top:24px;font-size:14px}
+aside.relecture h2{font-size:15px;margin:0}aside.relecture .ex{color:#555;font-size:13px;margin:4px 0 10px}
+aside.relecture label{color:#333}aside.relecture textarea{width:100%;height:120px;font:inherit;padding:8px;border-radius:8px;border:1px solid #bbb}
+.verdicts button{font:inherit;padding:6px 10px;border-radius:8px;border:1px solid #bbb;background:#fff;cursor:pointer;margin:0 4px 6px 0}.verdicts button.on{background:var(--encre);color:#fff;border-color:var(--encre)}
+</style></head><body>
+<nav class="menu"><h2>Ki&La — maquettes</h2><div id="menu"></div>
+<div class="boutons"><button id="bascule">Voir en tablette</button><button id="exporter">Exporter les notes (JSON)</button><button id="copier">Copier les notes</button></div>
+<p style="font-size:12px;color:#555">Données fictives. Polices IBM Plex si installées, sinon police du système. Notes gardées dans ce navigateur.</p></nav>
+<div class="appareil" id="appareil"><div class="fond"></div>
+<section class="ecran" id="e-bienvenue" hidden><div class="colonne">
+<div class="entete"><h1>Bienvenue</h1></div>
+<p class="aide">Quatre étapes avant votre premier appel.</p>
+<div class="carte ">
+<div class="etape faite"><span class="coche">✓</span><div><div class="l-titre">Créer la saison</div><div class="l-sous">Saison 2026-2027, créée automatiquement</div></div></div>
+<div class="etape"><span class="num">2</span><div><div class="l-titre">Créer un groupe</div><div class="l-sous">Par exemple « Poussins mercredi »</div></div></div>
+<button class="btn-p" data-go="groupe">Créer un groupe</button>
+<div class="etape"><span class="num">3</span><div><div class="l-titre">Ajouter les membres</div></div></div>
+<div class="etape"><span class="num">4</span><div><div class="l-titre">Déclarer les créneaux</div></div></div>
+</div>
+<p class="note">Un seul bouton à l'écran, sur la première étape qui reste.</p></div></section>
+<section class="ecran" id="e-accueil" hidden><div class="colonne">
+<div class="entete"><h1>Mercredi 26 nov.</h1></div>
+<div class="recherche" data-go="urgence">🔍 Contact d'urgence : rechercher un membre</div>
+<h3 class="section">Maintenant</h3>
+<div class="carte ">
+<div class="l-titre gros">Poussins mercredi</div>
+<div class="l-sous">14:00 – 15:30 · Gymnase Jean-Moulin · 22 membres</div>
+<div class="duo"><button class="btn-s tiers" data-go="annuler">Annuler</button><button class="btn-p deuxtiers" data-go="appel">Faire l'appel</button></div>
+</div>
+<h3 class="section">Appels manquants</h3>
+<div class="carte ">
+<div class="ligne" data-go="appel"><div><div class="l-titre"><span class="rouge">●</span> Benjamins lundi</div><div class="l-sous">Lundi 24 nov. · 18:00</div></div><span class="chev">›</span></div>
+</div>
+<div class="carte bandeau"><div class="l-titre">Pas de sauvegarde depuis 34 jours</div><div class="l-sous">Vos données ne vivent que sur cet appareil.</div><button class="btn-s" data-go="donnees">Sauvegarder maintenant</button></div>
+<p class="note">Lot 2 : la frise des séances (F-12) et les alertes d'assiduité (F-04) prendront place ici.</p></div></section>
+<section class="ecran" id="e-urgence" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="accueil">‹</button><h1>Contact d'urgence</h1></div>
+<div class="champ actif">gar|</div>
+<div class="carte ">
+<div class="l-titre gros">Léo Garcia</div><div class="l-sous">Poussins mercredi</div>
+<div class="contact"><div><div class="l-titre">Sa mère</div><div class="l-sous mono">06 00 00 00 01</div></div><button class="btn-appel">📞 Appeler</button></div>
+<div class="contact"><div><div class="l-titre">Son père</div><div class="l-sous mono">06 00 00 00 02</div></div><button class="btn-appel">📞 Appeler</button></div>
+</div>
+<p class="note">Contacts affichés dès la saisie, appel en un appui (EX-06 : 2 appuis au plus).</p></div></section>
+<section class="ecran" id="e-appel" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="accueil">‹</button><h1>Poussins mercredi</h1></div>
+<div class="l-sous sous-titre">Mer. 26/11/2026 · 14:00 · Gymnase Jean-Moulin</div>
+<div class="carte compteur mono" id="compteur"></div>
+<div class="brouillon"><span id="chrono" class="mono">0,0 s</span> · <span>Brouillon enregistré à chaque appui</span></div>
+<input class="champ" id="filtre" placeholder="🔍 Rechercher (plus de 20 membres)">
+<div id="liste-appel"></div>
+<button class="btn-s" data-go="ajout">+ Ajouter un membre</button>
+<div class="champ multi">Commentaire de la séance (facultatif)</div>
+<button class="btn-p" id="enregistrer">Enregistrer l'appel</button></div></section>
+<section class="ecran" id="e-appel-libre" hidden><div class="colonne">
+<div class="entete"><h1>Nouvel appel</h1></div>
+<p class="aide">Aucun créneau en cours. Choisissez le groupe et la date.</p>
+<h3 class="section">Groupe</h3>
+<div class="carte "><div class="ligne" data-go="appel"><div><div class="l-titre">Poussins mercredi</div><div class="l-sous">22 membres</div></div><span class="chev">›</span></div><div class="ligne" data-go="appel"><div><div class="l-titre">Benjamins lundi</div><div class="l-sous">18 membres</div></div><span class="chev">›</span></div><div class="ligne" data-go="appel"><div><div class="l-titre">Adultes jeudi</div><div class="l-sous">25 membres</div></div><span class="chev">›</span></div></div>
+<h3 class="section">Date</h3>
+<div class="champ mono">26/11/2026</div>
+<p class="note">S'affiche quand on touche « Nouvel appel » hors de tout créneau proche.</p></div></section>
+<section class="ecran" id="e-ajout" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="appel">‹</button><h1>Nouveau membre</h1></div>
+<label>Prénom</label><div class="champ">Yanis</div>
+<label>Nom</label><div class="champ">Colin</div>
+<label>Date de naissance <span class="facultatif">facultative</span></label><div class="champ vide">JJ/MM/AAAA</div>
+<p class="aide">Il sera inscrit à « Poussins mercredi » à partir d'aujourd'hui.</p>
+<button class="btn-p" data-go="appel">Ajouter et revenir à l'appel</button></div></section>
+<section class="ecran" id="e-historique" hidden><div class="colonne">
+<div class="entete"><h1>Historique</h1></div>
+<div class="filtres"><span class="filtre on">Tous les groupes</span><span class="filtre">30 derniers jours</span></div>
+<div class="carte ">
+<div class="ligne" data-go="appel"><div><div class="l-titre"><span class="rouge">● Appel manquant</span> · Benjamins lundi</div><div class="l-sous">Lun. 24/11 · 18:00</div></div><span class="chev">›</span></div>
+<div class="ligne" data-go="seance"><div><div class="l-titre">Poussins mercredi</div><div class="l-sous">Mer. 19/11 · <span class="mono">19/22</span> présents</div></div><span class="chev">›</span></div>
+<div class="ligne" data-go="seance"><div><div class="l-titre">Adultes jeudi</div><div class="l-sous">Jeu. 20/11 · <span class="mono">21/25</span> présents</div></div><span class="chev">›</span></div>
+<div class="ligne" data-go="seance"><div><div class="l-titre">Benjamins lundi</div><div class="l-sous">Lun. 17/11 · <span class="mono">16/18</span> présents</div></div><span class="chev">›</span></div>
+<div class="ligne" ><div><div class="l-titre"><span class="gris">Annulée</span> · Poussins mercredi</div><div class="l-sous">Mer. 12/11</div></div><span class="chev">›</span></div>
+<div class="ligne" ><div><div class="l-titre"><span class="gris">Non planifiée</span> · Adultes jeudi</div><div class="l-sous">Jeu. 30/10 · vacances</div></div><span class="chev">›</span></div>
+</div>
+<p class="note">Annulée et Non planifiée viennent du lot 2 (F-13) : montrées ici pour le rendu.</p></div></section>
+<section class="ecran" id="e-seance" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="historique">‹</button><h1>Poussins mercredi</h1></div>
+<div class="l-sous sous-titre">Mer. 19/11/2026 · 14:00 · enregistrée</div>
+<div class="carte compteur mono"><span><i class="carre s-present"></i>19 présents</span><span><i class="carre s-absent"></i>2 absents</span><span><i class="carre s-excused"></i>1 excusé</span></div>
+<div class="carte "><div class="rang"><span class="nom">Rose André</span><span class="pastille s-present">✓ Présent</span></div><div class="rang"><span class="nom">Adam Bernard</span><span class="pastille s-absent">✕ Absent</span></div><div class="rang"><span class="nom">Louise Bertrand</span><span class="pastille s-present">✓ Présent</span></div><div class="rang"><span class="nom">Zoé Blanc</span><span class="pastille s-excused">≈ Excusé</span></div><div class="rang"><span class="nom">Louis David</span><span class="pastille s-present">✓ Présent</span></div></div>
+<p class="aide">Touchez un statut pour le corriger.</p>
+<div class="duo"><button class="btn-s tiers danger" data-go="historique">Supprimer la séance</button><button class="btn-p deuxtiers" data-go="historique">Enregistrer les corrections</button></div></div></section>
+<section class="ecran" id="e-parametres" hidden><div class="colonne">
+<div class="entete"><h1>Paramètres</h1></div>
+<h3 class="section">Organisation</h3>
+<div class="carte "><div class="ligne" data-go="saisons"><div><div class="l-titre">Saisons</div><div class="l-sous">Active : 2026-2027</div></div><span class="chev">›</span></div><div class="ligne" data-go="groupe"><div><div class="l-titre">Groupes</div><div class="l-sous">3 groupes</div></div><span class="chev">›</span></div><div class="ligne" data-go="membre"><div><div class="l-titre">Membres</div><div class="l-sous">65 membres</div></div><span class="chev">›</span></div><div class="ligne" data-go="creneau"><div><div class="l-titre">Créneaux</div><div class="l-sous">3 créneaux</div></div><span class="chev">›</span></div></div>
+<h3 class="section">Données</h3>
+<div class="carte "><div class="ligne" data-go="donnees"><div><div class="l-titre">Sauvegarde et restauration</div><div class="l-sous">Dernière : il y a 34 jours</div></div><span class="chev">›</span></div><div class="ligne" data-go="donnees"><div><div class="l-titre">Conservation</div><div class="l-sous">3 saisons</div></div><span class="chev">›</span></div><div class="ligne" data-go="donnees"><div><div class="l-titre">Tout effacer</div></div><span class="chev">›</span></div></div>
+<h3 class="section">À propos</h3>
+<div class="carte "><div class="ligne" ><div><div class="l-titre">Confidentialité</div></div><span class="chev">›</span></div><div class="ligne" ><div><div class="l-titre">Conditions d'utilisation</div></div><span class="chev">›</span></div><div class="ligne" ><div><div class="l-titre">Licences</div></div><span class="chev">›</span></div></div></div></section>
+<section class="ecran" id="e-saisons" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="parametres">‹</button><h1>Saisons</h1></div>
+<div class="carte ">
+<div class="rang"><div><div class="l-titre">2026-2027</div><div class="l-sous mono">01/09/2026 – 31/07/2027</div></div><span class="badge">Active</span></div>
+<div class="rang"><div><div class="l-titre">2025-2026</div><div class="l-sous mono">01/09/2025 – 31/07/2026</div></div><button class="btn-mini">Activer</button></div>
+</div>
+<button class="btn-s" data-go="saisons">Nouvelle saison</button>
+<p class="note">Supprimer une saison : confirmation qui liste ce qui sera effacé (groupes, créneaux, séances, présences ; pas les membres).</p></div></section>
+<section class="ecran" id="e-groupe" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="parametres">‹</button><h1>Poussins mercredi</h1></div>
+<div class="l-sous sous-titre">Saison 2026-2027 · 22 membres inscrits</div>
+<div class="carte "><div class="ligne" data-go="membre"><div><div class="l-titre">Rose André</div><div class="l-sous">Inscrit depuis le 03/09/2026</div></div><span class="chev">›</span></div><div class="ligne" data-go="membre"><div><div class="l-titre">Adam Bernard</div><div class="l-sous">Inscrit depuis le 03/09/2026</div></div><span class="chev">›</span></div><div class="ligne" data-go="membre"><div><div class="l-titre">Louise Bertrand</div><div class="l-sous">Inscrit depuis le 03/09/2026</div></div><span class="chev">›</span></div><div class="ligne" data-go="membre"><div><div class="l-titre">Zoé Blanc</div><div class="l-sous">Inscrit depuis le 03/09/2026</div></div><span class="chev">›</span></div><div class="ligne" data-go="membre"><div><div class="l-titre">Louis David</div><div class="l-sous">Inscrit depuis le 03/09/2026</div></div><span class="chev">›</span></div><div class="ligne" data-go="membre"><div><div class="l-titre">Emma Durand</div><div class="l-sous">Inscrit depuis le 03/09/2026</div></div><span class="chev">›</span></div></div>
+<div class="duo"><button class="btn-s tiers" data-go="groupe">Archiver</button><button class="btn-p deuxtiers" data-go="ajout">Ajouter un membre</button></div></div></section>
+<section class="ecran" id="e-membre" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="groupe">‹</button><h1>Léo Garcia</h1></div>
+<label>Prénom</label><div class="champ">Léo</div>
+<label>Nom</label><div class="champ">Garcia</div>
+<label>Date de naissance <span class="facultatif">facultative</span></label><div class="champ mono">14/03/2017</div>
+<h3 class="section">Contacts d'urgence</h3>
+<div class="carte "><div class="contact"><div><div class="l-titre">Sa mère</div><div class="l-sous mono">06 00 00 00 01</div></div><span class="chev">≡</span></div><div class="contact"><div><div class="l-titre">Son père</div><div class="l-sous mono">06 00 00 00 02</div></div><span class="chev">≡</span></div></div>
+<button class="btn-s">+ Ajouter un contact</button>
+<h3 class="section">Groupes</h3>
+<div class="carte "><div class="ligne" ><div><div class="l-titre">Poussins mercredi</div><div class="l-sous">Depuis le 03/09/2026</div></div><span class="chev">›</span></div></div>
+<div class="duo"><button class="btn-s tiers" data-go="membre">Archiver</button><button class="btn-s tiers danger" data-go="suppression">Supprimer</button></div></div></section>
+<section class="ecran" id="e-suppression" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="membre">‹</button><h1>Supprimer Léo Garcia ?</h1></div>
+<div class="carte bandeau"><p>Seront effacés <b>définitivement</b> :</p><ul><li>sa fiche et sa date de naissance ;</li><li>ses 2 contacts d'urgence ;</li><li>ses <span class="mono">41</span> présences.</li></ul><p class="l-sous">Pour le retirer des listes sans rien effacer, utilisez plutôt « Archiver ».</p></div>
+<div class="duo"><button class="btn-s tiers" data-go="membre">Garder</button><button class="btn-p deuxtiers fond-marge" data-go="groupe">Supprimer définitivement</button></div></div></section>
+<section class="ecran" id="e-creneau" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="parametres">‹</button><h1>Nouveau créneau</h1></div>
+<label>Jour</label><div class="jours"><span class="jour ">L</span><span class="jour ">M</span><span class="jour on">Me</span><span class="jour ">J</span><span class="jour ">V</span><span class="jour ">S</span><span class="jour ">D</span></div>
+<div class="deux"><div><label>Début</label><div class="champ mono">14:00</div></div><div><label>Durée</label><div class="champ mono">1 h 30</div></div></div>
+<label>Groupe</label><div class="champ">Poussins mercredi ▾</div>
+<label>Lieu <span class="facultatif">facultatif</span></label><div class="champ">Gymnase Jean-Moulin</div>
+<label>Nom <span class="facultatif">facultatif</span></label><div class="champ vide">Par exemple « Technique »</div>
+<button class="btn-p" data-go="parametres">Enregistrer le créneau</button>
+<p class="note">Lot 2 : créneaux ponctuels (F-10) et plusieurs groupes (F-11) s'ajouteront à ce formulaire.</p></div></section>
+<section class="ecran" id="e-donnees" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="parametres">‹</button><h1>Sauvegarde</h1></div>
+<div class="carte bandeau"><div class="l-titre">Ce fichier n'est pas protégé</div><p>Il contient les noms, dates de naissance et contacts d'urgence de vos membres, et toutes leurs présences, <b>en clair</b>. Toute personne qui l'obtient peut les lire. Gardez-le en lieu sûr : sa garde vous revient.</p></div>
+<button class="btn-p" data-go="donnees">Exporter une sauvegarde</button>
+<p class="l-sous">Dernière sauvegarde : il y a 34 jours.</p>
+<h3 class="section">Restaurer</h3>
+<div class="carte "><p>Remplace <b>toutes</b> les données de l'appareil par celles du fichier. Le fichier est vérifié avant tout changement.</p><button class="btn-s" data-go="donnees">Choisir un fichier…</button></div>
+<h3 class="section">Conservation</h3>
+<div class="carte "><div class="rang"><span>Garder les</span><span class="champ mini mono">3 ▾</span><span>dernières saisons</span></div><p class="l-sous">1 saison dépasse cette durée : 2023-2024.</p><button class="btn-s">Purger 2023-2024…</button></div>
+<h3 class="section">Tout effacer</h3>
+<div class="carte "><p class="l-sous">Efface toutes les données de cet appareil. Double confirmation.</p><button class="btn-s danger">Tout effacer…</button></div></div></section>
+<section class="ecran" id="e-illisible" hidden><div class="colonne">
+<div class="entete"><h1>Vos données ne peuvent pas être ouvertes</h1></div>
+<div class="carte "><p>Le fichier de données de l'appli est abîmé. Rien n'a été effacé pour l'instant.</p><p>Vous pouvez restaurer votre dernière sauvegarde, ou repartir de zéro.</p></div>
+<button class="btn-p" data-go="accueil">Restaurer une sauvegarde</button>
+<button class="btn-s" data-go="bienvenue">Repartir de zéro</button>
+<p class="note">Jamais de message technique ni de plantage.</p></div></section>
+<section class="ecran" id="e-annuler" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="accueil">‹</button><h1>Que s'est-il passé ?</h1></div>
+<p class="note">Lot 2 : maquette à venir (F-13).</p></div></section>
+<section class="ecran" id="e-stats" hidden><div class="colonne">
+<div class="entete"><h1>Statistiques</h1></div>
+<p class="note">Lot 2 : maquette à venir (F-05, F-09, F-14).</p></div></section>
+<div class="onglets" id="onglets">
+<div class="onglet" data-tab="accueil" data-go="accueil"><span class="i">⌂</span>Accueil</div>
+<div class="onglet" data-tab="stats" data-go="stats"><span class="i">▥</span>Stats</div>
+<div class="onglet central" data-tab="appel" data-go="appel"><div class="rond">✓</div>Nouvel appel</div>
+<div class="onglet" data-tab="historique" data-go="historique"><span class="i">☰</span>Historique</div>
+<div class="onglet" data-tab="parametres" data-go="parametres"><span class="i">⚙</span>Paramètres</div>
+</div><div class="toast" id="toast"></div></div>
+<aside class="relecture"><h2 id="r-titre"></h2><div class="ex" id="r-ex"></div>
+<div class="verdicts" id="verdicts"><button data-v="ok">✓ Validé</button><button data-v="revoir">À revoir</button><button data-v="refuse">Refusé</button></div>
+<label for="r-com">Commentaire</label><textarea id="r-com" placeholder="Ce qui ne va pas, ce qui manque…"></textarea></aside>
+<script>
+const ECRANS=[{"id":"bienvenue","lot":1,"titre":"Bienvenue (mise en route)","exigences":"P1"},{"id":"accueil","lot":1,"titre":"Accueil","exigences":"EX-09, EX-17, EX-21, EX-06"},{"id":"urgence","lot":1,"titre":"Recherche d'un contact d'urgence","exigences":"EX-06, EX-05"},{"id":"appel","lot":1,"titre":"Appel","exigences":"EX-09 à EX-15"},{"id":"appel-libre","lot":1,"titre":"Appel sans créneau","exigences":"EX-39"},{"id":"ajout","lot":1,"titre":"Ajout d'un membre pendant l'appel","exigences":"EX-12, EX-03"},{"id":"historique","lot":1,"titre":"Historique","exigences":"EX-16, EX-17"},{"id":"seance","lot":1,"titre":"Détail d'une séance","exigences":"EX-18, EX-13"},{"id":"parametres","lot":1,"titre":"Paramètres","exigences":"EX-01 à EX-07, EX-19 à EX-24"},{"id":"saisons","lot":1,"titre":"Saisons","exigences":"EX-01"},{"id":"groupe","lot":1,"titre":"Groupe et ses membres","exigences":"EX-02, EX-04"},{"id":"membre","lot":1,"titre":"Fiche membre","exigences":"EX-03, EX-04, EX-05"},{"id":"suppression","lot":1,"titre":"Suppression d'un membre","exigences":"EX-03, ABS-05"},{"id":"creneau","lot":1,"titre":"Créneau récurrent","exigences":"EX-07"},{"id":"donnees","lot":1,"titre":"Sauvegarde et données","exigences":"EX-19, EX-20, EX-23, EX-24, ABS-06"},{"id":"illisible","lot":1,"titre":"Base illisible au démarrage","exigences":"EX-22"},{"id":"annuler","lot":2,"titre":"Annuler une séance","exigences":"EX-38 (lot 2)"},{"id":"stats","lot":2,"titre":"Statistiques","exigences":"EX-27 (lot 2)"}], MEMBRES=[{"prenom":"Rose","nom":"André"},{"prenom":"Adam","nom":"Bernard"},{"prenom":"Louise","nom":"Bertrand"},{"prenom":"Zoé","nom":"Blanc"},{"prenom":"Louis","nom":"David"},{"prenom":"Emma","nom":"Durand"},{"prenom":"Mila","nom":"Fournier"},{"prenom":"Léo","nom":"Garcia"},{"prenom":"Noah","nom":"Girard"},{"prenom":"Jade","nom":"Laurent"},{"prenom":"Jules","nom":"Lefebvre"},{"prenom":"Gabriel","nom":"Leroy"},{"prenom":"Sacha","nom":"Mercier"},{"prenom":"Léa","nom":"Michel"},{"prenom":"Hugo","nom":"Moreau"},{"prenom":"Nathan","nom":"Morel"},{"prenom":"Alice","nom":"Petit"},{"prenom":"Chloé","nom":"Richard"},{"prenom":"Arthur","nom":"Robert"},{"prenom":"Lucas","nom":"Roux"},{"prenom":"Inès","nom":"Simon"},{"prenom":"Manon","nom":"Vincent"}], ST={"present":{"fond":"#1F3A93","texte":"#FFFFFF","libelle":"Présent"},"absent":{"fond":"#C83C3C","texte":"#FFFFFF","libelle":"Absent"},"late":{"fond":"#D98E2B","texte":"#1B2233","libelle":"Retard"},"excused":{"fond":"#646C7B","texte":"#FFFFFF","libelle":"Excusé"},"preparedPresent":{"fond":"#FFFFFF","texte":"#1F3A93","bordure":"#1F3A93","libelle":"Attendu"}};
+const ONGLET={"bienvenue":"accueil","accueil":"accueil","urgence":"accueil","appel":"appel","appel-libre":"appel","ajout":"appel","historique":"historique","seance":"historique","parametres":"parametres","saisons":"parametres","groupe":"parametres","membre":"parametres","suppression":"parametres","creneau":"parametres","donnees":"parametres","illisible":null,"annuler":"accueil","stats":"stats"};
+const CLE='kila-maquettes-notes-v1';
+const notes=JSON.parse(localStorage.getItem(CLE)||'{}');
+const sauver=()=>localStorage.setItem(CLE,JSON.stringify(notes));
+let courant='accueil';
+function menu(){document.getElementById('menu').innerHTML=[1,2].map(l=>'<div class="lot">Lot '+l+'</div>'+ECRANS.filter(e=>e.lot===l).map(e=>{const v=(notes[e.id]||{}).verdict;return '<a data-go="'+e.id+'" class="'+(e.id===courant?'on':'')+'">'+e.titre+'<span class="v">'+(v==='ok'?'✓':v==='revoir'?'!':v==='refuse'?'✕':'')+'</span></a>'}).join('')).join('')}
+function aller(id){if(!document.getElementById('e-'+id))return;courant=id;document.querySelectorAll('.ecran').forEach(s=>s.hidden=s.id!=='e-'+id);
+document.querySelectorAll('.onglet').forEach(o=>o.classList.toggle('on',o.dataset.tab===ONGLET[id]));document.getElementById('onglets').style.display=ONGLET[id]?'flex':'none';
+const e=ECRANS.find(x=>x.id===id);document.getElementById('r-titre').textContent=e.titre;document.getElementById('r-ex').textContent='Couvre : '+e.exigences+' · lot '+e.lot;
+const n=notes[id]||{};document.getElementById('r-com').value=n.commentaire||'';document.querySelectorAll('#verdicts button').forEach(b=>b.classList.toggle('on',b.dataset.v===n.verdict));
+if(id==='appel')demarrerAppel();menu();location.hash=id}
+document.addEventListener('click',ev=>{const t=ev.target.closest('[data-go]');if(t){ev.preventDefault();aller(t.dataset.go)}});
+document.querySelectorAll('#verdicts button').forEach(b=>b.onclick=()=>{notes[courant]={...(notes[courant]||{}),verdict:b.dataset.v};sauver();aller(courant)});
+document.getElementById('r-com').oninput=ev=>{notes[courant]={...(notes[courant]||{}),commentaire:ev.target.value};sauver()};
+const exportNotes=()=>JSON.stringify({date:new Date().toISOString().slice(0,10),lot:1,notes:ECRANS.map(e=>({ecran:e.id,titre:e.titre,...(notes[e.id]||{})})).filter(n=>n.verdict||n.commentaire)},null,2);
+document.getElementById('exporter').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([exportNotes()],{type:'application/json'}));a.download='notes-maquettes.json';a.click()};
+document.getElementById('copier').onclick=()=>navigator.clipboard.writeText(exportNotes()).then(()=>toast('Notes copiées'));
+document.getElementById('bascule').onclick=ev=>{const a=document.getElementById('appareil');a.classList.toggle('tablette');ev.target.textContent=a.classList.contains('tablette')?'Voir en téléphone':'Voir en tablette'};
+function toast(t){const e=document.getElementById('toast');e.textContent=t;e.style.display='block';setTimeout(()=>e.style.display='none',1800)}
+// Appel interactif : Présent → Absent → Retard → Excusé → Présent (EX-10)
+const CYCLE=['present','absent','late','excused'],ICO={present:'✓',absent:'✕',late:'◷',excused:'≈'};
+let statuts,debut,minuteur;
+function demarrerAppel(){statuts=MEMBRES.map(()=> 'present');debut=null;clearInterval(minuteur);document.getElementById('chrono').textContent='Chrono : démarre au premier appui';document.getElementById('filtre').value='';rendreAppel()}
+function rendreAppel(){const f=document.getElementById('filtre').value.toLowerCase();
+document.getElementById('liste-appel').innerHTML='<div class="carte">'+MEMBRES.map((p,i)=>(p.prenom+' '+p.nom).toLowerCase().includes(f)?'<div class="rang" data-i="'+i+'"><span class="nom">'+p.prenom+' '+p.nom+'</span><span class="pastille s-'+statuts[i]+'">'+ICO[statuts[i]]+' '+ST[statuts[i]].libelle+'</span></div>':'').join('')+'</div>';
+const n=k=>statuts.filter(s=>s===k).length;
+document.getElementById('compteur').innerHTML=CYCLE.map(k=>'<span><i class="carre s-'+k+'"></i>'+n(k)+' '+ST[k].libelle.toLowerCase()+(n(k)>1&&k!=='late'?'s':'')+'</span>').join('')}
+document.getElementById('liste-appel').addEventListener('click',ev=>{const r=ev.target.closest('.rang');if(!r)return;
+if(!debut){debut=Date.now();minuteur=setInterval(()=>document.getElementById('chrono').textContent='Chrono : '+((Date.now()-debut)/1000).toFixed(1).replace('.',',')+' s',100)}
+const i=+r.dataset.i;statuts[i]=CYCLE[(CYCLE.indexOf(statuts[i])+1)%4];rendreAppel()});
+document.getElementById('filtre').oninput=rendreAppel;
+document.getElementById('enregistrer').onclick=()=>{clearInterval(minuteur);const s=debut?((Date.now()-debut)/1000).toFixed(1).replace('.',','):'0';toast('Appel enregistré · '+s+' s');setTimeout(()=>aller('historique'),1200)};
+aller(location.hash.slice(1)||'accueil');
+</script></body></html>

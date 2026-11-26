@@ -114,7 +114,7 @@ Thème : **clair seul en v1** (décision du 2026-11-26) ; le thème sombre est e
 
 ## 9. Maquettes
 
-HTML local, générées par un script depuis `design/jetons.json`, dans `design/maquettes/` (décision du 2026-11-26). Liste des écrans au document des maquettes. Données toujours fictives.
+HTML local, générées par `node scripts/maquettes.mjs` depuis `design/jetons.json`, dans `design/maquettes/index.html` (décision du 2026-11-26). La page liste les écrans, les exigences que chacun couvre et leur état de relecture. Données toujours fictives. On ne modifie jamais le HTML à la main : on modifie le script et on régénère.
 
 ## 10. À ne pas faire
 
