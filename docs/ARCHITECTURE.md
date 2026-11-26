@@ -90,7 +90,7 @@ Les identifiants suivent le glossaire du cadrage (colonne « Terme du code »).
 | `sessions` | id, season_id, slot_id?, date, start_time, state, comment? | `state` ∈ recorded, prepared, cancelled, unscheduled ; `slot_id` nul = appel sans créneau (EX-39) ; unique (slot_id, date) (RM-05) |
 | `session_groups` | session_id, group_id | Groupes figés au jour de la séance |
 | `attendances` | session_id, member_id, status | `status` ∈ present, absent, late, excused ; cascade depuis `members` et `sessions` |
-| `roll_call_drafts` | id (= 1), slot_id?, date, comment, updated_at | Un seul brouillon à la fois (EX-14) |
+| `roll_call_drafts` | id (= 1), season_id, slot_id?, date, comment, updated_at | Un seul brouillon à la fois (EX-14) ; cascade depuis `seasons` et `slots` |
 | `roll_call_draft_groups` | draft_id, group_id | Groupes du brouillon ; cascade depuis `groups` |
 | `roll_call_draft_statuses` | draft_id, member_id, status | Statuts du brouillon ; cascade depuis `members` (ABS-05) |
 | `alert_acks` | member_id, streak_length, acked_at | Alerte traitée à ce niveau de série (EX-26) |
@@ -99,6 +99,7 @@ Les identifiants suivent le glossaire du cadrage (colonne « Terme du code »).
 - Dates en texte `AAAA-MM-JJ`, heures `HH:MM` (RM-04) ; conversion d'affichage dans `src/domain/formats.ts` seulement.
 - **Séances calculées à la volée** (ADR-004) : une ligne `sessions` n'existe qu'une fois l'appel enregistré, préparé, annulé ou marqué non planifié.
 - Requêtes toujours paramétrées ; `PRAGMA foreign_keys = ON` à chaque ouverture.
+- **Transactions** : une seule connexion, une file d'attente commune aux deux adaptateurs (`src/data/db.ts`). Dans une transaction, n'utiliser que la base de transaction `tx`, jamais la base principale (sinon blocage) ; les dépôts reçoivent la base en paramètre. Vérifié en revue (décision du porteur du 2026-11-26).
 - Tables `STRICT` ; `CHECK` sur les dates (format, date réelle, 1900 à 2100), les heures (`00:00` à `23:59`), les états et statuts, nom et prénom non vides. `weekday` : 1 = lundi … 7 = dimanche.
 - **Suppressions** (décision du porteur du 2026-11-26, ticket 002) :
 
@@ -165,7 +166,7 @@ Liste fermée de ce qu'un journal peut contenir : code d'erreur, nom de l'opéra
 
 - 2026-11-26 : réglages dans SQLite, état React seul, icônes lucide-react-native, polices en fichiers `.ttf`, schéma complet dès la migration 1, builds sur GitHub Actions seul ; brouillon dans une table à part (`roll_call_drafts`) ; **noms de tables au pluriel** (évite le mot réservé `group`) ; tests de données avec `node:sqlite`, à confirmer au ticket d'outillage ; sauvegarde au format base SQLite brute (`.db`).
 - 2026-11-26 (ticket 001) : dépendances obligatoires d'expo-router et de Jest acceptées ; `react-dom` épinglée en 19.3.0 ; `expo-font` installée au ticket 003 (ABS-07).
-- 2026-11-26 (ticket 002) : règles de suppression du §4.1 ; groupes et statuts du brouillon en tables filles en cascade (16 tables) ; transactions sur la connexion principale par une file commune aux deux adaptateurs (`withExclusiveTransactionAsync` ouvre une connexion sans clés étrangères) ; séance d'un créneau supprimé sans colonne d'origine ; types de `node:sqlite` déclarés localement (pas de `@types/node`) ; vérification d'ADR-008 complétée sur téléphone au ticket 004.
+- 2026-11-26 (ticket 002) : règles de suppression du §4.1 ; groupes et statuts du brouillon en tables filles en cascade (16 tables), brouillon rattaché à sa saison ; règle « dans une transaction, seulement `tx` » ; transactions sur la connexion principale par une file commune aux deux adaptateurs (`withExclusiveTransactionAsync` ouvre une connexion sans clés étrangères) ; séance d'un créneau supprimé sans colonne d'origine ; types de `node:sqlite` déclarés localement (pas de `@types/node`) ; vérification d'ADR-008 complétée sur téléphone au ticket 004.
 
 ## Questions ouvertes
 

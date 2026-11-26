@@ -26,6 +26,11 @@ export interface Driver {
 
 export const NESTED_TRANSACTION = 'Transaction imbriquée refusée';
 export const CLOSE_IN_TRANSACTION = 'Fermeture refusée pendant une transaction';
+export const TRANSACTION_OVER = 'Transaction terminée : base de transaction inutilisable';
+export const BROKEN_CONNECTION = 'Connexion dans un état inconnu : rouvrir la base';
+
+// Seul échec de ROLLBACK sans danger : SQLite avait déjà annulé la transaction lui-même.
+const NO_ACTIVE_TRANSACTION = /no transaction is active/i;
 
 /**
  * Base commune aux deux adaptateurs.
@@ -33,20 +38,33 @@ export const CLOSE_IN_TRANSACTION = 'Fermeture refusée pendant une transaction'
  *   (SEC-11 ; withExclusiveTransactionAsync d'expo-sqlite ouvre une autre connexion, sans lui).
  * - Une file : chaque opération attend la fin de la précédente ; rien ne s'intercale dans une
  *   transaction, et une écriture lancée pendant elle n'est pas annulée avec elle.
+ * Règle (décision du porteur du 2026-11-26) : dans `fn`, n'utiliser que `tx`, jamais la base
+ * principale, qui attendrait la fin de la transaction et bloquerait tout. Les dépôts reçoivent
+ * la base en paramètre (`tx` ou `db`) et ne la capturent jamais. Vérifié en revue.
  */
 export const createDb = (driver: Driver): Db => {
   let queue: Promise<unknown> = Promise.resolve();
-  const enqueue = <T>(task: () => Promise<T>): Promise<T> => {
-    const run = queue.then(task);
+  let broken = false;
+  const enqueue = <T>(task: () => Promise<T>, evenIfBroken = false): Promise<T> => {
+    const run = queue.then(() =>
+      broken && !evenIfBroken ? Promise.reject(new Error(BROKEN_CONNECTION)) : task(),
+    );
     queue = run.catch(() => undefined);
     return run;
   };
 
-  const tx: Db = {
-    execute: (sql, params = []) => driver.run(sql, params),
-    query: (sql, params = []) => driver.all(sql, params),
-    transaction: () => Promise.reject(new Error(NESTED_TRANSACTION)),
-    close: () => Promise.reject(new Error(CLOSE_IN_TRANSACTION)),
+  // Une base de transaction neuve à chaque fois, refusée une fois la transaction terminée.
+  const openTx = () => {
+    let open = true;
+    const guard = <T>(task: () => Promise<T>) =>
+      open ? task() : Promise.reject(new Error(TRANSACTION_OVER));
+    const tx: Db = {
+      execute: (sql, params = []) => guard(() => driver.run(sql, params)),
+      query: (sql, params = []) => guard(() => driver.all(sql, params)),
+      transaction: () => Promise.reject(new Error(NESTED_TRANSACTION)),
+      close: () => Promise.reject(new Error(CLOSE_IN_TRANSACTION)),
+    };
+    return { tx, end: () => (open = false) };
   };
 
   return {
@@ -55,6 +73,7 @@ export const createDb = (driver: Driver): Db => {
     transaction: (fn) =>
       enqueue(async () => {
         await driver.exec('BEGIN IMMEDIATE');
+        const { tx, end } = openTx();
         try {
           const value = await fn(tx);
           await driver.exec('COMMIT');
@@ -62,12 +81,18 @@ export const createDb = (driver: Driver): Db => {
         } catch (error) {
           try {
             await driver.exec('ROLLBACK');
-          } catch {
-            // SQLite a déjà annulé la transaction : c'est l'erreur d'origine qui compte.
+          } catch (rollbackError) {
+            // Toute autre cause laisse peut-être la transaction ouverte : plus rien n'est écrit.
+            if (!NO_ACTIVE_TRANSACTION.test(String(rollbackError))) {
+              broken = true;
+            }
           }
           throw error;
+        } finally {
+          end();
         }
       }),
-    close: () => enqueue(() => driver.close()),
+    // Fermer reste permis sur une connexion cassée : c'est le moyen de rouvrir la base.
+    close: () => enqueue(() => driver.close(), true),
   };
 };

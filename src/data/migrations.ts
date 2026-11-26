@@ -122,9 +122,10 @@ const MIGRATION_1: string[] = [
   ) STRICT`,
   'CREATE INDEX attendances_member ON attendances (member_id)',
 
-  // EX-14 : un seul brouillon à la fois (id = 1).
+  // EX-14 : un seul brouillon à la fois (id = 1) ; effacé avec sa saison, même sans créneau (EX-39).
   `CREATE TABLE roll_call_drafts (
     id INTEGER PRIMARY KEY CHECK (id = 1),
+    season_id INTEGER NOT NULL REFERENCES seasons (id) ON DELETE CASCADE,
     slot_id INTEGER REFERENCES slots (id) ON DELETE CASCADE,
     date TEXT NOT NULL CHECK ${isoDate('date')},
     comment TEXT,

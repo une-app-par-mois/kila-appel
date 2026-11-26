@@ -10,7 +10,7 @@ Dernière mise à jour : 2026-11-26
 
 ## Prochaines étapes
 
-1. Ticket 002 : codé et vert (82 tests, couverture 100 % sur `src/data/`) ; `/code-review`, `/security-review`, puis **relecture du porteur** avant la fusion dans le groupe.
+1. Ticket 002 : codé et vert (95 tests, couverture 100 %), deux `/code-review` et `/security-review` traités ; **relecture du porteur** sur la PR avant la fusion dans le groupe.
 2. Tickets 003 et 004 ; au 004, migration 1 lancée sur le téléphone (ADR-008).
 3. Fin du jalon 0 : PR du jalon vers `main` (CI complète), prétest, réévaluation du calendrier (`docs/PLAN.md` §6).
 

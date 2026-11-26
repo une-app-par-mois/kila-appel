@@ -7,14 +7,14 @@ import { openExpoDb } from '@/data/expoDb';
 import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
 
-// Imitation fidèle d'expo-sqlite sur node:sqlite : base dans un fichier, et
-// withExclusiveTransactionAsync sur une NOUVELLE connexion (comme le module réel,
-// SQLiteDatabase.ts : useNewConnection), où les clés étrangères sont inactives par défaut.
+// Imitation d'expo-sqlite sur node:sqlite, base dans un fichier temporaire. Elle n'offre pas
+// withExclusiveTransactionAsync : ce module ouvre une autre connexion, sans clés étrangères
+// (SQLiteDatabase.ts : useNewConnection) ; l'adaptateur ne doit pas l'utiliser (SEC-11).
 // On teste le code de l'adaptateur, pas le module natif (ticket 004, ADR-008).
 jest.mock('expo-sqlite', () => {
   const { DatabaseSync } = require('node:sqlite');
-  const { mkdtempSync } = require('node:fs');
-  const { join } = require('node:path');
+  const { mkdtempSync, rmSync } = require('node:fs');
+  const { dirname, join } = require('node:path');
   const { tmpdir } = require('node:os');
   type MockRaw = InstanceType<typeof DatabaseSync>;
   const wrap = (raw: MockRaw, path: string) => ({
@@ -24,20 +24,10 @@ jest.mock('expo-sqlite', () => {
     },
     getAllAsync: async (sql: string, params: unknown[]) => raw.prepare(sql).all(...params),
     execAsync: async (sql: string) => raw.exec(sql),
-    withExclusiveTransactionAsync: async (task: (txn: unknown) => Promise<void>) => {
-      const other = new DatabaseSync(path);
-      other.exec('BEGIN IMMEDIATE');
-      try {
-        await task(wrap(other, path));
-        other.exec('COMMIT');
-      } catch (error) {
-        other.exec('ROLLBACK');
-        throw error;
-      } finally {
-        other.close();
-      }
+    closeAsync: async () => {
+      raw.close();
+      rmSync(dirname(path), { recursive: true, force: true });
     },
-    closeAsync: async () => raw.close(),
   });
   return {
     openDatabaseAsync: async (name: string) => {

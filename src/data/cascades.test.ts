@@ -60,6 +60,14 @@ describe('Suppressions en cascade (SEC-11, ABS-05)', () => {
     expect(await count(db, 'enrollments')).toBe(2);
   });
 
+  it('EX-39 un brouillon sans créneau est effacé avec sa saison', async () => {
+    await db.execute('UPDATE roll_call_drafts SET slot_id = NULL');
+    await db.execute('DELETE FROM seasons WHERE id = ?', [s.seasonId]);
+
+    expect(await count(db, 'roll_call_drafts')).toBe(0);
+    expect(await count(db, 'roll_call_draft_statuses')).toBe(0);
+  });
+
   it('EX-07 supprimer un créneau garde ses séances et leurs présences, sans lien vers le créneau', async () => {
     await db.execute('DELETE FROM slots WHERE id = ?', [s.slotId]);
 
