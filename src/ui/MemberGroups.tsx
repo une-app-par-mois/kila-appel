@@ -1,12 +1,14 @@
 // Section Groupes de la fiche d'un membre (maquette, EX-04) : groupes en cours ou à venir de la
-// saison active ; « Retirer » à une date ; « Ajouter à un groupe » inscrit aujourd'hui (décision
-// du porteur du 2026-11-26). Un membre archivé ne se retire ni ne s'inscrit.
+// saison active ; « Retirer » à une date, ou « Annuler » une inscription qui n'a pas commencé ;
+// « Ajouter à un groupe » inscrit aujourd'hui (décisions du porteur du 2026-11-26). Un membre
+// archivé ne se retire ni ne s'inscrit.
 import { useState } from 'react';
 import { labels } from '@/config/libelles';
 import type { MemberEnrollment } from '@/data/enrollmentsRepo';
 import { previousDay, toDisplayDate } from '@/domain/formats';
 import { Button } from '@/ui/Button';
 import { Card } from '@/ui/Card';
+import { ConfirmDialog } from '@/ui/ConfirmDialog';
 import { ListRow } from '@/ui/ListRow';
 import { Section } from '@/ui/Screen';
 import { ChoiceList } from '@/ui/Select';
@@ -22,6 +24,7 @@ type Props = {
   busy: boolean;
   onAdd: (groupId: number) => void;
   onWithdraw: (enrollmentId: number, endDate: string) => Promise<void>;
+  onCancel: (enrollmentId: number) => void;
 };
 
 export const MemberGroups = ({
@@ -33,9 +36,11 @@ export const MemberGroups = ({
   busy,
   onAdd,
   onWithdraw,
+  onCancel,
 }: Props) => {
   const [withdrawing, setWithdrawing] = useState<MemberEnrollment | null>(null);
   const [choosing, setChoosing] = useState(false);
+  const [cancelling, setCancelling] = useState<MemberEnrollment | null>(null);
   return (
     <>
       <Section title={labels.memberGroups.title} />
@@ -54,7 +59,17 @@ export const MemberGroups = ({
                   )
             }
             right={
-              e.endDate === null && !archived ? (
+              archived ? undefined : e.startDate > today ? (
+                <Button
+                  label={labels.memberGroups.cancel}
+                  accessibilityLabel={labels.rowAccessibility(
+                    labels.memberGroups.cancel,
+                    e.groupName,
+                  )}
+                  variant="compact"
+                  onPress={() => setCancelling(e)}
+                />
+              ) : e.endDate === null ? (
                 <Button
                   label={labels.memberGroups.withdraw}
                   accessibilityLabel={labels.rowAccessibility(
@@ -89,13 +104,26 @@ export const MemberGroups = ({
         <WithdrawDialog
           visible
           title={labels.withdrawal.title(memberName, withdrawing.groupName)}
-          // Pas avant son début : la plus tardive des deux dates (texte AAAA-MM-JJ).
-          initialDate={[withdrawing.startDate, today].sort()[1] ?? today}
+          initialDate={today}
           onConfirm={async (endDate) => {
             await onWithdraw(withdrawing.enrollmentId, endDate);
             setWithdrawing(null);
           }}
           onCancel={() => setWithdrawing(null)}
+        />
+      )}
+      {cancelling !== null && (
+        <ConfirmDialog
+          visible
+          title={labels.cancellation.title(memberName, cancelling.groupName)}
+          message={labels.cancellation.message}
+          cancelLabel={labels.common.keep}
+          confirmLabel={labels.cancellation.confirm}
+          onCancel={() => setCancelling(null)}
+          onConfirm={() => {
+            setCancelling(null);
+            onCancel(cancelling.enrollmentId);
+          }}
         />
       )}
     </>

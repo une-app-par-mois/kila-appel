@@ -1,7 +1,7 @@
 // Dépôt des inscriptions (EX-04). Inscrit du début (inclus) à la fin (exclue) : la date de fin est
 // le premier jour sans le membre (décision du porteur du 2026-11-26). Requêtes paramétrées.
 import type { Db } from '@/data/db';
-import { DataError } from '@/data/errors';
+import { DataError, expectChanged } from '@/data/errors';
 import { InputError, validateDate } from '@/domain/validation';
 
 /** `endDate` : premier jour sans le membre, ou `null` (aucun retrait prévu). */
@@ -53,8 +53,11 @@ const byName = (a: Candidate | GroupEnrollment, b: Candidate | GroupEnrollment) 
 export const current = (n: number) =>
   `(e.start_date <= ?${n} AND (e.end_date IS NULL OR e.end_date > ?${n}))`;
 
+/** Période non vide : une fin le jour même du début (retrait le premier jour) ne compte nulle part. */
+const NOT_EMPTY = '(e.end_date IS NULL OR e.end_date > e.start_date)';
+
 /** Inscription qui n'est pas finie à la date `?n` (en cours ou à venir). */
-const notEnded = (n: number) => `(e.end_date IS NULL OR e.end_date > ?${n})`;
+const notEnded = (n: number) => `((e.end_date IS NULL OR e.end_date > ?${n}) AND ${NOT_EMPTY})`;
 
 /**
  * Groupe où l'on peut inscrire (non archivé, saison active) et membre courant ; sinon NOT_FOUND.
@@ -96,7 +99,7 @@ export const enrollmentsRepo = (db: Db) => ({
       await db.query<GroupEnrollmentRow>(
         `SELECT ${GROUP_ENROLLMENT_COLUMNS}
          FROM enrollments e JOIN members m ON m.id = e.member_id
-         WHERE e.group_id = ?1 AND m.archived_at IS NULL AND e.start_date > ?2
+         WHERE e.group_id = ?1 AND m.archived_at IS NULL AND e.start_date > ?2 AND ${NOT_EMPTY}
          ORDER BY e.start_date, e.id`,
         [groupId, validateDate(today)],
       )
@@ -178,5 +181,18 @@ export const enrollmentsRepo = (db: Db) => ({
       if (endDate < row.start_date) throw new InputError('END_BEFORE_START');
       await tx.execute('UPDATE enrollments SET end_date = ? WHERE id = ?', [endDate, enrollmentId]);
     });
+  },
+
+  /**
+   * Annule une inscription qui n'a pas commencé (après `today`) : elle est effacée, il n'a jamais
+   * été dans le groupe (décision du porteur du 2026-11-26). Commencée ou introuvable : NOT_FOUND.
+   */
+  cancel: async (enrollmentId: number, today: string): Promise<void> => {
+    expectChanged(
+      await db.execute('DELETE FROM enrollments WHERE id = ? AND start_date > ?', [
+        enrollmentId,
+        validateDate(today),
+      ]),
+    );
   },
 });

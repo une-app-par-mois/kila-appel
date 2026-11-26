@@ -135,7 +135,7 @@ export default function GroupDetail() {
                 onPress={() => run(unarchive)}
               />
             )}
-            {group.archivedAt === null && (
+            {group.archivedAt === null && season?.isActive && (
               <Button
                 label={t.addMembers}
                 flex={2}

@@ -47,7 +47,7 @@ describe('Écrans des inscriptions (EX-04)', () => {
   it('fiche du groupe : nombre d’inscrits du jour, « Inscrit depuis le … », vers la fiche du membre', async () => {
     const router = await open(`/groupes/${s.groupId}`);
     expect(await screen.findByText(t.group.memberCount(2))).toBeTruthy();
-    const since = t.group.enrolledSince(toDisplayDate('2026-09-01'));
+    const since = t.group.period(toDisplayDate('2026-09-01'), null);
     await fireEvent.press(await button(`Alix Exemple, ${since}`));
     expect(router.getPathname()).toBe(`/membres/${s.memberId}`);
   });
@@ -64,7 +64,9 @@ describe('Écrans des inscriptions (EX-04)', () => {
       '2099-01-05',
     ]);
     await open(`/groupes/${s.groupId}`);
-    expect(await button(new RegExp(t.group.until(toDisplayDate('2099-11-30'))))).toBeTruthy();
+    expect(
+      await button(`Alix Exemple, ${t.group.period(toDisplayDate('2026-09-01'), '30/11/2099')}`),
+    ).toBeTruthy();
     expect(screen.getByText(t.group.upcoming)).toBeTruthy();
     expect(
       screen.getByRole('button', {
@@ -105,8 +107,9 @@ describe('Écrans des inscriptions (EX-04)', () => {
     expect(await count(db, 'enrollments', 'member_id = ?', [noah])).toBe(0);
   });
 
-  it('« Nouveau membre » depuis l’ajout : groupe préchoisi, puis retour à l’ajout', async () => {
+  it('« Nouveau membre » depuis l’ajout : groupe préchoisi, date choisie, puis retour à l’ajout', async () => {
     const router = await open(`/groupes/${s.groupId}/inscrire`);
+    await fireEvent.changeText(await screen.findByLabelText(t.enrollment.startDate), '05/01/2099');
     await fireEvent.press(await button(t.enrollment.newMember));
     expect(await button(`${t.memberForm.group}, Poussins`)).toBeTruthy();
     await fireEvent.changeText(screen.getByLabelText(t.memberForm.firstName), 'Yanis');
@@ -117,15 +120,17 @@ describe('Écrans des inscriptions (EX-04)', () => {
       await count(
         db,
         'enrollments',
-        "group_id = ? AND member_id = (SELECT id FROM members WHERE first_name = 'Yanis')",
-        [s.groupId],
+        "group_id = ? AND start_date = ? AND member_id = (SELECT id FROM members WHERE first_name = 'Yanis')",
+        [s.groupId, '2099-01-05'],
       ),
     ).toBe(1);
   });
 
   it('fiche du membre : ses groupes ; retrait à une date, présences conservées', async () => {
     await open(`/membres/${s.memberId}`);
-    expect(await screen.findByText(t.memberGroups.since(toDisplayDate('2026-09-01')))).toBeTruthy();
+    expect(
+      await screen.findByText(t.memberGroups.period(toDisplayDate('2026-09-01'), null)),
+    ).toBeTruthy();
     await fireEvent.press(
       screen.getByRole('button', { name: `${t.memberGroups.withdraw}, Poussins` }),
     );
@@ -182,5 +187,64 @@ describe('Écrans des inscriptions (EX-04)', () => {
         ]),
       ).toBe(1),
     );
+  });
+
+  it('groupe d’une saison inactive : pas d’« Ajouter des membres »', async () => {
+    const [old] = await db.query<{ id: number }>('SELECT id FROM groups WHERE season_id = ?', [
+      s.otherSeasonId,
+    ]);
+    await open(`/groupes/${old?.id}`);
+    expect(await screen.findByText(t.group.memberCount(2))).toBeTruthy();
+    expect(screen.queryByRole('button', { name: t.group.addMembers })).toBeNull();
+  });
+
+  it('ajout à une date passée : seuls les membres libres à cette date sont proposés', async () => {
+    await db.execute(
+      'INSERT INTO enrollments (member_id, group_id, start_date, end_date) VALUES (?, ?, ?, ?)',
+      [noah, s.groupId, '2020-01-01', '2020-06-01'],
+    );
+    await open(`/groupes/${s.groupId}/inscrire`);
+    await fireEvent.press(await screen.findByRole('checkbox', { name: 'Noah Girard' }));
+    await fireEvent.changeText(screen.getByLabelText(t.enrollment.startDate), '01/03/2020');
+    await waitFor(() => expect(screen.queryByRole('checkbox', { name: 'Noah Girard' })).toBeNull());
+    expect(
+      screen.getByRole('button', { name: t.enrollment.submit(0) }).props.accessibilityState,
+    ).toMatchObject({ disabled: true });
+  });
+
+  it('inscription à venir : « Annuler » l’efface après confirmation', async () => {
+    await db.execute('INSERT INTO enrollments (member_id, group_id, start_date) VALUES (?, ?, ?)', [
+      noah,
+      s.groupId,
+      '2099-01-05',
+    ]);
+    await open(`/membres/${noah}`);
+    expect(
+      screen.queryByRole('button', { name: `${t.memberGroups.withdraw}, Poussins` }),
+    ).toBeNull();
+    await fireEvent.press(await button(`${t.memberGroups.cancel}, Poussins`));
+    expect(await screen.findByText(t.cancellation.title('Noah Girard', 'Poussins'))).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: t.cancellation.confirm }));
+    await waitFor(async () =>
+      expect(await count(db, 'enrollments', 'member_id = ?', [noah])).toBe(0),
+    );
+    expect(await screen.findByText(t.memberGroups.none)).toBeTruthy();
+  });
+
+  it('nouveau membre avec un groupe préchoisi qui n’est plus proposé : aucun groupe, comme affiché', async () => {
+    await db.execute('UPDATE groups SET archived_at = ? WHERE id = ?', [TODAY, s.groupId]);
+    await open(`/membres/nouveau?groupe=${s.groupId}`);
+    expect(await button(`${t.memberForm.group}, ${t.memberForm.noGroup}`)).toBeTruthy();
+    await fireEvent.changeText(screen.getByLabelText(t.memberForm.firstName), 'Yanis');
+    await fireEvent.changeText(screen.getByLabelText(t.memberForm.lastName), 'Colin');
+    await fireEvent.press(screen.getByRole('button', { name: t.memberForm.create }));
+    await waitFor(async () => expect(await count(db, 'members', "first_name = 'Yanis'")).toBe(1));
+    expect(
+      await count(
+        db,
+        'enrollments',
+        "member_id = (SELECT id FROM members WHERE first_name = 'Yanis')",
+      ),
+    ).toBe(0);
   });
 });

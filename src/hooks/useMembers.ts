@@ -68,8 +68,8 @@ export const useMembers = ({
 export const useMemberCreation = (today: string) => {
   const change = useChange(useRepos());
   return useCallback(
-    (input: MemberInput, groupId: number | null = null) =>
-      change((r) => r.members.create(input, { groupId, today })),
+    (input: MemberInput, groupId: number | null = null, startDate = today) =>
+      change((r) => r.members.create(input, { groupId, today, startDate })),
     [change, today],
   );
 };
@@ -116,6 +116,11 @@ export const useMember = (id: number, today: string) => {
       change((r) => r.enrollments.withdraw(enrollmentId, endDate)),
     [change],
   );
+  /** Annule une inscription à venir (décision du porteur du 2026-11-26). */
+  const cancel = useCallback(
+    (enrollmentId: number) => change((r) => r.enrollments.cancel(enrollmentId, today)),
+    [change, today],
+  );
   /** Inscrit à un groupe à partir d'aujourd'hui (décision du porteur du 2026-11-26). */
   const enrollIn = useCallback(
     (groupId: number) => change((r) => r.enrollments.enroll(groupId, [id], today)),
@@ -139,12 +144,16 @@ export const useMember = (id: number, today: string) => {
     remove,
     deletionImpact,
     withdraw,
+    cancel,
     enrollIn,
   };
 };
 
-/** Inscrits du jour d'un groupe, ceux à venir, membres qu'on peut y inscrire (EX-04). */
-export const useEnrollments = (groupId: number, today: string) => {
+/**
+ * Inscrits du jour d'un groupe, ceux à venir, et membres qu'on peut y inscrire à `candidatesOn`
+ * (par défaut `today`) : libres à cette date et après (EX-04).
+ */
+export const useEnrollments = (groupId: number, today: string, candidatesOn = today) => {
   const repos = useRepos();
   const load = useMemo(
     () =>
@@ -152,10 +161,10 @@ export const useEnrollments = (groupId: number, today: string) => {
         ? async () => ({
             enrollments: await repos.enrollments.listByGroup(groupId, today),
             upcoming: await repos.enrollments.listUpcomingByGroup(groupId, today),
-            candidates: await repos.enrollments.candidates(groupId, today),
+            candidates: await repos.enrollments.candidates(groupId, candidatesOn),
           })
         : null,
-    [repos, groupId, today],
+    [repos, groupId, today, candidatesOn],
   );
   const { value, loadFailed } = useLoaded(load, 'ENROLLMENTS_LOAD_FAILED', { groupId });
   const change = useChange(repos);

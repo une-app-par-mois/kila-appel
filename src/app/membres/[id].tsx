@@ -210,6 +210,7 @@ export default function MemberSheet() {
             busy={busy}
             onAdd={(groupId) => void run(() => member$.enrollIn(groupId))}
             onWithdraw={member$.withdraw}
+            onCancel={(enrollmentId) => void run(() => member$.cancel(enrollmentId))}
           />
           {member.archivedAt === null ? (
             <Button

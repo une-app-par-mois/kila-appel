@@ -6,6 +6,7 @@ import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
+import { DataError } from '@/data/errors';
 import { parseDisplayDate, toDisplayDate, toIsoDate } from '@/domain/formats';
 import { useGroup } from '@/hooks/useGroups';
 import { useEnrollments } from '@/hooks/useMembers';
@@ -24,9 +25,15 @@ export default function Enroll() {
   const id = param && /^\d+$/.test(param) ? Number(param) : 0;
   const today = toIsoDate(new Date());
   const { group, loaded, loadFailed } = useGroup(id);
-  const { candidates, loadFailed: candidatesFailed, enroll } = useEnrollments(id, today);
   const [selected, setSelected] = useState<number[]>([]);
   const [date, setDate] = useState(toDisplayDate(today));
+  // Candidats libres à la date saisie : l'inscription y est refusée sinon (chevauchement).
+  const startDate = parseDisplayDate(date);
+  const {
+    candidates,
+    loadFailed: candidatesFailed,
+    enroll,
+  } = useEnrollments(id, today, startDate ?? today);
   const [dateError, setDateError] = useState<string | undefined>();
   const [formError, setFormError] = useState<string | undefined>();
   const saving = useRef(false);
@@ -40,7 +47,6 @@ export default function Enroll() {
   const back = () => (router.canGoBack() ? router.back() : router.replace(`/groupes/${id}`));
 
   const save = async () => {
-    const startDate = parseDisplayDate(date);
     if (startDate === null) {
       setDateError(labels.errors.DATE_INVALID);
       return;
@@ -51,6 +57,7 @@ export default function Enroll() {
     try {
       // Un membre décoché ou disparu entre-temps n'est pas inscrit.
       const ids = selected.filter((memberId) => candidates?.some((c) => c.id === memberId));
+      if (ids.length === 0) throw new DataError('ALREADY_ENROLLED');
       await enroll(ids, startDate);
       back();
     } catch (e) {
@@ -110,7 +117,11 @@ export default function Enroll() {
               label={t.newMember}
               variant="secondary"
               flex={1}
-              onPress={() => router.push(`/membres/nouveau?groupe=${id}&retour=1`)}
+              onPress={() =>
+                startDate === null
+                  ? setDateError(labels.errors.DATE_INVALID)
+                  : router.push(`/membres/nouveau?groupe=${id}&debut=${startDate}&retour=1`)
+              }
             />
             <Button
               label={t.submit(count)}

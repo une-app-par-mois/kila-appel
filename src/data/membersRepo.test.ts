@@ -104,6 +104,22 @@ describe('Dépôt des membres (EX-03)', () => {
     ).toBe(1);
   });
 
+  it('EX-04 crée un membre inscrit à une date choisie (écran d’ajout à un groupe)', async () => {
+    const id = await membersRepo(db).create(
+      { firstName: 'Léa', lastName: 'Morel', birthDate: null },
+      { groupId: s.groupId, today: TODAY, startDate: '2027-01-05' },
+    );
+    expect(
+      await count(db, 'enrollments', 'member_id = ? AND start_date = ?', [id, '2027-01-05']),
+    ).toBe(1);
+    await expect(
+      membersRepo(db).create(
+        { firstName: 'Léa', lastName: 'Morel', birthDate: null },
+        { groupId: s.groupId, today: TODAY, startDate: '05/01/2027' },
+      ),
+    ).rejects.toMatchObject({ code: 'DATE_INVALID' });
+  });
+
   it('création refusée : rien n’est écrit (saisie invalide ou groupe inexistant)', async () => {
     const repo = membersRepo(db);
     await expect(

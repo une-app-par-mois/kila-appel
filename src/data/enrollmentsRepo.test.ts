@@ -205,6 +205,30 @@ describe('Dépôt des inscriptions (EX-04)', () => {
     expect(await count(db, 'enrollments', 'member_id = ?', [newcomer])).toBe(0);
   });
 
+  it('annuler une inscription à venir l’efface ; une inscription commencée ne s’annule pas', async () => {
+    const repo = enrollmentsRepo(db);
+    await repo.enroll(s.groupId, [newcomer], '2026-12-10');
+    const [upcoming] = await repo.listUpcomingByGroup(s.groupId, TODAY);
+    await repo.cancel(upcoming?.enrollmentId ?? 0, TODAY);
+    expect(await count(db, 'enrollments', 'member_id = ?', [newcomer])).toBe(0);
+    expect((await repo.candidates(s.groupId, TODAY)).map((m) => m.id)).toContain(newcomer);
+    const started = (await enrollmentOf(s.memberId))?.enrollmentId ?? 0;
+    await expect(repo.cancel(started, TODAY)).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    await expect(repo.cancel(9999, TODAY)).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    expect(await count(db, 'enrollments', 'id = ?', [started])).toBe(1);
+  });
+
+  it('une période vide (fin = début) ne compte nulle part : ni à venir, ni dans ses groupes, ni comme blocage', async () => {
+    const repo = enrollmentsRepo(db);
+    await repo.enroll(s.groupId, [newcomer], '2026-12-10');
+    const [upcoming] = await repo.listUpcomingByGroup(s.groupId, TODAY);
+    await repo.withdraw(upcoming?.enrollmentId ?? 0, '2026-12-10');
+    expect(await repo.listUpcomingByGroup(s.groupId, TODAY)).toEqual([]);
+    expect(await repo.listByMember(newcomer, TODAY)).toEqual([]);
+    expect((await repo.candidates(s.groupId, TODAY)).map((m) => m.id)).toContain(newcomer);
+    await repo.enroll(s.groupId, [newcomer], TODAY);
+  });
+
   it('retrait refusé avant le début, sur une inscription déjà close ou introuvable', async () => {
     const repo = enrollmentsRepo(db);
     const id = (await enrollmentOf(s.memberId))?.enrollmentId ?? 0;

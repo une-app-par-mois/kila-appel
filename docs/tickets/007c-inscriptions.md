@@ -25,7 +25,8 @@ Découpé du ticket 007 le 2026-11-26 (décision du porteur).
 
 - Dates futures permises : la fiche du groupe montre les inscrits du jour (« Jusqu'au … » si leur retrait est prévu) et une section « À venir » (« À partir du … »).
 - « + Ajouter à un groupe » (fiche d'un membre) : liste plein écran des groupes de la saison active où il n'est pas inscrit ; inscrit à partir d'aujourd'hui.
-- « Nouveau membre » (écran d'ajout) : création avec ce groupe préchoisi, puis retour à l'écran d'ajout.
+- « Nouveau membre » (écran d'ajout) : création avec ce groupe préchoisi et la date « À partir du » saisie, puis retour à l'écran d'ajout.
+- « Retirer » une inscription qui n'a pas commencé l'annule : elle est effacée (« Annuler », confirmation), il redevient inscriptible.
 
 ## Tests attendus
 

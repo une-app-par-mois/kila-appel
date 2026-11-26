@@ -149,8 +149,6 @@ export const labels = {
     unarchive: 'Désarchiver',
     /** Suivi du séparateur, avant le lien « Renommer ou supprimer ». */
     memberCount: (n: number) => `${plural(n, 'membre inscrit', 'membres inscrits')} · `,
-    enrolledSince: (date: string) => `Inscrit depuis le ${date}`,
-    until: (date: string) => `jusqu’au ${date}`,
     /** « Inscrit depuis le …, jusqu’au … » quand un retrait est prévu. */
     period: (since: string, until: string | null) =>
       until === null
@@ -169,10 +167,11 @@ export const labels = {
   },
   memberGroups: {
     title: 'Groupes',
-    since: (date: string) => `Depuis le ${date}`,
     period: (since: string, until: string | null) =>
       until === null ? `Depuis le ${since}` : `Depuis le ${since}, jusqu’au ${until}`,
     withdraw: 'Retirer',
+    /** Inscription à venir : elle s'annule (décision du porteur du 2026-11-26). */
+    cancel: 'Annuler',
     add: 'Ajouter à un groupe',
     none: 'Inscrit à aucun groupe de la saison active.',
   },
@@ -182,6 +181,11 @@ export const labels = {
     kept: 'Ses présences passées sont conservées.',
     cancel: 'Annuler',
     confirm: 'Retirer du groupe',
+  },
+  cancellation: {
+    title: (member: string, group: string) => `Annuler l’inscription de ${member} à ${group} ?`,
+    message: 'Elle n’a pas encore commencé : elle est effacée.',
+    confirm: 'Annuler l’inscription',
   },
   groupDeletion: {
     title: (name: string) => `Supprimer ${name} ?`,
