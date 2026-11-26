@@ -1,6 +1,6 @@
 # Cadrage — Ki&La (appel)
 
-Statut : 🟡 brouillon complet, en attente de relecture · Dernière mise à jour : 2026-11-26
+Statut : ✅ validé le 2026-11-26
 
 Mois : 2026-11 · App n°1 · Origine de l'idée : moi
 
