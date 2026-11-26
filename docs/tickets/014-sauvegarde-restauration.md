@@ -15,7 +15,7 @@ L'unique chemin de récupération des données (EX-19 à EX-22) ; le bogue le pl
 
 ## Ce qui change
 
-- `src/data/backup.ts` : `VACUUM INTO`, vérification sur copie, remplacement
+- `src/data/backup.ts` : `VACUUM INTO`, vérification sur copie, remplacement ; la vérification contrôle aussi `slots.schedule_from` (une sauvegarde contourne le déclencheur, ticket 005)
 - Écrans ; dépendances expo-file-system, expo-sharing, expo-document-picker (validées)
 
 ## Critères d'acceptation

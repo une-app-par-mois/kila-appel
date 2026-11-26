@@ -14,6 +14,7 @@ Déclarer quand les groupes se réunissent (EX-07).
 ## Ce qui change
 
 - Dépôts `slots`, `slot_groups`
+- `slots.schedule_from` : date du jour à la création ; avancée à la date du changement quand le jour ou l'heure changent (EX-07, ticket 005) ; jamais de `REPLACE INTO`
 - Écrans liste, création, modification, suppression
 
 ## Critères d'acceptation

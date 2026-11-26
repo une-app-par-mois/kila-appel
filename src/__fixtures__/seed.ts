@@ -66,7 +66,7 @@ export const seed = async (db: Db): Promise<Seeded> => {
   }
   const slotId = await insert(
     db,
-    'INSERT INTO slots (season_id, weekday, start_time, duration_min, place, created_on) VALUES (?, 3, ?, 90, ?, ?)',
+    'INSERT INTO slots (season_id, weekday, start_time, duration_min, place, schedule_from) VALUES (?, 3, ?, 90, ?, ?)',
     [seasonId, '17:30', 'Gymnase', '2025-09-01'],
   );
   await db.execute('INSERT INTO slot_groups (slot_id, group_id) VALUES (?, ?)', [slotId, groupId]);

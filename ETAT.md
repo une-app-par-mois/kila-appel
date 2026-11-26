@@ -12,7 +12,7 @@ Réévaluation (PLAN §6) : moins de 2 h de porteur pour 6 h prévues ; 1,5 h pa
 
 ## Prochaines étapes
 
-1. **Ticket 005** (domaine : occurrences, appels manquants) sur `ticket/005-domaine-occurrences`, partie de `groupe/jalon-1-organiser-appeler-retrouver` : migration 2 (`slots.created_on` et déclencheur, décision du 2026-11-26), tests d'abord.
+1. **Ticket 005** (domaine : occurrences, appels manquants) sur `ticket/005-domaine-occurrences`, partie de `groupe/jalon-1-organiser-appeler-retrouver` : `slots.schedule_from` dans la migration 1 (ADR-003). Codé, revues faites ; relecture du porteur avant fusion (zone sensible).
 2. Tickets 006 à 016 du jalon 1, puis PR du jalon vers `main`.
 
 ## Points d'attention
@@ -35,6 +35,7 @@ Réévaluation (PLAN §6) : moins de 2 h de porteur pour 6 h prévues ; 1,5 h pa
 - Écran vide du ticket 001 jamais lancé sur un téléphone (`npx expo start` à faire par le porteur).
 - CI jamais lancée (elle tournera sur la PR du jalon 0).
 - Polices jamais vues à l'écran (rendu avec les premiers écrans du jalon 1) ; couleurs nommées (`'red'`) non détectées par le contrôle CONV-16.
+- **Bases de test à effacer** (Galaxy A55, émulateur) : créées en version 1 sans `slots.schedule_from` ; désinstaller Ki&La avant la prochaine installation, sinon la création d'un créneau échouera.
 - **Dependabot** ouvre ses PR vers `main` : chacune lance aussi les builds Android et iOS (environ 30 min).
 - Requêtes métier jamais essayées sur le module natif `expo-sqlite` : seules l'ouverture et la migration 1 l'ont été, sur le Galaxy A55. Rien encore sur un iPhone réel.
 - Habilitations iOS contrôlées sur le projet généré, pas sur un binaire signé : à revoir avec la signature (jalon 6). Polices IBM Plex absentes du poste : les maquettes s'affichent dans la police du système.

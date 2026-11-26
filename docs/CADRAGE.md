@@ -89,7 +89,7 @@ Un mot par notion. Le terme du code (en anglais, décision du 2026-11-26) est le
 | Contacts d'urgence : nom et téléphone (facultatifs, plusieurs par membre) | Oui, d'un tiers | Non | Base locale | Idem, supprimés avec le membre | Sauvegarde ; suppression avec le membre |
 | Présences (statut par membre et par séance) | Oui | Non | Base locale | 3 saisons, réglable | Sauvegarde, export CSV, rapport PDF ; effacées avec le membre |
 | Commentaire de séance (pas de membre) | Non, en principe | Non | Base locale | Idem | Sauvegarde |
-| Saisons, groupes, créneaux (dont leur date de création, EX-08), réglages | Non | Non | Base locale et préférences | Jusqu'à suppression | Sauvegarde |
+| Saisons, groupes, créneaux (dont la date d'effet de leur horaire, EX-07, EX-08), réglages | Non | Non | Base locale et préférences | Jusqu'à suppression | Sauvegarde |
 | Sauvegarde exportée | Oui (tout ce qui précède) | Non | Là où l'encadrant la dépose ; **en clair**, avec avertissement à l'export | Sous la garde de l'encadrant | Hors de l'appli |
 
 ## Zones sensibles

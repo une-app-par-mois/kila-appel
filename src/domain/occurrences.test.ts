@@ -14,7 +14,7 @@ const wednesday: WeeklySlot = {
   weekday: 3,
   startTime: '17:30',
   durationMin: 90,
-  createdOn: '2026-09-01',
+  scheduleFrom: '2026-09-01',
 };
 const at = (date: string, time: string): LocalNow => ({ date, time });
 
@@ -28,14 +28,14 @@ describe('EX-08 slotDates : dates d’un créneau hebdomadaire sur une période'
     ]);
   });
 
-  it('EX-08 ne donne aucune date antérieure à la création du créneau', () => {
-    const created = { ...wednesday, createdOn: '2026-11-12' };
+  it('EX-08 ne donne aucune date antérieure à la date d’effet de l’horaire', () => {
+    const created = { ...wednesday, scheduleFrom: '2026-11-12' };
     expect(slotDates(created, SEASON, '2026-11-01', '2026-11-30')).toEqual([
       '2026-11-18',
       '2026-11-25',
     ]);
-    const createdOnAWednesday = { ...wednesday, createdOn: '2026-11-18' };
-    expect(slotDates(createdOnAWednesday, SEASON, '2026-11-01', '2026-11-30')).toEqual([
+    const scheduleFromAWednesday = { ...wednesday, scheduleFrom: '2026-11-18' };
+    expect(slotDates(scheduleFromAWednesday, SEASON, '2026-11-01', '2026-11-30')).toEqual([
       '2026-11-18',
       '2026-11-25',
     ]);
@@ -59,7 +59,7 @@ describe('EX-08 slotDates : dates d’un créneau hebdomadaire sur une période'
   });
 
   it('ignore les changements d’heure (29 mars et 25 octobre 2026)', () => {
-    const sunday = { ...wednesday, weekday: 7 as const, createdOn: '2026-01-01' };
+    const sunday = { ...wednesday, weekday: 7 as const, scheduleFrom: '2026-01-01' };
     const season = { startDate: '2026-01-01', endDate: '2026-12-31' };
     expect(slotDates(sunday, season, '2026-03-22', '2026-04-05')).toEqual([
       '2026-03-22',
@@ -135,6 +135,35 @@ describe('EX-09 proposedSession : séance en cours, sinon la plus proche', () =>
     });
   });
 
+  it('juste après minuit, propose la séance qui vient de finir plutôt qu’une séance du soir', () => {
+    const night: WeeklySlot = {
+      ...wednesday,
+      id: 6,
+      weekday: 2,
+      startTime: '23:00',
+      durationMin: 80,
+    };
+    const wednesdayEvening: WeeklySlot = { ...wednesday, id: 8, startTime: '18:00' };
+    // Mercredi 0 h 30 : la séance du mardi a fini à 0 h 20, celle du mercredi commence à 18 h.
+    expect(proposedSession([wednesdayEvening, night], SEASON, at('2026-11-18', '00:30'))).toEqual({
+      slotId: 6,
+      date: '2026-11-17',
+      startTime: '23:00',
+    });
+  });
+
+  it('entre deux séances en cours commencées à la même minute, choisit le plus petit identifiant', () => {
+    const twin: WeeklySlot = { ...wednesday, id: 9 };
+    expect(proposedSession([twin, wednesday], SEASON, at('2026-11-18', '18:00'))?.slotId).toBe(1);
+  });
+
+  it('refuse une heure ou une date mal écrite (RM-04)', () => {
+    expect(() => proposedSession([wednesday], SEASON, at('2026-11-18', '9:05'))).toThrow(/RM-04/);
+    expect(() => missingRollCalls([wednesday], SEASON, [], at('18/11/2026', '09:05'))).toThrow(
+      /RM-04/,
+    );
+  });
+
   it('propose une séance qui passe minuit tant qu’elle est en cours', () => {
     const night: WeeklySlot = {
       ...wednesday,
@@ -152,7 +181,7 @@ describe('EX-09 proposedSession : séance en cours, sinon la plus proche', () =>
 
   it('ne propose rien sans créneau, ni avant la création ou hors de la saison', () => {
     expect(proposedSession([], SEASON, at('2026-11-18', '18:00'))).toBeNull();
-    const future = { ...wednesday, createdOn: '2027-01-01' };
+    const future = { ...wednesday, scheduleFrom: '2027-01-01' };
     const ended = { startDate: '2026-01-01', endDate: '2026-06-30' };
     expect(
       proposedSession([future], { ...SEASON, endDate: '2026-12-01' }, at('2026-11-18', '18:00')),
@@ -162,7 +191,15 @@ describe('EX-09 proposedSession : séance en cours, sinon la plus proche', () =>
 });
 
 describe('EX-17 missingRollCalls : séances passées sans appel enregistré', () => {
-  const created = { ...wednesday, createdOn: '2026-11-01' };
+  it('EX-07 un changement d’horaire ne réclame pas le passé avec le nouvel horaire', () => {
+    // Mercredi jusqu'au 19 novembre, puis jeudi : schedule_from avancé au 20 novembre.
+    const moved: WeeklySlot = { ...wednesday, weekday: 4, scheduleFrom: '2026-11-20' };
+    expect(missingRollCalls([moved], SEASON, [], at('2026-11-27', '12:00'))).toEqual([
+      { slotId: 1, date: '2026-11-26', startTime: '17:30' },
+    ]);
+  });
+
+  const created = { ...wednesday, scheduleFrom: '2026-11-01' };
 
   it('liste les séances finies sans appel, pas celle en cours', () => {
     expect(missingRollCalls([created], SEASON, [], at('2026-11-18', '18:00'))).toEqual([
@@ -190,7 +227,7 @@ describe('EX-17 missingRollCalls : séances passées sans appel enregistré', ()
   });
 
   it('EX-08 ne réclame rien avant la création ni après la fin de la saison', () => {
-    const late = { ...wednesday, createdOn: '2026-11-12' };
+    const late = { ...wednesday, scheduleFrom: '2026-11-12' };
     expect(missingRollCalls([late], SEASON, [], at('2026-11-18', '18:00'))).toEqual([]);
     const season = { startDate: '2026-09-01', endDate: '2026-11-10' };
     expect(missingRollCalls([created], season, [], at('2026-11-30', '12:00'))).toEqual([
