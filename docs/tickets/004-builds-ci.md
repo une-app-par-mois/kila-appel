@@ -1,6 +1,6 @@
 # 004 — Builds sur la CI et audit des permissions
 
-Statut : fusionné dans le groupe · Jalon : 0 · Zone sensible : oui · Trivial : non
+Statut : fait · Jalon : 0 · Zone sensible : oui · Trivial : non
 
 ## Contexte
 
@@ -23,7 +23,7 @@ Lever le risque d'ADR-009 tôt : APK de développement installable, build iOS de
 ## Critères d'acceptation
 
 - [x] L'APK de développement s'installe et s'ouvre sur le téléphone du porteur
-- [ ] Le build iOS simulateur réussit sur la CI (vérifié à la PR du jalon 0 vers `main` : les workflows ne tournent que là)
+- [x] Le build iOS simulateur réussit sur la CI (PR #7, `macos-26`, 26 min 46 s, audit conforme)
 - [x] L'audit échoue si une permission non attendue apparaît (vérifié en en ajoutant une, puis retirée)
 - [x] `INTERNET` absente de la liste attendue du build de production
 - [x] La migration 1 s'applique sur le téléphone (base ouverte, `user_version` = 1) : fin de la vérification d'ADR-008

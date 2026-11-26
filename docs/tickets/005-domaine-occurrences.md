@@ -1,6 +1,6 @@
 # 005 — Domaine : occurrences des créneaux et appels manquants
 
-Statut : à faire · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : en cours · Jalon : 1 · Zone sensible : non · Trivial : non
 
 ## Contexte
 

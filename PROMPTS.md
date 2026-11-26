@@ -36,6 +36,54 @@ Démarre le ticket 001 (docs/tickets/001-socle-expo.md), le premier du jalon 0, 
 
 **Ce que j'ai corrigé ou décidé** : branche du jalon 0 partie de `ticket/000` (`main` vide), PR n°1 fermée au profit de la PR du jalon ; `react-dom` épinglé en 19.3.0 ; années bornées de 1900 à 2100 ; scheme `kila://` retiré. L'IA avait affirmé à tort que pousser la branche du jalon passerait « vraiment » le hook : corrigé avant le push, limite notée.
 
+### Ticket 002 : couche données et migration 1 — 2026-11-26 (zone sensible)
+
+**Prompt**
+
+```text
+démarre le ticket 002
+```
+
+**Ce que l'IA a fait** : interface `Db` commune à `expo-sqlite` (appli) et `node:sqlite` (tests, ADR-008) ; migration 1 (16 tables `STRICT`, contraintes, cascades) ; deux `/code-review` et `/security-review`. La première revue a trouvé un défaut grave : `withExclusiveTransactionAsync` ouvre une nouvelle connexion sans clés étrangères, si bien que les cascades ne s'appliquaient pas dans les transactions. L'IA l'a reproduit par une imitation fidèle avant de le corriger (file de transactions sur la connexion principale). La deuxième revue a trouvé un ROLLBACK avalé et une poignée de transaction réutilisable.
+
+**Ce que j'ai corrigé ou décidé** : séances gardées à la suppression d'un créneau ; brouillon d'appel en tables filles plutôt qu'en JSON, rattaché à sa saison ; relecture de la zone sensible avant fusion.
+
+### Ticket 003 : garde-fous, thème et polices — 2026-11-26
+
+**Prompt**
+
+```text
+démarre le ticket 003
+```
+
+**Ce que l'IA a fait** : thème lu dans `jetons.json` ; journal unique ; contrôles CONV-03, CONV-16, SEC-01 et SEC-03 par l'arbre syntaxique de TypeScript ; polices IBM Plex avec empreintes. La revue a trouvé que 3 polices sur 4 seraient introuvables sur iOS, parce que leur nom PostScript diffère du nom de fichier : confirmé avec `fc-scan`, fichiers renommés, et un test lit maintenant le nom dans chaque police.
+
+**Ce que j'ai corrigé ou décidé** : j'ai lancé moi-même le téléchargement des polices (`!`), car l'IA n'en avait pas la permission ; journal sans erreur levée (`LOG_REFUSED`) et clés en liste blanche ; `expo-font` accepté pour son extension de build seulement, `loadAsync` et `useFonts` interdits.
+
+### Ticket 004 : builds sur la CI et audit des permissions — 2026-11-26 (zone sensible)
+
+**Prompt**
+
+```text
+démarre le ticket 004
+```
+
+**Ce que l'IA a fait** : APK de version construit en local puis par la CI ; `scripts/audit-apk.js` (permissions égales à une liste figée, sans INTERNET, sans sauvegarde système, sans lien profond) et `audit-ios.js` ; base ouverte au démarrage. Constats : Expo ajoute 4 permissions par défaut malgré `permissions: []`, et un scheme d'URL iOS dans tous les cas. L'audit a échoué quand une permission (`CAMERA`) a été ajoutée exprès, puis est repassé une fois celle-ci retirée. Sur mon Galaxy A55 : `DB_READY { version: 1 }` dans `adb logcat`. La revue a trouvé que la base pouvait être ouverte deux fois en parallèle, d'où une ouverture partagée.
+
+**Ce que j'ai corrigé ou décidé** : binaire de test = APK de version avec la clé de débogage, et non `expo-dev-client` (qui exige INTERNET) ; migration vérifiée par `adb logcat` plutôt qu'à l'écran ; liste de permissions validée ; scheme iOS retiré par un plugin local.
+
+### Fin du jalon 0 — 2026-11-26
+
+**Prompt**
+
+```text
+tu peux fusionner la PR #5 (puis : « Vas y » pour la PR du jalon vers main)
+```
+
+**Ce que l'IA a fait** : PR du jalon vers `main`, la première exécution de la CI. Semgrep a refusé un gabarit placé en premier argument de `console.log` : faux positif en pratique, mais corrigé dans le code plutôt que masqué. Le build Android (17 min) et le build iOS sur `macos-26` (27 min) ont réussi dès le premier essai ; fusion en `--squash` une fois tout vert. Prétest : APK de la CI téléchargé (empreinte vérifiée), installé et relancé après une fermeture forcée sur l'émulateur Android 16.
+
+**Ce que j'ai corrigé ou décidé** : l'IA a fusionné la PR #8 (correction Semgrep) sans `/code-review` préalable, contrairement à `CLAUDE.md` ; elle l'a signalé d'elle-même et lancé la revue après coup (aucune remarque). Réévaluation : moins de 2 h réelles pour 6 h prévues ; estimation de 1,5 h par ticket gardée, l'avance d'une semaine sert de marge.
+
 ### [Étape] — [AAAA-MM-JJ]
 
 **Prompt**
