@@ -6,10 +6,10 @@ Ce fichier est lu par Claude Code à chaque session. Il fixe le contexte et les 
 
 ## Contexte
 
-- **Application** : [nom] — [une phrase : ce qu'elle fait, pour qui]
+- **Application** : Ki&La (appel) — relevé de présence en moins de 30 secondes, pour tout encadrant d'un groupe (club de sport d'abord), 100 % hors ligne
 - **Cahier des charges** : `docs/CADRAGE.md` (fait foi sur le périmètre, le vocabulaire et les zones sensibles)
-- **Plateforme cible** : [PWA hors ligne | desktop (Tauri/Electron) | Android | CLI | extension navigateur]
-- **Stack** : [langage, framework, version] — dépendances minimales, répandues et maintenues
+- **Plateforme cible** : Android et iOS, téléphone et tablette, publiée sur Google Play et l'App Store
+- **Stack** : Expo + React Native + TypeScript, SQLite local (versions vérifiées au premier ticket) — dépendances minimales, répandues et maintenues
 - **Design** : `design/CHARTE.md` et `design/maquettes/` (validés avant le code ; la maquette fait foi, rien d'absent n'est ajouté sans validation)
 - **Conventions et Definition of Done** : `docs/CONVENTIONS.md`
 - **Glossaire de la méthode** (ADR, DoD, CI, jalon, zone sensible…) : `docs/GLOSSAIRE-METHODE.md` ; le vocabulaire de l'app est dans le cadrage
@@ -62,7 +62,7 @@ Pose chaque décision sous forme de choix (options, avec ta recommandation en pr
 
 ## Mode de CI
 
-Mode de ce projet : **par jalon** — [par ticket | par groupe | par jalon], choisi au cadrage. Un changement de mode est une décision datée du porteur, notée ici ; jamais une dérogation.
+Mode de ce projet : **par jalon**, choisi au cadrage par le porteur le 2026-11-26. Un changement de mode est une décision datée du porteur, notée ici ; jamais une dérogation.
 
 | Mode | La PR du ticket vise | La CI tourne sur |
 | --- | --- | --- |

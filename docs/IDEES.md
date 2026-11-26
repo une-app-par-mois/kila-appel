@@ -4,4 +4,4 @@ Les idées hors périmètre, notées pour plus tard. **Une idée n'est jamais co
 
 | Date | Idée | Origine | Statut |
 | --- | --- | --- | --- |
-| [AAAA-MM-JJ] | [ ] | [moi, @auteur, retour d'utilisateur] | à étudier |
+| 2026-11-26 | Importer les membres en photographiant la liste (noms, prénoms, contacts), lecture du texte sur l'appareil, sans réseau. À étudier par une preuve de concept : qualité de lecture, permission caméra, photos de listes de mineurs. | moi | à étudier |
