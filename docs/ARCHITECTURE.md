@@ -138,6 +138,6 @@ Liste fermée de ce qu'un journal peut contenir : code d'erreur, nom de l'opéra
 
 1. **ADR-008** : tests de la couche données avec le module `node:sqlite` intégré à Node 22 (aucune dépendance), à confirmer au ticket d'outillage : il faut que les mêmes requêtes tournent sur `node:sqlite` et `expo-sqlite`.
 2. **`roll_call_draft`** : le brouillon dans une table à part plutôt que comme une séance à l'état « brouillon », pour qu'aucune requête de statistiques ne puisse le compter.
-3. **ADR-009 non vérifié** : gratuité des runners macOS pour un dépôt public, et signature iOS sans EAS (certificats et profils à créer par le porteur dans son compte Apple). À vérifier à la source avant le ticket de build.
+3. **ADR-009** : la gratuité des runners macOS standard pour un dépôt public est vérifiée (sources dans l'ADR) ; reste à vérifier la signature iOS sans EAS (certificats et profils à créer par le porteur dans son compte Apple), au ticket de build.
 4. Noms de tables et colonnes en anglais, d'après le glossaire ; `group` est un mot réservé SQL et devra être entre guillemets (ou renommé `class_group`, à trancher).
 5. Format du fichier de sauvegarde : la base SQLite brute (`.db`), lisible par tout outil SQLite.

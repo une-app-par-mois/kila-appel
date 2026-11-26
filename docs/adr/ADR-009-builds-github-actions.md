@@ -16,4 +16,8 @@ EAS Build (service cloud d'Expo, compte et quotas) ; décision reportée.
 
 ## Conséquences
 
-Décision du porteur du 2026-11-26. **Non vérifié** : coût des runners macOS pour un dépôt public, signature iOS sans EAS. À vérifier avant le ticket de build.
+Décision du porteur du 2026-11-26.
+
+- **Vérifié le 2026-11-26** : « Use of the standard GitHub-hosted runners is free and unlimited on public repositories » ([choisir le runner](https://docs.github.com/en/actions/how-tos/write-workflows/choose-where-workflows-run/choose-the-runner-for-a-job), [facturation](https://docs.github.com/en/billing/concepts/product-billing/github-actions)). Runner iOS : étiquette explicite `macos-26` (arm64) plutôt que `macos-latest`. Les *larger runners* sont facturés même en public : interdits.
+- Si le dépôt devenait privé, les minutes macOS seraient facturées (0,062 $ la minute, environ 10 fois Linux).
+- **Non vérifié** : signature iOS sans EAS (certificats et profils créés par le porteur dans son compte Apple). À vérifier au ticket de build.
