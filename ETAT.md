@@ -10,7 +10,7 @@ Dernière mise à jour : 2026-11-26
 
 ## Prochaines étapes
 
-1. Ticket 003 : tests d'abord, `/code-review`, PR vers le groupe.
+1. Ticket 003 : codé et vert (144 tests) ; `/code-review`, PR vers le groupe.
 2. Ticket 004 (zone sensible) : builds sur la CI, audit des permissions, migration 1 sur le téléphone (fin d'ADR-008), polices vérifiées à l'écran.
 3. Fin du jalon 0 : PR du jalon vers `main` (CI complète), prétest, réévaluation du calendrier (`docs/PLAN.md` §6).
 
@@ -23,6 +23,7 @@ Dernière mise à jour : 2026-11-26
 - Calendrier sans marge (publication Android fin janvier 2027) : jalons 4 et 5 premiers candidats au report, décision du porteur à la fin du jalon 3.
 - iOS : aucun appareil Apple ni Mac ; publication iOS après un test sur un vrai iPhone (jalon 7).
 - DSA : déclarer Jita Vision commerçant avant le 1er février 2027.
+- Registre des licences (EX-42, jalon 6) : y faire figurer les polices IBM Plex (OFL 1.1, `assets/fonts/SOURCES.md`).
 - `node:sqlite` est expérimental dans Node 22 : avertissement à chaque test de données, sans effet.
 - Questions ouvertes : contenu du rapport PDF (ticket F-09) ; migration 1 à lancer sur le téléphone (ticket 004, fin d'ADR-008) ; signature iOS sans EAS (jalon 7) ; tranche 16-17 et politique Familles (soumission Play).
 - Nom de paquet : `com.jitavision.kila` (Android et iOS), décidé le 2026-11-26.
@@ -32,5 +33,6 @@ Dernière mise à jour : 2026-11-26
 
 - Écran vide du ticket 001 jamais lancé sur un téléphone (`npx expo start` à faire par le porteur).
 - CI jamais lancée (elle tournera sur la PR du jalon 0).
+- Polices jamais vues à l'écran (rendu au ticket 004) ; couleurs nommées (`'red'`) non détectées par le contrôle CONV-16.
 - Adaptateur `expo-sqlite` testé sur une imitation branchée sur `node:sqlite`, jamais sur le module natif (ticket 004).
 - Permission INTERNET encore présente par défaut (retrait et audit du binaire : ticket 004). Polices IBM Plex absentes du poste : les maquettes s'affichent dans la police du système.

@@ -44,8 +44,21 @@
       "suspicious": {
         "noExplicitAny": "error",
         "noFocusedTests": "error",
-        "noSkippedTests": "error"
+        "noSkippedTests": "error",
+        "noConsole": "error"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["src/data/log.ts", "scripts/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
+    }
+  ]
 }

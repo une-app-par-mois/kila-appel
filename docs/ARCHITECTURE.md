@@ -25,7 +25,7 @@ Chaque ligne vaut validation de la dépendance (ADR-001). **Une dépendance n'es
 | react | 19.3.0 (fixée par le SDK) | MIT | Interface | Outillage |
 | typescript | ~6.0.3 (modèle du SDK 58) | Apache-2.0 | Typage strict | Outillage |
 | expo-router | ~58.0.32 | MIT | Navigation par fichiers | Outillage |
-| expo-font | ~58.0.12 | MIT | Polices IBM Plex embarquées | Thème et polices (003) |
+| expo-font | 58.0.12 | MIT | Polices IBM Plex embarquées au build (extension dans `app.json`) | Thème et polices (003) |
 | expo-sqlite | 58.0.18 (SQLite 3.53.3 embarqué) | MIT | Base locale | Couche données (002) |
 | react-native-svg | 15.16.0 (fixée par le SDK) | MIT | Dessin, icônes | Premier écran |
 | lucide-react-native | 1.81.0 | ISC | Icônes au trait (charte §8) | Premier écran |
@@ -166,6 +166,7 @@ Liste fermée de ce qu'un journal peut contenir : code d'erreur, nom de l'opéra
 
 - 2026-11-26 : réglages dans SQLite, état React seul, icônes lucide-react-native, polices en fichiers `.ttf`, schéma complet dès la migration 1, builds sur GitHub Actions seul ; brouillon dans une table à part (`roll_call_drafts`) ; **noms de tables au pluriel** (évite le mot réservé `group`) ; tests de données avec `node:sqlite`, à confirmer au ticket d'outillage ; sauvegarde au format base SQLite brute (`.db`).
 - 2026-11-26 (ticket 001) : dépendances obligatoires d'expo-router et de Jest acceptées ; `react-dom` épinglée en 19.3.0 ; `expo-font` installée au ticket 003 (ABS-07).
+- 2026-11-26 (ticket 003) : polices téléchargées depuis github.com/IBM/plex, empreintes dans `assets/fonts/SOURCES.md` ; journal limité à un code et à des nombres ou booléens ; contrôles CONV-03, CONV-16, SEC-01 et SEC-03 par un test qui lit l'arbre syntaxique (`src/staticChecks.test.ts`), CONV-17 par Biome ; types Node des tests déclarés dans `src/node.d.ts`.
 - 2026-11-26 (ticket 002) : règles de suppression du §4.1 ; groupes et statuts du brouillon en tables filles en cascade (16 tables), brouillon rattaché à sa saison ; règle « dans une transaction, seulement `tx` » ; transactions sur la connexion principale par une file commune aux deux adaptateurs (`withExclusiveTransactionAsync` ouvre une connexion sans clés étrangères) ; séance d'un créneau supprimé sans colonne d'origine ; types de `node:sqlite` déclarés localement (pas de `@types/node`) ; vérification d'ADR-008 complétée sur téléphone au ticket 004.
 
 ## Questions ouvertes

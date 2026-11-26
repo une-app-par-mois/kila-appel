@@ -10,7 +10,7 @@ Ce que la machine ne vérifie pas encore, l'IA le respecte ; ce qu'elle peut vé
 | --- | --- | --- |
 | CONV-01 | Identifiants en anglais, avec le terme du glossaire du cadrage (`Session`, `RollCall`, `Attendance`…) ; aucun synonyme | Revue |
 | CONV-02 | Commentaires, textes de l'interface, documents et messages de commit en français | Revue |
-| CONV-03 | Tous les textes de l'interface dans `src/config/libelles.ts`, jamais en dur dans un écran | Règle de lint (texte littéral dans le JSX interdit hors de ce fichier) |
+| CONV-03 | Tous les textes de l'interface dans `src/config/libelles.ts`, jamais en dur dans un écran | Test `src/staticChecks.test.ts` (texte littéral dans le JSX interdit hors de ce fichier ; Biome ne le permet pas) |
 | CONV-04 | Fichiers : composants et écrans en `PascalCase.tsx` sauf les routes Expo Router (`index.tsx`, `[id].tsx`) ; le reste en `camelCase.ts` | Revue |
 | CONV-05 | Tables SQL au pluriel, colonnes en `snake_case` (`docs/ARCHITECTURE.md` §4) | Tests de données |
 
@@ -24,8 +24,8 @@ Ce que la machine ne vérifie pas encore, l'IA le respecte ; ce qu'elle peut vé
 | CONV-13 | Toute promesse est attendue ou explicitement gérée (bogue de restauration de l'ancienne version) | Lint `noFloatingPromises` en erreur |
 | CONV-14 | Données venues de l'extérieur (fichier importé, sauvegarde, saisie) validées à l'entrée, jamais simplement converties | Tests (SEC-06, SEC-10) |
 | CONV-15 | Erreurs attendues gérées et affichées clairement, sans terme technique ; aucune exception avalée en silence | Revue ; tests d'écrans |
-| CONV-16 | Couleurs, tailles, rayons, espacements tirés du thème dérivé de `design/jetons.json` ; aucune valeur en dur dans un écran | Lint (couleur littérale interdite hors du thème) |
-| CONV-17 | Journaux uniquement par le module de journal (SEC-12) | Lint `console.*` interdit ailleurs |
+| CONV-16 | Couleurs, tailles, rayons, espacements tirés du thème dérivé de `design/jetons.json` ; aucune valeur en dur dans un écran | Test `src/staticChecks.test.ts` (couleur littérale `#hex`, `rgb()`, `hsl()` interdite hors du thème ; couleurs nommées non détectées) ; revue pour les tailles |
+| CONV-17 | Journaux uniquement par le module de journal `src/data/log.ts` (SEC-12) | Biome `noConsole` en erreur, sauf dans ce module et `scripts/` |
 | CONV-18 | SQL uniquement dans `src/data/`, toujours paramétré (SEC-05) | Revue ; Semgrep |
 | CONV-19 | Un commentaire qui justifie une règle cite son identifiant (`// EX-14 : brouillon écrit à chaque appui`) | Revue |
 | CONV-20 | Lint et format par Biome : indentation 2 espaces, guillemets simples, virgules finales, 100 colonnes, imports triés | `biome check` dans `scripts/test.sh` |

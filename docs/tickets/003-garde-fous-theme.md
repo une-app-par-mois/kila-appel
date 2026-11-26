@@ -22,9 +22,9 @@ Rendre vérifiables par la machine les règles CONV-03, CONV-16, CONV-17, SEC-01
 
 ## Critères d'acceptation
 
-- [ ] Chaque contrôle fait échouer `scripts/test.sh` sur un fichier d'exemple fautif (vérifié puis retiré)
-- [ ] Le thème expose exactement les valeurs de `design/jetons.json`
-- [ ] Le module de journal refuse un objet contenant un champ `first_name`, `last_name`, `phone` ou `birth_date`
+- [x] Chaque contrôle fait échouer `scripts/test.sh` sur un fichier d'exemple fautif (vérifié puis retiré)
+- [x] Le thème expose exactement les valeurs de `design/jetons.json`
+- [x] Le module de journal refuse un objet contenant un champ `first_name`, `last_name`, `phone` ou `birth_date`
 
 ## Tests attendus
 
