@@ -21,12 +21,12 @@ Premiers écrans de gestion, sur les dépôts du ticket 006 et les composants du
 
 ## Critères d'acceptation
 
-- [ ] Écrans conformes aux maquettes
-- [ ] La confirmation de suppression d'une saison dit ce qui sera effacé (groupes, inscriptions, créneaux, séances, présences, appel en cours) et que les membres restent (EX-01)
-- [ ] Dates saisies en JJ/MM/AAAA (RM-04) ; erreurs affichées sous le champ et lues par le lecteur d'écran
-- [ ] Dates refusées si des séances tomberaient en dehors : « Des séances ont déjà eu lieu hors de ces dates. » (`SESSIONS_OUTSIDE_SEASON`)
-- [ ] Échec de chargement (`loadFailed`) : un message à la place du chargement sans fin
-- [ ] Une saison créée sans saison active devient active (décision du porteur du 2026-11-26)
+- [x] Écrans conformes aux maquettes
+- [x] La confirmation de suppression d'une saison dit ce qui sera effacé (groupes, inscriptions, créneaux, séances, présences, appel en cours) et que les membres restent (EX-01)
+- [x] Dates saisies en JJ/MM/AAAA (RM-04) ; erreurs affichées sous le champ et lues par le lecteur d'écran
+- [x] Dates refusées si des séances tomberaient en dehors : « Des séances ont déjà eu lieu hors de ces dates. » (`SESSIONS_OUTSIDE_SEASON`)
+- [x] Échec de chargement (`loadFailed`) : un message à la place du chargement sans fin
+- [x] Une saison créée sans saison active devient active (décision du porteur du 2026-11-26)
 
 ## Tests attendus
 

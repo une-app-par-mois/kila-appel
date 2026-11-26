@@ -2,7 +2,13 @@
 import { Pressable, StyleSheet, Text, type ViewStyle } from 'react-native';
 import { theme } from '@/config/theme';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'destructive' | 'destructiveSecondary';
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'destructive'
+  | 'destructiveSecondary'
+  /** Petit bouton dans une ligne (« Activer »). */
+  | 'compact';
 
 type Props = {
   label: string;
@@ -28,6 +34,7 @@ const VARIANTS = {
   secondary: outlined(colors.texteSecondaire),
   destructive: filled(colors.marge, colors.blanc),
   destructiveSecondary: outlined(colors.marge),
+  compact: outlined(colors.encre),
 };
 
 export const Button = ({ label, onPress, variant = 'primary', disabled = false, flex }: Props) => {

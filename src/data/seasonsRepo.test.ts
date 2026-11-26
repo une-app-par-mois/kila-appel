@@ -22,13 +22,23 @@ describe('Dépôt des saisons (EX-01)', () => {
     await db.close();
   });
 
-  it('EX-01 crée une saison inactive, nom nettoyé, et la relit', async () => {
+  it('EX-01 crée une saison, nom nettoyé ; la première devient active, pas les suivantes', async () => {
     const repo = seasonsRepo(db);
     const id = await repo.create(input('  2026-2027 '));
     expect(await repo.list()).toEqual([
-      { id, name: '2026-2027', startDate: '2026-09-01', endDate: '2027-07-31', isActive: false },
+      { id, name: '2026-2027', startDate: '2026-09-01', endDate: '2027-07-31', isActive: true },
     ]);
-    expect(await repo.getActive()).toBeNull();
+    const next = await repo.create(input('2027-2028', '2027-09-01', '2028-07-31'));
+    expect((await repo.getActive())?.id).toBe(id);
+    expect((await repo.list()).find((s) => s.id === next)?.isActive).toBe(false);
+  });
+
+  it('EX-01 sans saison active (active supprimée), la saison créée devient active', async () => {
+    const repo = seasonsRepo(db);
+    const first = await repo.create(input('2025-2026', '2025-09-01', '2026-07-31'));
+    await repo.remove(first);
+    const id = await repo.create(input('2026-2027'));
+    expect((await repo.getActive())?.id).toBe(id);
   });
 
   it('EX-01 liste les saisons de la plus récente à la plus ancienne', async () => {

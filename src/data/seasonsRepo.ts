@@ -49,11 +49,15 @@ export const seasonsRepo = (db: Db) => ({
     return row ? toSeason(row) : null;
   },
 
-  /** Crée une saison inactive ; l'activer est une action à part. */
+  /**
+   * Crée une saison, active seulement si aucune ne l'est (décision du porteur du 2026-11-26) ;
+   * une seule instruction, donc sans course entre la lecture et l'écriture.
+   */
   create: async (input: SeasonInput): Promise<number> => {
     const s = validateSeason(input);
     const result = await db.execute(
-      'INSERT INTO seasons (name, start_date, end_date) VALUES (?, ?, ?)',
+      `INSERT INTO seasons (name, start_date, end_date, is_active)
+       VALUES (?, ?, ?, NOT EXISTS (SELECT 1 FROM seasons WHERE is_active = 1))`,
       [s.name, s.startDate, s.endDate],
     );
     return result.lastInsertRowId;

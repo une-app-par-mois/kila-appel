@@ -1,11 +1,14 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { Text } from 'react-native';
+import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
 import { Button } from '@/ui/Button';
 import { Card } from '@/ui/Card';
 import { ConfirmDialog } from '@/ui/ConfirmDialog';
 import { Icon } from '@/ui/Icon';
 import { ListRow } from '@/ui/ListRow';
+import { Screen, Section } from '@/ui/Screen';
+import { TextField } from '@/ui/TextField';
 
 // Zones sûres : doublure fournie par la bibliothèque (Jest n'a pas d'écran à mesurer).
 jest.mock(
@@ -31,6 +34,7 @@ describe('Button (charte §7)', () => {
     ['secondary', theme.colors.blanc, theme.colors.texteSecondaire],
     ['destructive', theme.colors.marge, theme.colors.blanc],
     ['destructiveSecondary', theme.colors.blanc, theme.colors.marge],
+    ['compact', theme.colors.blanc, theme.colors.encre],
   ] as const)('variante %s : fond et texte de la charte', async (variant, background, color) => {
     await render(<Button label="Action" variant={variant} onPress={() => {}} />);
     expect(flat(screen.getByRole('button').props.style).backgroundColor).toBe(background);
@@ -97,15 +101,37 @@ describe('ListRow', () => {
   });
 
   it('un contenu interactif à droite reste hors de la zone d’appui, joignable seul', async () => {
-    const onArchive = jest.fn();
+    const onActivate = jest.fn();
+    const onOpen = jest.fn();
     await render(
       <ListRow
-        title="Poussins"
-        right={<Button label="Archiver" variant="secondary" onPress={onArchive} />}
+        title="2025-2026"
+        onPress={onOpen}
+        chevron={false}
+        testID="ligne"
+        right={<Button label="Activer" variant="compact" onPress={onActivate} />}
       />,
     );
-    await fireEvent.press(screen.getByRole('button', { name: 'Archiver' }));
-    expect(onArchive).toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole('button', { name: 'Activer' }));
+    expect(onActivate).toHaveBeenCalled();
+    expect(onOpen).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole('button', { name: '2025-2026' }));
+    expect(onOpen).toHaveBeenCalled();
+    expect(screen.queryByTestId('ligne-chevron', { includeHiddenElements: true })).toBeNull();
+  });
+
+  it('une pastille (« Active ») est affichée et lue avec la ligne', async () => {
+    await render(
+      <ListRow
+        title="2026-2027"
+        subtitle="01/09/2026 – 31/07/2027"
+        badge="Active"
+        onPress={() => {}}
+      />,
+    );
+    expect(
+      screen.getByRole('button', { name: '2026-2027, 01/09/2026 – 31/07/2027, Active' }),
+    ).toBeTruthy();
   });
 
   it('sans onPress : simple ligne, sans chevron ni rôle de bouton', async () => {
@@ -162,7 +188,20 @@ describe('ConfirmDialog (EX-01, EX-02)', () => {
 
   it('le contenu défile : les boutons restent joignables avec un long message', async () => {
     await render(<ConfirmDialog visible {...props} onConfirm={() => {}} onCancel={() => {}} />);
-    expect(screen.getByTestId('confirm-scroll')).toBeTruthy();
+    expect(screen.getByTestId('screen-scroll')).toBeTruthy();
+  });
+
+  it('un texte secondaire dit ce qui est gardé', async () => {
+    await render(
+      <ConfirmDialog
+        visible
+        {...props}
+        note="Les membres sont conservés."
+        onConfirm={() => {}}
+        onCancel={() => {}}
+      />,
+    );
+    expect(screen.getByText('Les membres sont conservés.')).toBeTruthy();
   });
 
   it('caché : rien n’est affiché', async () => {
@@ -187,5 +226,46 @@ describe('Icon (charte §8)', () => {
     expect(screen.getByTestId('actif', { includeHiddenElements: true }).props.stroke).toBe(
       theme.colors.encre,
     );
+  });
+});
+
+describe('Screen', () => {
+  it('titre en en-tête, retour joignable (44 pt), contenu qui défile', async () => {
+    const onBack = jest.fn();
+    await render(
+      <Screen title="Saisons" onBack={onBack}>
+        <Section title="Organisation" />
+      </Screen>,
+    );
+    expect(screen.getByRole('header', { name: 'Saisons' })).toBeTruthy();
+    const back = screen.getByRole('button', { name: labels.common.back });
+    expect(flat(back.props.style).minWidth).toBeGreaterThanOrEqual(theme.minTouchTarget);
+    await fireEvent.press(back);
+    expect(onBack).toHaveBeenCalled();
+    expect(screen.getByText('Organisation')).toBeTruthy();
+    expect(screen.getByTestId('screen-scroll')).toBeTruthy();
+  });
+
+  it('sans retour : pas de bouton ; une erreur de chargement s’affiche (CONV-15)', async () => {
+    await render(<Screen title="Paramètres" error="Lecture impossible" />);
+    expect(screen.queryByRole('button')).toBeNull();
+    expect(screen.getByText('Lecture impossible')).toBeTruthy();
+  });
+});
+
+describe('TextField', () => {
+  it('étiquette lue par le lecteur d’écran, saisie transmise', async () => {
+    const onChangeText = jest.fn();
+    await render(<TextField label="Nom" value="" onChangeText={onChangeText} />);
+    await fireEvent.changeText(screen.getByLabelText('Nom'), '2026-2027');
+    expect(onChangeText).toHaveBeenCalledWith('2026-2027');
+  });
+
+  it('erreur affichée sous le champ, annoncée, bordure Marge', async () => {
+    await render(
+      <TextField label="Début" value="31/02" onChangeText={() => {}} error="Date invalide" />,
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent('Date invalide');
+    expect(flat(screen.getByLabelText('Début').props.style).borderColor).toBe(theme.colors.marge);
   });
 });
