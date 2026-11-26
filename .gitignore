@@ -27,6 +27,12 @@ models/*.gguf
 models/*.onnx
 models/*.safetensors
 
+# Bases et exports locaux : jamais versionnés (SEC-13)
+*.db
+*.db-*
+*.csv
+!src/__fixtures__/**/*.csv
+
 # Système et éditeurs
 .DS_Store
 Thumbs.db

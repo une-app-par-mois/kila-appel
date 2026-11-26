@@ -6,15 +6,13 @@ Dernière mise à jour : 2026-11-26
 
 ## En cours
 
-**Ticket 001** (socle Expo SDK 58, `scripts/test.sh` réel) sur `ticket/001-socle-expo`, partie de `groupe/jalon-0-outillage`. Cette branche de jalon part de `ticket/000-mise-en-route` : `main` ne contient que le commit initial (décision du porteur du 2026-11-26, notée dans `CLAUDE.md`). La PR du jalon 0 vers `main` remplacera la PR n°1.
-
-`scripts/test.sh` est réel et vert (Biome, tsc, contrastes, Jest + couverture). Échec vérifié sur : test faux, couverture sous le seuil, `.only`, promesse flottante.
+**Ticket 002** (couche données, migration 1, zone sensible) sur `ticket/002-couche-donnees`, partie de `groupe/jalon-0-outillage`. Ticket 001 fusionné dans le groupe (PR #2). La branche du jalon part de `ticket/000-mise-en-route` (décision du porteur du 2026-11-26, notée dans `CLAUDE.md`) ; la PR n°1 est fermée sans fusion.
 
 ## Prochaines étapes
 
-1. Ticket 001 : test manuel `npx expo start` par le porteur, puis fusion de la PR du ticket dans `groupe/jalon-0-outillage`.
-2. PR n°1 fermée sans fusion (décision du 2026-11-26) : la PR du jalon 0 vers `main` porte la préparation ; `ticket/000-mise-en-route` reste en local, non poussée au-delà de son état distant.
-3. Jalon 0 : tickets 002 à 004 ; prétest de fin de jalon ; réévaluation du calendrier (`docs/PLAN.md` §6).
+1. Ticket 002 : codé et vert (95 tests, couverture 100 %), deux `/code-review` et `/security-review` traités ; **relecture du porteur** sur la PR avant la fusion dans le groupe.
+2. Tickets 003 et 004 ; au 004, migration 1 lancée sur le téléphone (ADR-008).
+3. Fin du jalon 0 : PR du jalon vers `main` (CI complète), prétest, réévaluation du calendrier (`docs/PLAN.md` §6).
 
 ## Points d'attention
 
@@ -25,7 +23,8 @@ Dernière mise à jour : 2026-11-26
 - Calendrier sans marge (publication Android fin janvier 2027) : jalons 4 et 5 premiers candidats au report, décision du porteur à la fin du jalon 3.
 - iOS : aucun appareil Apple ni Mac ; publication iOS après un test sur un vrai iPhone (jalon 7).
 - DSA : déclarer Jita Vision commerçant avant le 1er février 2027.
-- Questions ouvertes : contenu du rapport PDF (ticket F-09) ; compatibilité `node:sqlite` / `expo-sqlite` (ticket 002) ; signature iOS sans EAS (jalon 7) ; tranche 16-17 et politique Familles (soumission Play).
+- `node:sqlite` est expérimental dans Node 22 : avertissement à chaque test de données, sans effet.
+- Questions ouvertes : contenu du rapport PDF (ticket F-09) ; migration 1 à lancer sur le téléphone (ticket 004, fin d'ADR-008) ; signature iOS sans EAS (jalon 7) ; tranche 16-17 et politique Familles (soumission Play).
 - Nom de paquet : `com.jitavision.kila` (Android et iOS), décidé le 2026-11-26.
 - `main` protégée (ruleset vérifié) ; hooks Git activés.
 
@@ -33,4 +32,5 @@ Dernière mise à jour : 2026-11-26
 
 - Écran vide du ticket 001 jamais lancé sur un téléphone (`npx expo start` à faire par le porteur).
 - CI jamais lancée (elle tournera sur la PR du jalon 0).
+- Adaptateur `expo-sqlite` testé sur une imitation branchée sur `node:sqlite`, jamais sur le module natif (ticket 004).
 - Permission INTERNET encore présente par défaut (retrait et audit du binaire : ticket 004). Polices IBM Plex absentes du poste : les maquettes s'affichent dans la police du système.

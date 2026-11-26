@@ -1,6 +1,6 @@
 # 002 — Couche données testable et migration 1
 
-Statut : à faire · Jalon : 0 · Zone sensible : oui · Trivial : non
+Statut : en cours · Jalon : 0 · Zone sensible : oui · Trivial : non
 
 ## Contexte
 
@@ -16,17 +16,17 @@ Lever le risque d'ADR-008 et poser le schéma complet de la v1 (ADR-003), dont d
 
 - Interface de base minimale (`execute`, `query`, transaction) dans `src/data/db.ts`
 - Adaptateur `expo-sqlite` (appli) et adaptateur `node:sqlite` (tests)
-- Migration 1 : les 14 tables, clés étrangères, cascades, index, `PRAGMA user_version`
+- Migration 1 : les 16 tables (brouillon en tables filles, décision de la revue), clés étrangères, cascades, index, `PRAGMA user_version`
 - Ouverture de base : `PRAGMA foreign_keys = ON`, migrations dans une transaction
 - Seuil de couverture `./src/data/` (90 % lignes, 85 % branches) ajouté dans `jest.config.js` avec le premier fichier de `src/data/` (CONV §5.3)
 
 ## Critères d'acceptation
 
-- [ ] La migration 1 crée toutes les tables de `docs/ARCHITECTURE.md` §4.1 sur une base vide et pose `user_version` = 1
-- [ ] Supprimer un membre supprime ses présences, contacts, inscriptions et alertes traitées (SEC-11)
-- [ ] Une seule saison active possible (index unique partiel)
-- [ ] Unicité (créneau, date) des séances (RM-05)
-- [ ] Les mêmes requêtes tournent sur `node:sqlite` et `expo-sqlite` (sinon : arrêt et question au porteur, ADR-008)
+- [x] La migration 1 crée toutes les tables de `docs/ARCHITECTURE.md` §4.1 sur une base vide et pose `user_version` = 1
+- [x] Supprimer un membre supprime ses présences, contacts, inscriptions et alertes traitées (SEC-11)
+- [x] Une seule saison active possible (index unique partiel)
+- [x] Unicité (créneau, date) des séances (RM-05)
+- [x] Les mêmes requêtes tournent sur `node:sqlite` et `expo-sqlite` (sinon : arrêt et question au porteur, ADR-008) — partie vérifiable faite (même interface, adaptateur expo testé sur imitation) ; exécution native au ticket 004
 
 ## Tests attendus
 
