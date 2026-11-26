@@ -11,12 +11,30 @@ updates:
     cooldown:
       default-days: 7
 
-  # - package-ecosystem: "npm"
-  #   directory: "/"
-  #   schedule:
-  #     interval: "weekly"
-  #   cooldown:
-  #     default-days: 7
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    # Les versions d'Expo, React et React Native sont fixées par le SDK (CONV-31) :
+    # elles changent ensemble, par un ticket de montée de SDK et `npx expo install`.
+    ignore:
+      - dependency-name: "react"
+      - dependency-name: "react-dom"
+      - dependency-name: "react-native"
+      - dependency-name: "react-native-*"
+      - dependency-name: "@react-native/*"
+      - dependency-name: "typescript"
+      - dependency-name: "expo"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "expo-*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "jest-expo"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+    groups:
+      expo-sdk:
+        patterns: ["expo", "expo-*", "jest-expo"]
 
   # - package-ecosystem: "pip"
   #   directory: "/"

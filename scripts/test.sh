@@ -1,7 +1,24 @@
 #!/usr/bin/env bash
-# Lance la suite de tests. À remplacer selon la stack (ex. npm test, pytest).
-# Tant qu'il n'est pas défini, il échoue : une CI verte sans aucun test serait un faux vert.
+# Suite de tests complète (docs/CONVENTIONS.md §5.4). Échoue au premier problème.
+# Lancée par le hook pre-push et par la CI.
 set -euo pipefail
 
-echo "::error::scripts/test.sh n'est pas encore défini : aucun test lancé." >&2
-exit 1
+cd "$(dirname "$0")/.."
+
+if [ ! -d node_modules ]; then
+  echo "::error::node_modules absent : lancer d'abord npm ci." >&2
+  exit 1
+fi
+
+echo "== Lint et format (Biome, CONV-20)"
+npx --no-install biome check --error-on-warnings .
+
+echo "== Typage strict (tsc, CONV-12)"
+npx --no-install tsc --noEmit
+
+echo "== Contrastes de la charte"
+node scripts/contrastes.mjs
+
+echo "== Tests et couverture (Jest, CONV §5.3)"
+# --ci : un instantané manquant échoue au lieu d'être écrit.
+npx --no-install jest --ci --coverage

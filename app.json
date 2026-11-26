@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "Ki&La",
+    "slug": "kila-appel",
+    "version": "0.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "bundleIdentifier": "com.jitavision.kila",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.jitavision.kila"
+    },
+    "plugins": ["expo-router"]
+  }
+}

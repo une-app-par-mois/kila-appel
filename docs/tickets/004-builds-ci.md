@@ -26,6 +26,7 @@ Lever le risque d'ADR-009 tôt : APK de développement installable, build iOS de
 - [ ] Le build iOS simulateur réussit sur la CI
 - [ ] L'audit échoue si une permission non attendue apparaît (vérifié en en ajoutant une, puis retirée)
 - [ ] `INTERNET` absente de la liste attendue du build de production
+- [ ] Aucun filtre d’intention de lien profond (`scheme`) dans le manifeste du binaire de production (scheme retiré au ticket 001, ABS-07)
 
 ## Tests attendus
 

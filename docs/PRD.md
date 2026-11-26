@@ -109,7 +109,7 @@ Priorité : toutes les exigences sont dans la v1 (décision du 2026-11-26). Le j
 - **RM-01** Taux de présence = (Présent + Retard) / (Présent + Retard + Absent). Excusé n'entre pas dans le calcul. Sans séance, le taux s'affiche « — » et non 0 %.
 - **RM-02** Série d'absences : seules les séances enregistrées comptent, dans l'ordre des dates. Absent l'allonge ; Excusé l'interrompt sans la remettre à zéro ; Présent ou Retard la remet à zéro.
 - **RM-03** Une présence compte pour le groupe auquel le membre était inscrit à la date de la séance.
-- **RM-04** Les dates sont stockées en `AAAA-MM-JJ` et affichées en `JJ/MM/AAAA`.
+- **RM-04** Les dates sont stockées en `AAAA-MM-JJ` et affichées en `JJ/MM/AAAA` ; seules les années 1900 à 2100 sont acceptées.
 - **RM-05** Une seule séance par créneau et par date.
 - **RM-06** Une saison se termine par défaut le 31 juillet.
 
@@ -147,3 +147,4 @@ Serveur, compte, synchronisation, chiffrement dans l'appli, verrouillage à l'ou
 ## Décisions du porteur
 
 - 2026-11-26 : EX-09 (créneau en cours ou le plus proche), EX-36 et EX-38 (version de l'ancienne appli), RM-01, RM-06, EX-21, EX-23, EX-06, NF-06 et NF-08 validés tels que proposés. EX-17 et EX-33 gardés ; tablette en portrait seul (NF-05) ; appel sans créneau ajouté (EX-39).
+- 2026-11-26 (revue du ticket 001) : RM-04 complétée, années acceptées de 1900 à 2100.
