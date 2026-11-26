@@ -6,7 +6,7 @@ Dernière mise à jour : 2026-11-26
 
 ## En cours
 
-Préparation (niveau renforcé), branche `ticket/000-mise-en-route`. Cadrage, PRD (révision 1) et charte validés le 2026-11-26 ; maquettes : lot 1 (39 écrans) validé le 2026-11-26, lot 2 (22 écrans) et les 3 écrans du lot 1 modifiés validés le 2026-11-26 ; architecture et ADR 001 à 009 validés le 2026-11-26 ; sécurité en attente de validation ; ensuite conformité ; règles absolues ABS-01 à ABS-08 dans `CLAUDE.md`.
+Préparation (niveau renforcé), branche `ticket/000-mise-en-route`. Cadrage, PRD (révision 1) et charte validés le 2026-11-26 ; maquettes : lot 1 (39 écrans) validé le 2026-11-26, lot 2 (22 écrans) et les 3 écrans du lot 1 modifiés validés le 2026-11-26 ; architecture et ADR 001 à 009 validés le 2026-11-26 ; sécurité validée le 2026-11-26 ; ensuite conformité ; règles absolues ABS-01 à ABS-08 dans `CLAUDE.md`.
 
 ## Prochaines étapes
 
