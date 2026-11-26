@@ -28,6 +28,13 @@ const toContact = (r: ContactRow): EmergencyContact => ({
 });
 
 const COLUMNS = 'id, member_id, label, phone';
+
+const expectMember = async (tx: Db, memberId: number) => {
+  const [member] = await tx.query<{ id: number }>('SELECT id FROM members WHERE id = ?', [
+    memberId,
+  ]);
+  if (!member) throw new DataError('NOT_FOUND');
+};
 const ORDER = 'ORDER BY position, id';
 
 export const contactsRepo = (db: Db) => ({
@@ -48,14 +55,11 @@ export const contactsRepo = (db: Db) => ({
     return row ? toContact(row) : null;
   },
 
-  /** EX-05 : ajouté après les autres. Membre inconnu : NOT_FOUND. */
+  /** EX-05 : ajouté après les autres ; membre archivé compris (sa fiche reste modifiable). Inconnu : NOT_FOUND. */
   create: async (memberId: number, input: ContactInput): Promise<number> => {
     const c = validateContact(input);
     return db.transaction(async (tx) => {
-      const [member] = await tx.query<{ id: number }>('SELECT id FROM members WHERE id = ?', [
-        memberId,
-      ]);
-      if (!member) throw new DataError('NOT_FOUND');
+      await expectMember(tx, memberId);
       const { lastInsertRowId } = await tx.execute(
         `INSERT INTO emergency_contacts (member_id, label, phone, position)
          VALUES (?1, ?2, ?3,
@@ -85,6 +89,7 @@ export const contactsRepo = (db: Db) => ({
   /** EX-05 : nouvel ordre, d'un bloc. `ids` doit être exactement ses contacts, sinon NOT_FOUND. */
   reorder: async (memberId: number, ids: number[]): Promise<void> => {
     await db.transaction(async (tx) => {
+      await expectMember(tx, memberId);
       const rows = await tx.query<{ id: number }>(
         'SELECT id FROM emergency_contacts WHERE member_id = ?',
         [memberId],
@@ -103,19 +108,22 @@ export const contactsRepo = (db: Db) => ({
     if (query.trim() === '') return [];
     const members = await membersRepo(db).list({ today, query });
     if (members.length === 0) return [];
-    const contacts = (
-      await db.query<ContactRow>(
-        `SELECT c.id, c.member_id, c.label, c.phone FROM emergency_contacts c
-         JOIN members m ON m.id = c.member_id
-         WHERE m.archived_at IS NULL ORDER BY c.position, c.id`,
-      )
-    ).map(toContact);
+    // Seulement les contacts des membres trouvés : un « ? » par membre, valeurs liées (SEC-05).
+    const ids = members.map((m) => m.id);
+    const byMember = new Map<number, EmergencyContact[]>();
+    for (const row of await db.query<ContactRow>(
+      `SELECT ${COLUMNS} FROM emergency_contacts
+       WHERE member_id IN (${ids.map(() => '?').join(', ')}) ${ORDER}`,
+      ids,
+    )) {
+      byMember.set(row.member_id, [...(byMember.get(row.member_id) ?? []), toContact(row)]);
+    }
     return members.map((m) => ({
       memberId: m.id,
       firstName: m.firstName,
       lastName: m.lastName,
       groups: m.groups,
-      contacts: contacts.filter((c) => c.memberId === m.id),
+      contacts: byMember.get(m.id) ?? [],
     }));
   },
 });

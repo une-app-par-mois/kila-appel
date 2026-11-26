@@ -12,8 +12,9 @@ export const parsePhone = (input: string): string | null => {
   return null;
 };
 
-/** 10 chiffres stockés → « 06 00 00 00 01 ». Un numéro mal stocké est un défaut du programme. */
-export const formatPhone = (phone: string): string => {
-  if (!NATIONAL.test(phone)) throw new Error('Téléphone stocké invalide (EX-05)');
-  return phone.replace(/(\d{2})(?=\d)/g, '$1 ');
-};
+/**
+ * 10 chiffres stockés → « 06 00 00 00 01 ». Un numéro hors format (sauvegarde, import : la base
+ * ne vérifie que le non-vide) s'affiche tel quel : une fiche ne doit pas devenir illisible.
+ */
+export const formatPhone = (phone: string): string =>
+  NATIONAL.test(phone) ? phone.replace(/(\d{2})(?=\d)/g, '$1 ') : phone;

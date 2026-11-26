@@ -114,6 +114,13 @@ describe('Dépôt des contacts d’urgence (EX-05, EX-06)', () => {
       parent?.id,
       mother,
     ]);
+    await expect(repo.reorder(9999, [])).rejects.toMatchObject({ code: 'NOT_FOUND' });
+  });
+
+  it('un membre archivé garde une fiche modifiable : on peut lui ajouter un contact', async () => {
+    await membersRepo(db).archive(s.memberId, TODAY);
+    await contactsRepo(db).create(s.memberId, { label: 'Sa mère', phone: '0600000001' });
+    expect(await contactsRepo(db).listByMember(s.memberId)).toHaveLength(2);
   });
 
   it('EX-06 recherche : membres courants trouvés par nom ou prénom, avec groupes et contacts dans l’ordre', async () => {

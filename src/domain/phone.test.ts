@@ -34,12 +34,8 @@ describe('Téléphone d’un contact d’urgence : français seulement (EX-05, d
     expect(formatPhone('0600000001')).toBe('06 00 00 00 01');
   });
 
-  it('un numéro stocké mal formé est un défaut du programme : erreur sans le numéro (ABS-04)', () => {
-    expect(() => formatPhone('123')).toThrow('Téléphone stocké invalide');
-    try {
-      formatPhone('061234');
-    } catch (e) {
-      expect(String(e)).not.toContain('061234');
-    }
+  it('un numéro stocké hors format (sauvegarde, import) s’affiche tel quel, sans erreur', () => {
+    expect(formatPhone('+32 470 00 00 00')).toBe('+32 470 00 00 00');
+    expect(formatPhone('06 00')).toBe('06 00');
   });
 });
