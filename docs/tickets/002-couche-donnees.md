@@ -1,6 +1,6 @@
 # 002 — Couche données testable et migration 1
 
-Statut : à faire · Jalon : 0 · Zone sensible : oui · Trivial : non
+Statut : en cours · Jalon : 0 · Zone sensible : oui · Trivial : non
 
 ## Contexte
 
