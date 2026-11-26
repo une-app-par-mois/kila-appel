@@ -27,8 +27,8 @@ Chaque ligne vaut validation de la dépendance (ADR-001). **Une dépendance n'es
 | expo-router | ~58.0.32 | MIT | Navigation par fichiers | Outillage |
 | expo-font | 58.0.12 | MIT | Polices IBM Plex embarquées au build (extension dans `app.json`) ; `loadAsync` et `useFonts` interdits dans `src/` (ABS-01, décision du 2026-11-26) | Thème et polices (003) |
 | expo-sqlite | 58.0.18 (SQLite 3.53.3 embarqué) | MIT | Base locale | Couche données (002) |
-| react-native-svg | 15.16.0 (fixée par le SDK) | MIT | Dessin, icônes | Premier écran |
-| lucide-react-native | 1.81.0 | ISC | Icônes au trait (charte §8) | Premier écran |
+| react-native-svg | 15.16.0 (fixée par le SDK) | MIT | Dessin, icônes ; ses chargeurs par adresse sont interdits (ABS-01, décision du 2026-11-26) | Installée au ticket 006b |
+| lucide-react-native | 1.81.0 | ISC | Icônes au trait (charte §8), importées une par une ; Jest charge leur version CommonJS | Installée au ticket 006b |
 | expo-file-system | ~58.0.14 | MIT | Fichiers de sauvegarde | F-03 |
 | expo-sharing | ~58.0.23 | MIT | Partage d'un fichier exporté | F-03 |
 | expo-document-picker | ~58.0.5 | MIT | Choix d'un fichier (restauration, import) | F-03 |
@@ -169,6 +169,7 @@ Liste fermée de ce qu'un journal peut contenir : code d'erreur, nom de l'opéra
 
 - 2026-11-26 : réglages dans SQLite, état React seul, icônes lucide-react-native, polices en fichiers `.ttf`, schéma complet dès la migration 1, builds sur GitHub Actions seul ; brouillon dans une table à part (`roll_call_drafts`) ; **noms de tables au pluriel** (évite le mot réservé `group`) ; tests de données avec `node:sqlite`, à confirmer au ticket d'outillage ; sauvegarde au format base SQLite brute (`.db`).
 - 2026-11-26 (ticket 001) : dépendances obligatoires d'expo-router et de Jest acceptées ; `react-dom` épinglée en 19.3.0 ; `expo-font` installée au ticket 003 (ABS-07).
+- 2026-11-26 (ticket 006b) : `react-native-svg` accepté malgré ses chargeurs par adresse, interdits par `staticChecks` (ABS-01) ; composants de base dans `src/ui/` ; la confirmation est un écran entier sur Papier, comme la maquette.
 - 2026-11-26 (ticket 006) : ticket découpé en 006 (données), 006b (composants), 006c (écrans) ; Paramètres sert d'écran d'accueil provisoire jusqu'au ticket 012 ; suppression d'un groupe confirmée telle que le §4.1 la décrit (séances et présences gardées), texte de la maquette à corriger ; « Désarchiver » un groupe ajouté ; dates d'une saison refusées si des séances tomberaient en dehors ; erreurs des dépôts à code (`src/data/errors.ts`).
 - 2026-11-26 (ticket 005) : `slots.schedule_from` (date d'effet de l'horaire) ajouté **dans la migration 1** (ADR-003 : corrigeable avant la publication), obligatoire, avancé à chaque changement de jour ou d'heure, jamais reculé : le passé n'est pas recalculé avec le nouvel horaire, les appels manquants de l'ancien horaire sont abandonnés ; une séance « du jour » commence ou finit aujourd'hui ; séance proposée = en cours, sinon la plus proche dans le temps, celles du jour d'abord (EX-09) ; appel manquant dès la fin de la séance (EX-17) ; occurrences calculées sur des dates de calendrier locales, `now` = date et heure locales passées par l'appelant.
 - 2026-11-26 (ticket 004) : binaire de test = APK de version avec la clé de débogage (pas d'`expo-dev-client`) ; migration vérifiée sur le téléphone par `adb logcat` (`[kila] DB_READY`) ; liste des permissions figée et validée ; scheme d'URL iOS retiré par un plugin local ; `actions/setup-java` v6.3.0 et `actions/upload-artifact` v7.0.2 épinglés par empreinte.
