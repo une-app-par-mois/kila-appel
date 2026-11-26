@@ -1,6 +1,6 @@
 # 003 — Garde-fous automatiques, thème et polices
 
-Statut : fusionné dans le groupe · Jalon : 0 · Zone sensible : non · Trivial : non
+Statut : fait · Jalon : 0 · Zone sensible : non · Trivial : non
 
 ## Contexte
 

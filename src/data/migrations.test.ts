@@ -44,11 +44,11 @@ describe('Migration 1 (ADR-003)', () => {
     await db.close();
   });
 
-  it('crée les 16 tables du schéma sur une base vide et pose user_version = 1', async () => {
+  it('crée les 16 tables du schéma sur une base vide et pose la dernière version', async () => {
     await prepareDatabase(db);
     expect(await tableNames(db)).toEqual(TABLES);
-    expect(await userVersion(db)).toBe(1);
-    expect(LATEST_VERSION).toBe(1);
+    expect(await userVersion(db)).toBe(LATEST_VERSION);
+    expect(LATEST_VERSION).toBe(MIGRATIONS.length);
   });
 
   it('active les clés étrangères à l’ouverture', async () => {
@@ -70,7 +70,7 @@ describe('Migration 1 (ADR-003)', () => {
     await prepareDatabase(db);
     await db.execute('INSERT INTO settings (key, value) VALUES (?, ?)', ['retention', '3']);
     await prepareDatabase(db);
-    expect(await userVersion(db)).toBe(1);
+    expect(await userVersion(db)).toBe(LATEST_VERSION);
     expect(await db.query('SELECT key, value FROM settings')).toEqual([
       { key: 'retention', value: '3' },
     ]);

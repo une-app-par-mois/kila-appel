@@ -84,7 +84,7 @@ Les identifiants suivent le glossaire du cadrage (colonne « Terme du code »).
 | `emergency_contacts` | id, member_id, label, phone, position | `ON DELETE CASCADE` depuis `members` |
 | `groups` | id, season_id, name, archived_at? | |
 | `enrollments` | id, member_id, group_id, start_date, end_date? | Cascade depuis `members` et `groups` |
-| `slots` | id, season_id, weekday?, start_time, duration_min, place?, name? | `weekday` nul = créneau ponctuel |
+| `slots` | id, season_id, weekday?, start_time, duration_min, place?, name?, schedule_from | `weekday` nul = créneau ponctuel ; `schedule_from` = date d'effet de l'horaire : fixée à la création, avancée quand le jour ou l'heure changent, jamais reculée (déclencheur) ; aucune séance réclamée avant (EX-07, EX-08) |
 | `slot_dates` | slot_id, date | Dates d'un créneau ponctuel (F-10) |
 | `slot_groups` | slot_id, group_id | Plusieurs groupes par créneau (F-11) |
 | `sessions` | id, season_id, slot_id?, date, start_time, state, comment? | `state` ∈ recorded, prepared, cancelled, unscheduled ; `slot_id` nul = appel sans créneau (EX-39) ; unique (slot_id, date) (RM-05) |
@@ -113,7 +113,7 @@ Les identifiants suivent le glossaire du cadrage (colonne « Terme du code »).
 
 ### 4.2 Migrations
 
-Numérotées, appliquées dans une transaction, version dans `PRAGMA user_version`, **jamais réécrites une fois publiées**. Avant la publication, la migration 1 reste la seule (ADR-003). Zone sensible.
+Numérotées, appliquées dans une transaction, version dans `PRAGMA user_version`, **jamais réécrites une fois publiées**. Avant la publication, la migration 1 reste la seule (ADR-003). Zone sensible. Jamais de `REPLACE INTO` ni d'`INSERT OR REPLACE` : ils suppriment puis recréent la ligne, contournent les déclencheurs (`slots.schedule_from`) et déclenchent les cascades.
 
 ### 4.3 Sauvegarde et restauration (zone sensible)
 
@@ -169,6 +169,7 @@ Liste fermée de ce qu'un journal peut contenir : code d'erreur, nom de l'opéra
 
 - 2026-11-26 : réglages dans SQLite, état React seul, icônes lucide-react-native, polices en fichiers `.ttf`, schéma complet dès la migration 1, builds sur GitHub Actions seul ; brouillon dans une table à part (`roll_call_drafts`) ; **noms de tables au pluriel** (évite le mot réservé `group`) ; tests de données avec `node:sqlite`, à confirmer au ticket d'outillage ; sauvegarde au format base SQLite brute (`.db`).
 - 2026-11-26 (ticket 001) : dépendances obligatoires d'expo-router et de Jest acceptées ; `react-dom` épinglée en 19.3.0 ; `expo-font` installée au ticket 003 (ABS-07).
+- 2026-11-26 (ticket 005) : `slots.schedule_from` (date d'effet de l'horaire) ajouté **dans la migration 1** (ADR-003 : corrigeable avant la publication), obligatoire, avancé à chaque changement de jour ou d'heure, jamais reculé : le passé n'est pas recalculé avec le nouvel horaire, les appels manquants de l'ancien horaire sont abandonnés ; une séance « du jour » commence ou finit aujourd'hui ; séance proposée = en cours, sinon la plus proche dans le temps, celles du jour d'abord (EX-09) ; appel manquant dès la fin de la séance (EX-17) ; occurrences calculées sur des dates de calendrier locales, `now` = date et heure locales passées par l'appelant.
 - 2026-11-26 (ticket 004) : binaire de test = APK de version avec la clé de débogage (pas d'`expo-dev-client`) ; migration vérifiée sur le téléphone par `adb logcat` (`[kila] DB_READY`) ; liste des permissions figée et validée ; scheme d'URL iOS retiré par un plugin local ; `actions/setup-java` v6.3.0 et `actions/upload-artifact` v7.0.2 épinglés par empreinte.
 - 2026-11-26 (ticket 003) : **expo-font accepté malgré sa capacité réseau** (`loadAsync` avec une URL) : seule son extension de build est utilisée, `loadAsync` et `useFonts` sont refusés par le contrôle SEC-01 ; polices téléchargées depuis github.com/IBM/plex, renommées d'après leur nom PostScript (même nom sur Android et iOS), empreintes dans `assets/fonts/SOURCES.md` ; journal : code et nombres ou booléens, clés en liste blanche (`…Id`, `…Count`, `version`, `changes`, `durationMs`, `ok`), donnée refusée remplacée par `LOG_REFUSED` sans erreur ; contrôles CONV-03, CONV-16, SEC-01 et SEC-03 par un test qui lit l'arbre syntaxique (`src/staticChecks.test.ts`), CONV-17 par Biome ; types Node des tests déclarés dans `src/node.d.ts`, invisibles pour l'appli (`tsconfig.json` sans les tests, `tsconfig.test.json` avec).
 - 2026-11-26 (ticket 002) : règles de suppression du §4.1 ; groupes et statuts du brouillon en tables filles en cascade (16 tables), brouillon rattaché à sa saison ; règle « dans une transaction, seulement `tx` » ; transactions sur la connexion principale par une file commune aux deux adaptateurs (`withExclusiveTransactionAsync` ouvre une connexion sans clés étrangères) ; séance d'un créneau supprimé sans colonne d'origine ; types de `node:sqlite` déclarés localement (pas de `@types/node`) ; vérification d'ADR-008 complétée sur téléphone au ticket 004.

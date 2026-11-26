@@ -76,4 +76,5 @@ Démarches hors code, à lancer tôt à cause des délais.
 
 ## Décisions du porteur
 
+- 2026-11-26 (fin du jalon 0) : jalon 0 terminé le 26 nov. au lieu du 6 déc., en moins de 2 h de porteur pour 6 h prévues ; estimation de 1,5 h par ticket **gardée** (jalon d'outillage, peu représentatif), l'avance d'une semaine devient de la marge ; recalage à la fin du jalon 1.
 - 2026-11-26 : ordre des jalons gardé (4 et 5 premiers candidats au report) ; estimation de 1,5 h par ticket, recalée au jalon 0 ; bêta d'une semaine par le porteur seul.
