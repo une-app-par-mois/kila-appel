@@ -1,6 +1,6 @@
 # 006 — Saisons et groupes : dépôts et hooks
 
-Statut : en cours · Jalon : 1 · Zone sensible : oui (suppressions) · Trivial : non
+Statut : fusionné dans le groupe · Jalon : 1 · Zone sensible : oui (suppressions) · Trivial : non
 
 Découpé le 2026-11-26 (décision du porteur) : 006 (données), 006b (composants), 006c (écrans).
 
