@@ -55,7 +55,7 @@ L'empreinte affichée doit être identique à celle de `SHA256SUMS.txt`. Chaque 
 
 | Permission | Pourquoi |
 | --- | --- |
-| [ex. aucune] | |
+| Aucune voulue | Le tableau définitif est rempli au ticket 004, après l'audit du binaire construit. En attendant, Expo ajoute INTERNET par défaut ; elle sera retirée (ABS-01). |
 
 ## Sécurité
 

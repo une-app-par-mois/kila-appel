@@ -11,7 +11,7 @@ if [ ! -d node_modules ]; then
 fi
 
 echo "== Lint et format (Biome, CONV-20)"
-npx --no-install biome check .
+npx --no-install biome check --error-on-warnings .
 
 echo "== Typage strict (tsc, CONV-12)"
 npx --no-install tsc --noEmit
