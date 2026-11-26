@@ -43,6 +43,8 @@ const Paper = () => (
 
 type Props = {
   title: string;
+  /** Sous l'en-tête (saison, liens). */
+  subtitle?: ReactNode;
   /** Sans `onBack`, pas de bouton retour (écran racine). */
   onBack?: () => void;
   /** Erreur de chargement, à la place du contenu attendu (CONV-15). */
@@ -50,7 +52,7 @@ type Props = {
   children?: ReactNode;
 };
 
-export const Screen = ({ title, onBack, error, children }: Props) => (
+export const Screen = ({ title, subtitle, onBack, error, children }: Props) => (
   <SafeAreaView style={styles.screen}>
     <Paper />
     <ScrollView testID="screen-scroll" contentContainerStyle={styles.content}>
@@ -69,6 +71,7 @@ export const Screen = ({ title, onBack, error, children }: Props) => (
           {title}
         </Text>
       </View>
+      {subtitle}
       {error !== undefined && <Text style={styles.error}>{error}</Text>}
       {children}
     </ScrollView>

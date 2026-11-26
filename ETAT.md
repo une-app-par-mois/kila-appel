@@ -12,8 +12,8 @@ Réévaluation (PLAN §6) : moins de 2 h de porteur pour 6 h prévues ; 1,5 h pa
 
 ## Prochaines étapes
 
-1. **Ticket 006c** (écrans des saisons, zone sensible) sur `ticket/006c-ecrans-saisons-groupes`. Ticket 006b fusionné dans le groupe (PR #11). Redécoupage : 006c (saisons), 006d (groupes), 006e (licences, EX-42).
-2. Tickets 006d à 016 du jalon 1, puis PR du jalon vers `main`.
+1. **Ticket 006d** (écrans des groupes, zone sensible) sur `ticket/006d-ecrans-groupes`. Ticket 006c fusionné dans le groupe (PR #12).
+2. Tickets 006e à 016 du jalon 1, puis PR du jalon vers `main`.
 
 ## Points d'attention
 

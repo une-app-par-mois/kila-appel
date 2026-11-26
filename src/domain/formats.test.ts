@@ -1,4 +1,4 @@
-import { isIsoDate, parseDisplayDate, toDisplayDate } from '@/domain/formats';
+import { isIsoDate, parseDisplayDate, toDisplayDate, toIsoDate } from '@/domain/formats';
 
 describe('RM-04 : dates stockées en AAAA-MM-JJ, affichées en JJ/MM/AAAA', () => {
   describe('isIsoDate', () => {
@@ -84,6 +84,14 @@ describe('RM-04 : dates stockées en AAAA-MM-JJ, affichées en JJ/MM/AAAA', () =
 
     it('RM-04 aller-retour : afficher puis relire redonne la date stockée', () => {
       expect(parseDisplayDate(toDisplayDate('2026-07-31'))).toBe('2026-07-31');
+    });
+  });
+
+  describe('toIsoDate', () => {
+    it('RM-04 date locale du jour (pas UTC), sur deux chiffres', () => {
+      // 1er mars 2026 à 0 h 30, heure locale : la date reste le 1er mars quel que soit le fuseau.
+      expect(toIsoDate(new Date(2026, 2, 1, 0, 30))).toBe('2026-03-01');
+      expect(toIsoDate(new Date(2026, 10, 26, 23, 59))).toBe('2026-11-26');
     });
   });
 });

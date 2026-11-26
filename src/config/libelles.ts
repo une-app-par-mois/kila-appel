@@ -18,6 +18,10 @@ export type SeasonDeletionCounts = {
 };
 
 const NOTHING_ELSE = 'Seule la saison sera effacée : elle ne contient aucune donnée.';
+const GROUP_NOTHING_ELSE = 'Seul le groupe sera effacé : il n’a ni inscription ni lien.';
+
+/** Ce que la suppression d'un groupe effacera (EX-02, ARCHITECTURE §4.1). */
+export type GroupDeletionCounts = { enrollments: number; slots: number; sessions: number };
 
 export const labels = {
   appName: 'Ki&La',
@@ -43,6 +47,55 @@ export const labels = {
     seasons: 'Saisons',
     activeSeason: (name: string) => `Active : ${name}`,
     noActiveSeason: 'Aucune saison active',
+    groups: 'Groupes',
+    groupCount: (n: number) => (n === 0 ? 'Aucun groupe' : plural(n, 'groupe', 'groupes')),
+  },
+  groups: {
+    title: 'Groupes',
+    archivedTitle: 'Groupes archivés',
+    create: 'Nouveau groupe',
+    createFirst: 'Créer un groupe',
+    empty: 'Aucun groupe dans cette saison.',
+    emptyArchived: 'Aucun groupe archivé.',
+    showArchived: (n: number) => `Voir les groupes archivés (${n})`,
+    noActiveSeason: 'Aucune saison active. Activez ou créez une saison pour y ranger vos groupes.',
+    toSeasons: 'Voir les saisons',
+  },
+  groupForm: {
+    newTitle: 'Nouveau groupe',
+    editTitle: 'Modifier le groupe',
+    name: 'Nom du groupe',
+    attachedTo: (season: string) => `Rattaché à la saison active : ${season}.`,
+    next: 'Ensuite : ajouter ses membres, puis déclarer son créneau.',
+    create: 'Créer le groupe',
+    delete: 'Supprimer le groupe',
+  },
+  group: {
+    edit: 'Renommer ou supprimer',
+    /** Saison suivie du séparateur, avant le lien « Renommer ou supprimer ». */
+    seasonOf: (season: string) => `${season} · `,
+    noMember: 'Personne n’est encore inscrit à ce groupe.',
+    archive: 'Archiver',
+    unarchive: 'Désarchiver',
+  },
+  groupDeletion: {
+    title: (name: string) => `Supprimer ${name} ?`,
+    message: (c: GroupDeletionCounts) => {
+      const links = [
+        c.slots > 0 && `à ${plural(c.slots, 'créneau', 'créneaux')}`,
+        c.sessions > 0 && `à ${plural(c.sessions, 'séance', 'séances')}`,
+      ].filter((part): part is string => typeof part === 'string');
+      const parts = [
+        c.enrollments === 1 && 'son inscription',
+        c.enrollments > 1 && `ses ${c.enrollments} inscriptions`,
+        links.length > 0 && `ses liens ${links.join(' et ')}`,
+      ].filter((part): part is string => typeof part === 'string');
+      return parts.length === 0
+        ? GROUP_NOTHING_ELSE
+        : `Seront effacés définitivement : ${parts.join(' et ')}.`;
+    },
+    nothingElse: GROUP_NOTHING_ELSE,
+    kept: 'Les séances, leurs présences et les membres sont conservés. Pour le retirer des écrans sans rien effacer, utilisez plutôt « Archiver ».',
   },
   seasons: {
     title: 'Saisons',

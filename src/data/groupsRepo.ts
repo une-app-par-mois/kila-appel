@@ -5,6 +5,9 @@ import { validateDate, validateName } from '@/domain/validation';
 
 export type Group = { id: number; seasonId: number; name: string; archivedAt: string | null };
 
+/** Un groupe et son nombre d'inscriptions en cours (sans date de fin). */
+export type GroupDetail = Group & { enrollmentCount: number };
+
 /** EX-02 : supprimer un groupe efface ses inscriptions et ses liens ; séances et présences restent. */
 export type GroupDeletionImpact = { enrollments: number; slots: number; sessions: number };
 
@@ -32,6 +35,17 @@ export const groupsRepo = (db: Db) => ({
     )
       .map(toGroup)
       .sort((a, b) => byName.compare(a.name, b.name)),
+
+  get: async (id: number): Promise<GroupDetail | null> => {
+    const [row] = await db.query<GroupRow & { enrollment_count: number }>(
+      `SELECT id, season_id, name, archived_at,
+        (SELECT COUNT(*) FROM enrollments WHERE group_id = groups.id AND end_date IS NULL)
+          AS enrollment_count
+       FROM groups WHERE id = ?`,
+      [id],
+    );
+    return row ? { ...toGroup(row), enrollmentCount: row.enrollment_count } : null;
+  },
 
   create: async (seasonId: number, name: string): Promise<number> =>
     (

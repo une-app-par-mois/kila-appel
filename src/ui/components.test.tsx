@@ -5,6 +5,7 @@ import { theme } from '@/config/theme';
 import { Button } from '@/ui/Button';
 import { Card } from '@/ui/Card';
 import { ConfirmDialog } from '@/ui/ConfirmDialog';
+import { errorMessage } from '@/ui/errorMessage';
 import { Icon } from '@/ui/Icon';
 import { ListRow } from '@/ui/ListRow';
 import { Screen, Section } from '@/ui/Screen';
@@ -246,6 +247,11 @@ describe('Screen', () => {
     expect(screen.getByTestId('screen-scroll')).toBeTruthy();
   });
 
+  it('un sous-titre sous l’en-tête', async () => {
+    await render(<Screen title="Groupes" subtitle={<Text>Saison 2026-2027</Text>} />);
+    expect(screen.getByText('Saison 2026-2027')).toBeTruthy();
+  });
+
   it('sans retour : pas de bouton ; une erreur de chargement s’affiche (CONV-15)', async () => {
     await render(<Screen title="Paramètres" error="Lecture impossible" />);
     expect(screen.queryByRole('button')).toBeNull();
@@ -267,5 +273,18 @@ describe('TextField', () => {
     );
     expect(screen.getByRole('alert')).toHaveTextContent('Date invalide');
     expect(flat(screen.getByLabelText('Début').props.style).borderColor).toBe(theme.colors.marge);
+  });
+});
+
+describe('errorMessage (CONV-15)', () => {
+  it('un code connu donne son message ; le reste, le message générique', () => {
+    expect(errorMessage({ code: 'NAME_REQUIRED' })).toBe(labels.errors.NAME_REQUIRED);
+    expect(errorMessage(new Error('Alix'))).toBe(labels.errors.unknown);
+    expect(errorMessage(null)).toBe(labels.errors.unknown);
+  });
+
+  it('un code hérité du prototype (« constructor », « toString ») donne le message générique', () => {
+    expect(errorMessage({ code: 'constructor' })).toBe(labels.errors.unknown);
+    expect(errorMessage({ code: 'toString' })).toBe(labels.errors.unknown);
   });
 });

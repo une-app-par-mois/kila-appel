@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
-import { useGroups } from '@/hooks/useGroups';
+import { useGroup, useGroups } from '@/hooks/useGroups';
 import { useSeasons } from '@/hooks/useSeasons';
 
 // La base et les dépôts sont simulés : les dépôts sont testés sur node:sqlite.
@@ -17,6 +17,7 @@ const mockSeasons = {
 };
 const mockGroups = {
   listBySeason: jest.fn(),
+  get: jest.fn(),
   create: jest.fn(),
   rename: jest.fn(),
   archive: jest.fn(),
@@ -142,29 +143,42 @@ describe('useSeasons (EX-01, CONV-10)', () => {
 describe('useGroups (EX-02, CONV-10)', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it('charge les groupes courants ou archivés de la saison, et recharge après modification', async () => {
+  it('charge les groupes courants ou archivés de la saison', async () => {
     mockGroups.listBySeason.mockResolvedValue([]);
-    mockGroups.create.mockResolvedValue(5);
     const { result } = await renderHook(() => useGroups(1, { archived: true }));
     await waitFor(() => expect(result.current.groups).toEqual([]));
     expect(mockGroups.listBySeason).toHaveBeenCalledWith(1, { archived: true });
+  });
+
+  it('useGroup : actions sur le groupe, puis rechargement ; introuvable distingué du chargement', async () => {
+    mockGroups.get.mockResolvedValue(null);
+    const { result } = await renderHook(() => useGroup(5));
+    await waitFor(() => expect(result.current.loaded).toBe(true));
+    expect(result.current.group).toBeNull();
     await act(async () => {
-      await result.current.create('Poussins');
-      await result.current.rename(5, 'Poussins mercredi');
-      await result.current.archive(5, '2026-11-26');
-      await result.current.unarchive(5);
-      await result.current.remove(5);
+      await result.current.rename('Poussins mercredi');
+      await result.current.archive('2026-11-26');
+      await result.current.unarchive();
+      await result.current.remove();
     });
-    expect(mockGroups.create).toHaveBeenCalledWith(1, 'Poussins');
     expect(mockGroups.rename).toHaveBeenCalledWith(5, 'Poussins mercredi');
     expect(mockGroups.archive).toHaveBeenCalledWith(5, '2026-11-26');
-    expect(mockGroups.listBySeason).toHaveBeenCalledTimes(6);
+    expect(mockGroups.unarchive).toHaveBeenCalledWith(5);
+    expect(mockGroups.remove).toHaveBeenCalledWith(5);
+    expect(mockGroups.get.mock.calls.length).toBeGreaterThanOrEqual(5);
     mockGroups.deletionImpact.mockResolvedValue({ enrollments: 2, slots: 1, sessions: 31 });
-    expect(await result.current.deletionImpact(5)).toEqual({
+    expect(await result.current.deletionImpact()).toEqual({
       enrollments: 2,
       slots: 1,
       sessions: 31,
     });
+  });
+
+  it('useGroup signale un échec de lecture', async () => {
+    mockGroups.get.mockRejectedValue(new Error('BROKEN_CONNECTION'));
+    const { result } = await renderHook(() => useGroup(5));
+    await waitFor(() => expect(result.current.loadFailed).toBe(true));
+    expect(log).toHaveBeenCalledWith('GROUP_LOAD_FAILED', { groupId: 5 });
   });
 
   it('au changement de saison, vide la liste et ignore une réponse tardive de l’ancienne', async () => {
@@ -197,6 +211,40 @@ describe('useGroups (EX-02, CONV-10)', () => {
     const { result } = await renderHook(() => useGroups(1));
     await waitFor(() => expect(result.current.loadFailed).toBe(true));
     expect(log).toHaveBeenCalledWith('GROUPS_LOAD_FAILED', { seasonId: 1 });
+  });
+
+  it('une modification des saisons recharge aussi les groupes (suppression en cascade)', async () => {
+    mockSeasons.list.mockResolvedValue([]);
+    mockSeasons.remove.mockResolvedValue(undefined);
+    mockGroups.listBySeason.mockResolvedValue([]);
+    const seasonsHook = await renderHook(() => useSeasons());
+    const groupsHook = await renderHook(() => useGroups(1));
+    await waitFor(() => expect(groupsHook.result.current.groups).toEqual([]));
+    const before = mockGroups.listBySeason.mock.calls.length;
+    await act(async () => {
+      await seasonsHook.result.current.remove(1);
+    });
+    await waitFor(() => expect(mockGroups.listBySeason.mock.calls.length).toBeGreaterThan(before));
+    await seasonsHook.unmount();
+    await groupsHook.unmount();
+  });
+
+  it('useGroup lit un groupe ; « create » rend l’identifiant créé', async () => {
+    const group = { id: 5, seasonId: 1, name: 'Poussins', archivedAt: null, enrollmentCount: 0 };
+    mockGroups.get.mockResolvedValue(group);
+    mockGroups.listBySeason.mockResolvedValue([]);
+    mockGroups.create.mockResolvedValue(5);
+    const one = await renderHook(() => useGroup(5));
+    await waitFor(() => expect(one.result.current.group).toEqual(group));
+    const list = await renderHook(() => useGroups(1));
+    await waitFor(() => expect(list.result.current.groups).toEqual([]));
+    let id = 0;
+    await act(async () => {
+      id = await list.result.current.create('Poussins');
+    });
+    expect(id).toBe(5);
+    await one.unmount();
+    await list.unmount();
   });
 
   it('ne charge rien sans saison', async () => {
