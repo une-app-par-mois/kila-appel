@@ -10,9 +10,11 @@ module.exports = {
     'src/domain/**/*.{ts,tsx}',
     'src/data/**/*.{ts,tsx}',
     '!**/*.test.{ts,tsx}',
+    '!**/*.d.ts',
   ],
   // CONV §5.3 : seuils sur le domaine et les données ; ils ne baissent jamais.
   coverageThreshold: {
     './src/domain/': { lines: 90, branches: 85 },
+    './src/data/': { lines: 90, branches: 85 },
   },
 };

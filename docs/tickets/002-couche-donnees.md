@@ -22,11 +22,11 @@ Lever le risque d'ADR-008 et poser le schéma complet de la v1 (ADR-003), dont d
 
 ## Critères d'acceptation
 
-- [ ] La migration 1 crée toutes les tables de `docs/ARCHITECTURE.md` §4.1 sur une base vide et pose `user_version` = 1
-- [ ] Supprimer un membre supprime ses présences, contacts, inscriptions et alertes traitées (SEC-11)
-- [ ] Une seule saison active possible (index unique partiel)
-- [ ] Unicité (créneau, date) des séances (RM-05)
-- [ ] Les mêmes requêtes tournent sur `node:sqlite` et `expo-sqlite` (sinon : arrêt et question au porteur, ADR-008)
+- [x] La migration 1 crée toutes les tables de `docs/ARCHITECTURE.md` §4.1 sur une base vide et pose `user_version` = 1
+- [x] Supprimer un membre supprime ses présences, contacts, inscriptions et alertes traitées (SEC-11)
+- [x] Une seule saison active possible (index unique partiel)
+- [x] Unicité (créneau, date) des séances (RM-05)
+- [x] Les mêmes requêtes tournent sur `node:sqlite` et `expo-sqlite` (sinon : arrêt et question au porteur, ADR-008) — partie vérifiable faite (même interface, adaptateur expo testé sur imitation) ; exécution native au ticket 004
 
 ## Tests attendus
 

@@ -10,7 +10,7 @@ Dernière mise à jour : 2026-11-26
 
 ## Prochaines étapes
 
-1. Ticket 002 : tests d'abord sur `node:sqlite`, `/security-review`, relecture du porteur avant la fusion dans le groupe.
+1. Ticket 002 : codé et vert (82 tests, couverture 100 % sur `src/data/`) ; `/code-review`, `/security-review`, puis **relecture du porteur** avant la fusion dans le groupe.
 2. Tickets 003 et 004 ; au 004, migration 1 lancée sur le téléphone (ADR-008).
 3. Fin du jalon 0 : PR du jalon vers `main` (CI complète), prétest, réévaluation du calendrier (`docs/PLAN.md` §6).
 
@@ -23,7 +23,8 @@ Dernière mise à jour : 2026-11-26
 - Calendrier sans marge (publication Android fin janvier 2027) : jalons 4 et 5 premiers candidats au report, décision du porteur à la fin du jalon 3.
 - iOS : aucun appareil Apple ni Mac ; publication iOS après un test sur un vrai iPhone (jalon 7).
 - DSA : déclarer Jita Vision commerçant avant le 1er février 2027.
-- Questions ouvertes : contenu du rapport PDF (ticket F-09) ; compatibilité `node:sqlite` / `expo-sqlite` (ticket 002) ; signature iOS sans EAS (jalon 7) ; tranche 16-17 et politique Familles (soumission Play).
+- `node:sqlite` est expérimental dans Node 22 : avertissement à chaque test de données, sans effet.
+- Questions ouvertes : contenu du rapport PDF (ticket F-09) ; migration 1 à lancer sur le téléphone (ticket 004, fin d'ADR-008) ; signature iOS sans EAS (jalon 7) ; tranche 16-17 et politique Familles (soumission Play).
 - Nom de paquet : `com.jitavision.kila` (Android et iOS), décidé le 2026-11-26.
 - `main` protégée (ruleset vérifié) ; hooks Git activés.
 
@@ -31,4 +32,5 @@ Dernière mise à jour : 2026-11-26
 
 - Écran vide du ticket 001 jamais lancé sur un téléphone (`npx expo start` à faire par le porteur).
 - CI jamais lancée (elle tournera sur la PR du jalon 0).
+- Adaptateur `expo-sqlite` testé sur une imitation branchée sur `node:sqlite`, jamais sur le module natif (ticket 004).
 - Permission INTERNET encore présente par défaut (retrait et audit du binaire : ticket 004). Polices IBM Plex absentes du poste : les maquettes s'affichent dans la police du système.
