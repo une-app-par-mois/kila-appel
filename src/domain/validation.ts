@@ -1,12 +1,14 @@
 // Validation des saisies avant la base (CLAUDE.md : toute entrée est validée). Les contraintes
 // de la base restent le dernier rempart. Une erreur porte un code, jamais la saisie (ABS-04).
 import { isIsoDate } from '@/domain/formats';
+import { parsePhone } from '@/domain/phone';
 
 export type InputErrorCode =
   | 'NAME_REQUIRED'
   | 'DATE_INVALID'
   | 'DATE_IN_FUTURE'
-  | 'END_BEFORE_START';
+  | 'END_BEFORE_START'
+  | 'PHONE_INVALID';
 
 export class InputError extends Error {
   constructor(readonly code: InputErrorCode) {
@@ -50,4 +52,15 @@ export const validateMember = (input: MemberInput, today: string): MemberInput =
   const birthDate = validateDate(input.birthDate);
   if (birthDate > today) throw new InputError('DATE_IN_FUTURE');
   return { firstName, lastName, birthDate };
+};
+
+/** EX-05, ABS-03 : qui est-ce (« Sa mère ») et téléphone ; aucun autre champ. */
+export type ContactInput = { label: string; phone: string };
+
+/** EX-05 : nom non vide ; téléphone français, rendu sur 10 chiffres (décision du 2026-11-26). */
+export const validateContact = (input: ContactInput): ContactInput => {
+  const label = validateName(input.label);
+  const phone = parsePhone(input.phone);
+  if (phone === null) throw new InputError('PHONE_INVALID');
+  return { label, phone };
 };

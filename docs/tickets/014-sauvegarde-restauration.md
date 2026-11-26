@@ -38,3 +38,7 @@ L'unique chemin de récupération des données (EX-19 à EX-22) ; le bogue le pl
 
 - Après une restauration par copie de fichier, lancer un `VACUUM` : le fichier restauré apporte ses propres pages libérées, que `secure_delete` ne nettoie pas.
 - L'écran de récupération (EX-22) ne traite pas `SECURE_DELETE_OFF` ni `FOREIGN_KEYS_OFF` comme une base abîmée à remplacer : ce sont des problèmes de configuration, le fichier est sain.
+
+## Note du ticket 008 (2026-11-26)
+
+- La base ne vérifie que le non-vide du téléphone d'un contact : la restauration valide chaque contact avec `validateContact` (nom obligatoire, téléphone français) avant d'écrire. Un numéro hors format s'affiche tel quel (`formatPhone`), sans faire planter l'écran.
