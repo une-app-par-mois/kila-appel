@@ -27,17 +27,11 @@ export default function Enroll() {
   const today = toIsoDate(new Date());
   const { group, loaded, loadFailed } = useGroup(id);
   const [selected, setSelected] = useState<number[]>([]);
-  const { seasons } = useSeasons();
+  const { seasons, loadFailed: seasonsFailed } = useSeasons();
+  const active = seasons?.find((s) => s.isActive);
   // Saisie, sinon aujourd'hui ramené dans la saison active (EX-04, ticket 007e).
   const [typed, setDate] = useState<string | null>(null);
-  const date =
-    typed ??
-    toDisplayDate(
-      startInSeason(
-        today,
-        seasons?.find((s) => s.isActive),
-      ),
-    );
+  const date = typed ?? toDisplayDate(startInSeason(today, active));
   // Candidats libres à la date saisie : l'inscription y est refusée sinon (chevauchement).
   const startDate = parseDisplayDate(date);
   const {
@@ -72,7 +66,8 @@ export default function Enroll() {
       await enroll(ids, startDate);
       back();
     } catch (e) {
-      if ((e as { code?: string }).code === 'DATE_OUTSIDE_SEASON') setDateError(errorMessage(e));
+      if ((e as { code?: string } | null)?.code === 'DATE_OUTSIDE_SEASON')
+        setDateError(errorMessage(e));
       else setFormError(errorMessage(e));
       saving.current = false;
       setBusy(false);
@@ -81,14 +76,14 @@ export default function Enroll() {
 
   const count = selected.filter((memberId) => candidates?.some((c) => c.id === memberId)).length;
   const error =
-    loadFailed || candidatesFailed
+    loadFailed || candidatesFailed || seasonsFailed
       ? labels.common.loadFailed
       : loaded && group === null
         ? labels.errors.NOT_FOUND
         : formError;
   return (
     <Screen title={group ? t.title(group.name) : labels.groups.title} onBack={back} error={error}>
-      {group && candidates && (
+      {group && candidates && seasons && (
         <>
           {candidates.length === 0 ? (
             <Text style={styles.text}>{t.noCandidate}</Text>
@@ -129,11 +124,13 @@ export default function Enroll() {
               label={t.newMember}
               variant="secondary"
               flex={1}
-              onPress={() =>
-                startDate === null
-                  ? setDateError(labels.errors.DATE_INVALID)
-                  : router.push(`/membres/nouveau?groupe=${id}&debut=${startDate}&retour=1`)
-              }
+              onPress={() => {
+                // Le nouveau membre n'a pas de champ de date : elle est vérifiée ici.
+                if (startDate === null) setDateError(labels.errors.DATE_INVALID);
+                else if (startInSeason(startDate, active) !== startDate)
+                  setDateError(labels.errors.DATE_OUTSIDE_SEASON);
+                else router.push(`/membres/nouveau?groupe=${id}&debut=${startDate}&retour=1`);
+              }}
             />
             <Button
               label={t.submit(count)}

@@ -71,7 +71,8 @@ export default function NewMember() {
       else router.replace(`/membres/${id}`);
     } catch (e) {
       const message = errorMessage(e);
-      if ((e as { code?: string }).code === 'DATE_IN_FUTURE') setErrors({ birthDate: message });
+      if ((e as { code?: string } | null)?.code === 'DATE_IN_FUTURE')
+        setErrors({ birthDate: message });
       else setFormError(message);
       saving.current = false;
       setBusy(false);

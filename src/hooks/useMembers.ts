@@ -57,16 +57,8 @@ export const useMembers = ({
   );
   const { value, loadFailed } = useLoaded<MemberListItem[]>(load, 'MEMBERS_LOAD_FAILED');
   const members = useMemo(() => value && filterByQuery(value, query), [value, query]);
-  const change = useChange(repos);
 
-  /** Crée un membre (inscrit au groupe choisi à `today`) et rend son identifiant. */
-  const create = useCallback(
-    (input: MemberInput, groupId: number | null = null) =>
-      change((r) => r.members.create(input, { groupId, today })),
-    [change, today],
-  );
-
-  return { members, loadFailed, create };
+  return { members, loadFailed };
 };
 
 /** Création seule, sans lire la liste (écran Nouveau membre). */
@@ -132,6 +124,8 @@ export const useMember = (id: number, today: string) => {
    */
   const enrollIn = useCallback(
     (groupId: number) =>
+      // Saison lue hors de l'écriture : si ses dates changent entre-temps, expectEnrollable
+      // refuse la date (DATE_OUTSIDE_SEASON), rien n'est écrit.
       change(async (r) =>
         r.enrollments.enroll(groupId, [id], startInSeason(today, await r.seasons.getActive())),
       ),
