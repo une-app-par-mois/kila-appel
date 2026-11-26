@@ -13,6 +13,9 @@ dist/
 build/
 out/
 node_modules/
+coverage/
+.expo/
+expo-env.d.ts
 .venv/
 venv/
 __pycache__/
@@ -24,6 +27,12 @@ models/*.gguf
 models/*.onnx
 models/*.safetensors
 
+# Bases et exports locaux : jamais versionnés (SEC-13)
+*.db
+*.db-*
+*.csv
+!src/__fixtures__/**/*.csv
+
 # Système et éditeurs
 .DS_Store
 Thumbs.db
@@ -33,3 +42,7 @@ Thumbs.db
 
 # Réglages personnels de Claude Code
 .claude/settings.local.json
+
+# Projets natifs : régénérés par expo prebuild à chaque build (ADR-009)
+/android/
+/ios/

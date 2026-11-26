@@ -55,7 +55,9 @@ L'empreinte affichée doit être identique à celle de `SHA256SUMS.txt`. Chaque 
 
 | Permission | Pourquoi |
 | --- | --- |
-| [ex. aucune] | |
+| `com.jitavision.kila.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` | Ajoutée par AndroidX, de niveau signature : seule l'appli l'utilise, pour ses récepteurs internes. Aucune boîte de dialogue, aucun accès à vos données. |
+
+C'est la seule permission du binaire Android, relevée par `aapt2 dump permissions` et vérifiée à chaque build par `scripts/audit-apk.js` contre `config/permissions-attendues.txt`. **INTERNET est absente** (ABS-01), comme le stockage externe, la superposition aux autres applis et la vibration, ajoutés par défaut par Expo et bloqués. Sur iOS : aucune permission, aucun lien entrant.
 
 ## Sécurité
 

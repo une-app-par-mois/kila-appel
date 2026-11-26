@@ -6,18 +6,23 @@ Ce fichier est lu par Claude Code à chaque session. Il fixe le contexte et les 
 
 ## Contexte
 
-- **Application** : [nom] — [une phrase : ce qu'elle fait, pour qui]
+- **Application** : Ki&La (appel) — relevé de présence en moins de 30 secondes, pour tout encadrant d'un groupe (club de sport d'abord), 100 % hors ligne
 - **Cahier des charges** : `docs/CADRAGE.md` (fait foi sur le périmètre, le vocabulaire et les zones sensibles)
-- **Plateforme cible** : [PWA hors ligne | desktop (Tauri/Electron) | Android | CLI | extension navigateur]
-- **Stack** : [langage, framework, version] — dépendances minimales, répandues et maintenues
+- **Architecture** : `docs/ARCHITECTURE.md` et `docs/adr/` (pile technique fermée, couches, schéma)
+- **Sécurité** : `docs/SECURITE.md` (exigences `SEC-xx` et leur vérification)
+- **Conformité** : `docs/CONFORMITE.md` (RGPD, stores, DSA, licences, actions avant lancement)
+- **Plan** : `docs/PLAN.md` (jalons, calendrier, piste du porteur) et `docs/tickets/`
+- **Exigences** : `docs/PRD.md` (exigences `EX-xx`, règles métier `RM-xx`, non fonctionnelles `NF-xx`)
+- **Plateforme cible** : Android et iOS, téléphone et tablette, publiée sur Google Play et l'App Store
+- **Stack** : Expo + React Native + TypeScript, SQLite local (versions vérifiées au premier ticket) — dépendances minimales, répandues et maintenues
 - **Design** : `design/CHARTE.md` et `design/maquettes/` (validés avant le code ; la maquette fait foi, rien d'absent n'est ajouté sans validation)
 - **Conventions et Definition of Done** : `docs/CONVENTIONS.md`
 - **Glossaire de la méthode** (ADR, DoD, CI, jalon, zone sensible…) : `docs/GLOSSAIRE-METHODE.md` ; le vocabulaire de l'app est dans le cadrage
 
 ## Commandes
 
-- Installer : `[commande]`, puis une fois par poste `./scripts/setup-hooks.sh`
-- Lancer en développement : `[commande]`
+- Installer : `npm ci` (Node 22), puis une fois par poste `./scripts/setup-hooks.sh`
+- Lancer en développement : `npx expo start`
 - Tests : `./scripts/test.sh` (doit passer avant toute PR)
 - Build : `./scripts/build.sh` (doit produire les fichiers à publier dans `dist/`)
 
@@ -29,18 +34,25 @@ Ce fichier est lu par Claude Code à chaque session. Il fixe le contexte et les 
 
 ## Règles non négociables
 
-### 100 % local
-- Aucun appel réseau nécessaire au fonctionnement : pas d'API distante, pas de CDN, pas de police ou script chargé depuis Internet, pas de télémétrie, pas d'analytics.
-- Toutes les ressources (polices, icônes, modèles) sont embarquées dans le dépôt ou le build.
-- Un LLM éventuel est un modèle open-weight dont la licence autorise la redistribution ; son empreinte SHA-256 est vérifiée au chargement ; taille et prérequis matériels sont indiqués dans le README.
-- Si une fonctionnalité semble exiger un serveur : t'arrêter et me le signaler, ne pas contourner.
+### Règles absolues du projet (niveau renforcé)
+
+Chacune a un identifiant, cité dans le code, les tests et les tickets. Le motif est dans `docs/CADRAGE.md`.
+
+- **ABS-01 Aucun réseau.** L'appli n'émet aucune requête réseau, jamais : pas d'API, d'analytics, de télémétrie, de suivi de crash, de publicité, de notification push, de police ou de ressource chargée à l'exécution. Toutes les ressources sont embarquées. Une dépendance capable d'émettre du réseau est refusée, sauf décision datée du porteur. La permission INTERNET est absente du binaire Android de production.
+- **ABS-02 Aucun serveur, aucun compte, aucune synchronisation.** Si une fonctionnalité semble l'exiger : t'arrêter et me le signaler, ne pas contourner.
+- **ABS-03 Minimisation.** Seuls les champs de la table « Données manipulées » du cadrage existent. N'ajoute aucun champ personnel. Aucune donnée de santé, aucun commentaire libre au niveau d'un membre (seulement au niveau d'une séance).
+- **ABS-04 Aucun nom hors de l'écran.** Jamais de nom, prénom, téléphone ou date de naissance dans un journal (`console.*`), un message d'erreur ou une notification : des identifiants seulement.
+- **ABS-05 Suppression réelle.** Supprimer efface vraiment (présences comprises) ; archiver et supprimer sont deux opérations distinctes et les deux existent.
+- **ABS-06 Pas de chiffrement dans l'appli.** Aucun chiffrement applicatif sans décision datée du porteur (déclaration ANSSI, export Apple). La sauvegarde est en clair, et l'écran d'export le dit sans détour : cet avertissement n'est jamais réduit.
+- **ABS-07 Permissions minimales.** Aucune dépendance installée avant la fonctionnalité qui l'utilise. Les permissions sont auditées sur le binaire construit, pas sur le manifeste.
+- **ABS-08 Une évolution qui touche aux données** met à jour, dans le même lot, la politique de confidentialité et les déclarations des stores (« aucune donnée collectée »).
 
 ### Sécurité
 - Aucun secret dans le code ni dans l'historique Git (clé, token, mot de passe). Ne lis jamais `.env`.
 - Toute entrée est validée : saisies, fichiers importés, CSV, chemins, URL.
 - Pas de `eval`, pas d'exécution de commande construite à partir d'une entrée, pas de `innerHTML` avec des données non échappées.
 - Requêtes paramétrées pour toute base locale (SQLite, IndexedDB).
-- Données personnelles : collecter le minimum, stocker localement, chiffrer au repos si elles sont sensibles, permettre l'export et la suppression.
+- Données personnelles : collecter le minimum, stocker localement, permettre l'export et la suppression (pas de chiffrement applicatif : ABS-06 ; aucune donnée sensible : ABS-03).
 - Principe du moindre privilège : permissions système, d'extension ou Android réduites au strict nécessaire, chacune justifiée dans le README.
 - Avant d'ajouter une dépendance : me la proposer avec sa raison, sa licence et sa date de dernière mise à jour, après avoir vérifié qu'elle existe sous ce nom exact (une IA peut inventer un nom de paquet).
 - **Ne désactive ni n'affaiblis jamais un contrôle** pour faire passer du code : test, lint, typage, hook (`--no-verify` interdit), workflow de sécurité.
@@ -62,7 +74,7 @@ Pose chaque décision sous forme de choix (options, avec ta recommandation en pr
 
 ## Mode de CI
 
-Mode de ce projet : **par jalon** — [par ticket | par groupe | par jalon], choisi au cadrage. Un changement de mode est une décision datée du porteur, notée ici ; jamais une dérogation.
+Mode de ce projet : **par jalon**, choisi au cadrage par le porteur le 2026-11-26. Un changement de mode est une décision datée du porteur, notée ici ; jamais une dérogation.
 
 | Mode | La PR du ticket vise | La CI tourne sur |
 | --- | --- | --- |
@@ -70,7 +82,7 @@ Mode de ce projet : **par jalon** — [par ticket | par groupe | par jalon], cho
 | Par groupe | `groupe/<n°>-<n°>-<intitulé>` (2 à 4 tickets liés, décidés au plan) | la PR du groupe vers `main` |
 | Par jalon | `groupe/jalon-<n>-<intitulé>` (tous les tickets du jalon) | la PR du jalon vers `main`, une fois le dernier ticket fusionné |
 
-La branche de groupe ou de jalon part de `main`. Les workflows ne tournent que sur les PR vers `main`. En zone sensible, le ticket reste dans son groupe, avec `/security-review` et la relecture du porteur avant sa fusion dans le groupe.
+La branche de groupe ou de jalon part de `main`. Seule exception, décidée par le porteur le 2026-11-26 : `groupe/jalon-0-outillage` part de `ticket/000-mise-en-route`, car `main` ne contenait alors que le commit initial ; la PR du jalon 0 vers `main` remplace la PR n°1. Les workflows ne tournent que sur les PR vers `main`. En zone sensible, le ticket reste dans son groupe, avec `/security-review` et la relecture du porteur avant sa fusion dans le groupe.
 
 ## Cycle d'un ticket
 

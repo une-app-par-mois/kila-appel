@@ -1,0 +1,44 @@
+{
+  "$commentaire": "Source unique des couleurs et mesures de la charte Carnet (design/CHARTE.md). Lue par les maquettes, puis par le code. Toute modification est revérifiée par scripts/contrastes.mjs.",
+  "couleurs": {
+    "encre": "#1F3A93",
+    "marge": "#C83C3C",
+    "papier": "#FBFAF6",
+    "quadrillage": "#DCE3F0",
+    "blanc": "#FFFFFF",
+    "texte": "#1B2233",
+    "texteSecondaire": "#667085"
+  },
+  "statuts": {
+    "present": { "fond": "#1F3A93", "texte": "#FFFFFF", "libelle": "Présent" },
+    "absent": { "fond": "#C83C3C", "texte": "#FFFFFF", "libelle": "Absent" },
+    "late": { "fond": "#D98E2B", "texte": "#1B2233", "libelle": "Retard" },
+    "excused": { "fond": "#646C7B", "texte": "#FFFFFF", "libelle": "Excusé" },
+    "preparedPresent": { "fond": "#FFFFFF", "texte": "#1F3A93", "bordure": "#1F3A93", "libelle": "Attendu" }
+  },
+  "etatsSeance": {
+    "cancelled": { "texte": "#667085", "libelle": "Annulée" },
+    "unscheduled": { "texte": "#667085", "libelle": "Non planifiée" }
+  },
+  "polices": {
+    "texte": "IBM Plex Sans 400",
+    "texteSemi": "IBM Plex Sans 600",
+    "titre": "IBM Plex Sans 700",
+    "chiffres": "IBM Plex Mono 500"
+  },
+  "matieres": {
+    "carreau": 22,
+    "traitCarreau": 1,
+    "margeX": 30,
+    "margeLargeur": 2,
+    "margeOpacite": 0.55,
+    "retraitContenu": 44,
+    "retraitDroit": 20,
+    "grainOpacite": 0.17
+  },
+  "rayons": { "carte": 16, "bouton": 14, "champ": 12, "pastille": 10, "barre": 4 },
+  "espace": 4,
+  "zoneAppuiMin": 44,
+  "texteMin": 12,
+  "largeurContenuMax": 640
+}

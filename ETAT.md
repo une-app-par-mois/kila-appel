@@ -2,28 +2,37 @@
 
 Mis à jour à la fin de chaque ticket. **100 lignes au plus** : on remplace, on n'empile pas ; l'historique vit dans les PR et `PROMPTS.md`.
 
-Dernière mise à jour : [AAAA-MM-JJ]
+Dernière mise à jour : 2026-11-26
 
 ## En cours
 
-[Jalon et branche de groupe ; ticket en cours et son état, ou « aucun ».]
+**Fin du jalon 0** : tickets 001 à 004 fusionnés dans `groupe/jalon-0-outillage` (PR #2 à #5). PR du jalon vers `main` ouverte : première exécution de la CI (tests, sécurité, builds Android et iOS). La branche du jalon part de `ticket/000-mise-en-route` (décision du 2026-11-26, notée dans `CLAUDE.md`) ; PR n°1 fermée sans fusion.
 
 ## Prochaines étapes
 
-Mise en route d'une nouvelle app (à retirer une fois faites) :
-
-1. Supprimer `.github/workflows/modele.yml` et `scripts/tests-modele.sh` (tests du modèle seulement).
-2. Remplir `docs/CADRAGE.md` (fonctionnalités, glossaire, données, zones sensibles, mode de CI), puis le faire valider ; reporter le mode dans `CLAUDE.md`.
-3. Charte et maquettes dans `design/`, validées avant le code.
-4. Compléter `CLAUDE.md` (contexte, commandes), `scripts/test.sh`, `scripts/build.sh`, la mise en place de la stack dans les workflows et `.github/dependabot.yml`.
-5. Activer les hooks : `./scripts/setup-hooks.sh` (gitleaks requis sur le poste).
-6. Protéger `main` dans les réglages GitHub : PR obligatoire, travaux de la CI obligatoires.
-7. Écrire les premiers tickets dans `docs/tickets/`.
+1. CI de la PR du jalon : tout vert sur le dernier commit, notamment le **premier build iOS** (`macos-26`). Chaque échec se corrige sur une branche de ticket fusionnée dans le groupe.
+2. Fusion vers `main` (`--squash`) avec l'accord du porteur, une fois tout vert et la branche à jour de `main`. Les tickets 001 à 004 passent alors à « fait ».
+3. Prétest de fin de jalon, réévaluation du calendrier (`docs/PLAN.md` §6), `PROMPTS.md` complété ; puis jalon 1 (ticket 005).
 
 ## Points d'attention
 
-- [Pièges rencontrés, décisions en attente du porteur.]
+- Hook pre-push : il lance `scripts/test.sh` sur la **copie de travail**, pas sur les commits envoyés ; la CI reste la vérification qui fait foi. `groupe/jalon-0-outillage` a été poussée sur `e9c39bc` (documents seuls, sans test.sh réel) depuis la copie verte du ticket 001, par décision du porteur du 2026-11-26.
+- `noFloatingPromises` est une règle expérimentale (nursery) de Biome 2.6.9 : à surveiller à chaque mise à jour de Biome.
+- `npm audit` : 22 vulnérabilités moyennes, aucune élevée, dans l'outillage de build d'Expo (`@expo/fingerprint`) ; CI à `--audit-level=high`.
+- **Lancer Claude Code depuis `kila-appel/`** : depuis le dossier parent, les interdictions de `.claude/settings.json` ne s'appliquent pas.
+- Calendrier sans marge (publication Android fin janvier 2027) : jalons 4 et 5 premiers candidats au report, décision du porteur à la fin du jalon 3.
+- iOS : aucun appareil Apple ni Mac ; publication iOS après un test sur un vrai iPhone (jalon 7).
+- DSA : déclarer Jita Vision commerçant avant le 1er février 2027.
+- Registre des licences (EX-42, jalon 6) : y faire figurer les polices IBM Plex (OFL 1.1, `assets/fonts/SOURCES.md`).
+- `node:sqlite` est expérimental dans Node 22 : avertissement à chaque test de données, sans effet.
+- Questions ouvertes : contenu du rapport PDF (ticket F-09) ; migration 1 à lancer sur le téléphone (ticket 004, fin d'ADR-008) ; signature iOS sans EAS (jalon 7) ; tranche 16-17 et politique Familles (soumission Play).
+- Nom de paquet : `com.jitavision.kila` (Android et iOS), décidé le 2026-11-26.
+- `main` protégée (ruleset vérifié) ; hooks Git activés.
 
 ## Non vérifié
 
-- [Ce qui n'a pas pu être vérifié et comment le faire.]
+- Écran vide du ticket 001 jamais lancé sur un téléphone (`npx expo start` à faire par le porteur).
+- CI jamais lancée (elle tournera sur la PR du jalon 0).
+- Polices jamais vues à l'écran (rendu avec les premiers écrans du jalon 1) ; couleurs nommées (`'red'`) non détectées par le contrôle CONV-16.
+- Requêtes métier jamais essayées sur le module natif `expo-sqlite` : seules l'ouverture et la migration 1 l'ont été, sur le Galaxy A55. Rien encore sur un iPhone réel.
+- Habilitations iOS contrôlées sur le projet généré, pas sur un binaire signé : à revoir avec la signature (jalon 6). Polices IBM Plex absentes du poste : les maquettes s'affichent dans la police du système.

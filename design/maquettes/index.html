@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ki&La — maquettes (lot 1)</title>
+<style>
+:root{--encre:#1F3A93;--marge:#C83C3C;--papier:#FBFAF6;--quad:#DCE3F0;--blanc:#FFFFFF;--texte:#1B2233;--texte2:#667085;}
+*{box-sizing:border-box}body{margin:0;font-family:"IBM Plex Sans",system-ui,sans-serif;background:#e9ecf2;color:var(--texte);display:flex;gap:24px;padding:24px;align-items:flex-start}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-weight:500}
+nav.menu{width:250px;flex:none;font-size:14px;position:sticky;top:24px}
+nav.menu h2{font-size:15px;margin:0 0 8px}nav.menu a{display:block;padding:5px 8px;border-radius:6px;color:var(--texte);text-decoration:none;cursor:pointer}
+nav.menu a.on{background:var(--encre);color:#fff}nav.menu a .v{float:right}nav.menu .lot{margin:12px 0 4px;color:var(--texte2);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.boutons button{margin:4px 4px 0 0;font:inherit;font-size:13px;padding:5px 8px;border:1px solid #bbb;border-radius:6px;background:#fff;cursor:pointer}
+.appareil{flex:none;width:390px;height:844px;border-radius:36px;border:10px solid #1b2233;overflow:hidden;position:relative;background:var(--papier);box-shadow:0 10px 30px #0003}
+.appareil.tablette{width:834px;height:1112px;border-radius:24px}
+.fond{position:absolute;inset:0;background-image:linear-gradient(var(--quad) 1px,transparent 1px),linear-gradient(90deg,var(--quad) 1px,transparent 1px);background-size:22px 22px;opacity:.6}
+.fond::after{content:"";position:absolute;top:0;bottom:0;left:30px;width:2px;background:var(--marge);opacity:0.55}
+.ecran{position:absolute;inset:0 0 76px 0;overflow-y:auto;padding:16px 20px 24px 44px}
+.colonne{max-width:640px;margin:0 auto}
+.entete{display:flex;align-items:center;gap:8px;margin:8px 0 4px}h1{font-size:30px;font-weight:700;letter-spacing:-.02em;margin:0}
+.retour{font-size:30px;border:none;background:none;color:var(--encre);cursor:pointer;min-width:44px;min-height:44px;margin-left:-12px}
+.sous-titre{margin-bottom:12px}
+.section{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin:20px 0 8px;display:inline-block;border-bottom:2.5px solid var(--marge);padding-bottom:2px}
+.carte{background:var(--blanc);border:1px solid var(--quad);border-radius:16px;box-shadow:0 2px 0 rgba(31,58,147,.06);padding:14px;margin:10px 0}
+.carte.bandeau{border:1.5px solid var(--marge)}
+.l-titre{font-weight:600;font-size:16px}.l-titre.gros{font-size:22px;font-weight:700;letter-spacing:-.01em}.l-sous{color:var(--texte2);font-size:14px}
+.aide{color:var(--texte2);font-size:14px}.note{font-size:12.5px;color:var(--texte2);font-style:italic;border-left:3px solid var(--quad);padding-left:8px}
+.ligne,.rang,.contact{display:flex;justify-content:space-between;align-items:center;min-height:44px;padding:8px 0;border-bottom:1px solid var(--quad);cursor:pointer;gap:8px}
+.ligne:last-child,.rang:last-child,.contact:last-child{border-bottom:none}.chev{color:var(--texte2);font-size:20px}
+.btn-p,.btn-s,.btn-mini,.btn-appel{font:inherit;border-radius:14px;cursor:pointer;min-height:44px}
+.btn-p{display:block;width:100%;height:54px;background:var(--encre);color:#fff;border:none;font-weight:600;font-size:17px;margin:12px 0}
+.btn-p.fond-marge{background:var(--marge)}
+.btn-s{display:block;width:100%;background:#fff;border:1.5px solid var(--quad);color:var(--texte2);font-weight:600;font-size:15px;padding:10px;margin:8px 0}
+.btn-s.danger{color:var(--marge)}
+.btn-mini{background:#fff;border:1.5px solid var(--quad);color:var(--encre);font-weight:600;padding:0 12px}
+.btn-appel{background:var(--encre);color:#fff;border:none;font-weight:600;padding:0 14px}
+.duo{display:flex;gap:10px}.duo .tiers{flex:1}.duo .deuxtiers{flex:2}.duo button{margin:12px 0 0}
+.badge{background:var(--encre);color:#fff;border-radius:10px;padding:3px 10px;font-size:13px;font-weight:600}
+.lien{color:var(--encre);font-weight:600;text-decoration:underline;cursor:pointer}.rouge{color:var(--marge);font-weight:600}.gris{color:var(--texte2);font-weight:600}
+.recherche{background:#fff;border:1.5px solid var(--quad);border-radius:12px;padding:12px;color:var(--texte2);cursor:pointer;margin:8px 0;min-height:44px}
+label{display:block;font-size:14px;color:var(--texte2);margin:12px 0 4px}.facultatif{font-style:italic}
+.champ{display:block;width:100%;background:#fff;border:1.5px solid var(--quad);border-radius:12px;padding:11px 12px;font:inherit;font-size:16px;min-height:44px;margin:6px 0}
+.champ.vide{color:var(--texte2)}.champ.actif{border-color:var(--encre)}.champ.multi{min-height:70px;color:var(--texte2)}.champ.mini{width:auto;display:inline-block;margin:0 6px}
+.deux{display:flex;gap:10px}.deux>div{flex:1}
+.jours{display:flex;gap:6px}.jour{flex:1;text-align:center;border:1.5px solid var(--quad);border-radius:10px;padding:10px 0;background:#fff;font-weight:600}.jour.on{background:var(--encre);color:#fff;border-color:var(--encre)}
+.etape{display:flex;gap:12px;align-items:center;padding:10px 0}.etape.faite .l-titre{color:var(--texte2)}.num,.coche{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;border:2px solid var(--quad)}.coche{background:#2e7d4f;border-color:#2e7d4f;color:#fff}
+.filtres{display:flex;gap:8px;margin:8px 0}.filtre{border:1.5px solid var(--quad);border-radius:20px;padding:6px 12px;background:#fff;font-size:14px}.filtre.on{border-color:var(--encre);color:var(--encre);font-weight:600}
+.pastille{min-width:84px;text-align:center;border-radius:10px;padding:8px 10px;font-weight:600;font-size:14px;white-space:nowrap}
+.s-present{background:#1F3A93;color:#FFFFFF;}.s-absent{background:#C83C3C;color:#FFFFFF;}.s-late{background:#D98E2B;color:#1B2233;}.s-excused{background:#646C7B;color:#FFFFFF;}.s-preparedPresent{background:#FFFFFF;color:#1F3A93;border:1.5px solid #1F3A93;}
+.case{width:30px;height:30px;border-radius:8px;border:2px solid var(--quad);display:flex;align-items:center;justify-content:center;font-weight:700}.case.on{background:var(--encre);border-color:var(--encre);color:#fff}.barre{display:flex;height:12px;border-radius:4px;overflow:hidden;margin:6px 0 12px}.barre i{display:block;height:100%}
+.taux{font-size:18px;color:var(--encre)}.chiffre{font-size:26px;color:var(--encre)}.legende{display:flex;gap:12px;font-size:13px;color:var(--texte2);flex-wrap:wrap}
+.sg{cursor:pointer}.cases{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}.cas{width:22px;height:22px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:12px}.cas.vide{background:var(--quad)}
+.frise{display:flex;gap:8px;overflow-x:auto;padding:6px 0}.pastel{flex:none;width:92px;background:#fff;border:1px solid var(--quad);border-radius:12px;padding:8px;font-size:12px;cursor:pointer}.pastel .etat{font-weight:600;margin-top:4px}
+.f-manquant{border:1.5px solid var(--marge)}.f-manquant .etat{color:var(--marge)}.f-fait .etat{color:var(--encre)}.f-maintenant{border:2px solid var(--encre)}.f-maintenant .etat{color:var(--encre)}.f-preparee .etat,.f-avenir .etat,.f-annulee .etat{color:var(--texte2)}
+.podium{display:flex;align-items:flex-end;gap:6px;text-align:center;font-size:13px}.marche{flex:1;background:var(--quad);border-radius:8px 8px 0 0;padding:6px 2px}.marche .mono{font-size:20px;color:var(--encre)}.m1{height:120px}.m2{height:96px}.m3{height:80px}
+.interrupteur{width:50px;height:30px;border-radius:15px;background:var(--quad);position:relative;flex:none}.interrupteur.on{background:var(--encre)}.interrupteur.on::after{content:"";position:absolute;right:3px;top:3px;width:24px;height:24px;border-radius:50%;background:#fff}
+.verrou{background:#1b2233;margin:-16px -20px 0 -44px;padding:60px 20px;min-height:500px}.verrou .heure{color:#fff;font-size:56px;text-align:center;margin-bottom:24px}
+.exemple{font-size:11px;border-collapse:collapse;width:100%;margin:8px 0}.exemple th,.exemple td{border:1px solid var(--quad);padding:3px}
+.bascule{display:flex;border:1.5px solid var(--quad);border-radius:12px;overflow:hidden;margin:8px 0}.bascule span{flex:1;text-align:center;padding:10px;background:#fff}.bascule .on{background:var(--encre);color:#fff;font-weight:600}
+.feuille{border:1px solid var(--quad);padding:12px;aspect-ratio:1/1.41;max-height:240px}.btn-s.choix{color:var(--texte);text-align:left}
+.carre{display:inline-block;width:10px;height:10px;margin-right:5px;border-radius:2px}
+.compteur{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px}
+.brouillon{font-size:13px;color:var(--texte2);margin:4px 0 8px}
+.nom{font-size:18px;font-weight:600}
+.onglets{position:absolute;left:0;right:0;bottom:0;height:76px;background:#fff;border-top:1px solid var(--quad);display:flex;justify-content:space-around;align-items:center}
+.onglet{font-size:12px;font-weight:600;color:var(--texte2);text-align:center;cursor:pointer;min-width:44px;padding-top:6px}.onglet.on{color:var(--encre)}.onglet .i{font-size:20px;display:block}
+.onglet.central .rond{width:58px;height:58px;border-radius:50%;background:var(--encre);color:#fff;display:flex;align-items:center;justify-content:center;font-size:26px;margin:-28px auto 2px;box-shadow:0 6px 14px rgba(31,58,147,.35)}
+.toast{position:absolute;left:50%;bottom:96px;transform:translateX(-50%);background:var(--texte);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;display:none}
+aside.relecture{width:300px;flex:none;position:sticky;top:24px;font-size:14px}
+aside.relecture h2{font-size:15px;margin:0}aside.relecture .ex{color:#555;font-size:13px;margin:4px 0 10px}
+aside.relecture label{color:#333}aside.relecture textarea{width:100%;height:120px;font:inherit;padding:8px;border-radius:8px;border:1px solid #bbb}
+.verdicts button{font:inherit;padding:6px 10px;border-radius:8px;border:1px solid #bbb;background:#fff;cursor:pointer;margin:0 4px 6px 0}.verdicts button.on{background:var(--encre);color:#fff;border-color:var(--encre)}
+</style></head><body>
+<nav class="menu"><h2>Ki&La — maquettes</h2><div id="menu"></div>
+<div class="boutons"><button id="bascule">Voir en tablette</button><button id="exporter">Exporter les notes (JSON)</button><button id="copier">Copier les notes</button></div>
+<p style="font-size:12px;color:#555">Données fictives. Polices IBM Plex si installées, sinon police du système. Notes gardées dans ce navigateur.</p></nav>
+<div class="appareil" id="appareil"><div class="fond"></div>
+<section class="ecran" id="e-bienvenue" hidden><div class="colonne">
+<div class="entete"><h1>Bienvenue</h1></div>
+<p class="aide">Quatre étapes avant votre premier appel.</p>
+<div class="carte ">
+<div class="etape faite"><span class="coche">✓</span><div><div class="l-titre">Créer la saison</div><div class="l-sous">Saison 2026-2027, créée automatiquement</div></div></div>
+<div class="etape"><span class="num">2</span><div><div class="l-titre">Créer un groupe</div><div class="l-sous">Par exemple « Poussins mercredi »</div></div></div>
+<button class="btn-p" data-go="groupe-nouveau">Créer un groupe</button>
+<div class="etape"><span class="num">3</span><div><div class="l-titre">Ajouter les membres</div></div></div>
+<div class="etape"><span class="num">4</span><div><div class="l-titre">Déclarer les créneaux</div></div></div>
+</div>
+<p class="note">Un seul bouton à l'écran, sur la première étape qui reste.</p></div></section>
+<section class="ecran" id="e-accueil" hidden><div class="colonne">
+<div class="entete"><h1>Mercredi 26 nov.</h1></div>
+<div class="recherche" data-go="urgence">🔍 Contact d'urgence : rechercher un membre</div>
+<h3 class="section">Maintenant</h3>
+<div class="carte ">
+<div class="l-titre gros">Poussins mercredi</div>
+<div class="l-sous">14:00 – 15:30 · Gymnase Jean-Moulin · 22 membres</div>
+<div class="duo"><button class="btn-s tiers" data-go="annuler">Annuler</button><button class="btn-p deuxtiers" data-go="appel">Faire l'appel</button></div>
+</div>
+<h3 class="section">Appels manquants</h3>
+<div class="carte ">
+<div class="ligne" data-go="appel"><div><div class="l-titre"><span class="rouge">●</span> Benjamins lundi</div><div class="l-sous">Lundi 24 nov. · 18:00</div></div><span class="chev">›</span></div>
+</div>
+<div class="carte bandeau"><div class="l-titre">Pas de sauvegarde depuis 34 jours</div><div class="l-sous">Vos données ne vivent que sur cet appareil.</div><button class="btn-s" data-go="donnees">Sauvegarder maintenant</button></div>
+<p class="note">Version finale avec frise et alertes : <a class="lien" data-go="accueil-complet">Accueil complet</a> (lot 2).</p></div></section>
+<section class="ecran" id="e-urgence" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="accueil">‹</button><h1>Contact d'urgence</h1></div>
+<div class="champ actif">gar|</div>
+<div class="carte ">
+<div class="l-titre gros">Léo Garcia</div><div class="l-sous">Poussins mercredi</div>
+<div class="contact"><div><div class="l-titre">Sa mère</div><div class="l-sous mono">06 00 00 00 01</div></div><button class="btn-appel">📞 Appeler</button></div>
+<div class="contact"><div><div class="l-titre">Son père</div><div class="l-sous mono">06 00 00 00 02</div></div><button class="btn-appel">📞 Appeler</button></div>
+</div>
+<p class="note">Contacts affichés dès la saisie, appel en un appui (EX-06 : 2 appuis au plus).</p></div></section>
+<section class="ecran" id="e-appel" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="accueil">‹</button><h1>Poussins mercredi</h1></div>
+<div class="l-sous sous-titre">Mer. 26/11/2026 · 14:00 · Gymnase Jean-Moulin</div>
+<div class="carte compteur mono" id="compteur"></div>
+<div class="brouillon"><span id="chrono" class="mono">0,0 s</span> · <span>Brouillon enregistré à chaque appui</span></div>
+<input class="champ" id="filtre" placeholder="🔍 Rechercher (plus de 20 membres)">
+<div id="liste-appel"></div>
+<button class="btn-s" data-go="ajout">+ Ajouter un membre</button>
+<div class="champ multi">Commentaire de la séance (facultatif)</div>
+<button class="btn-p" id="enregistrer">Enregistrer l'appel</button></div></section>
+<section class="ecran" id="e-appel-libre" hidden><div class="colonne">
+<div class="entete"><h1>Nouvel appel</h1></div>
+<p class="aide">Aucun créneau en cours. Choisissez le groupe et la date.</p>
+<h3 class="section">Groupe</h3>
+<div class="carte "><div class="ligne" data-go="appel"><div><div class="l-titre">Poussins mercredi</div><div class="l-sous">22 membres</div></div><span class="chev">›</span></div><div class="ligne" data-go="appel"><div><div class="l-titre">Benjamins lundi</div><div class="l-sous">18 membres</div></div><span class="chev">›</span></div><div class="ligne" data-go="appel"><div><div class="l-titre">Adultes jeudi</div><div class="l-sous">25 membres</div></div><span class="chev">›</span></div></div>
+<h3 class="section">Date</h3>
+<div class="champ mono">26/11/2026</div>
+<p class="note">S'affiche quand on touche « Nouvel appel » hors de tout créneau proche.</p></div></section>
+<section class="ecran" id="e-ajout" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="appel">‹</button><h1>Nouveau membre</h1></div>
+<label>Prénom</label><div class="champ">Yanis</div>
+<label>Nom</label><div class="champ">Colin</div>
+<label>Date de naissance <span class="facultatif">facultative</span></label><div class="champ vide">JJ/MM/AAAA</div>
+<p class="aide">Il sera inscrit à « Poussins mercredi » à partir d'aujourd'hui.</p>
+<button class="btn-p" data-go="appel">Ajouter et revenir à l'appel</button></div></section>
+<section class="ecran" id="e-historique" hidden><div class="colonne">
+<div class="entete"><h1>Historique</h1></div>
+<div class="filtres"><span class="filtre on">Tous les groupes</span><span class="filtre">30 derniers jours</span></div>
+<div class="carte ">
+<div class="ligne" data-go="appel"><div><div class="l-titre"><span class="rouge">● Appel manquant</span> · Benjamins lundi</div><div class="l-sous">Lun. 24/11 · 18:00</div></div><span class="chev">›</span></div>
+<div class="ligne" data-go="seance"><div><div class="l-titre">Poussins mercredi</div><div class="l-sous">Mer. 19/11 · <span class="mono">19/22</span> présents</div></div><span class="chev">›</span></div>
+<div class="ligne" data-go="seance"><div><div class="l-titre">Adultes jeudi</div><div class="l-sous">Jeu. 20/11 · <span class="mono">21/25</span> présents</div></div><span class="chev">›</span></div>
+<div class="ligne" data-go="seance"><div><div class="l-titre">Benjamins lundi</div><div class="l-sous">Lun. 17/11 · <span class="mono">16/18</span> présents</div></div><span class="chev">›</span></div>
+<div class="ligne" ><div><div class="l-titre"><span class="gris">Annulée</span> · Poussins mercredi</div><div class="l-sous">Mer. 12/11</div></div><span class="chev">›</span></div>
+<div class="ligne" ><div><div class="l-titre"><span class="gris">Non planifiée</span> · Adultes jeudi</div><div class="l-sous">Jeu. 30/10 · vacances</div></div><span class="chev">›</span></div>
+</div>
+<p class="note">Annulée et Non planifiée viennent du lot 2 (F-13) : montrées ici pour le rendu.</p></div></section>
+<section class="ecran" id="e-seance" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="historique">‹</button><h1>Poussins mercredi</h1></div>
+<div class="l-sous sous-titre">Mer. 19/11/2026 · 14:00 · enregistrée</div>
+<div class="carte compteur mono"><span><i class="carre s-present"></i>19 présents</span><span><i class="carre s-absent"></i>2 absents</span><span><i class="carre s-excused"></i>1 excusé</span></div>
+<div class="carte "><div class="rang"><span class="nom">Rose André</span><span class="pastille s-present">✓ Présent</span></div><div class="rang"><span class="nom">Adam Bernard</span><span class="pastille s-absent">✕ Absent</span></div><div class="rang"><span class="nom">Louise Bertrand</span><span class="pastille s-present">✓ Présent</span></div><div class="rang"><span class="nom">Zoé Blanc</span><span class="pastille s-excused">≈ Excusé</span></div><div class="rang"><span class="nom">Louis David</span><span class="pastille s-present">✓ Présent</span></div></div>
+<p class="aide">Touchez un statut pour le corriger.</p>
+<div class="duo"><button class="btn-s tiers danger" data-go="suppression-seance">Supprimer la séance</button><button class="btn-p deuxtiers" data-go="historique">Enregistrer les corrections</button></div></div></section>
+<section class="ecran" id="e-parametres" hidden><div class="colonne">
+<div class="entete"><h1>Paramètres</h1></div>
+<h3 class="section">Organisation</h3>
+<div class="carte "><div class="ligne" data-go="saisons"><div><div class="l-titre">Saisons</div><div class="l-sous">Active : 2026-2027</div></div><span class="chev">›</span></div><div class="ligne" data-go="groupes"><div><div class="l-titre">Groupes</div><div class="l-sous">3 groupes</div></div><span class="chev">›</span></div><div class="ligne" data-go="membres"><div><div class="l-titre">Membres</div><div class="l-sous">65 membres</div></div><span class="chev">›</span></div><div class="ligne" data-go="creneaux"><div><div class="l-titre">Créneaux</div><div class="l-sous">3 créneaux</div></div><span class="chev">›</span></div></div>
+<h3 class="section">Réglages</h3>
+<div class="carte "><div class="ligne" data-go="relance"><div><div class="l-titre">Relance</div><div class="l-sous">Activée · 30 min</div></div><span class="chev">›</span></div><div class="ligne" data-go="assiduite"><div><div class="l-titre">Alertes d'assiduité</div><div class="l-sous">Après 3 absences</div></div><span class="chev">›</span></div></div>
+<h3 class="section">Données</h3>
+<div class="carte "><div class="ligne" data-go="donnees"><div><div class="l-titre">Sauvegarde et restauration</div><div class="l-sous">Dernière : il y a 34 jours</div></div><span class="chev">›</span></div><div class="ligne" data-go="donnees"><div><div class="l-titre">Conservation</div><div class="l-sous">3 saisons</div></div><span class="chev">›</span></div><div class="ligne" data-go="tout-effacer"><div><div class="l-titre">Tout effacer</div></div><span class="chev">›</span></div></div>
+<h3 class="section">À propos</h3>
+<div class="carte "><div class="ligne" data-go="confidentialite"><div><div class="l-titre">Confidentialité</div></div><span class="chev">›</span></div><div class="ligne" data-go="confidentialite"><div><div class="l-titre">Conditions d'utilisation</div></div><span class="chev">›</span></div><div class="ligne" data-go="licences"><div><div class="l-titre">Licences</div></div><span class="chev">›</span></div></div></div></section>
+<section class="ecran" id="e-saisons" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="parametres">‹</button><h1>Saisons</h1></div>
+<div class="carte ">
+<div class="rang" data-go="saison-edition"><div><div class="l-titre">2026-2027</div><div class="l-sous mono">01/09/2026 – 31/07/2027</div></div><span class="badge">Active</span></div>
+<div class="rang"><div><div class="l-titre">2025-2026</div><div class="l-sous mono">01/09/2025 – 31/07/2026</div></div><button class="btn-mini">Activer</button></div>
+</div>
+<button class="btn-s" data-go="saison-edition">Nouvelle saison</button>
+<p class="note">Supprimer une saison : confirmation qui liste ce qui sera effacé (groupes, créneaux, séances, présences ; pas les membres).</p></div></section>
+<section class="ecran" id="e-groupe" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="groupes">‹</button><h1>Poussins mercredi</h1></div>
+<div class="l-sous sous-titre">Saison 2026-2027 · 22 membres inscrits · <a class="lien" data-go="groupe-edition">Renommer ou supprimer</a></div>
+<div class="carte "><div class="ligne" data-go="membre"><div><div class="l-titre">Rose André</div><div class="l-sous">Inscrit depuis le 03/09/2026</div></div><span class="chev">›</span></div><div class="ligne" data-go="membre"><div><div class="l-titre">Adam Bernard</div><div class="l-sous">Inscrit depuis le 03/09/2026</div></div><span class="chev">›</span></div><div class="ligne" data-go="membre"><div><div class="l-titre">Louise Bertrand</div><div class="l-sous">Inscrit depuis le 03/09/2026</div></div><span class="chev">›</span></div><div class="ligne" data-go="membre"><div><div class="l-titre">Zoé Blanc</div><div class="l-sous">Inscrit depuis le 03/09/2026</div></div><span class="chev">›</span></div><div class="ligne" data-go="membre"><div><div class="l-titre">Louis David</div><div class="l-sous">Inscrit depuis le 03/09/2026</div></div><span class="chev">›</span></div><div class="ligne" data-go="membre"><div><div class="l-titre">Emma Durand</div><div class="l-sous">Inscrit depuis le 03/09/2026</div></div><span class="chev">›</span></div></div>
+<div class="duo"><button class="btn-s tiers" data-go="groupe">Archiver</button><button class="btn-p deuxtiers" data-go="inscription">Ajouter des membres</button></div></div></section>
+<section class="ecran" id="e-groupes" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="parametres">‹</button><h1>Groupes</h1></div>
+<div class="l-sous sous-titre">Saison 2026-2027</div>
+<div class="carte "><div class="ligne" data-go="groupe"><div><div class="l-titre">Poussins mercredi</div><div class="l-sous">22 membres · mercredi 14:00</div></div><span class="chev">›</span></div><div class="ligne" data-go="groupe"><div><div class="l-titre">Benjamins lundi</div><div class="l-sous">18 membres · lundi 18:00</div></div><span class="chev">›</span></div><div class="ligne" data-go="groupe"><div><div class="l-titre">Adultes jeudi</div><div class="l-sous">25 membres · jeudi 20:00</div></div><span class="chev">›</span></div></div>
+<button class="btn-p" data-go="groupe-nouveau">Nouveau groupe</button>
+<div class="filtres"><span class="filtre">Voir les groupes archivés (1)</span></div></div></section>
+<section class="ecran" id="e-groupe-nouveau" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="groupes">‹</button><h1>Nouveau groupe</h1></div>
+<label>Nom du groupe</label><div class="champ actif">Poussins mercredi|</div>
+<p class="aide">Rattaché à la saison active : 2026-2027.</p>
+<button class="btn-p" data-go="groupe">Créer le groupe</button>
+<p class="note">Ensuite : ajouter ses membres, puis déclarer son créneau.</p></div></section>
+<section class="ecran" id="e-membres" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="parametres">‹</button><h1>Membres</h1></div>
+<input class="champ" placeholder="🔍 Rechercher un membre">
+<div class="filtres"><span class="filtre on">Tous les groupes</span><span class="filtre">Archivés (4)</span></div>
+<div class="carte "><div class="ligne" data-go="membre"><div><div class="l-titre">Rose André</div><div class="l-sous">Poussins mercredi</div></div><span class="chev">›</span></div><div class="ligne" data-go="membre"><div><div class="l-titre">Adam Bernard</div><div class="l-sous">Benjamins lundi</div></div><span class="chev">›</span></div><div class="ligne" data-go="membre"><div><div class="l-titre">Louise Bertrand</div><div class="l-sous">Poussins mercredi</div></div><span class="chev">›</span></div><div class="ligne" data-go="membre"><div><div class="l-titre">Zoé Blanc</div><div class="l-sous">Adultes jeudi</div></div><span class="chev">›</span></div><div class="ligne" data-go="membre"><div><div class="l-titre">Louis David</div><div class="l-sous">Poussins mercredi</div></div><span class="chev">›</span></div><div class="ligne" data-go="membre"><div><div class="l-titre">Emma Durand</div><div class="l-sous">Benjamins lundi</div></div><span class="chev">›</span></div><div class="ligne" data-go="membre"><div><div class="l-titre">Mila Fournier</div><div class="l-sous">Aucun groupe</div></div><span class="chev">›</span></div></div>
+<div class="duo"><button class="btn-s tiers" data-go="import">Importer (CSV)</button><button class="btn-p deuxtiers" data-go="membre-nouveau">Nouveau membre</button></div>
+<p class="note">« Importer (CSV) » : lot 2 (F-07).</p></div></section>
+<section class="ecran" id="e-creneaux" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="parametres">‹</button><h1>Créneaux</h1></div>
+<div class="carte "><div class="ligne" data-go="creneau-modif"><div><div class="l-titre">Mercredi 14:00 – 15:30</div><div class="l-sous">Poussins mercredi · Gymnase Jean-Moulin</div></div><span class="chev">›</span></div><div class="ligne" data-go="creneau"><div><div class="l-titre">Lundi 18:00 – 19:30</div><div class="l-sous">Benjamins lundi · Dojo municipal</div></div><span class="chev">›</span></div><div class="ligne" data-go="creneau"><div><div class="l-titre">Jeudi 20:00 – 21:30</div><div class="l-sous">Adultes jeudi · Dojo municipal</div></div><span class="chev">›</span></div></div>
+<div class="duo"><button class="btn-s tiers" data-go="creneau">Chaque semaine</button><button class="btn-p deuxtiers" data-go="creneau-ponctuel">Nouveau créneau</button></div>
+<div class="carte "><div class="ligne" data-go="creneau-ponctuel"><div><div class="l-titre">Stage de Noël</div><div class="l-sous">27, 28 et 29/12 · Poussins et Benjamins</div></div><span class="chev">›</span></div></div></div></section>
+<section class="ecran" id="e-membre" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="membres">‹</button><h1>Léo Garcia</h1></div>
+<label>Prénom</label><div class="champ">Léo</div>
+<label>Nom</label><div class="champ">Garcia</div>
+<label>Date de naissance <span class="facultatif">facultative</span></label><div class="champ mono">14/03/2017</div>
+<h3 class="section">Contacts d'urgence</h3>
+<div class="carte "><div class="contact" data-go="contact"><div><div class="l-titre">Sa mère</div><div class="l-sous mono">06 00 00 00 01</div></div><span class="chev">≡</span></div><div class="contact" data-go="contact"><div><div class="l-titre">Son père</div><div class="l-sous mono">06 00 00 00 02</div></div><span class="chev">≡</span></div></div>
+<button class="btn-s" data-go="contact">+ Ajouter un contact</button><p class="note">≡ : glisser pour changer l'ordre des contacts.</p>
+<h3 class="section">Groupes</h3>
+<div class="carte "><div class="rang"><div><div class="l-titre">Poussins mercredi</div><div class="l-sous">Depuis le 03/09/2026</div></div><button class="btn-mini" data-go="retrait">Retirer</button></div></div><button class="btn-s" data-go="inscription">+ Ajouter à un groupe</button>
+<div class="duo"><button class="btn-s tiers" data-go="membre">Archiver</button><button class="btn-s tiers danger" data-go="suppression">Supprimer</button></div></div></section>
+<section class="ecran" id="e-suppression" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="membre">‹</button><h1>Supprimer Léo Garcia ?</h1></div>
+<div class="carte bandeau"><p>Seront effacés <b>définitivement</b> :</p><ul><li>sa fiche et sa date de naissance ;</li><li>ses 2 contacts d'urgence ;</li><li>ses <span class="mono">41</span> présences.</li></ul><p class="l-sous">Pour le retirer des listes sans rien effacer, utilisez plutôt « Archiver ».</p></div>
+<div class="duo"><button class="btn-s tiers" data-go="membre">Garder</button><button class="btn-p deuxtiers fond-marge" data-go="groupe">Supprimer définitivement</button></div></div></section>
+<section class="ecran" id="e-creneau" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="creneaux">‹</button><h1>Nouveau créneau</h1></div>
+<label>Jour</label><div class="jours"><span class="jour ">L</span><span class="jour ">M</span><span class="jour on">Me</span><span class="jour ">J</span><span class="jour ">V</span><span class="jour ">S</span><span class="jour ">D</span></div>
+<div class="deux"><div><label>Début</label><div class="champ mono">14:00</div></div><div><label>Durée</label><div class="champ mono">1 h 30</div></div></div>
+<label>Groupe</label><div class="champ">Poussins mercredi ▾</div>
+<label>Lieu <span class="facultatif">facultatif</span></label><div class="champ">Gymnase Jean-Moulin</div>
+<label>Nom <span class="facultatif">facultatif</span></label><div class="champ vide">Par exemple « Technique »</div>
+<button class="btn-p" data-go="creneaux">Enregistrer le créneau</button>
+<p class="note">Lot 2 : créneaux ponctuels (F-10) et plusieurs groupes (F-11) s'ajouteront à ce formulaire.</p></div></section>
+<section class="ecran" id="e-donnees" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="parametres">‹</button><h1>Sauvegarde</h1></div>
+<div class="carte bandeau"><div class="l-titre">Ce fichier n'est pas protégé</div><p>Il contient les noms, dates de naissance et contacts d'urgence de vos membres, et toutes leurs présences, <b>en clair</b>. Toute personne qui l'obtient peut les lire. Gardez-le en lieu sûr : sa garde vous revient.</p></div>
+<button class="btn-p" data-go="donnees">Exporter une sauvegarde</button>
+<p class="l-sous">Dernière sauvegarde : il y a 34 jours.</p>
+<h3 class="section">Restaurer</h3>
+<div class="carte "><p>Remplace <b>toutes</b> les données de l'appareil par celles du fichier. Le fichier est vérifié avant tout changement.</p><button class="btn-s" data-go="restauration">Choisir un fichier…</button></div>
+<h3 class="section">Conservation</h3>
+<div class="carte "><div class="rang"><span>Garder les</span><span class="champ mini mono">3 ▾</span><span>dernières saisons</span></div><p class="l-sous">1 saison dépasse cette durée : 2023-2024.</p><button class="btn-s" data-go="purge">Purger 2023-2024…</button></div>
+<h3 class="section">Tout effacer</h3>
+<div class="carte "><p class="l-sous">Efface toutes les données de cet appareil. Double confirmation.</p><button class="btn-s danger" data-go="tout-effacer">Tout effacer…</button></div></div></section>
+<section class="ecran" id="e-illisible" hidden><div class="colonne">
+<div class="entete"><h1>Vos données ne peuvent pas être ouvertes</h1></div>
+<div class="carte "><p>Le fichier de données de l'appli est abîmé. Rien n'a été effacé pour l'instant.</p><p>Vous pouvez restaurer votre dernière sauvegarde, ou repartir de zéro.</p></div>
+<button class="btn-p" data-go="accueil">Restaurer une sauvegarde</button>
+<button class="btn-s" data-go="bienvenue">Repartir de zéro</button>
+<p class="note">Jamais de message technique ni de plantage.</p></div></section>
+<section class="ecran" id="e-accueil-brouillon" hidden><div class="colonne">
+<div class="entete"><h1>Mercredi 26 nov.</h1></div>
+<div class="carte bandeau"><div class="l-titre">Appel en cours</div><div class="l-sous">Poussins mercredi · commencé à 14:03 · 3 absents notés</div><div class="duo"><button class="btn-s tiers" data-go="abandon-brouillon">Abandonner</button><button class="btn-p deuxtiers" data-go="appel">Reprendre l'appel</button></div></div>
+<p class="note">S'affiche à la réouverture si un brouillon d'appel existe (fermeture forcée, redémarrage). L'appel s'ouvre aussi directement sur le brouillon depuis « Nouvel appel ».</p></div></section>
+<section class="ecran" id="e-abandon-brouillon" hidden><div class="colonne"><div class="entete"><button class="retour" data-go="accueil-brouillon">‹</button><h1>Abandonner l'appel en cours ?</h1></div><div class="carte bandeau"><p>Les statuts déjà notés pour <b>Poussins mercredi</b> seront perdus. Aucune séance ne sera enregistrée.</p></div><div class="duo"><button class="btn-s tiers" data-go="accueil-brouillon">Revenir</button><button class="btn-p deuxtiers fond-marge" data-go="accueil">Abandonner</button></div></div></section>
+<section class="ecran" id="e-invitation-sauvegarde" hidden><div class="colonne">
+<div class="entete"><h1>Premier appel enregistré</h1></div>
+<div class="carte "><div class="l-titre">Pensez à sauvegarder</div><p>Vos données ne vivent que sur cet appareil. Si vous le perdez ou le changez, seule une sauvegarde permet de les retrouver.</p></div>
+<button class="btn-p" data-go="donnees">Sauvegarder maintenant</button>
+<button class="btn-s" data-go="historique">Plus tard</button>
+<p class="note">Une seule fois, après le premier appel enregistré.</p></div></section>
+<section class="ecran" id="e-saison-edition" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="saisons">‹</button><h1>Saison</h1></div>
+<label>Nom</label><div class="champ">2026-2027</div>
+<div class="deux"><div><label>Début</label><div class="champ mono">01/09/2026</div></div><div><label>Fin</label><div class="champ mono">31/07/2027</div></div></div>
+<button class="btn-p" data-go="saisons">Enregistrer</button>
+<button class="btn-s danger" data-go="suppression-saison">Supprimer la saison</button></div></section>
+<section class="ecran" id="e-suppression-saison" hidden><div class="colonne"><div class="entete"><button class="retour" data-go="saison-edition">‹</button><h1>Supprimer 2025-2026 ?</h1></div><div class="carte bandeau"><p>Seront effacés <b>définitivement</b> : ses <span class="mono">3</span> groupes, <span class="mono">3</span> créneaux, <span class="mono">96</span> séances et toutes leurs présences.</p><p class="l-sous">Les membres sont conservés.</p></div><div class="duo"><button class="btn-s tiers" data-go="saison-edition">Garder</button><button class="btn-p deuxtiers fond-marge" data-go="saisons">Supprimer définitivement</button></div></div></section>
+<section class="ecran" id="e-groupe-edition" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="groupe">‹</button><h1>Modifier le groupe</h1></div>
+<label>Nom du groupe</label><div class="champ">Poussins mercredi</div>
+<button class="btn-p" data-go="groupe">Enregistrer</button>
+<button class="btn-s danger" data-go="suppression-groupe">Supprimer le groupe</button></div></section>
+<section class="ecran" id="e-suppression-groupe" hidden><div class="colonne"><div class="entete"><button class="retour" data-go="groupe-edition">‹</button><h1>Supprimer Poussins mercredi ?</h1></div><div class="carte bandeau"><p>Seront effacés <b>définitivement</b> : ses inscriptions, son créneau, ses <span class="mono">31</span> séances et leurs présences.</p><p class="l-sous">Les membres sont conservés. Pour le retirer des écrans sans rien effacer, utilisez plutôt « Archiver ».</p></div><div class="duo"><button class="btn-s tiers" data-go="groupe-edition">Garder</button><button class="btn-p deuxtiers fond-marge" data-go="groupes">Supprimer définitivement</button></div></div></section>
+<section class="ecran" id="e-membre-nouveau" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="membres">‹</button><h1>Nouveau membre</h1></div>
+<label>Prénom</label><div class="champ">Yanis</div>
+<label>Nom</label><div class="champ">Colin</div>
+<label>Date de naissance <span class="facultatif">facultative</span></label><div class="champ vide">JJ/MM/AAAA</div>
+<label>Groupe <span class="facultatif">facultatif</span></label><div class="champ">Poussins mercredi ▾</div>
+<button class="btn-p" data-go="membre">Créer le membre</button>
+<p class="note">Les contacts d'urgence s'ajoutent ensuite depuis sa fiche.</p></div></section>
+<section class="ecran" id="e-inscription" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="groupe">‹</button><h1>Ajouter à Poussins mercredi</h1></div>
+<input class="champ" placeholder="🔍 Rechercher parmi les membres">
+<div class="carte "><div class="rang"><span class="nom">Noah Girard</span><span class="case on">✓</span></div><div class="rang"><span class="nom">Jade Laurent</span><span class="case on">✓</span></div><div class="rang"><span class="nom">Jules Lefebvre</span><span class="case "></span></div><div class="rang"><span class="nom">Gabriel Leroy</span><span class="case "></span></div><div class="rang"><span class="nom">Sacha Mercier</span><span class="case "></span></div></div>
+<label>À partir du</label><div class="champ mono">26/11/2026</div>
+<div class="duo"><button class="btn-s tiers" data-go="membre-nouveau">Nouveau membre</button><button class="btn-p deuxtiers" data-go="groupe">Inscrire 2 membres</button></div></div></section>
+<section class="ecran" id="e-retrait" hidden><div class="colonne"><div class="entete"><button class="retour" data-go="membre">‹</button><h1>Retirer Léo Garcia de Poussins mercredi ?</h1></div><div class="carte bandeau"><p>Il n'apparaîtra plus dans l'appel de ce groupe à partir du :</p><div class="champ mono">26/11/2026</div><p class="l-sous">Ses présences passées sont conservées.</p></div><div class="duo"><button class="btn-s tiers" data-go="membre">Annuler</button><button class="btn-p deuxtiers fond-marge" data-go="membre">Retirer du groupe</button></div></div></section>
+<section class="ecran" id="e-contact" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="membre">‹</button><h1>Contact d'urgence</h1></div>
+<label>Qui est-ce ?</label><div class="champ">Sa mère</div>
+<label>Téléphone</label><div class="champ mono">06 00 00 00 01</div>
+<button class="btn-p" data-go="membre">Enregistrer</button>
+<button class="btn-s danger" data-go="membre">Supprimer ce contact</button></div></section>
+<section class="ecran" id="e-creneau-modif" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="creneaux">‹</button><h1>Mercredi 14:00</h1></div>
+<label>Jour</label><div class="jours"><span class="jour ">L</span><span class="jour ">M</span><span class="jour on">Me</span><span class="jour ">J</span><span class="jour ">V</span><span class="jour ">S</span><span class="jour ">D</span></div>
+<div class="deux"><div><label>Début</label><div class="champ mono">14:00</div></div><div><label>Durée</label><div class="champ mono">1 h 30</div></div></div>
+<label>Groupe</label><div class="champ">Poussins mercredi ▾</div>
+<button class="btn-p" data-go="creneaux">Enregistrer</button>
+<button class="btn-s danger" data-go="creneaux">Supprimer le créneau</button>
+<p class="note">Modifier ou supprimer un créneau ne touche à aucune séance déjà enregistrée (EX-07).</p></div></section>
+<section class="ecran" id="e-suppression-seance" hidden><div class="colonne"><div class="entete"><button class="retour" data-go="seance">‹</button><h1>Supprimer cette séance ?</h1></div><div class="carte bandeau"><p>L'appel de <b>Poussins mercredi</b> du <span class="mono">19/11/2026</span> et ses <span class="mono">22</span> présences seront effacés définitivement.</p><p class="l-sous">La date réapparaîtra comme appel manquant.</p></div><div class="duo"><button class="btn-s tiers" data-go="seance">Garder</button><button class="btn-p deuxtiers fond-marge" data-go="historique">Supprimer définitivement</button></div></div></section>
+<section class="ecran" id="e-restauration" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="donnees">‹</button><h1>Restaurer ?</h1></div>
+<div class="carte bandeau"><div class="l-titre">Sauvegarde du 22/10/2026</div><div class="l-sous mono">65 membres · 3 groupes · 112 séances</div><p>Toutes les données actuelles de l'appareil seront <b>remplacées</b> par celles de ce fichier.</p></div>
+<div class="duo"><button class="btn-s tiers" data-go="donnees">Annuler</button><button class="btn-p deuxtiers fond-marge" data-go="accueil">Remplacer mes données</button></div>
+<h3 class="section">Si le fichier est invalide</h3>
+<div class="carte "><div class="l-titre">Ce fichier n'est pas une sauvegarde Ki&La</div><p class="l-sous">Rien n'a été modifié. Choisissez un autre fichier.</p></div></div></section>
+<section class="ecran" id="e-purge" hidden><div class="colonne"><div class="entete"><button class="retour" data-go="donnees">‹</button><h1>Purger 2023-2024 ?</h1></div><div class="carte bandeau"><p>Seront effacés <b>définitivement</b> : la saison 2023-2024, ses groupes, créneaux, séances et présences.</p><p class="l-sous">Les membres qui ne figurent plus dans aucune saison conservée sont aussi effacés.</p></div><div class="duo"><button class="btn-s tiers" data-go="donnees">Garder</button><button class="btn-p deuxtiers fond-marge" data-go="donnees">Purger</button></div></div></section>
+<section class="ecran" id="e-tout-effacer" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="donnees">‹</button><h1>Tout effacer ?</h1></div>
+<div class="carte bandeau"><p>Toutes les données de cet appareil seront effacées <b>définitivement</b> : membres, contacts d'urgence, groupes, créneaux, séances, présences et réglages.</p><p class="l-sous">Sans sauvegarde, elles ne pourront pas être retrouvées.</p></div>
+<label>Pour confirmer, tapez EFFACER</label><div class="champ mono vide">EFFACER</div>
+<div class="duo"><button class="btn-s tiers" data-go="donnees">Garder</button><button class="btn-p deuxtiers fond-marge" data-go="bienvenue">Tout effacer</button></div>
+<p class="note">Double confirmation : le bouton, puis le mot à taper.</p></div></section>
+<section class="ecran" id="e-confidentialite" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="parametres">‹</button><h1>Confidentialité</h1></div>
+<div class="l-sous sous-titre">Version du 26/11/2026 · aussi en ligne</div>
+<div class="carte "><h3 class="section">En bref</h3><p><b>Aucune donnée collectée.</b> Tout ce que vous saisissez reste sur cet appareil. L'appli n'envoie rien sur Internet.</p><h3 class="section">Vos membres</h3><p>Texte définitif au document de conformité.</p></div>
+<p class="note">Même gabarit pour les conditions d'utilisation : texte long, titres de section, aucune action.</p></div></section>
+<section class="ecran" id="e-licences" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="parametres">‹</button><h1>Licences</h1></div>
+<div class="carte "><div class="ligne" ><div><div class="l-titre">IBM Plex Sans, IBM Plex Mono</div><div class="l-sous">SIL Open Font License 1.1</div></div><span class="chev">›</span></div><div class="ligne" ><div><div class="l-titre">React Native</div><div class="l-sous">MIT</div></div><span class="chev">›</span></div><div class="ligne" ><div><div class="l-titre">Expo</div><div class="l-sous">MIT</div></div><span class="chev">›</span></div><div class="ligne" ><div><div class="l-titre">…</div><div class="l-sous">Liste générée depuis les dépendances réellement embarquées</div></div><span class="chev">›</span></div></div>
+<p class="note">Un appui ouvre le texte complet de la licence. Liste indicative : elle sera générée au build.</p></div></section>
+<section class="ecran" id="e-etats-vides" hidden><div class="colonne">
+<div class="entete"><h1>États vides</h1></div>
+<p class="note">Catalogue : chaque carte remplace le contenu de la liste concernée quand elle est vide.</p>
+<h3 class="section">Groupes</h3><div class="carte "><p>Aucun groupe dans cette saison.</p><button class="btn-p" data-go="groupe-nouveau">Créer un groupe</button></div>
+<h3 class="section">Groupe sans membre</h3><div class="carte "><p>Personne n'est encore inscrit à ce groupe.</p><button class="btn-p" data-go="inscription">Ajouter des membres</button></div>
+<h3 class="section">Membres</h3><div class="carte "><p>Aucun membre pour l'instant.</p><button class="btn-p" data-go="membre-nouveau">Nouveau membre</button></div>
+<h3 class="section">Créneaux</h3><div class="carte "><p>Aucun créneau. Déclarez quand vos groupes se réunissent pour que l'appli propose l'appel au bon moment.</p><button class="btn-p" data-go="creneau">Nouveau créneau</button></div>
+<h3 class="section">Historique</h3><div class="carte "><p>Aucun appel enregistré. Votre premier appel apparaîtra ici.</p><button class="btn-p" data-go="appel">Faire l'appel</button></div>
+<h3 class="section">Recherche sans résultat</h3><div class="carte "><p>Aucun membre ne correspond à « xyz ».</p><p class="l-sous">Vérifiez l'orthographe, ou cherchez par le prénom.</p></div>
+<h3 class="section">Appel d'un groupe vide</h3><div class="carte "><p>Ce groupe n'a aucun membre à appeler.</p><button class="btn-s" data-go="inscription">Ajouter des membres</button></div>
+<h3 class="section">Membre sans contact d'urgence</h3><div class="carte "><p>Aucun contact d'urgence pour Léo Garcia.</p><button class="btn-s" data-go="contact">+ Ajouter un contact</button></div></div></section>
+<section class="ecran" id="e-accueil-complet" hidden><div class="colonne">
+<div class="entete"><h1>Mercredi 26 nov.</h1></div>
+<div class="recherche" data-go="urgence">🔍 Contact d'urgence : rechercher un membre</div>
+<div class="frise"><div class="pastel f-manquant" data-go="appel"><div class="mono">Lun 24</div><div class="l-titre">Benjamins</div><div class="etat">Appel manquant</div></div><div class="pastel f-fait" data-go="seance"><div class="mono">Mer 19</div><div class="l-titre">Poussins</div><div class="etat">Fait</div></div><div class="pastel f-fait" data-go="seance"><div class="mono">Jeu 20</div><div class="l-titre">Adultes</div><div class="etat">Fait</div></div><div class="pastel f-maintenant" data-go="appel"><div class="mono">Mer 26</div><div class="l-titre">Poussins</div><div class="etat">Maintenant</div></div><div class="pastel f-preparee" data-go="preparation"><div class="mono">Jeu 27</div><div class="l-titre">Adultes</div><div class="etat">Préparée</div></div><div class="pastel f-avenir" data-go="preparation"><div class="mono">Lun 01</div><div class="l-titre">Benjamins</div><div class="etat">À venir</div></div><div class="pastel f-annulee" data-go="seance-annulee"><div class="mono">Mer 03</div><div class="l-titre">Poussins</div><div class="etat">Annulée</div></div></div>
+<p class="note">Frise : 28 jours en arrière, 7 en avant, défilement horizontal ; centrée sur aujourd'hui.</p>
+<h3 class="section">Maintenant</h3>
+<div class="carte "><div class="l-titre gros">Poussins mercredi</div><div class="l-sous">14:00 – 15:30 · Gymnase Jean-Moulin · 22 membres</div><div class="duo"><button class="btn-s tiers" data-go="annuler">Annuler</button><button class="btn-p deuxtiers" data-go="appel">Faire l'appel</button></div></div>
+<h3 class="section">Alertes d'assiduité</h3>
+<div class="carte "><div class="rang" data-go="alerte"><div><div class="l-titre">Hugo Moreau</div><div class="l-sous">Poussins mercredi</div></div><span class="rouge mono">4 absences</span></div><div class="rang" data-go="alerte"><div><div class="l-titre">Rose André</div><div class="l-sous">Benjamins lundi</div></div><span class="rouge mono">3 absences</span></div></div></div></section>
+<section class="ecran" id="e-alerte" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="accueil-complet">‹</button><h1>Hugo Moreau</h1></div>
+<div class="l-sous sous-titre">Poussins mercredi · 4 absences non excusées de suite</div>
+<div class="carte "><div class="l-sous">Dernières séances</div><div class="cases"><span class="cas s-absent">✕</span><span class="cas s-absent">✕</span><span class="cas s-absent">✕</span><span class="cas s-absent">✕</span><span class="cas s-present">✓</span><span class="cas s-excused">≈</span></div><p class="l-sous">De la plus récente à la plus ancienne.</p></div>
+<button class="btn-s" data-go="urgence">Voir ses contacts d'urgence</button>
+<button class="btn-p" data-go="accueil-complet">Marquer comme traitée</button>
+<p class="note">L'alerte réapparaît si la série s'allonge (EX-26).</p></div></section>
+<section class="ecran" id="e-stats" hidden><div class="colonne">
+<div class="entete"><h1>Statistiques</h1></div>
+<div class="filtres"><span class="filtre on">Saison</span><span class="filtre">Ce mois</span><span class="filtre" data-go="periode">Dates…</span></div>
+<div class="deux"><div class="carte "><div class="l-sous">Taux de présence</div><div class="chiffre mono">87 %</div></div><div class="carte "><div class="l-sous">Séances</div><div class="chiffre mono">112</div></div></div>
+<h3 class="section">Par groupe</h3>
+<div class="carte "><div data-go="stats-groupe" class="sg"><div class="rang"><span class="l-titre">Poussins mercredi</span><span class="mono taux">91 %</span></div><div class="barre"><i class="s-present" style="width:84%"></i><i class="s-late" style="width:7%"></i><i class="s-excused" style="width:4%"></i><i class="s-absent" style="width:5%"></i></div></div><div data-go="stats-groupe" class="sg"><div class="rang"><span class="l-titre">Benjamins lundi</span><span class="mono taux">82 %</span></div><div class="barre"><i class="s-present" style="width:74%"></i><i class="s-late" style="width:8%"></i><i class="s-excused" style="width:5%"></i><i class="s-absent" style="width:13%"></i></div></div><div data-go="stats-groupe" class="sg"><div class="rang"><span class="l-titre">Adultes jeudi</span><span class="mono taux">—</span></div><p class="l-sous">Aucune séance sur la période.</p></div></div>
+<div class="legende"><span><i class="carre s-present"></i>Présent</span><span><i class="carre s-late"></i>Retard</span><span><i class="carre s-excused"></i>Excusé</span><span><i class="carre s-absent"></i>Absent</span></div>
+<div class="duo"><button class="btn-s tiers" data-go="export-csv">Exporter (CSV)</button><button class="btn-s deuxtiers" data-go="rapport">Rapport PDF</button></div>
+<p class="note">« — » et non 0 % sans séance (RM-01).</p></div></section>
+<section class="ecran" id="e-periode" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="stats">‹</button><h1>Période</h1></div>
+<div class="deux"><div><label>Du</label><div class="champ mono">01/09/2026</div></div><div><label>Au</label><div class="champ mono">26/11/2026</div></div></div>
+<button class="btn-p" data-go="stats">Appliquer</button></div></section>
+<section class="ecran" id="e-stats-groupe" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="stats">‹</button><h1>Poussins mercredi</h1></div>
+<div class="l-sous sous-titre">Saison 2026-2027 · 12 séances</div>
+<h3 class="section">Podium</h3>
+<div class="carte "><div class="podium"><div class="marche m2"><div class="mono">2</div>Emma D.<br><span class="mono">96 %</span></div><div class="marche m1"><div class="mono">1</div>Léa M. · Zoé B.<br><span class="mono">100 %</span></div><div class="marche m3"><div class="mono">3</div>Jules L.<br><span class="mono">92 %</span></div></div><p class="l-sous">Ex æquo au même rang.</p></div>
+<h3 class="section">Par membre</h3>
+<div class="carte "><div class="rang" data-go="stats-membre"><span>Zoé Blanc</span><span class="mono taux">100 %</span></div><div class="rang" data-go="stats-membre"><span>Emma Durand</span><span class="mono taux">96 %</span></div><div class="rang" data-go="stats-membre"><span>Jules Lefebvre</span><span class="mono taux">92 %</span></div><div class="rang" data-go="stats-membre"><span>Léa Michel</span><span class="mono taux">100 %</span></div><div class="rang" data-go="stats-membre"><span>Hugo Moreau</span><span class="mono taux">58 %</span></div></div>
+<p class="l-sous">Triés par nom ; 22 membres.</p></div></section>
+<section class="ecran" id="e-stats-membre" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="stats-groupe">‹</button><h1>Hugo Moreau</h1></div>
+<div class="l-sous sous-titre">Poussins mercredi · saison 2026-2027</div>
+<div class="carte "><div class="chiffre mono">58 %</div><div class="barre"><i class="s-present" style="width:50%"></i><i class="s-late" style="width:8%"></i><i class="s-excused" style="width:8%"></i><i class="s-absent" style="width:34%"></i></div><p class="l-sous mono">6 présent · 1 retard · 1 excusé · 4 absent</p></div>
+<h3 class="section">Séance par séance</h3>
+<div class="carte "><div class="cases"><span class="cas s-present">✓</span><span class="cas s-present">✓</span><span class="cas s-late">◷</span><span class="cas s-present">✓</span><span class="cas s-excused">≈</span><span class="cas s-present">✓</span><span class="cas s-present">✓</span><span class="cas s-present">✓</span><span class="cas s-absent">✕</span><span class="cas s-absent">✕</span><span class="cas s-absent">✕</span><span class="cas s-absent">✕</span><span class="cas vide"></span></div><p class="l-sous">Case vide : séance hors inscription.</p></div></div></section>
+<section class="ecran" id="e-relance" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="parametres">‹</button><h1>Relance</h1></div>
+<div class="carte "><div class="rang"><div><div class="l-titre">Me relancer si l'appel n'est pas fait</div><div class="l-sous">Notification sur cet appareil, jamais envoyée ailleurs</div></div><span class="interrupteur on"></span></div><div class="rang"><span>Après</span><span class="champ mini mono">30 min ▾</span><span>le début du créneau</span></div></div>
+<div class="carte bandeau"><div class="l-titre">Notifications refusées dans les réglages du téléphone</div><p class="l-sous">La relance est activée ici mais ne peut pas s'afficher.</p><button class="btn-s" data-go="relance">Ouvrir les réglages du téléphone</button></div>
+<p class="note">L'interrupteur montre l'état effectif : préférence et permission du système (EX-29).</p></div></section>
+<section class="ecran" id="e-permission" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="relance">‹</button><h1>Autoriser les notifications ?</h1></div>
+<div class="carte "><p>Pour vous relancer quand un appel n'est pas fait, l'appli doit afficher des notifications.</p><p class="l-sous">Elles nomment le groupe, jamais un membre. Rien n'est envoyé hors de l'appareil.</p></div>
+<button class="btn-p" data-go="relance">Continuer</button><button class="btn-s" data-go="relance">Pas maintenant</button>
+<p class="note">Affiché à l'activation de la relance, juste avant la demande du système.</p></div></section>
+<section class="ecran" id="e-notification" hidden><div class="colonne">
+<div class="verrou"><div class="mono heure">14:30</div><div class="carte "><div class="l-sous">Ki&La · maintenant</div><div class="l-titre">Appel non fait : Poussins mercredi</div><div class="l-sous">Le créneau a commencé à 14:00.</div></div></div>
+<p class="note">Le groupe seul, jamais un nom de membre. Un appui ouvre l'appel.</p></div></section>
+<section class="ecran" id="e-assiduite" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="parametres">‹</button><h1>Alertes d'assiduité</h1></div>
+<div class="carte "><div class="rang"><span>Alerter après</span><span class="champ mini mono">3 ▾</span><span>absences de suite</span></div><p class="l-sous">Seules les absences non excusées comptent.</p></div></div></section>
+<section class="ecran" id="e-import" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="membres">‹</button><h1>Importer des membres</h1></div>
+<div class="carte "><p>Préparez un tableau (Excel, LibreOffice…) avec une ligne par membre, enregistré au format <b>CSV</b>.</p><table class="exemple mono"><tr><th>nom</th><th>prenom</th><th>date_naissance</th><th>telephone</th><th>groupe</th></tr><tr><td>Colin</td><td>Yanis</td><td>02/05/2016</td><td>0600000003</td><td>Poussins mercredi</td></tr></table><p class="l-sous">Seuls nom et prénom sont obligatoires. Les autres colonnes sont ignorées.</p></div>
+<button class="btn-p" data-go="import-apercu">Choisir le fichier…</button></div></section>
+<section class="ecran" id="e-import-apercu" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="import">‹</button><h1>Aperçu</h1></div>
+<div class="carte compteur mono"><span>24 lignes</span><span>21 à importer</span><span class="rouge">1 invalide</span><span>2 doublons</span></div>
+<h3 class="section">Doublons</h3>
+<div class="carte "><div class="rang"><div><div class="l-titre">Léo Garcia</div><div class="l-sous mono">14/03/2017 · déjà dans l'appli</div></div><span class="filtre on">Ignorer</span></div><div class="rang"><div><div class="l-titre">Zoé Blanc</div><div class="l-sous mono">déjà dans l'appli</div></div><span class="filtre on">Ignorer</span></div></div>
+<h3 class="section">Ligne invalide</h3>
+<div class="carte "><div class="rang"><div><div class="l-titre">Ligne 17</div><div class="l-sous">Prénom manquant</div></div></div></div>
+<button class="btn-p" data-go="import-resultat">Importer 21 membres</button>
+<p class="note">Rien n'est écrit avant ce bouton.</p></div></section>
+<section class="ecran" id="e-import-resultat" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="membres">‹</button><h1>21 membres importés</h1></div>
+<div class="carte "><p>21 membres ajoutés, dont 18 inscrits à leur groupe. 2 doublons ignorés, 1 ligne invalide.</p></div>
+<button class="btn-p" data-go="membres">Voir les membres</button></div></section>
+<section class="ecran" id="e-import-erreur" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="import">‹</button><h1>Fichier non reconnu</h1></div>
+<div class="carte bandeau"><p>Ce fichier ne contient pas de colonnes « nom » et « prenom ». Rien n'a été importé.</p></div>
+<button class="btn-p" data-go="import">Choisir un autre fichier</button></div></section>
+<section class="ecran" id="e-export-csv" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="stats">‹</button><h1>Exporter les présences</h1></div>
+<label>Groupe</label><div class="champ">Tous les groupes ▾</div>
+<div class="deux"><div><label>Du</label><div class="champ mono">01/09/2026</div></div><div><label>Au</label><div class="champ mono">26/11/2026</div></div></div>
+<div class="carte bandeau"><p>Le fichier contient les noms des membres et leurs présences, <b>en clair</b>. Partagez-le seulement avec qui doit le recevoir.</p></div>
+<button class="btn-p" data-go="export-csv">Exporter (2 418 lignes)</button></div></section>
+<section class="ecran" id="e-rapport" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="stats">‹</button><h1>Rapport PDF</h1></div>
+<label>Période</label><div class="champ">Saison 2026-2027 ▾</div>
+<label>Groupes</label><div class="champ">Tous les groupes ▾</div>
+<div class="carte "><div class="feuille"><div class="l-titre">Ki&La · Rapport de présence</div><div class="l-sous mono">01/09/2026 – 26/11/2026</div><div class="barre"><i class="s-present" style="width:80%"></i><i class="s-late" style="width:7%"></i><i class="s-excused" style="width:5%"></i><i class="s-absent" style="width:8%"></i></div><div class="l-sous">Synthèse, puis une page par groupe…</div></div></div>
+<button class="btn-p" data-go="rapport">Créer et partager le PDF</button>
+<p class="note">Format A4. Contenu exact : question ouverte du PRD (→ ticket F-09).</p></div></section>
+<section class="ecran" id="e-creneau-ponctuel" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="creneaux">‹</button><h1>Nouveau créneau</h1></div>
+<div class="bascule"><span>Chaque semaine</span><span class="on">À des dates précises</span></div>
+<label>Dates</label><div class="filtres"><span class="filtre on mono">27/12</span><span class="filtre on mono">28/12</span><span class="filtre on mono">29/12</span><span class="filtre">+ date</span></div>
+<div class="deux"><div><label>Début</label><div class="champ mono">10:00</div></div><div><label>Durée</label><div class="champ mono">3 h</div></div></div>
+<label>Groupes</label><div class="filtres"><span class="filtre on">Poussins mercredi</span><span class="filtre on">Benjamins lundi</span><span class="filtre">Adultes jeudi</span></div>
+<label>Nom <span class="facultatif">facultatif</span></label><div class="champ">Stage de Noël</div>
+<button class="btn-p" data-go="creneaux">Enregistrer le créneau</button>
+<p class="note">Récurrent ou ponctuel : un seul formulaire ; plusieurs groupes possibles dans les deux cas. Un ponctuel réclame un appel pour chacune de ses dates passées (EX-33).</p></div></section>
+<section class="ecran" id="e-appel-multi" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="accueil-complet">‹</button><h1>Stage de Noël</h1></div>
+<div class="l-sous sous-titre">Sam. 27/12/2026 · 10:00 · 2 groupes</div>
+<h3 class="section">Poussins mercredi</h3>
+<div class="carte "><div class="rang"><span class="nom">Rose André</span><span class="pastille s-present">✓ Présent</span></div><div class="rang"><span class="nom">Adam Bernard</span><span class="pastille s-present">✓ Présent</span></div><div class="rang"><span class="nom">Louise Bertrand</span><span class="pastille s-present">✓ Présent</span></div></div>
+<h3 class="section">Benjamins lundi</h3>
+<div class="carte "><div class="rang"><span class="nom">Zoé Blanc</span><span class="pastille s-present">✓ Présent</span></div><div class="rang"><span class="nom">Louis David</span><span class="pastille s-absent">✕ Absent</span></div><div class="rang"><span class="nom">Emma Durand</span><span class="pastille s-present">✓ Présent</span></div></div>
+<button class="btn-p" data-go="historique">Enregistrer l'appel</button>
+<p class="note">Chaque présence compte pour le groupe du membre (RM-03).</p></div></section>
+<section class="ecran" id="e-preparation" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="accueil-complet">‹</button><h1>Adultes jeudi</h1></div>
+<div class="l-sous sous-titre">Jeu. 27/11/2026 · 20:00 · <b>préparation</b></div>
+<div class="carte "><p class="l-sous">La séance n'a pas commencé : notez les excusés à l'avance. Elle ne compte nulle part avant d'être enregistrée le jour venu.</p></div>
+<div class="carte "><div class="rang"><span class="nom">Rose André</span><span class="pastille s-preparedPresent">○ Attendu</span></div><div class="rang"><span class="nom">Adam Bernard</span><span class="pastille s-preparedPresent">○ Attendu</span></div><div class="rang"><span class="nom">Louise Bertrand</span><span class="pastille s-excused">≈ Excusé</span></div><div class="rang"><span class="nom">Zoé Blanc</span><span class="pastille s-preparedPresent">○ Attendu</span></div><div class="rang"><span class="nom">Louis David</span><span class="pastille s-preparedPresent">○ Attendu</span></div></div>
+<button class="btn-p" data-go="accueil-complet">Enregistrer la préparation</button>
+<p class="note">Deux statuts seulement : Attendu ↔ Excusé. La relance part quand même.</p></div></section>
+<section class="ecran" id="e-annuler" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="accueil-complet">‹</button><h1>Que s'est-il passé ?</h1></div>
+<div class="l-sous sous-titre">Poussins mercredi · mer. 26/11/2026 · 14:00</div>
+<button class="btn-s choix" data-go="accueil-complet">La séance a été annulée</button>
+<button class="btn-s choix" data-go="accueil-complet">Aucune séance prévue ce jour-là</button>
+<p class="l-sous">Vacances, salle fermée…</p>
+<button class="btn-p" data-go="accueil-complet">Garder la séance</button>
+<p class="note">Annulée et non planifiée : pas de relance, rien dans les statistiques, distinguées dans l'historique. Possible tant que la séance n'a pas commencé.</p></div></section>
+<section class="ecran" id="e-seance-annulee" hidden><div class="colonne">
+<div class="entete"><button class="retour" data-go="historique">‹</button><h1>Poussins mercredi</h1></div>
+<div class="l-sous sous-titre">Mer. 03/12/2026 · <span class="gris">Annulée</span></div>
+<div class="carte "><p>Cette séance est marquée annulée. Elle ne réclame pas d'appel et ne compte pas dans les statistiques.</p></div>
+<button class="btn-s" data-go="accueil-complet">Rétablir la séance</button>
+<p class="note">Une préparation déjà posée revient intacte.</p></div></section>
+<section class="ecran" id="e-vides-lot2" hidden><div class="colonne">
+<div class="entete"><h1>États vides</h1></div>
+<h3 class="section">Alertes d'assiduité</h3><div class="carte "><p>Aucune alerte : personne n'a manqué 3 séances de suite.</p></div>
+<h3 class="section">Statistiques</h3><div class="carte "><p>Pas encore de statistiques : elles apparaissent après le premier appel enregistré.</p><button class="btn-p" data-go="appel">Faire l'appel</button></div>
+<h3 class="section">Frise</h3><div class="carte "><p>Aucun créneau déclaré : la frise se remplira dès votre premier créneau.</p><button class="btn-p" data-go="creneau">Nouveau créneau</button></div>
+<h3 class="section">Export sur une période sans séance</h3><div class="carte "><p>Aucune présence sur cette période : rien à exporter.</p></div></div></section>
+<div class="onglets" id="onglets">
+<div class="onglet" data-tab="accueil" data-go="accueil"><span class="i">⌂</span>Accueil</div>
+<div class="onglet" data-tab="stats" data-go="stats"><span class="i">▥</span>Stats</div>
+<div class="onglet central" data-tab="appel" data-go="appel"><div class="rond">✓</div>Nouvel appel</div>
+<div class="onglet" data-tab="historique" data-go="historique"><span class="i">☰</span>Historique</div>
+<div class="onglet" data-tab="parametres" data-go="parametres"><span class="i">⚙</span>Paramètres</div>
+</div><div class="toast" id="toast"></div></div>
+<aside class="relecture"><h2 id="r-titre"></h2><div class="ex" id="r-ex"></div>
+<div class="verdicts" id="verdicts"><button data-v="ok">✓ Validé</button><button data-v="revoir">À revoir</button><button data-v="refuse">Refusé</button></div>
+<label for="r-com">Commentaire</label><textarea id="r-com" placeholder="Ce qui ne va pas, ce qui manque…"></textarea></aside>
+<script>
+const MODIFIES=["parametres","creneaux","accueil"];
+const ECRANS=[{"id":"bienvenue","lot":1,"titre":"Bienvenue (mise en route)","exigences":"P1"},{"id":"accueil","lot":1,"titre":"Accueil","exigences":"EX-09, EX-17, EX-21, EX-06"},{"id":"urgence","lot":1,"titre":"Recherche d'un contact d'urgence","exigences":"EX-06, EX-05"},{"id":"appel","lot":1,"titre":"Appel","exigences":"EX-09 à EX-15"},{"id":"appel-libre","lot":1,"titre":"Appel sans créneau","exigences":"EX-39"},{"id":"ajout","lot":1,"titre":"Ajout d'un membre pendant l'appel","exigences":"EX-12, EX-03"},{"id":"historique","lot":1,"titre":"Historique","exigences":"EX-16, EX-17"},{"id":"seance","lot":1,"titre":"Détail d'une séance","exigences":"EX-18, EX-13"},{"id":"parametres","lot":1,"titre":"Paramètres","exigences":"EX-01 à EX-07, EX-19 à EX-24"},{"id":"saisons","lot":1,"titre":"Saisons","exigences":"EX-01"},{"id":"groupe","lot":1,"titre":"Groupe et ses membres","exigences":"EX-02, EX-04"},{"id":"groupes","lot":1,"titre":"Groupes","exigences":"EX-02"},{"id":"groupe-nouveau","lot":1,"titre":"Création d'un groupe","exigences":"EX-02"},{"id":"membres","lot":1,"titre":"Membres","exigences":"EX-03"},{"id":"creneaux","lot":1,"titre":"Créneaux","exigences":"EX-07"},{"id":"membre","lot":1,"titre":"Fiche membre","exigences":"EX-03, EX-04, EX-05"},{"id":"suppression","lot":1,"titre":"Suppression d'un membre","exigences":"EX-03, ABS-05"},{"id":"creneau","lot":1,"titre":"Créneau récurrent","exigences":"EX-07"},{"id":"donnees","lot":1,"titre":"Sauvegarde et données","exigences":"EX-19, EX-20, EX-23, EX-24, ABS-06"},{"id":"illisible","lot":1,"titre":"Base illisible au démarrage","exigences":"EX-22"},{"id":"accueil-brouillon","lot":1,"titre":"Accueil avec un appel interrompu","exigences":"EX-14"},{"id":"abandon-brouillon","lot":1,"titre":"Abandon d'un brouillon d'appel","exigences":"EX-14"},{"id":"invitation-sauvegarde","lot":1,"titre":"Invitation à sauvegarder (premier appel)","exigences":"EX-21"},{"id":"saison-edition","lot":1,"titre":"Création ou modification d'une saison","exigences":"EX-01"},{"id":"suppression-saison","lot":1,"titre":"Suppression d'une saison","exigences":"EX-01, ABS-05"},{"id":"groupe-edition","lot":1,"titre":"Renommer ou supprimer un groupe","exigences":"EX-02"},{"id":"suppression-groupe","lot":1,"titre":"Suppression d'un groupe","exigences":"EX-02, ABS-05"},{"id":"membre-nouveau","lot":1,"titre":"Création d'un membre","exigences":"EX-03, EX-04"},{"id":"inscription","lot":1,"titre":"Inscription de membres à un groupe","exigences":"EX-04"},{"id":"retrait","lot":1,"titre":"Retrait d'un membre d'un groupe","exigences":"EX-04"},{"id":"contact","lot":1,"titre":"Contact d'urgence","exigences":"EX-05"},{"id":"creneau-modif","lot":1,"titre":"Modification d'un créneau","exigences":"EX-07"},{"id":"suppression-seance","lot":1,"titre":"Suppression d'une séance","exigences":"EX-18"},{"id":"restauration","lot":1,"titre":"Restauration d'une sauvegarde","exigences":"EX-20"},{"id":"purge","lot":1,"titre":"Purge des anciennes saisons","exigences":"EX-24, ABS-05"},{"id":"tout-effacer","lot":1,"titre":"Tout effacer (double confirmation)","exigences":"EX-23, ABS-05"},{"id":"confidentialite","lot":1,"titre":"Page légale (confidentialité, conditions)","exigences":"EX-40, EX-41"},{"id":"licences","lot":1,"titre":"Licences tierces","exigences":"EX-42"},{"id":"etats-vides","lot":1,"titre":"États vides (une carte par liste)","exigences":"P1, NF-06"},{"id":"accueil-complet","lot":2,"titre":"Accueil complet (frise et alertes)","exigences":"EX-35, EX-25, EX-09, EX-17"},{"id":"alerte","lot":2,"titre":"Alerte d'assiduité","exigences":"EX-25, EX-26"},{"id":"stats","lot":2,"titre":"Statistiques","exigences":"EX-27, RM-01"},{"id":"periode","lot":2,"titre":"Choix d'une période","exigences":"EX-27"},{"id":"stats-groupe","lot":2,"titre":"Statistiques d'un groupe (podium)","exigences":"EX-27, EX-37"},{"id":"stats-membre","lot":2,"titre":"Statistiques d'un membre","exigences":"EX-27"},{"id":"relance","lot":2,"titre":"Réglage de la relance","exigences":"EX-28, EX-29"},{"id":"permission","lot":2,"titre":"Demande de permission de notification","exigences":"EX-29"},{"id":"notification","lot":2,"titre":"Relance sur l'écran verrouillé","exigences":"EX-28, ABS-04"},{"id":"assiduite","lot":2,"titre":"Réglage des alertes d'assiduité","exigences":"EX-25"},{"id":"import","lot":2,"titre":"Import CSV : choisir le fichier","exigences":"EX-30"},{"id":"import-apercu","lot":2,"titre":"Import CSV : aperçu","exigences":"EX-30"},{"id":"import-resultat","lot":2,"titre":"Import CSV : résultat","exigences":"EX-30"},{"id":"import-erreur","lot":2,"titre":"Import CSV : fichier illisible","exigences":"EX-30"},{"id":"export-csv","lot":2,"titre":"Export CSV des présences","exigences":"EX-31"},{"id":"rapport","lot":2,"titre":"Rapport PDF","exigences":"EX-32"},{"id":"creneau-ponctuel","lot":2,"titre":"Créneau ponctuel (plusieurs groupes)","exigences":"EX-33, EX-34"},{"id":"appel-multi","lot":2,"titre":"Appel de plusieurs groupes","exigences":"EX-34"},{"id":"preparation","lot":2,"titre":"Préparation d'un appel","exigences":"EX-36"},{"id":"annuler","lot":2,"titre":"Annuler une séance","exigences":"EX-38"},{"id":"seance-annulee","lot":2,"titre":"Séance annulée : rétablir","exigences":"EX-38"},{"id":"vides-lot2","lot":2,"titre":"États vides du lot 2","exigences":"EX-25, EX-27"}], MEMBRES=[{"prenom":"Rose","nom":"André"},{"prenom":"Adam","nom":"Bernard"},{"prenom":"Louise","nom":"Bertrand"},{"prenom":"Zoé","nom":"Blanc"},{"prenom":"Louis","nom":"David"},{"prenom":"Emma","nom":"Durand"},{"prenom":"Mila","nom":"Fournier"},{"prenom":"Léo","nom":"Garcia"},{"prenom":"Noah","nom":"Girard"},{"prenom":"Jade","nom":"Laurent"},{"prenom":"Jules","nom":"Lefebvre"},{"prenom":"Gabriel","nom":"Leroy"},{"prenom":"Sacha","nom":"Mercier"},{"prenom":"Léa","nom":"Michel"},{"prenom":"Hugo","nom":"Moreau"},{"prenom":"Nathan","nom":"Morel"},{"prenom":"Alice","nom":"Petit"},{"prenom":"Chloé","nom":"Richard"},{"prenom":"Arthur","nom":"Robert"},{"prenom":"Lucas","nom":"Roux"},{"prenom":"Inès","nom":"Simon"},{"prenom":"Manon","nom":"Vincent"}], ST={"present":{"fond":"#1F3A93","texte":"#FFFFFF","libelle":"Présent"},"absent":{"fond":"#C83C3C","texte":"#FFFFFF","libelle":"Absent"},"late":{"fond":"#D98E2B","texte":"#1B2233","libelle":"Retard"},"excused":{"fond":"#646C7B","texte":"#FFFFFF","libelle":"Excusé"},"preparedPresent":{"fond":"#FFFFFF","texte":"#1F3A93","bordure":"#1F3A93","libelle":"Attendu"}};
+const ONGLET={"bienvenue":"accueil","accueil":"accueil","urgence":"accueil","appel":"appel","appel-libre":"appel","ajout":"appel","historique":"historique","seance":"historique","parametres":"parametres","saisons":"parametres","groupe":"parametres","groupes":"parametres","groupe-nouveau":"parametres","membres":"parametres","creneaux":"parametres","membre":"parametres","suppression":"parametres","creneau":"parametres","donnees":"parametres","illisible":null,"accueil-brouillon":"accueil","abandon-brouillon":"accueil","invitation-sauvegarde":"appel","saison-edition":"parametres","suppression-saison":"parametres","groupe-edition":"parametres","suppression-groupe":"parametres","membre-nouveau":"parametres","inscription":"parametres","retrait":"parametres","contact":"parametres","creneau-modif":"parametres","suppression-seance":"historique","restauration":"parametres","purge":"parametres","tout-effacer":"parametres","confidentialite":"parametres","licences":"parametres","etats-vides":null,"accueil-complet":"accueil","alerte":"accueil","stats":"stats","periode":"stats","stats-groupe":"stats","stats-membre":"stats","relance":"parametres","permission":"parametres","notification":null,"assiduite":"parametres","import":"parametres","import-apercu":"parametres","import-resultat":"parametres","import-erreur":"parametres","export-csv":"stats","rapport":"stats","creneau-ponctuel":"parametres","appel-multi":"appel","preparation":"appel","annuler":"accueil","seance-annulee":"historique","vides-lot2":null};
+const CLE='kila-maquettes-notes-v1';
+const notes=JSON.parse(localStorage.getItem(CLE)||'{}');
+const sauver=()=>localStorage.setItem(CLE,JSON.stringify(notes));
+let courant='accueil';
+function menu(){document.getElementById('menu').innerHTML=[1,2].map(l=>'<div class="lot">Lot '+l+'</div>'+ECRANS.filter(e=>e.lot===l).map(e=>{const v=(notes[e.id]||{}).verdict;return '<a data-go="'+e.id+'" class="'+(e.id===courant?'on':'')+'">'+e.titre+(MODIFIES.includes(e.id)?' <i>(modifié lot 2)</i>':'')+'<span class="v">'+(v==='ok'?'✓':v==='revoir'?'!':v==='refuse'?'✕':'')+'</span></a>'}).join('')).join('')}
+function aller(id){if(!document.getElementById('e-'+id))return;courant=id;document.querySelectorAll('.ecran').forEach(s=>s.hidden=s.id!=='e-'+id);
+document.querySelectorAll('.onglet').forEach(o=>o.classList.toggle('on',o.dataset.tab===ONGLET[id]));document.getElementById('onglets').style.display=ONGLET[id]?'flex':'none';
+const e=ECRANS.find(x=>x.id===id);document.getElementById('r-titre').textContent=e.titre;document.getElementById('r-ex').textContent='Couvre : '+e.exigences+' · lot '+e.lot;
+const n=notes[id]||{};document.getElementById('r-com').value=n.commentaire||'';document.querySelectorAll('#verdicts button').forEach(b=>b.classList.toggle('on',b.dataset.v===n.verdict));
+if(id==='appel')demarrerAppel();menu();location.hash=id}
+document.addEventListener('click',ev=>{const t=ev.target.closest('[data-go]');if(t){ev.preventDefault();aller(t.dataset.go)}});
+document.querySelectorAll('#verdicts button').forEach(b=>b.onclick=()=>{notes[courant]={...(notes[courant]||{}),verdict:b.dataset.v};sauver();aller(courant)});
+document.getElementById('r-com').oninput=ev=>{notes[courant]={...(notes[courant]||{}),commentaire:ev.target.value};sauver()};
+const exportNotes=()=>JSON.stringify({date:new Date().toISOString().slice(0,10),lot:1,notes:ECRANS.map(e=>({ecran:e.id,titre:e.titre,...(notes[e.id]||{})})).filter(n=>n.verdict||n.commentaire)},null,2);
+document.getElementById('exporter').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([exportNotes()],{type:'application/json'}));a.download='notes-maquettes.json';a.click()};
+document.getElementById('copier').onclick=()=>navigator.clipboard.writeText(exportNotes()).then(()=>toast('Notes copiées'));
+document.getElementById('bascule').onclick=ev=>{const a=document.getElementById('appareil');a.classList.toggle('tablette');ev.target.textContent=a.classList.contains('tablette')?'Voir en téléphone':'Voir en tablette'};
+function toast(t){const e=document.getElementById('toast');e.textContent=t;e.style.display='block';setTimeout(()=>e.style.display='none',1800)}
+// Appel interactif : Présent → Absent → Retard → Excusé → Présent (EX-10)
+const CYCLE=['present','absent','late','excused'],ICO={present:'✓',absent:'✕',late:'◷',excused:'≈'};
+let statuts,debut,minuteur;
+function demarrerAppel(){statuts=MEMBRES.map(()=> 'present');debut=null;clearInterval(minuteur);document.getElementById('chrono').textContent='Chrono : démarre au premier appui';document.getElementById('filtre').value='';rendreAppel()}
+function rendreAppel(){const f=document.getElementById('filtre').value.toLowerCase();
+document.getElementById('liste-appel').innerHTML='<div class="carte">'+MEMBRES.map((p,i)=>(p.prenom+' '+p.nom).toLowerCase().includes(f)?'<div class="rang" data-i="'+i+'"><span class="nom">'+p.prenom+' '+p.nom+'</span><span class="pastille s-'+statuts[i]+'">'+ICO[statuts[i]]+' '+ST[statuts[i]].libelle+'</span></div>':'').join('')+'</div>';
+const n=k=>statuts.filter(s=>s===k).length;
+document.getElementById('compteur').innerHTML=CYCLE.map(k=>'<span><i class="carre s-'+k+'"></i>'+n(k)+' '+ST[k].libelle.toLowerCase()+(n(k)>1&&k!=='late'?'s':'')+'</span>').join('')}
+document.getElementById('liste-appel').addEventListener('click',ev=>{const r=ev.target.closest('.rang');if(!r)return;
+if(!debut){debut=Date.now();minuteur=setInterval(()=>document.getElementById('chrono').textContent='Chrono : '+((Date.now()-debut)/1000).toFixed(1).replace('.',',')+' s',100)}
+const i=+r.dataset.i;statuts[i]=CYCLE[(CYCLE.indexOf(statuts[i])+1)%4];rendreAppel()});
+document.getElementById('filtre').oninput=rendreAppel;
+document.getElementById('enregistrer').onclick=()=>{clearInterval(minuteur);const s=debut?((Date.now()-debut)/1000).toFixed(1).replace('.',','):'0';toast('Appel enregistré · '+s+' s');setTimeout(()=>aller('historique'),1200)};
+aller(location.hash.slice(1)||'accueil');
+</script></body></html>
