@@ -29,18 +29,25 @@ Ce fichier est lu par Claude Code à chaque session. Il fixe le contexte et les 
 
 ## Règles non négociables
 
-### 100 % local
-- Aucun appel réseau nécessaire au fonctionnement : pas d'API distante, pas de CDN, pas de police ou script chargé depuis Internet, pas de télémétrie, pas d'analytics.
-- Toutes les ressources (polices, icônes, modèles) sont embarquées dans le dépôt ou le build.
-- Un LLM éventuel est un modèle open-weight dont la licence autorise la redistribution ; son empreinte SHA-256 est vérifiée au chargement ; taille et prérequis matériels sont indiqués dans le README.
-- Si une fonctionnalité semble exiger un serveur : t'arrêter et me le signaler, ne pas contourner.
+### Règles absolues du projet (niveau renforcé)
+
+Chacune a un identifiant, cité dans le code, les tests et les tickets. Le motif est dans `docs/CADRAGE.md`.
+
+- **ABS-01 Aucun réseau.** L'appli n'émet aucune requête réseau, jamais : pas d'API, d'analytics, de télémétrie, de suivi de crash, de publicité, de notification push, de police ou de ressource chargée à l'exécution. Toutes les ressources sont embarquées. Une dépendance capable d'émettre du réseau est refusée, sauf décision datée du porteur. La permission INTERNET est absente du binaire Android de production.
+- **ABS-02 Aucun serveur, aucun compte, aucune synchronisation.** Si une fonctionnalité semble l'exiger : t'arrêter et me le signaler, ne pas contourner.
+- **ABS-03 Minimisation.** Seuls les champs de la table « Données manipulées » du cadrage existent. N'ajoute aucun champ personnel. Aucune donnée de santé, aucun commentaire libre au niveau d'un membre (seulement au niveau d'une séance).
+- **ABS-04 Aucun nom hors de l'écran.** Jamais de nom, prénom, téléphone ou date de naissance dans un journal (`console.*`), un message d'erreur ou une notification : des identifiants seulement.
+- **ABS-05 Suppression réelle.** Supprimer efface vraiment (présences comprises) ; archiver et supprimer sont deux opérations distinctes et les deux existent.
+- **ABS-06 Pas de chiffrement dans l'appli.** Aucun chiffrement applicatif sans décision datée du porteur (déclaration ANSSI, export Apple). La sauvegarde est en clair, et l'écran d'export le dit sans détour : cet avertissement n'est jamais réduit.
+- **ABS-07 Permissions minimales.** Aucune dépendance installée avant la fonctionnalité qui l'utilise. Les permissions sont auditées sur le binaire construit, pas sur le manifeste.
+- **ABS-08 Une évolution qui touche aux données** met à jour, dans le même lot, la politique de confidentialité et les déclarations des stores (« aucune donnée collectée »).
 
 ### Sécurité
 - Aucun secret dans le code ni dans l'historique Git (clé, token, mot de passe). Ne lis jamais `.env`.
 - Toute entrée est validée : saisies, fichiers importés, CSV, chemins, URL.
 - Pas de `eval`, pas d'exécution de commande construite à partir d'une entrée, pas de `innerHTML` avec des données non échappées.
 - Requêtes paramétrées pour toute base locale (SQLite, IndexedDB).
-- Données personnelles : collecter le minimum, stocker localement, chiffrer au repos si elles sont sensibles, permettre l'export et la suppression.
+- Données personnelles : collecter le minimum, stocker localement, permettre l'export et la suppression (pas de chiffrement applicatif : ABS-06 ; aucune donnée sensible : ABS-03).
 - Principe du moindre privilège : permissions système, d'extension ou Android réduites au strict nécessaire, chacune justifiée dans le README.
 - Avant d'ajouter une dépendance : me la proposer avec sa raison, sa licence et sa date de dernière mise à jour, après avoir vérifié qu'elle existe sous ce nom exact (une IA peut inventer un nom de paquet).
 - **Ne désactive ni n'affaiblis jamais un contrôle** pour faire passer du code : test, lint, typage, hook (`--no-verify` interdit), workflow de sécurité.
