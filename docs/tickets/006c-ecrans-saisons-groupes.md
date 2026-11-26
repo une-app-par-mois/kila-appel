@@ -1,8 +1,8 @@
-# 006c — Écrans saisons et groupes
+# 006c — Écrans des saisons
 
-Statut : à faire · Jalon : 1 · Zone sensible : oui (confirmations de suppression) · Trivial : non
+Statut : en cours · Jalon : 1 · Zone sensible : oui (confirmation de suppression) · Trivial : non
 
-Issu du découpage du ticket 006 (décision du porteur du 2026-11-26).
+Issu du découpage du ticket 006, puis redécoupé le 2026-11-26 (décision du porteur) : 006c (saisons), 006d (groupes), 006e (licences).
 
 ## Contexte
 
@@ -10,26 +10,35 @@ Premiers écrans de gestion, sur les dépôts du ticket 006 et les composants du
 
 ## À lire
 
-- Maquettes : Saisons, Création ou modification d'une saison, Suppression d'une saison, Groupes, Création d'un groupe, Renommer ou supprimer un groupe, Suppression d'un groupe, Paramètres, États vides
+- Maquettes : Paramètres, Saisons, Création ou modification d'une saison, Suppression d'une saison
 
 ## Ce qui change
 
-- Écrans Paramètres, saisons, groupes et leurs confirmations
-- Paramètres sert d'écran d'accueil provisoire jusqu'au ticket 012 (barre d'onglets), décision du porteur du 2026-11-26
+- Composants `Screen` (fond Papier, en-tête avec retour) et `TextField` (étiquette, erreur)
+- Écran Paramètres : accueil provisoire jusqu'au ticket 012 ; seulement les lignes qui mènent à un écran existant (ici Saisons ; chaque ticket ajoute la sienne)
+- Écrans Saisons et formulaire de saison (création, modification, suppression)
+- Une saison créée alors qu'aucune n'est active devient active
 
 ## Critères d'acceptation
 
-- [ ] Écrans conformes aux maquettes ; états vides
-- [ ] La confirmation de suppression d'une saison dit ce qui sera effacé (groupes, créneaux, séances, présences) et que les membres restent (EX-01)
-- [ ] La confirmation de suppression d'un groupe dit ce que fait la base (ARCHITECTURE §4.1) : « Seront effacés : ses inscriptions et ses liens aux créneaux. Les séances, leurs présences et les membres sont conservés. » Le texte de la maquette, qui annonçait l'effacement des séances, est corrigé (décision du porteur du 2026-11-26)
-- [ ] Dates d'une saison refusées (`SESSIONS_OUTSIDE_SEASON`) : « Des séances ont déjà eu lieu hors de ces dates. » (décision du porteur du 2026-11-26)
-- [ ] Échec de chargement (`loadFailed`) : un message à la place du chargement sans fin
-- [ ] Un groupe archivé montre « Désarchiver » à la place d'« Archiver » (absent de la maquette, ajouté par décision du porteur du 2026-11-26)
+- [x] Écrans conformes aux maquettes
+- [x] La confirmation de suppression d'une saison dit ce qui sera effacé (groupes, inscriptions, créneaux, séances, présences, appel en cours) et que les membres restent (EX-01)
+- [x] Dates saisies en JJ/MM/AAAA (RM-04) ; erreurs affichées sous le champ et lues par le lecteur d'écran
+- [x] Dates refusées si des séances tomberaient en dehors : « Des séances ont déjà eu lieu hors de ces dates. » (`SESSIONS_OUTSIDE_SEASON`)
+- [x] Échec de chargement (`loadFailed`) : un message à la place du chargement sans fin
+- [x] Une saison créée sans saison active devient active (décision du porteur du 2026-11-26)
 
 ## Tests attendus
 
-- Tests d'écrans des confirmations
+- Tests d'écran : liste, activation, formulaire (erreurs), confirmation de suppression
+- Test de données : activation de la première saison créée
+
+## Décisions du porteur (2026-11-26)
+
+- Paramètres ne montre que les lignes qui mènent à un écran existant.
+- Une saison créée sans saison active devient active.
+- Sans aucune saison : carte d'état vide « Aucune saison. Créez-en une pour y ranger vos groupes et vos appels. », ajoutée au catalogue des maquettes.
 
 ## Hors périmètre
 
-- Barre d'onglets (012), membres (007)
+- Écrans des groupes (006d), licences (006e), barre d'onglets et Bienvenue (012)

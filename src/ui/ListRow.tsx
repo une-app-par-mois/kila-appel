@@ -1,23 +1,29 @@
-// Ligne de liste (maquettes) : titre, sous-titre en Texte secondaire, chevron si elle s'ouvre.
-// Accessibilité (NF-06) : une ligne qui s'ouvre est lue d'un bloc, détail compris ; un contenu
-// interactif à droite (`right`) n'est permis que sur une ligne qui ne s'ouvre pas, pour rester
-// joignable seul par le lecteur d'écran.
+// Ligne de liste (maquettes) : titre, sous-titre en Texte secondaire, détail ou pastille à droite,
+// chevron si elle s'ouvre. Accessibilité (NF-06) : la zone qui ouvre est lue d'un bloc (détail et
+// pastille compris) ; un contenu interactif (`right`) reste hors de cette zone, joignable seul.
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
 import { Icon } from '@/ui/Icon';
 
-type Common = {
+type Props = {
   title: string;
   subtitle?: string;
-  /** Texte court à droite (« 3 groupes »), lu avec la ligne. */
+  /** Sous-titre en Plex Mono (dates). */
+  mono?: boolean;
+  /** Texte court à droite (« 3 groupes »). */
   detail?: string;
+  /** Pastille Encre à droite (« Active »). */
+  badge?: string;
+  onPress?: () => void;
+  /** Chevron quand la ligne s'ouvre ; certaines maquettes n'en ont pas. */
+  chevron?: boolean;
+  /** Contenu interactif à droite, hors de la zone d'appui de la ligne. */
+  right?: ReactNode;
   /** Le chevron reçoit `${testID}-chevron`. */
   testID?: string;
 };
-type Props = Common &
-  ({ onPress: () => void; right?: never } | { onPress?: never; right?: ReactNode });
 
 const describe = (title: string, parts: (string | undefined)[]) =>
   parts.reduce<string>(
@@ -25,14 +31,18 @@ const describe = (title: string, parts: (string | undefined)[]) =>
     title,
   );
 
-export const ListRow = ({ title, subtitle, detail, onPress, right, testID }: Props) => {
+export const ListRow = (props: Props) => {
+  const { title, subtitle, mono, detail, badge, onPress, chevron = true, right, testID } = props;
   const content = (
     <>
       <View style={styles.texts}>
         <Text style={styles.title}>{title}</Text>
-        {subtitle !== undefined && <Text style={styles.subtitle}>{subtitle}</Text>}
+        {subtitle !== undefined && (
+          <Text style={[styles.subtitle, mono && styles.mono]}>{subtitle}</Text>
+        )}
       </View>
       {detail !== undefined && <Text style={styles.subtitle}>{detail}</Text>}
+      {badge !== undefined && <Text style={styles.badge}>{badge}</Text>}
     </>
   );
   if (!onPress) {
@@ -43,34 +53,62 @@ export const ListRow = ({ title, subtitle, detail, onPress, right, testID }: Pro
       </View>
     );
   }
-  return (
+  const pressable = (
     <Pressable
-      testID={testID}
+      testID={right === undefined ? testID : undefined}
       accessibilityRole="button"
-      accessibilityLabel={describe(title, [subtitle, detail])}
+      accessibilityLabel={describe(title, [subtitle, detail, badge])}
       onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        right === undefined ? styles.row : styles.inner,
+        pressed && styles.pressed,
+      ]}
     >
       {content}
-      <View testID={testID && `${testID}-chevron`}>
-        <Icon name="chevron" />
-      </View>
+      {chevron && (
+        <View testID={testID && `${testID}-chevron`}>
+          <Icon name="chevron" />
+        </View>
+      )}
     </Pressable>
+  );
+  if (right === undefined) return pressable;
+  return (
+    <View testID={testID} style={styles.row}>
+      {pressable}
+      {right}
+    </View>
   );
 };
 
+const rowBase = {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: theme.spacing * 2,
+  minHeight: theme.minTouchTarget,
+} as const;
+
 const styles = StyleSheet.create({
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing * 2,
-    minHeight: theme.minTouchTarget,
+    ...rowBase,
     paddingVertical: theme.spacing * 2,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.quadrillage,
   },
+  inner: { ...rowBase, flex: 1 },
   pressed: { opacity: 0.6 },
   texts: { flex: 1 },
   title: { fontFamily: theme.fonts.textSemi, fontSize: 17, color: theme.colors.texte },
   subtitle: { fontFamily: theme.fonts.text, fontSize: 14, color: theme.colors.texteSecondaire },
+  mono: { fontFamily: theme.fonts.digits },
+  badge: {
+    overflow: 'hidden',
+    backgroundColor: theme.colors.encre,
+    color: theme.colors.blanc,
+    borderRadius: theme.radii.pastille,
+    paddingHorizontal: theme.spacing * 2.5,
+    paddingVertical: theme.spacing * 0.75,
+    fontFamily: theme.fonts.textSemi,
+    fontSize: 13,
+  },
 });

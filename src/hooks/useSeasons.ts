@@ -10,6 +10,13 @@ import { useDatabase } from '@/hooks/useDatabase';
 
 type Repo = ReturnType<typeof seasonsRepo>;
 
+// Chaque écran a son propre état ; une pile native garde les écrans précédents montés. Après
+// une modification, tous les écrans ouverts rechargent (liste, Paramètres, formulaire).
+const listeners = new Set<() => void>();
+const notifyAll = () => {
+  for (const listener of listeners) listener();
+};
+
 export const useSeasons = () => {
   const db = useDatabase();
   const repo = useMemo(() => (db ? seasonsRepo(db) : null), [db]);
@@ -40,14 +47,20 @@ export const useSeasons = () => {
 
   useEffect(() => {
     void reload();
+    const listener = () => void reload();
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
   }, [reload]);
 
+  // Les rechargements ne lèvent jamais : une action réussie n'est pas présentée comme un échec.
   const change = useCallback(
     async (action: (r: Repo) => Promise<unknown>) => {
       await action(ready());
-      await reload();
+      notifyAll();
     },
-    [ready, reload],
+    [ready],
   );
 
   const create = useCallback((input: SeasonInput) => change((r) => r.create(input)), [change]);

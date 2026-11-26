@@ -6,6 +6,7 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Ajouté
 
+- Écrans Paramètres (accueil provisoire), Saisons et formulaire de saison, avec la confirmation de suppression qui dit ce qui sera effacé — ticket 006c.
 - Composants de base : bouton, carte, ligne de liste, confirmation, icônes (react-native-svg 15.16.0, lucide-react-native 1.81.0) — ticket 006b.
 - Saisons et groupes (données) : créer, modifier, activer (une seule active), archiver, désarchiver, supprimer, avec ce que chaque suppression effacera — ticket 006.
 - Séances calculées à la volée : dates d'un créneau, séance proposée, appels manquants ; date d'effet de l'horaire des créneaux — ticket 005.
