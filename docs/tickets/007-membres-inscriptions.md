@@ -33,7 +33,7 @@ Gérer les membres (EX-03) et leur appartenance aux groupes (EX-04), avec la sup
 ## Décisions du porteur (2026-11-26)
 
 - Découpage en 007, 007b, 007c.
-- Liste des membres : une recherche par nom ou prénom s'ajoute au filtre par groupe et aux archivés ; la maquette sera modifiée et validée au 007b.
+- Liste des membres : une recherche par nom ou prénom, avec le filtre par groupe et les archivés (déjà dans la maquette, que l'IA avait mal lue).
 - Date de fin d'une inscription = premier jour sans le membre (« à partir du ») : inscrit du début (inclus) à la fin (exclue). Proposée à aujourd'hui, modifiable, refusée avant le début.
 
 ## Hors périmètre
