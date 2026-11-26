@@ -1,9 +1,7 @@
 // Licences (maquette, EX-42) : registre généré par scripts/licences.js, embarqué, lisible hors ligne.
 import { useRouter } from 'expo-router';
-import { StyleSheet, Text } from 'react-native';
 import { labels } from '@/config/libelles';
 import registry from '@/config/licences.json';
-import { theme } from '@/config/theme';
 import { Card } from '@/ui/Card';
 import { ListRow } from '@/ui/ListRow';
 import { Screen } from '@/ui/Screen';
@@ -17,7 +15,6 @@ export default function Licences() {
       title={t.title}
       onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))}
     >
-      <Text style={styles.note}>{t.generated}</Text>
       <Card>
         {registry.map((entry, index) => (
           <ListRow
@@ -27,11 +24,8 @@ export default function Licences() {
             onPress={() => router.push(`/licences/${index}`)}
           />
         ))}
+        <ListRow title={t.generated} chevron={false} />
       </Card>
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  note: { fontFamily: theme.fonts.text, fontSize: 14, color: theme.colors.texteSecondaire },
-});

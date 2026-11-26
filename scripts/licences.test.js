@@ -6,7 +6,13 @@
 const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = require('node:fs');
 const { join } = require('node:path');
 const { tmpdir } = require('node:os');
-const { isAccepted, packageDirsFromSources, licenceText, buildRegistry } = require('./licences');
+const {
+  isAccepted,
+  packageDirsFromSources,
+  licenceText,
+  buildRegistry,
+  serialize,
+} = require('./licences');
 
 describe('CONFORMITE §7 licences acceptées', () => {
   it.each([
@@ -41,6 +47,19 @@ describe('CONFORMITE §7 licences acceptées', () => {
     expect(isAccepted('(MIT AND CC-BY-4.0)')).toBe(false);
     expect(isAccepted('(MIT AND ISC)')).toBe(true);
   });
+
+  it('respecte les parenthèses : « (A OR B) AND GPL » est refusée', () => {
+    expect(isAccepted('(MIT OR Apache-2.0) AND GPL-2.0')).toBe(false);
+    expect(isAccepted('(MIT OR GPL-3.0) AND GPL-3.0')).toBe(false);
+    expect(isAccepted('MIT OR (GPL-3.0 AND ISC)')).toBe(true);
+    expect(isAccepted('(MIT OR GPL-3.0) AND (ISC OR GPL-2.0)')).toBe(true);
+  });
+
+  it('refuse une expression mal formée', () => {
+    expect(isAccepted('(MIT')).toBe(false);
+    expect(isAccepted('MIT OR')).toBe(false);
+    expect(isAccepted('MIT ISC')).toBe(false);
+  });
 });
 
 describe('Paquets du bundle, d’après la carte des sources', () => {
@@ -59,6 +78,12 @@ describe('Paquets du bundle, d’après la carte des sources', () => {
       'node_modules/expo/node_modules/nanoid',
       'node_modules/react',
     ]);
+  });
+
+  it('accepte des chemins absolus sous la racine du projet', () => {
+    expect(
+      packageDirsFromSources(['/ci/projet/node_modules/react/index.js'], '/ci/projet'),
+    ).toEqual(['node_modules/react']);
   });
 });
 
@@ -81,6 +106,56 @@ describe('Registre', () => {
     expect(licenceText(join(root, 'node_modules/a'))).toBe('Copyright (c) A');
     expect(licenceText(join(root, 'node_modules/b'))).toBe('Copyright (c) B');
     expect(licenceText(join(root, 'node_modules/c'))).toBeNull();
+  });
+
+  it('reconnaît LICENSE-MIT et LICENSE.markdown', () => {
+    pkg('node_modules/d', { name: 'd' }, { 'LICENSE-MIT': 'Copyright (c) D' });
+    pkg('node_modules/e', { name: 'e' }, { 'LICENSE.markdown': 'Copyright (c) E' });
+    expect(licenceText(join(root, 'node_modules/d'))).toBe('Copyright (c) D');
+    expect(licenceText(join(root, 'node_modules/e'))).toBe('Copyright (c) E');
+  });
+
+  it('sans fichier : reprend la licence d’un paquet embarqué du même dépôt (monorepo)', () => {
+    const repository = { type: 'git', url: 'git+https://exemple.invalid/mono.git' };
+    pkg(
+      'node_modules/mono',
+      { name: 'mono', version: '1.0.0', license: 'MIT', repository },
+      {
+        LICENSE: 'Copyright (c) Mono',
+      },
+    );
+    pkg('node_modules/@mono/part', {
+      name: '@mono/part',
+      version: '1.0.0',
+      license: 'MIT',
+      repository: {
+        ...repository,
+        url: 'https://exemple.invalid/mono',
+        directory: 'packages/part',
+      },
+    });
+    const { entries } = buildRegistry(root, ['node_modules/@mono/part', 'node_modules/mono']);
+    expect(entries[0]).toEqual({
+      name: '@mono/part',
+      version: '1.0.0',
+      license: 'MIT',
+      text: 'Copyright (c) Mono',
+    });
+  });
+
+  it('refuse une entrée sans texte de licence ni auteur (mention obligatoire impossible)', () => {
+    pkg('node_modules/o', { name: 'o', version: '1.0.0', license: 'MIT' });
+    expect(buildRegistry(root, ['node_modules/o']).refused).toEqual([
+      'o@1.0.0 (ni texte de licence ni auteur)',
+    ]);
+  });
+
+  it('--check : une dépendance ajoutée rend le registre périmé', () => {
+    pkg('node_modules/a', { name: 'a', version: '1.0.0', license: 'MIT' }, { LICENSE: 'A' });
+    pkg('node_modules/b', { name: 'b', version: '1.0.0', license: 'MIT' }, { LICENSE: 'B' });
+    const before = serialize(buildRegistry(root, ['node_modules/a']).entries);
+    const after = serialize(buildRegistry(root, ['node_modules/a', 'node_modules/b']).entries);
+    expect(after).not.toBe(before);
   });
 
   it('trie, dédoublonne nom et version, ajoute les polices, signale les refus', () => {

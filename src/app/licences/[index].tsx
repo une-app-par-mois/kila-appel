@@ -10,10 +10,9 @@ import { Screen } from '@/ui/Screen';
 const t = labels.licences;
 
 /** Entrée du registre pour un paramètre d'adresse, ou undefined s'il ne désigne aucune entrée. */
-const entryAt = (param: string | undefined) => {
-  const index = Number(param);
-  return Number.isInteger(index) && index >= 0 ? registry[index] : undefined;
-};
+const entryAt = (param: string | undefined) =>
+  // Chiffres seulement : « 0x1 », « 1e1 », « 1 » avec espace ou vide ne désignent rien.
+  param !== undefined && /^\d+$/.test(param) ? registry[Number(param)] : undefined;
 
 export default function Licence() {
   const router = useRouter();
@@ -21,7 +20,7 @@ export default function Licence() {
   return (
     <Screen
       title={entry?.name ?? t.title}
-      subtitle={entry && <Text style={styles.subtitle}>{t.subtitle(entry)}</Text>}
+      subtitle={entry && <Text style={styles.subtitle}>{t.detailSubtitle(entry)}</Text>}
       onBack={() => (router.canGoBack() ? router.back() : router.replace('/licences'))}
       error={entry ? undefined : labels.errors.NOT_FOUND}
     >

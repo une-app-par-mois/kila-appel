@@ -58,8 +58,11 @@ describe('Licences embarquées (EX-42)', () => {
     ).toBeTruthy();
   });
 
-  it.each(['999', '-1', 'abc', '1.5'])('une adresse invalide (%s) : introuvable', async (index) => {
-    await open(`/licences/${index}`);
-    expect(await screen.findByText(labels.errors.NOT_FOUND)).toBeTruthy();
-  });
+  it.each(['999', '-1', 'abc', '1.5', '0x1', '1e1', ' 1', '%20'])(
+    'une adresse invalide (%s) : introuvable',
+    async (index) => {
+      await open(`/licences/${index}`);
+      expect(await screen.findByText(labels.errors.NOT_FOUND)).toBeTruthy();
+    },
+  );
 });
