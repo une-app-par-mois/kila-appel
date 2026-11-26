@@ -6,7 +6,7 @@ Dernière mise à jour : 2026-11-26
 
 ## En cours
 
-Préparation (niveau renforcé), branche `ticket/000-mise-en-route`. Cadrage, PRD et charte validés le 2026-11-26 ; conception en cours (maquettes, puis architecture, sécurité, conformité) ; règles absolues ABS-01 à ABS-08 dans `CLAUDE.md`.
+Préparation (niveau renforcé), branche `ticket/000-mise-en-route`. Cadrage, PRD (révision 1) et charte validés le 2026-11-26 ; maquettes : lot 1 (39 écrans) validé le 2026-11-26, lot 2 (22 écrans) en relecture ; ensuite architecture, sécurité, conformité ; règles absolues ABS-01 à ABS-08 dans `CLAUDE.md`.
 
 ## Prochaines étapes
 
