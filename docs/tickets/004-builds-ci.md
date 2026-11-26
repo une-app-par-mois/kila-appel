@@ -15,7 +15,7 @@ Lever le risque d'ADR-009 tôt : APK de développement installable, build iOS de
 
 ## Ce qui change
 
-- Configuration Expo : nom de paquet choisi par le porteur, portrait, `blockedPermissions`, `allowBackup` false, `ITSAppUsesNonExemptEncryption` false
+- Configuration Expo : nom de paquet `com.jitavision.kila` (Android et iOS), portrait, `blockedPermissions`, `allowBackup` false, `ITSAppUsesNonExemptEncryption` false
 - Workflow : APK de développement (runner Linux) en artefact sur la PR du jalon
 - Workflow : build iOS simulateur non signé (runner `macos-26`)
 - Script d'audit `aapt2 dump permissions` comparé à `config/permissions-attendues.txt`

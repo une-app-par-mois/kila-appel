@@ -23,7 +23,8 @@ Aucun ticket de code en cours.
 - Calendrier sans marge (publication Android fin janvier 2027) : jalons 4 et 5 premiers candidats au report, décision du porteur à la fin du jalon 3.
 - iOS : aucun appareil Apple ni Mac ; publication iOS après un test sur un vrai iPhone (jalon 7).
 - DSA : déclarer Jita Vision commerçant avant le 1er février 2027.
-- Questions ouvertes : nom de paquet (avant le ticket 004) ; contenu du rapport PDF (ticket F-09) ; compatibilité `node:sqlite` / `expo-sqlite` (ticket 002) ; signature iOS sans EAS (jalon 7) ; tranche 16-17 et politique Familles (soumission Play).
+- Questions ouvertes : contenu du rapport PDF (ticket F-09) ; compatibilité `node:sqlite` / `expo-sqlite` (ticket 002) ; signature iOS sans EAS (jalon 7) ; tranche 16-17 et politique Familles (soumission Play).
+- Nom de paquet : `com.jitavision.kila` (Android et iOS), décidé le 2026-11-26.
 - `main` protégée (ruleset vérifié) ; hooks Git activés.
 
 ## Non vérifié
