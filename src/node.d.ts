@@ -25,6 +25,13 @@ declare module 'node:fs' {
   export function readdirSync(path: string, options: { withFileTypes: true }): Dirent[];
   export function readFileSync(path: string, encoding: 'utf8'): string;
   export function readFileSync(path: string): Uint8Array;
+  // Dossier temporaire du test d'effacement dans le fichier (ticket 007d).
+  export function mkdtempSync(prefix: string): string;
+  export function rmSync(path: string, options: { recursive: true; force: true }): void;
+}
+
+declare module 'node:os' {
+  export function tmpdir(): string;
 }
 
 // node:crypto : empreintes des polices (ticket 003).
