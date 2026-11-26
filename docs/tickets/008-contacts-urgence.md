@@ -25,9 +25,9 @@ Contacts d'urgence d'un membre (EX-05) et recherche rapide (EX-06) : la couche d
 
 ## Critères d'acceptation
 
-- [ ] Zéro, un ou plusieurs contacts, nom et téléphone obligatoires, ordre choisi (EX-05)
-- [ ] Téléphone refusé hors format français, sans jamais l'écrire dans un journal ni un message (ABS-04)
-- [ ] Recherche : un membre et ses contacts en une requête (EX-06)
+- [x] Zéro, un ou plusieurs contacts, nom et téléphone obligatoires, ordre choisi (EX-05)
+- [x] Téléphone refusé hors format français, sans jamais l'écrire dans un journal ni un message (ABS-04)
+- [x] Recherche : un membre et ses contacts en une requête (EX-06)
 
 ## Tests attendus
 
