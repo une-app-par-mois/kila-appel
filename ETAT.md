@@ -12,7 +12,7 @@ Réévaluation (PLAN §6) : moins de 2 h de porteur pour 6 h prévues ; 1,5 h pa
 
 ## Prochaines étapes
 
-1. **Ticket 007** (membres et inscriptions, données) sur `ticket/007-membres-inscriptions`, puis 007b (écrans des membres, maquette Membres à modifier : recherche) et 007c (inscriptions). Ticket 006e fusionné dans le groupe (PR #14). APK du jalon (667bbbf) installé sur l'A55 du porteur.
+1. **Ticket 007d** (effacement dans le fichier, `secure_delete`) sur `ticket/007d-effacement-securise`, puis 007b (écrans des membres, maquette Membres à modifier : recherche) et 007c (inscriptions). Ticket 007 fusionné dans le groupe (PR #15). APK du jalon (667bbbf) installé sur l'A55 du porteur.
    - `@expo/devtools` est dans le bundle de production : client WebSocket d'expo-sqlite, appelé seulement si `__DEV__` (jamais en production) ; INTERNET absente du binaire. Pas une violation d'ABS-01.
 2. Tickets 008 à 016 du jalon 1, puis PR du jalon vers `main`.
 
