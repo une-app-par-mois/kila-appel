@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 // Tests de l'audit du binaire Android (SEC-02, ABS-01, ABS-07), sur des sorties aapt2 fictives.
-const { auditPermissions, auditManifest, parseExpected } = require('./audit-apk');
+const { auditPermissions, auditManifest, latestVersion, parseExpected } = require('./audit-apk');
 
 const dump = (...names) =>
   ['package: com.jitavision.kila', ...names.map((n) => `uses-permission: name='${n}'`)].join('\n');
@@ -101,5 +101,21 @@ describe('Manifeste du binaire (ABS-07, sauvegarde système)', () => {
 
   it('ABS-07 signale un lien profond (android:scheme dans un intent-filter)', () => {
     expect(auditManifest(tree('kila'))).toEqual(['Lien profond déclaré : kila']);
+  });
+
+  it('ABS-07 signale aussi un scheme donné par référence à une ressource', () => {
+    const text = tree('x').replace('="x" (Raw: "x")', '=@0x7f0e0012');
+    expect(auditManifest(text)).toEqual(['Lien profond déclaré : @0x7f0e0012']);
+  });
+});
+
+describe('latestVersion : choix des build-tools', () => {
+  it('prend la plus haute version stable, en ordre numérique', () => {
+    expect(latestVersion(['9.0.0', '36.0.0-rc5', '36.0.0', '35.0.1', 'tmp'])).toBe('36.0.0');
+    expect(latestVersion(['36.1.0', '36.10.0'])).toBe('36.10.0');
+  });
+
+  it('rend undefined sans version stable', () => {
+    expect(latestVersion(['tmp'])).toBeUndefined();
   });
 });

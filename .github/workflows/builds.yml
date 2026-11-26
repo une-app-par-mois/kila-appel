@@ -61,5 +61,6 @@ jobs:
           xcodebuild -workspace ios/KiLa.xcworkspace -scheme KiLa
           -configuration Release -sdk iphonesimulator -derivedDataPath build
           CODE_SIGNING_ALLOWED=NO build
+      # Info.plist lu dans le .app construit ; habilitations lues dans le projet généré (build non signé).
       - name: Contrôles du binaire (ABS-06, ABS-07)
         run: node scripts/audit-ios.js build/Build/Products/Release-iphonesimulator/KiLa.app ios/KiLa/KiLa.entitlements

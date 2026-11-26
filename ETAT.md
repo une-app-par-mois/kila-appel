@@ -34,5 +34,5 @@ Dernière mise à jour : 2026-11-26
 - Écran vide du ticket 001 jamais lancé sur un téléphone (`npx expo start` à faire par le porteur).
 - CI jamais lancée (elle tournera sur la PR du jalon 0).
 - Polices jamais vues à l'écran (rendu avec les premiers écrans du jalon 1) ; couleurs nommées (`'red'`) non détectées par le contrôle CONV-16.
-- Adaptateur `expo-sqlite` testé sur une imitation branchée sur `node:sqlite`, jamais sur le module natif (ticket 004).
-- Permission INTERNET encore présente par défaut (retrait et audit du binaire : ticket 004). Polices IBM Plex absentes du poste : les maquettes s'affichent dans la police du système.
+- Requêtes métier jamais essayées sur le module natif `expo-sqlite` : seules l'ouverture et la migration 1 l'ont été, sur le Galaxy A55. Rien encore sur un iPhone réel.
+- Habilitations iOS contrôlées sur le projet généré, pas sur un binaire signé : à revoir avec la signature (jalon 6). Polices IBM Plex absentes du poste : les maquettes s'affichent dans la police du système.

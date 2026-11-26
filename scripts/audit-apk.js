@@ -47,20 +47,29 @@ const auditManifest = (xmltree) => {
       stack.push({ depth, name: element[1] });
       continue;
     }
-    const scheme = line.match(new RegExp(`${ANDROID_NS}:scheme\\(0x[0-9a-f]+\\)="([^"]*)"`));
+    // Valeur littérale ("kila") ou référence à une ressource (@0x7f…) : toutes deux comptent.
+    const scheme = line.match(
+      new RegExp(`${ANDROID_NS}:scheme\\(0x[0-9a-f]+\\)=(?:"([^"]*)"|(\\S+))`),
+    );
     if (scheme && stack.some((e) => e.name === 'intent-filter')) {
-      problems.push(`Lien profond déclaré : ${scheme[1]}`);
+      problems.push(`Lien profond déclaré : ${scheme[1] ?? scheme[2]}`);
     }
   }
   return problems;
 };
 
+/** Plus haute version stable (x.y.z), en ordre numérique ; les rc et autres dossiers sont ignorés. */
+const latestVersion = (names) =>
+  names
+    .filter((n) => /^\d+\.\d+\.\d+$/.test(n))
+    .sort((a, b) => a.localeCompare(b, 'en', { numeric: true }))
+    .pop();
+
 /** aapt2 : variable AAPT2, sinon la version la plus récente des build-tools du SDK Android. */
 const findAapt2 = () => {
   if (process.env.AAPT2) return process.env.AAPT2;
   const tools = join(process.env.ANDROID_HOME ?? '', 'build-tools');
-  const versions = existsSync(tools) ? readdirSync(tools).sort() : [];
-  const latest = versions[versions.length - 1];
+  const latest = latestVersion(existsSync(tools) ? readdirSync(tools) : []);
   if (!latest) throw new Error('aapt2 introuvable : définir AAPT2 ou ANDROID_HOME');
   return join(tools, latest, 'aapt2');
 };
@@ -95,4 +104,4 @@ if (require.main === module) {
   process.exitCode = main(process.argv[2]);
 }
 
-module.exports = { auditManifest, auditPermissions, parseExpected };
+module.exports = { auditManifest, auditPermissions, latestVersion, parseExpected };

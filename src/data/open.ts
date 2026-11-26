@@ -19,7 +19,15 @@ export const prepareDatabase = async (db: Db): Promise<Db> => {
 
 /** Ouverture au démarrage de l'appli : base prête, version écrite dans le journal (ADR-008). */
 export const openAppDatabase = async (open: () => Promise<Db>): Promise<Db> => {
-  const db = await prepareDatabase(await open());
+  const raw = await open();
+  let db: Db;
+  try {
+    db = await prepareDatabase(raw);
+  } catch (error) {
+    // Ne pas garder le fichier ouvert : l'écran de récupération (EX-22) doit pouvoir le remplacer.
+    await raw.close().catch(() => undefined);
+    throw error;
+  }
   const rows = await db.query<{ user_version: number }>('PRAGMA user_version');
   log('DB_READY', { version: rows[0]?.user_version ?? 0 });
   return db;

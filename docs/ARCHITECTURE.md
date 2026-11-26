@@ -130,7 +130,7 @@ Locales uniquement. À chaque écriture qui touche créneaux, séances ou régla
 - `blockedPermissions` dans `app.json` : INTERNET (ABS-01), et les permissions qu'Expo ajoute par défaut sans que l'appli s'en serve (stockage externe, `SYSTEM_ALERT_WINDOW`, `VIBRATE`) ; `permissions: []`.
 - **Audit sur le binaire construit**, pas sur le manifeste : `scripts/audit-apk.js` compare `aapt2 dump permissions` à `config/permissions-attendues.txt` (une seule permission, interne à AndroidX) et vérifie dans le manifeste compilé `allowBackup=false` et l'absence de `android:scheme` sous un `intent-filter`. Le bloc `<queries>` (scheme `https`) ajouté par Expo sert seulement à voir les navigateurs installés : ce n'est pas une entrée. Workflow `builds.yml`, à chaque PR vers `main`.
 - Sauvegarde système Android désactivée (`allowBackup: false`) : les données ne quittent pas l'appareil sans l'export explicite.
-- iOS : `ITSAppUsesNonExemptEncryption` = `false` ; aucune habilitation ; **aucun scheme d'URL** : Expo ajoute toujours le nom de paquet comme scheme, retiré par `plugins/withoutUrlScheme.js` (décision du porteur du 2026-11-26). Vérifié sur le binaire par `scripts/audit-ios.js`.
+- iOS : `ITSAppUsesNonExemptEncryption` = `false` ; aucune habilitation ; **aucun scheme d'URL** : Expo ajoute toujours le nom de paquet comme scheme, retiré par `plugins/withoutUrlScheme.js` (décision du porteur du 2026-11-26). `scripts/audit-ios.js` vérifie l'Info.plist **du binaire construit**, mais les habilitations sur le fichier du projet généré : le build simulateur n'est pas signé et n'en embarque pas. À contrôler sur le binaire signé au jalon 6.
 
 ## 7. Journaux
 

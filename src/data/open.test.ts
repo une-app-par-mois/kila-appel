@@ -14,4 +14,12 @@ describe('openAppDatabase : ouverture au démarrage (ADR-008, vérifiée sur le 
     expect(log).toHaveBeenCalledWith('DB_READY', { version: 1 });
     await db.close();
   });
+
+  it('ferme la connexion si la préparation échoue (base trop récente), puis relaie l’erreur', async () => {
+    const raw = openNodeDb();
+    await raw.execute('PRAGMA user_version = 99');
+    const close = jest.spyOn(raw, 'close');
+    await expect(openAppDatabase(async () => raw)).rejects.toThrow();
+    expect(close).toHaveBeenCalledTimes(1);
+  });
 });
