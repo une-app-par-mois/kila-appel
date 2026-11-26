@@ -30,6 +30,7 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 006c | [Écrans des saisons](006c-ecrans-saisons-groupes.md) | 1 | F-01 | oui | fusionné dans le groupe |
 | 006d | [Écrans des groupes](006d-ecrans-groupes.md) | 1 | F-01 | oui | fusionné dans le groupe |
 | 006e | [Licences embarquées](006e-licences.md) | 1 | — | non | fusionné dans le groupe |
+| 006f | [Saison modifiée sans inscription hors dates](006f-saison-inscriptions.md) | 1 | F-01 | oui | à faire |
 | 007 | [Membres et inscriptions : données](007-membres-inscriptions.md) | 1 | F-01 | oui | fusionné dans le groupe |
 | 007b | [Écrans des membres](007b-ecrans-membres.md) | 1 | F-01 | oui | fusionné dans le groupe |
 | 007c | [Écrans des inscriptions](007c-inscriptions.md) | 1 | F-01 | non | fusionné dans le groupe |
