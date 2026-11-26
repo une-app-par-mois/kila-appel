@@ -1,6 +1,6 @@
 # PRD — Ki&La (appel)
 
-Statut : 🟡 brouillon complet, en attente de relecture · Dernière mise à jour : 2026-11-26
+Statut : ✅ validé le 2026-11-26
 
 Ce document dit précisément ce que fait la v1. Il s'appuie sur `docs/CADRAGE.md` (validé le 2026-11-26), qui fait foi sur le périmètre et le vocabulaire : les mots en gras ci-dessous sont ceux du glossaire. Chaque exigence a un identifiant (`EX-xx`), rattaché à une fonctionnalité `F-xx`, cité dans le code, les tests et les tickets.
 
