@@ -73,9 +73,10 @@ Apple et Google demandent de déclarer si l'éditeur est un **commerçant** (*tr
 ## 7. Licences
 
 - **Code du dépôt** : MIT (fichier `LICENSE`).
-- **Licences acceptées pour une dépendance** : MIT, ISC, BSD, Apache-2.0 ; **polices** : SIL OFL 1.1. **Refusées sans décision du porteur** : GPL, LGPL, AGPL, SSPL et toute licence copyleft.
+- **Licences acceptées pour une dépendance** : MIT, ISC, BSD, Apache-2.0, et (décision du porteur du 2026-11-26) 0BSD, BlueOak-1.0.0, CC0-1.0, Unlicense ; une double licence est acceptée si l'une des deux l'est ; **polices** : SIL OFL 1.1. **Refusées sans décision du porteur** : GPL, LGPL, AGPL, SSPL et toute licence copyleft.
 - **Registre** : la liste des licences embarquées est générée depuis les dépendances réellement présentes dans le build et affichée dans l'appli (EX-42) ; elle est mise à jour dans le même ticket que toute nouvelle dépendance, police ou ressource.
 - Polices IBM Plex : fichier de licence OFL livré à côté des `.ttf` (ADR-001).
+- **Périmètre du registre** (décision du porteur du 2026-11-26) : paquets du bundle JavaScript exporté et polices, par `scripts/licences.mjs` ; les bibliothèques natives (Gradle, CocoaPods) font l'objet d'un inventaire à part (§8).
 
 ## 8. Actions avant le lancement
 
@@ -93,6 +94,7 @@ Apple et Google demandent de déclarer si l'éditeur est un **commerçant** (*tr
 
 ## 9. Sources (consultées le 2026-11-26)
 
+- [ ] Inventaire des licences des bibliothèques natives (Gradle, CocoaPods : AndroidX, Kotlin, OkHttp, Hermes…) et ajout au registre affiché (EX-42), décision du porteur du 2026-11-26
 - Google Play, Sécurité des données : <https://support.google.com/googleplay/android-developer/answer/10787469>
 - Google Play, données utilisateur et politique de confidentialité : <https://support.google.com/googleplay/android-developer/answer/9859455>
 - Google Play, suppression de compte : <https://support.google.com/googleplay/android-developer/answer/13327111>

@@ -1,6 +1,6 @@
 # 006d — Écrans des groupes
 
-Statut : en cours · Jalon : 1 · Zone sensible : oui (confirmation de suppression) · Trivial : non
+Statut : fusionné dans le groupe · Jalon : 1 · Zone sensible : oui (confirmation de suppression) · Trivial : non
 
 Issu du découpage du ticket 006c (décision du porteur du 2026-11-26).
 
