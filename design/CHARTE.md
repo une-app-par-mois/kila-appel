@@ -1,6 +1,6 @@
 # Charte graphique — Ki&La (appel) · « Carnet »
 
-Statut : 🟡 brouillon complet, en attente de relecture · Dernière mise à jour : 2026-11-26
+Statut : ✅ validé le 2026-11-26
 
 Reprise de la charte « Carnet » du 2026-11-25, conçue pour la version ouverte de Ki&La (décision du porteur du 2026-11-26), adaptée au cadrage et au PRD validés. Elle ne reprend rien de l'identité d'origine Jita Vision (fond beige, Rethink Sans, accent saumon, dégradés, icônes Phosphor).
 
@@ -110,6 +110,8 @@ Taille minimale : 12 pt (les onglets de Carnet, à 9,5–10,5, sont remontés à
 
 Icônes au trait de 2 pt, coins arrondis, grille de 24 pt ; Texte secondaire au repos, Encre à l'état actif. Bibliothèque libre de redistribution, compatible MIT, sans lien avec l'identité d'origine : **à choisir et valider comme dépendance** au ticket qui l'installe.
 
+Thème : **clair seul en v1** (décision du 2026-11-26) ; le thème sombre est en boîte à idées.
+
 ## 9. Maquettes
 
 HTML local, générées par un script depuis `design/jetons.json`, dans `design/maquettes/` (décision du 2026-11-26). Liste des écrans au document des maquettes. Données toujours fictives.
@@ -125,14 +127,4 @@ HTML local, générées par un script depuis `design/jetons.json`, dans `design/
 
 ## Ce que j'ai changé par rapport aux propositions de l'IA
 
-- (rempli à la relecture)
-
-## Points à vérifier en relisant
-
-1. **Attendu** : pastille blanche à contour Encre (ajout, absent de Carnet).
-2. **Séances annulée et non planifiée** : libellé en Texte secondaire, sans couleur (ajout).
-3. **Libellés d'onglet remontés à 12 pt** (Carnet : 9,5 à 10,5, sous son propre minimum de 12).
-4. **Tablette** : colonne centrée de 640 pt au plus (ajout).
-5. **Ordre des statuts** Présent → Absent → Retard → Excusé : celui de Carnet, qui tranche la question ouverte du PRD.
-6. **Pas de thème sombre** : Carnet n'en prévoit pas ; la méthode renforcée suggère des jetons clair et sombre.
-7. « élève » de Carnet devient « membre » (glossaire).
+- Aucun changement : ajouts (Attendu, états de séance, onglets à 12 pt, tablette), ordre des statuts et thème clair seul validés tels que proposés le 2026-11-26.

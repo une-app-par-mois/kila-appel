@@ -132,7 +132,7 @@ Serveur, compte, synchronisation, chiffrement dans l'appli, verrouillage à l'ou
 
 ## 9. Questions ouvertes
 
-- Ordre exact des statuts au fil des appuis (EX-10) : Présent → Absent → Retard → Excusé comme l'ancienne version ? (→ maquettes)
+~~Ordre des statuts au fil des appuis (EX-10)~~ : Présent → Absent → Retard → Excusé, tranché dans `design/CHARTE.md` le 2026-11-26.
 - Contenu exact du rapport PDF (EX-32). (→ ticket F-09)
 
 ## Décisions du porteur
