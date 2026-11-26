@@ -1,6 +1,6 @@
 # 006d — Écrans des groupes
 
-Statut : à faire · Jalon : 1 · Zone sensible : oui (confirmation de suppression) · Trivial : non
+Statut : en cours · Jalon : 1 · Zone sensible : oui (confirmation de suppression) · Trivial : non
 
 Issu du découpage du ticket 006c (décision du porteur du 2026-11-26).
 
@@ -20,6 +20,12 @@ Issu du découpage du ticket 006c (décision du porteur du 2026-11-26).
 - [ ] Sans saison active : « Aucune saison active » et un bouton vers Saisons (texte absent des maquettes, décision du porteur du 2026-11-26)
 
 - [ ] `useGroups` recharge tous les écrans ouverts après une modification, comme `useSeasons` (revue du 006c : une pile native garde les écrans précédents montés) ; supprimer une saison recharge aussi les groupes
+
+## Décisions du porteur (2026-11-26)
+
+- La ligne d'un groupe montre son nom seul : le nombre de membres arrive au ticket 007, le créneau au 009.
+- La confirmation de suppression donne les nombres : « Seront effacés définitivement : ses 22 inscriptions et ses liens à 1 créneau et à 31 séances. » puis « Les séances, leurs présences et les membres sont conservés. Pour le retirer des écrans sans rien effacer, utilisez plutôt « Archiver ». »
+- Fiche d'un groupe sans membre : état vide sans le bouton « Ajouter des membres » (ticket 007).
 
 ## Tests attendus
 
