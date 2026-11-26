@@ -26,8 +26,10 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 004 | [Builds sur la CI et audit des permissions](004-builds-ci.md) | 0 | — | oui | fait |
 | 005 | [Domaine : occurrences des créneaux et appels manquants](005-domaine-occurrences.md) | 1 | F-02, F-03 | oui | fusionné dans le groupe |
 | 006 | [Saisons et groupes : dépôts et hooks](006-saisons-groupes.md) | 1 | F-01 | oui | fusionné dans le groupe |
-| 006b | [Composants de base](006b-composants-base.md) | 1 | F-01 | non | en cours |
-| 006c | [Écrans saisons et groupes](006c-ecrans-saisons-groupes.md) | 1 | F-01 | oui | à faire |
+| 006b | [Composants de base](006b-composants-base.md) | 1 | F-01 | non | fusionné dans le groupe |
+| 006c | [Écrans des saisons](006c-ecrans-saisons-groupes.md) | 1 | F-01 | oui | en cours |
+| 006d | [Écrans des groupes](006d-ecrans-groupes.md) | 1 | F-01 | oui | à faire |
+| 006e | [Licences embarquées](006e-licences.md) | 1 | — | non | à faire |
 | 007 | [Membres et inscriptions](007-membres-inscriptions.md) | 1 | F-01 | oui | à faire |
 | 008 | [Contacts d'urgence et recherche rapide](008-contacts-urgence.md) | 1 | F-01 | non | à faire |
 | 009 | [Créneaux récurrents](009-creneaux-recurrents.md) | 1 | F-02 | non | à faire |

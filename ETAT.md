@@ -12,8 +12,8 @@ Réévaluation (PLAN §6) : moins de 2 h de porteur pour 6 h prévues ; 1,5 h pa
 
 ## Prochaines étapes
 
-1. **Ticket 006b** (composants de base et icônes) sur `ticket/006b-composants-base`. Ticket 006 fusionné dans le groupe (PR #10). `react-native-svg` et `lucide-react-native` acceptés (décision ABS-01 du 2026-11-26).
-2. Tickets 006c à 016 du jalon 1, puis PR du jalon vers `main`.
+1. **Ticket 006c** (écrans des saisons, zone sensible) sur `ticket/006c-ecrans-saisons-groupes`. Ticket 006b fusionné dans le groupe (PR #11). Redécoupage : 006c (saisons), 006d (groupes), 006e (licences, EX-42).
+2. Tickets 006d à 016 du jalon 1, puis PR du jalon vers `main`.
 
 ## Points d'attention
 
