@@ -6,12 +6,12 @@ Dernière mise à jour : 2026-11-26
 
 ## En cours
 
-**Ticket 002** (couche données, migration 1, zone sensible) sur `ticket/002-couche-donnees`, partie de `groupe/jalon-0-outillage`. Ticket 001 fusionné dans le groupe (PR #2). La branche du jalon part de `ticket/000-mise-en-route` (décision du porteur du 2026-11-26, notée dans `CLAUDE.md`) ; la PR n°1 est fermée sans fusion.
+**Ticket 003** (garde-fous automatiques, thème, polices) sur `ticket/003-garde-fous-theme`, partie de `groupe/jalon-0-outillage`. Tickets 001 et 002 fusionnés dans le groupe (PR #2, #3 ; 002 relu par le porteur). La branche du jalon part de `ticket/000-mise-en-route` (décision du 2026-11-26, notée dans `CLAUDE.md`) ; PR n°1 fermée sans fusion.
 
 ## Prochaines étapes
 
-1. Ticket 002 : codé et vert (95 tests, couverture 100 %), deux `/code-review` et `/security-review` traités ; **relecture du porteur** sur la PR avant la fusion dans le groupe.
-2. Tickets 003 et 004 ; au 004, migration 1 lancée sur le téléphone (ADR-008).
+1. Ticket 003 : tests d'abord, `/code-review`, PR vers le groupe.
+2. Ticket 004 (zone sensible) : builds sur la CI, audit des permissions, migration 1 sur le téléphone (fin d'ADR-008), polices vérifiées à l'écran.
 3. Fin du jalon 0 : PR du jalon vers `main` (CI complète), prétest, réévaluation du calendrier (`docs/PLAN.md` §6).
 
 ## Points d'attention
