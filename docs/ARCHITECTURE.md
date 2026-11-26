@@ -1,6 +1,6 @@
 # Architecture — Ki&La (appel)
 
-Statut : 🟡 brouillon complet, en attente de relecture · Dernière mise à jour : 2026-11-26
+Statut : ✅ validé le 2026-11-26
 
 Comment l'appli est faite. S'appuie sur `docs/CADRAGE.md`, `docs/PRD.md` et `design/CHARTE.md` (validés). Chaque décision structurante a son ADR dans `docs/adr/` ; ce document en donne la vue d'ensemble et renvoie vers eux.
 

@@ -1,6 +1,6 @@
 # ADR-008 — Tests de la couche données avec node:sqlite
 
-Statut : proposé · 2026-11-26
+Statut : accepté le 2026-11-26
 
 ## Contexte
 

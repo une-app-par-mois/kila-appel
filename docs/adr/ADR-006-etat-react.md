@@ -1,6 +1,6 @@
 # ADR-006 — État de l'interface avec React seul
 
-Statut : proposé · 2026-11-26
+Statut : accepté le 2026-11-26
 
 ## Contexte
 

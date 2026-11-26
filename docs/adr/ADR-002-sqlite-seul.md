@@ -1,6 +1,6 @@
 # ADR-002 — SQLite pour les données et les réglages, sans ORM
 
-Statut : proposé · 2026-11-26
+Statut : accepté le 2026-11-26
 
 ## Contexte
 

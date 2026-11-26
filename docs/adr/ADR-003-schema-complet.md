@@ -1,6 +1,6 @@
 # ADR-003 — Schéma complet de la v1 dès la migration 1
 
-Statut : proposé · 2026-11-26
+Statut : accepté le 2026-11-26
 
 ## Contexte
 

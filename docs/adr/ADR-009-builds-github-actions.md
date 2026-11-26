@@ -1,6 +1,6 @@
 # ADR-009 — Binaires construits sur GitHub Actions uniquement
 
-Statut : proposé · 2026-11-26
+Statut : accepté le 2026-11-26
 
 ## Contexte
 

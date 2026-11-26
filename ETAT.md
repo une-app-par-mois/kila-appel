@@ -6,13 +6,13 @@ Dernière mise à jour : 2026-11-26
 
 ## En cours
 
-Préparation (niveau renforcé), branche `ticket/000-mise-en-route`. Cadrage, PRD (révision 1) et charte validés le 2026-11-26 ; maquettes : lot 1 (39 écrans) validé le 2026-11-26, lot 2 (22 écrans) et les 3 écrans du lot 1 modifiés validés le 2026-11-26 ; ensuite architecture, sécurité, conformité ; règles absolues ABS-01 à ABS-08 dans `CLAUDE.md`.
+Préparation (niveau renforcé), branche `ticket/000-mise-en-route`. Cadrage, PRD (révision 1) et charte validés le 2026-11-26 ; maquettes : lot 1 (39 écrans) validé le 2026-11-26, lot 2 (22 écrans) et les 3 écrans du lot 1 modifiés validés le 2026-11-26 ; architecture et ADR 001 à 009 validés le 2026-11-26 ; ensuite sécurité, conformité ; règles absolues ABS-01 à ABS-08 dans `CLAUDE.md`.
 
 ## Prochaines étapes
 
 Mise en route d'une nouvelle app (à retirer une fois faites) :
 
-1. Niveau renforcé : remplacer la section « 100 % local » de `CLAUDE.md` par les règles absolues du projet, puis produire les documents de la préparation renforcée (fait : PRD ; à faire : conception et architecture, sécurité, conformité, conventions et DoD, plan), chacun validé avant le suivant.
+1. Niveau renforcé : remplacer la section « 100 % local » de `CLAUDE.md` par les règles absolues du projet, puis produire les documents de la préparation renforcée (fait : PRD, charte, maquettes, architecture ; à faire : sécurité, conformité, conventions et DoD, plan), chacun validé avant le suivant.
 2. Charte et maquettes dans `design/`, validées avant le code.
 3. Compléter `CLAUDE.md` (contexte, commandes), `scripts/test.sh`, `scripts/build.sh`, la mise en place de la stack dans les workflows et `.github/dependabot.yml`.
 4. Écrire les premiers tickets dans `docs/tickets/`.

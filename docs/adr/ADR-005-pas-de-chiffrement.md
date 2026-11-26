@@ -1,6 +1,6 @@
 # ADR-005 — Pas de chiffrement applicatif
 
-Statut : proposé · 2026-11-26
+Statut : accepté le 2026-11-26
 
 ## Contexte
 

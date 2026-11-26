@@ -1,6 +1,6 @@
 # ADR-004 — Séances calculées à la volée
 
-Statut : proposé · 2026-11-26
+Statut : accepté le 2026-11-26
 
 ## Contexte
 
