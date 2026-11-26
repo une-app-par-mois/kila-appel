@@ -88,9 +88,6 @@ Recopiée et cochée dans la PR (le modèle de PR la contient). Une case non coc
 7. Documents de référence et `CHANGELOG.md` à jour si une décision écrite ou un comportement visible change.
 8. `ETAT.md` à jour, avec ce qui n'a **pas** été vérifié.
 
-## Points à vérifier en relisant
+## Décisions du porteur
 
-1. **Seuils de couverture** 90 % des lignes, 85 % des branches sur domaine et données (l'ancienne version : 80/70 sur le domaine seul).
-2. **CONV-03 et CONV-16** : lint qui interdit textes et couleurs en dur ; la faisabilité avec Biome sera vérifiée au ticket d'outillage (sinon un test qui parcourt les fichiers).
-3. **CONV-42** : retour du `CHANGELOG.md` au format Keep a Changelog.
-4. **DoD point 4** : relecture du porteur en zone sensible avant la fusion dans le jalon (règle de la méthode, rappelée ici).
+- 2026-11-26 : seuils de couverture 90 % des lignes et 85 % des branches sur domaine et données ; contrôle automatique des textes et couleurs en dur (lint, ou test si Biome ne le permet pas, vérifié au ticket d'outillage) ; `CHANGELOG.md` au format Keep a Changelog. La DoD reprend la relecture du porteur en zone sensible avant la fusion dans le jalon.
