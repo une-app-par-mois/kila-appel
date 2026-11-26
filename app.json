@@ -12,6 +12,20 @@
     "android": {
       "package": "com.jitavision.kila"
     },
-    "plugins": ["expo-router", "expo-sqlite"]
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/IBMPlexSans.ttf",
+            "./assets/fonts/IBMPlexSans-SmBld.ttf",
+            "./assets/fonts/IBMPlexSans-Bold.ttf",
+            "./assets/fonts/IBMPlexMono-Medm.ttf"
+          ]
+        }
+      ]
+    ]
   }
 }

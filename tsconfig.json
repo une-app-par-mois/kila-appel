@@ -10,5 +10,14 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": [
+    "node_modules",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "src/__fixtures__",
+    "src/node.d.ts",
+    "src/data/nodeDb.ts",
+    "jest.config.js"
+  ]
 }

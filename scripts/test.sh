@@ -13,8 +13,9 @@ fi
 echo "== Lint et format (Biome, CONV-20)"
 npx --no-install biome check --error-on-warnings .
 
-echo "== Typage strict (tsc, CONV-12)"
-npx --no-install tsc --noEmit
+echo "== Typage strict (tsc, CONV-12) : appli, puis tests (seuls à connaître les types Node)"
+npx --no-install tsc --noEmit -p tsconfig.json
+npx --no-install tsc --noEmit -p tsconfig.test.json
 
 echo "== Contrastes de la charte"
 node scripts/contrastes.mjs
