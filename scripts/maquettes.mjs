@@ -125,7 +125,7 @@ ${titre('Poussins mercredi', 'historique')}
 <div class="carte compteur mono"><span><i class="carre s-present"></i>19 présents</span><span><i class="carre s-absent"></i>2 absents</span><span><i class="carre s-excused"></i>1 excusé</span></div>
 ${carte(membres.slice(0, 5).map((p, i) => `<div class="rang"><span class="nom">${p.prenom} ${p.nom}</span>${pastille(['present', 'absent', 'present', 'excused', 'present'][i])}</div>`).join(''))}
 <p class="aide">Touchez un statut pour le corriger.</p>
-<div class="duo">${go('historique', 'Supprimer la séance', 'btn-s tiers danger')}${go('historique', 'Enregistrer les corrections', 'btn-p deuxtiers')}</div>`);
+<div class="duo">${go('suppression-seance', 'Supprimer la séance', 'btn-s tiers danger')}${go('historique', 'Enregistrer les corrections', 'btn-p deuxtiers')}</div>`);
 
 // 09 — Paramètres
 ecran('parametres', 1, 'Paramètres', 'EX-01 à EX-07, EX-19 à EX-24', 'parametres', `
@@ -133,7 +133,7 @@ ${titre('Paramètres')}
 ${section('Organisation')}
 ${carte(`${ligne('Saisons', 'Active : 2026-2027', 'data-go="saisons"')}${ligne('Groupes', '3 groupes', 'data-go="groupes"')}${ligne('Membres', '65 membres', 'data-go="membres"')}${ligne('Créneaux', '3 créneaux', 'data-go="creneaux"')}`)}
 ${section('Données')}
-${carte(`${ligne('Sauvegarde et restauration', 'Dernière : il y a 34 jours', 'data-go="donnees"')}${ligne('Conservation', '3 saisons', 'data-go="donnees"')}${ligne('Tout effacer', '', 'data-go="donnees"')}`)}
+${carte(`${ligne('Sauvegarde et restauration', 'Dernière : il y a 34 jours', 'data-go="donnees"')}${ligne('Conservation', '3 saisons', 'data-go="donnees"')}${ligne('Tout effacer', '', 'data-go="tout-effacer"')}`)}
 ${section('À propos')}
 ${carte(`${ligne('Confidentialité', '')}${ligne("Conditions d'utilisation", '')}${ligne('Licences', '')}`)}`);
 
@@ -141,18 +141,18 @@ ${carte(`${ligne('Confidentialité', '')}${ligne("Conditions d'utilisation", '')
 ecran('saisons', 1, 'Saisons', 'EX-01', 'parametres', `
 ${titre('Saisons', 'parametres')}
 ${carte(`
-<div class="rang"><div><div class="l-titre">2026-2027</div><div class="l-sous mono">01/09/2026 – 31/07/2027</div></div><span class="badge">Active</span></div>
+<div class="rang" data-go="saison-edition"><div><div class="l-titre">2026-2027</div><div class="l-sous mono">01/09/2026 – 31/07/2027</div></div><span class="badge">Active</span></div>
 <div class="rang"><div><div class="l-titre">2025-2026</div><div class="l-sous mono">01/09/2025 – 31/07/2026</div></div><button class="btn-mini">Activer</button></div>
 `)}
-${go('saisons', 'Nouvelle saison', 'btn-s')}
+${go('saison-edition', 'Nouvelle saison', 'btn-s')}
 <p class="note">Supprimer une saison : confirmation qui liste ce qui sera effacé (groupes, créneaux, séances, présences ; pas les membres).</p>`);
 
 // 11 — Groupe (EX-02, EX-04)
 ecran('groupe', 1, "Groupe et ses membres", 'EX-02, EX-04', 'parametres', `
 ${titre('Poussins mercredi', 'groupes')}
-<div class="l-sous sous-titre">Saison 2026-2027 · 22 membres inscrits</div>
+<div class="l-sous sous-titre">Saison 2026-2027 · 22 membres inscrits · <a class="lien" data-go="groupe-edition">Renommer ou supprimer</a></div>
 ${carte(membres.slice(0, 6).map((p) => ligne(`${p.prenom} ${p.nom}`, 'Inscrit depuis le 03/09/2026', 'data-go="membre"')).join(''))}
-<div class="duo">${go('groupe', 'Archiver', 'btn-s tiers')}${go('ajout', 'Ajouter un membre', 'btn-p deuxtiers')}</div>`);
+<div class="duo">${go('groupe', 'Archiver', 'btn-s tiers')}${go('inscription', 'Ajouter des membres', 'btn-p deuxtiers')}</div>`);
 
 // 11a — Liste des groupes (EX-02)
 ecran('groupes', 1, 'Groupes', 'EX-02', 'parametres', `
@@ -176,13 +176,13 @@ ${titre('Membres', 'parametres')}
 <input class="champ" placeholder="🔍 Rechercher un membre">
 <div class="filtres"><span class="filtre on">Tous les groupes</span><span class="filtre">Archivés (4)</span></div>
 ${carte(membres.slice(0, 7).map((p, i) => ligne(`${p.prenom} ${p.nom}`, ['Poussins mercredi', 'Benjamins lundi', 'Poussins mercredi', 'Adultes jeudi', 'Poussins mercredi', 'Benjamins lundi', 'Aucun groupe'][i], 'data-go="membre"')).join(''))}
-<div class="duo">${go('membres', 'Importer (CSV)', 'btn-s tiers')}${go('ajout', 'Nouveau membre', 'btn-p deuxtiers')}</div>
+<div class="duo">${go('membres', 'Importer (CSV)', 'btn-s tiers')}${go('membre-nouveau', 'Nouveau membre', 'btn-p deuxtiers')}</div>
 <p class="note">« Importer (CSV) » : lot 2 (F-07).</p>`);
 
 // 14a — Liste des créneaux (EX-07)
 ecran('creneaux', 1, 'Créneaux', 'EX-07', 'parametres', `
 ${titre('Créneaux', 'parametres')}
-${carte(`${ligne('Mercredi 14:00 – 15:30', 'Poussins mercredi · Gymnase Jean-Moulin', 'data-go="creneau"')}${ligne('Lundi 18:00 – 19:30', 'Benjamins lundi · Dojo municipal', 'data-go="creneau"')}${ligne('Jeudi 20:00 – 21:30', 'Adultes jeudi · Dojo municipal', 'data-go="creneau"')}`)}
+${carte(`${ligne('Mercredi 14:00 – 15:30', 'Poussins mercredi · Gymnase Jean-Moulin', 'data-go="creneau-modif"')}${ligne('Lundi 18:00 – 19:30', 'Benjamins lundi · Dojo municipal', 'data-go="creneau"')}${ligne('Jeudi 20:00 – 21:30', 'Adultes jeudi · Dojo municipal', 'data-go="creneau"')}`)}
 ${go('creneau', 'Nouveau créneau')}`);
 
 // 12 — Fiche membre (EX-03, EX-04, EX-05)
@@ -192,10 +192,10 @@ ${titre('Léo Garcia', 'membres')}
 <label>Nom</label><div class="champ">Garcia</div>
 <label>Date de naissance <span class="facultatif">facultative</span></label><div class="champ mono">14/03/2017</div>
 ${section("Contacts d'urgence")}
-${carte(`<div class="contact"><div><div class="l-titre">Sa mère</div><div class="l-sous mono">06 00 00 00 01</div></div><span class="chev">≡</span></div><div class="contact"><div><div class="l-titre">Son père</div><div class="l-sous mono">06 00 00 00 02</div></div><span class="chev">≡</span></div>`)}
-<button class="btn-s">+ Ajouter un contact</button>
+${carte(`<div class="contact" data-go="contact"><div><div class="l-titre">Sa mère</div><div class="l-sous mono">06 00 00 00 01</div></div><span class="chev">≡</span></div><div class="contact" data-go="contact"><div><div class="l-titre">Son père</div><div class="l-sous mono">06 00 00 00 02</div></div><span class="chev">≡</span></div>`)}
+${go('contact', '+ Ajouter un contact', 'btn-s')}<p class="note">≡ : glisser pour changer l'ordre des contacts.</p>
 ${section('Groupes')}
-${carte(ligne('Poussins mercredi', 'Depuis le 03/09/2026'))}
+${carte(`<div class="rang"><div><div class="l-titre">Poussins mercredi</div><div class="l-sous">Depuis le 03/09/2026</div></div><button class="btn-mini" data-go="retrait">Retirer</button></div>`)}${go('inscription', '+ Ajouter à un groupe', 'btn-s')}
 <div class="duo">${go('membre', 'Archiver', 'btn-s tiers')}${go('suppression', 'Supprimer', 'btn-s tiers danger')}</div>`);
 
 // 13 — Confirmation de suppression (ABS-05)
@@ -222,11 +222,11 @@ ${carte(`<div class="l-titre">Ce fichier n'est pas protégé</div><p>Il contient
 ${go('donnees', 'Exporter une sauvegarde')}
 <p class="l-sous">Dernière sauvegarde : il y a 34 jours.</p>
 ${section('Restaurer')}
-${carte(`<p>Remplace <b>toutes</b> les données de l'appareil par celles du fichier. Le fichier est vérifié avant tout changement.</p>${go('donnees', 'Choisir un fichier…', 'btn-s')}`)}
+${carte(`<p>Remplace <b>toutes</b> les données de l'appareil par celles du fichier. Le fichier est vérifié avant tout changement.</p>${go('restauration', 'Choisir un fichier…', 'btn-s')}`)}
 ${section('Conservation')}
-${carte(`<div class="rang"><span>Garder les</span><span class="champ mini mono">3 ▾</span><span>dernières saisons</span></div><p class="l-sous">1 saison dépasse cette durée : 2023-2024.</p><button class="btn-s">Purger 2023-2024…</button>`)}
+${carte(`<div class="rang"><span>Garder les</span><span class="champ mini mono">3 ▾</span><span>dernières saisons</span></div><p class="l-sous">1 saison dépasse cette durée : 2023-2024.</p>${go('purge', 'Purger 2023-2024…', 'btn-s')}`)}
 ${section('Tout effacer')}
-${carte(`<p class="l-sous">Efface toutes les données de cet appareil. Double confirmation.</p><button class="btn-s danger">Tout effacer…</button>`)}`);
+${carte(`<p class="l-sous">Efface toutes les données de cet appareil. Double confirmation.</p>${go('tout-effacer', 'Tout effacer…', 'btn-s danger')}`)}`);
 
 // 16 — Base illisible (EX-22)
 ecran('illisible', 1, 'Base illisible au démarrage', 'EX-22', null, `
@@ -235,6 +235,98 @@ ${carte(`<p>Le fichier de données de l'appli est abîmé. Rien n'a été effac�
 ${go('accueil', 'Restaurer une sauvegarde')}
 ${go('bienvenue', 'Repartir de zéro', 'btn-s')}
 <p class="note">Jamais de message technique ni de plantage.</p>`);
+
+// ---------- Écrans ajoutés à la deuxième passe ----------
+const confirmer = (t, retour, corps, oui, ouiVers, non = 'Garder') => `${titre(t, retour)}${carte(corps, 'bandeau')}<div class="duo">${go(retour, non, 'btn-s tiers')}${go(ouiVers, oui, 'btn-p deuxtiers fond-marge')}</div>`;
+
+ecran('accueil-brouillon', 1, 'Accueil avec un appel interrompu', 'EX-14', 'accueil', `
+${titre('Mercredi 26 nov.')}
+${carte(`<div class="l-titre">Appel en cours</div><div class="l-sous">Poussins mercredi · commencé à 14:03 · 3 absents notés</div><div class="duo">${go('abandon-brouillon', 'Abandonner', 'btn-s tiers')}${go('appel', "Reprendre l'appel", 'btn-p deuxtiers')}</div>`, 'bandeau')}
+<p class="note">S'affiche à la réouverture si un brouillon d'appel existe (fermeture forcée, redémarrage). L'appel s'ouvre aussi directement sur le brouillon depuis « Nouvel appel ».</p>`);
+
+ecran('abandon-brouillon', 1, "Abandon d'un brouillon d'appel", 'EX-14', 'accueil', confirmer("Abandonner l'appel en cours ?", 'accueil-brouillon',
+  `<p>Les statuts déjà notés pour <b>Poussins mercredi</b> seront perdus. Aucune séance ne sera enregistrée.</p>`, 'Abandonner', 'accueil', 'Revenir'));
+
+ecran('invitation-sauvegarde', 1, 'Invitation à sauvegarder (premier appel)', 'EX-21', 'appel', `
+${titre('Premier appel enregistré')}
+${carte(`<div class="l-titre">Pensez à sauvegarder</div><p>Vos données ne vivent que sur cet appareil. Si vous le perdez ou le changez, seule une sauvegarde permet de les retrouver.</p>`)}
+${go('donnees', 'Sauvegarder maintenant')}
+${go('historique', 'Plus tard', 'btn-s')}
+<p class="note">Une seule fois, après le premier appel enregistré.</p>`);
+
+ecran('saison-edition', 1, "Création ou modification d'une saison", 'EX-01', 'parametres', `
+${titre('Saison', 'saisons')}
+<label>Nom</label><div class="champ">2026-2027</div>
+<div class="deux"><div><label>Début</label><div class="champ mono">01/09/2026</div></div><div><label>Fin</label><div class="champ mono">31/07/2027</div></div></div>
+${go('saisons', 'Enregistrer')}
+${go('suppression-saison', 'Supprimer la saison', 'btn-s danger')}`);
+
+ecran('suppression-saison', 1, "Suppression d'une saison", 'EX-01, ABS-05', 'parametres', confirmer('Supprimer 2025-2026 ?', 'saison-edition',
+  `<p>Seront effacés <b>définitivement</b> : ses <span class="mono">3</span> groupes, <span class="mono">3</span> créneaux, <span class="mono">96</span> séances et toutes leurs présences.</p><p class="l-sous">Les membres sont conservés.</p>`, 'Supprimer définitivement', 'saisons'));
+
+ecran('groupe-edition', 1, "Renommer ou supprimer un groupe", 'EX-02', 'parametres', `
+${titre('Modifier le groupe', 'groupe')}
+<label>Nom du groupe</label><div class="champ">Poussins mercredi</div>
+${go('groupe', 'Enregistrer')}
+${go('suppression-groupe', 'Supprimer le groupe', 'btn-s danger')}`);
+
+ecran('suppression-groupe', 1, "Suppression d'un groupe", 'EX-02, ABS-05', 'parametres', confirmer('Supprimer Poussins mercredi ?', 'groupe-edition',
+  `<p>Seront effacés <b>définitivement</b> : ses inscriptions, son créneau, ses <span class="mono">31</span> séances et leurs présences.</p><p class="l-sous">Les membres sont conservés. Pour le retirer des écrans sans rien effacer, utilisez plutôt « Archiver ».</p>`, 'Supprimer définitivement', 'groupes'));
+
+ecran('membre-nouveau', 1, "Création d'un membre", 'EX-03, EX-04', 'parametres', `
+${titre('Nouveau membre', 'membres')}
+<label>Prénom</label><div class="champ">Yanis</div>
+<label>Nom</label><div class="champ">Colin</div>
+<label>Date de naissance <span class="facultatif">facultative</span></label><div class="champ vide">JJ/MM/AAAA</div>
+<label>Groupe <span class="facultatif">facultatif</span></label><div class="champ">Poussins mercredi ▾</div>
+${go('membre', 'Créer le membre')}
+<p class="note">Les contacts d'urgence s'ajoutent ensuite depuis sa fiche.</p>`);
+
+ecran('inscription', 1, 'Inscription de membres à un groupe', 'EX-04', 'parametres', `
+${titre('Ajouter à Poussins mercredi', 'groupe')}
+<input class="champ" placeholder="🔍 Rechercher parmi les membres">
+${carte(membres.slice(8, 13).map((p, i) => `<div class="rang"><span class="nom">${p.prenom} ${p.nom}</span><span class="case ${i < 2 ? 'on' : ''}">${i < 2 ? '✓' : ''}</span></div>`).join(''))}
+<label>À partir du</label><div class="champ mono">26/11/2026</div>
+<div class="duo">${go('membre-nouveau', 'Nouveau membre', 'btn-s tiers')}${go('groupe', 'Inscrire 2 membres', 'btn-p deuxtiers')}</div>`);
+
+ecran('retrait', 1, "Retrait d'un membre d'un groupe", 'EX-04', 'parametres', confirmer('Retirer Léo Garcia de Poussins mercredi ?', 'membre',
+  `<p>Il n'apparaîtra plus dans l'appel de ce groupe à partir du :</p><div class="champ mono">26/11/2026</div><p class="l-sous">Ses présences passées sont conservées.</p>`, 'Retirer du groupe', 'membre', 'Annuler'));
+
+ecran('contact', 1, "Contact d'urgence", 'EX-05', 'parametres', `
+${titre("Contact d'urgence", 'membre')}
+<label>Qui est-ce ?</label><div class="champ">Sa mère</div>
+<label>Téléphone</label><div class="champ mono">06 00 00 00 01</div>
+${go('membre', 'Enregistrer')}
+${go('membre', 'Supprimer ce contact', 'btn-s danger')}`);
+
+ecran('creneau-modif', 1, "Modification d'un créneau", 'EX-07', 'parametres', `
+${titre('Mercredi 14:00', 'creneaux')}
+<label>Jour</label><div class="jours">${['L', 'M', 'Me', 'J', 'V', 'S', 'D'].map((d) => `<span class="jour ${d === 'Me' ? 'on' : ''}">${d}</span>`).join('')}</div>
+<div class="deux"><div><label>Début</label><div class="champ mono">14:00</div></div><div><label>Durée</label><div class="champ mono">1 h 30</div></div></div>
+<label>Groupe</label><div class="champ">Poussins mercredi ▾</div>
+${go('creneaux', 'Enregistrer')}
+${go('creneaux', 'Supprimer le créneau', 'btn-s danger')}
+<p class="note">Modifier ou supprimer un créneau ne touche à aucune séance déjà enregistrée (EX-07).</p>`);
+
+ecran('suppression-seance', 1, "Suppression d'une séance", 'EX-18', 'historique', confirmer('Supprimer cette séance ?', 'seance',
+  `<p>L'appel de <b>Poussins mercredi</b> du <span class="mono">19/11/2026</span> et ses <span class="mono">22</span> présences seront effacés définitivement.</p><p class="l-sous">La date réapparaîtra comme appel manquant.</p>`, 'Supprimer définitivement', 'historique'));
+
+ecran('restauration', 1, "Restauration d'une sauvegarde", 'EX-20', 'parametres', `
+${titre('Restaurer ?', 'donnees')}
+${carte(`<div class="l-titre">Sauvegarde du 22/10/2026</div><div class="l-sous mono">65 membres · 3 groupes · 112 séances</div><p>Toutes les données actuelles de l'appareil seront <b>remplacées</b> par celles de ce fichier.</p>`, 'bandeau')}
+<div class="duo">${go('donnees', 'Annuler', 'btn-s tiers')}${go('accueil', 'Remplacer mes données', 'btn-p deuxtiers fond-marge')}</div>
+${section('Si le fichier est invalide')}
+${carte(`<div class="l-titre">Ce fichier n'est pas une sauvegarde Ki&La</div><p class="l-sous">Rien n'a été modifié. Choisissez un autre fichier.</p>`)}`);
+
+ecran('purge', 1, 'Purge des anciennes saisons', 'EX-24, ABS-05', 'parametres', confirmer('Purger 2023-2024 ?', 'donnees',
+  `<p>Seront effacés <b>définitivement</b> : la saison 2023-2024, ses groupes, créneaux, séances et présences.</p><p class="l-sous">Les membres qui ne figurent plus dans aucune saison conservée sont aussi effacés.</p>`, 'Purger', 'donnees'));
+
+ecran('tout-effacer', 1, 'Tout effacer (double confirmation)', 'EX-23, ABS-05', 'parametres', `
+${titre('Tout effacer ?', 'donnees')}
+${carte(`<p>Toutes les données de cet appareil seront effacées <b>définitivement</b> : membres, contacts d'urgence, groupes, créneaux, séances, présences et réglages.</p><p class="l-sous">Sans sauvegarde, elles ne pourront pas être retrouvées.</p>`, 'bandeau')}
+<label>Pour confirmer, tapez EFFACER</label><div class="champ mono vide">EFFACER</div>
+<div class="duo">${go('donnees', 'Garder', 'btn-s tiers')}${go('bienvenue', 'Tout effacer', 'btn-p deuxtiers fond-marge')}</div>
+<p class="note">Double confirmation : le bouton, puis le mot à taper.</p>`);
 
 // 17 — Annuler une séance (lot 2, F-13) : laissée en lien depuis l'accueil, page d'attente
 ecran('annuler', 2, 'Annuler une séance', 'EX-38 (lot 2)', 'accueil', `
@@ -286,7 +378,7 @@ nav.menu a.on{background:var(--encre);color:#fff}nav.menu a .v{float:right}nav.m
 .btn-appel{background:var(--encre);color:#fff;border:none;font-weight:600;padding:0 14px}
 .duo{display:flex;gap:10px}.duo .tiers{flex:1}.duo .deuxtiers{flex:2}.duo button{margin:12px 0 0}
 .badge{background:var(--encre);color:#fff;border-radius:10px;padding:3px 10px;font-size:13px;font-weight:600}
-.rouge{color:var(--marge);font-weight:600}.gris{color:var(--texte2);font-weight:600}
+.lien{color:var(--encre);font-weight:600;text-decoration:underline;cursor:pointer}.rouge{color:var(--marge);font-weight:600}.gris{color:var(--texte2);font-weight:600}
 .recherche{background:#fff;border:1.5px solid var(--quad);border-radius:${j.rayons.champ}px;padding:12px;color:var(--texte2);cursor:pointer;margin:8px 0;min-height:${j.zoneAppuiMin}px}
 label{display:block;font-size:14px;color:var(--texte2);margin:12px 0 4px}.facultatif{font-style:italic}
 .champ{display:block;width:100%;background:#fff;border:1.5px solid var(--quad);border-radius:${j.rayons.champ}px;padding:11px 12px;font:inherit;font-size:16px;min-height:${j.zoneAppuiMin}px;margin:6px 0}
@@ -297,7 +389,7 @@ label{display:block;font-size:14px;color:var(--texte2);margin:12px 0 4px}.facult
 .filtres{display:flex;gap:8px;margin:8px 0}.filtre{border:1.5px solid var(--quad);border-radius:20px;padding:6px 12px;background:#fff;font-size:14px}.filtre.on{border-color:var(--encre);color:var(--encre);font-weight:600}
 .pastille{min-width:84px;text-align:center;border-radius:${j.rayons.pastille}px;padding:8px 10px;font-weight:600;font-size:14px;white-space:nowrap}
 ${Object.entries(st).map(([k, v]) => `.s-${k}{background:${v.fond};color:${v.texte};${v.bordure ? `border:1.5px solid ${v.bordure};` : ''}}`).join('')}
-.carre{display:inline-block;width:10px;height:10px;margin-right:5px;border-radius:2px}
+.case{width:30px;height:30px;border-radius:8px;border:2px solid var(--quad);display:flex;align-items:center;justify-content:center;font-weight:700}.case.on{background:var(--encre);border-color:var(--encre);color:#fff}.carre{display:inline-block;width:10px;height:10px;margin-right:5px;border-radius:2px}
 .compteur{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px}
 .brouillon{font-size:13px;color:var(--texte2);margin:4px 0 8px}
 .nom{font-size:18px;font-weight:600}
