@@ -15,13 +15,12 @@ Mise en route d'une nouvelle app (à retirer une fois faites) :
 1. Niveau renforcé : remplacer la section « 100 % local » de `CLAUDE.md` par les règles absolues du projet, puis produire les documents de la préparation renforcée (fait : PRD ; à faire : conception et architecture, sécurité, conformité, conventions et DoD, plan), chacun validé avant le suivant.
 2. Charte et maquettes dans `design/`, validées avant le code.
 3. Compléter `CLAUDE.md` (contexte, commandes), `scripts/test.sh`, `scripts/build.sh`, la mise en place de la stack dans les workflows et `.github/dependabot.yml`.
-4. Protéger `main` dans les réglages GitHub : PR obligatoire, travaux de la CI obligatoires.
-5. Écrire les premiers tickets dans `docs/tickets/`.
+4. Écrire les premiers tickets dans `docs/tickets/`.
 
 ## Points d'attention
 
 - Questions ouvertes : nom de paquet exact, usage de la marque Ki&La (cadrage) ; ordre des statuts au fil des appuis, contenu du rapport PDF (PRD).
-- Hooks Git activés le 2026-11-26. `main` reste à protéger dans les réglages GitHub (porteur).
+- Hooks Git activés le 2026-11-26. `main` protégée le 2026-11-26 (ruleset « main », vérifié par l'API) : PR obligatoire sans approbation, 4 vérifications exigées (tests, gitleaks, Semgrep, dépendances) sur une branche à jour, ni suppression ni force push, aucun contournement.
 - Le hook pre-push lance `scripts/test.sh`, qui échoue tant que la stack n'est pas en place : aucun push possible d'ici là (et `--no-verify` interdit). Les documents de préparation sont commités localement ; le prochain push se décide avec le porteur.
 
 ## Non vérifié
