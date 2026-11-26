@@ -19,10 +19,10 @@ Couche données des saisons (EX-01) et des groupes (EX-02), avec leurs suppressi
 
 ## Critères d'acceptation
 
-- [ ] Créer, renommer (et changer les dates), activer, supprimer une saison ; une seule active (EX-01)
-- [ ] Supprimer une saison efface ses groupes, créneaux, séances et présences, pas les membres ; le nombre de lignes concernées est connu avant (EX-01)
-- [ ] Créer, renommer, archiver, désarchiver, supprimer un groupe ; les présences restent (EX-02)
-- [ ] Toute saisie est validée avant la base (nom non vide, dates RM-04, fin après début)
+- [x] Créer, renommer (et changer les dates), activer, supprimer une saison ; une seule active (EX-01)
+- [x] Supprimer une saison efface ses groupes, créneaux, séances et présences, pas les membres ; le nombre de lignes concernées est connu avant (EX-01)
+- [x] Créer, renommer, archiver, désarchiver, supprimer un groupe ; les présences restent (EX-02)
+- [x] Toute saisie est validée avant la base (nom non vide, dates RM-04, fin après début)
 
 ## Tests attendus
 
