@@ -15,13 +15,16 @@ const isAllowed = ([key, value]: [string, unknown]) =>
   (ALLOWED_KEY.test(key) || ALLOWED_KEYS.has(key)) &&
   (typeof value === 'number' || typeof value === 'boolean');
 
-/** Écrit `[kila] CODE` et ses détails ; sinon `[kila] LOG_REFUSED`, sans la donnée refusée. */
+/**
+ * Écrit `[kila] CODE` et ses détails ; sinon `[kila] LOG_REFUSED`, sans la donnée refusée.
+ * Le premier argument de console.log reste constant : aucun format injectable (Semgrep).
+ */
 export const log = (code: string, details: LogDetails = {}): void => {
   if (!CODE.test(code)) {
     console.log('[kila] LOG_REFUSED');
   } else if (!Object.entries(details).every(isAllowed)) {
-    console.log(`[kila] LOG_REFUSED ${code}`);
+    console.log('[kila] LOG_REFUSED', code);
   } else {
-    console.log(`[kila] ${code}`, details);
+    console.log('[kila]', code, details);
   }
 };
