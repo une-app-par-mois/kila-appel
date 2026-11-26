@@ -4,6 +4,7 @@
 import { count, seed } from '@/__fixtures__/seed';
 import type { Db } from '@/data/db';
 import { openExpoDb } from '@/data/expoDb';
+import { LATEST_VERSION } from '@/data/migrations';
 import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
 
@@ -58,7 +59,7 @@ describe.each([
   it('applique la migration 1 et active les clés étrangères', async () => {
     const rows = await db.query<{ foreign_keys: number }>('PRAGMA foreign_keys');
     expect(rows).toEqual([{ foreign_keys: 1 }]);
-    expect(await db.query('PRAGMA user_version')).toEqual([{ user_version: 1 }]);
+    expect(await db.query('PRAGMA user_version')).toEqual([{ user_version: LATEST_VERSION }]);
   });
 
   it('execute renvoie le nombre de lignes touchées et le dernier identifiant', async () => {

@@ -71,9 +71,14 @@ const MIGRATION_1: string[] = [
     start_time TEXT NOT NULL CHECK ${hhmm('start_time')},
     duration_min INTEGER NOT NULL CHECK (duration_min BETWEEN 1 AND 1440),
     place TEXT,
-    name TEXT
+    name TEXT,
+    -- EX-08 : aucun appel réclamé avant la création (décision du porteur du 2026-11-26).
+    created_on TEXT NOT NULL CHECK ${isoDate('created_on')}
   ) STRICT`,
   'CREATE INDEX slots_season ON slots (season_id)',
+  `CREATE TRIGGER slots_created_on_fixed BEFORE UPDATE OF created_on ON slots
+   WHEN NEW.created_on IS NOT OLD.created_on
+   BEGIN SELECT RAISE(ABORT, 'slots.created_on non modifiable (EX-08)'); END`,
 
   `CREATE TABLE slot_dates (
     slot_id INTEGER NOT NULL REFERENCES slots (id) ON DELETE CASCADE,

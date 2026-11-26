@@ -1,6 +1,6 @@
 # 005 — Domaine : occurrences des créneaux et appels manquants
 
-Statut : en cours · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : en cours · Jalon : 1 · Zone sensible : oui (migration 2, décision du porteur du 2026-11-26) · Trivial : non
 
 ## Contexte
 
@@ -17,10 +17,10 @@ Calculer les séances à la volée (ADR-004), base de l'appel, de l'accueil et d
 
 ## Critères d'acceptation
 
-- [ ] Un créneau hebdomadaire donne ses dates sur une période, sans aucune antérieure à sa création (EX-08)
-- [ ] La séance proposée est celle du créneau en cours, sinon la plus proche du jour (EX-09)
-- [ ] Une date passée sans séance enregistrée est un appel manquant (EX-17)
-- [ ] L'heure est passée en paramètre (CONV-11)
+- [x] Un créneau hebdomadaire donne ses dates sur une période, sans aucune antérieure à sa création (EX-08)
+- [x] La séance proposée est celle du créneau en cours, sinon la plus proche du jour (EX-09)
+- [x] Une date passée sans séance enregistrée est un appel manquant (EX-17)
+- [x] L'heure est passée en paramètre (CONV-11)
 
 ## Tests attendus
 

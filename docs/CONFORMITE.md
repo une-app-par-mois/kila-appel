@@ -114,6 +114,7 @@ Non lus (pages vides ou en erreur) : considérant 18 du RGPD (EUR-Lex), deux pag
 
 ## Décisions du porteur
 
+- 2026-11-26 (ticket 005) : date de création des créneaux ajoutée (donnée d'organisation, non personnelle, stockée sur l'appareil) ; rien ne change pour les déclarations des stores (« aucune donnée collectée ») ; la politique de confidentialité (EX-40) la range avec les créneaux (ABS-08).
 - 2026-11-26 : comptes Jita Vision, nom Ki&La, GitHub Pages ; Jita Vision **commerçant** au sens du DSA ; modèle de mention d'information pour les familles sur la page web ; export non déclaré comme partage (action initiée par l'utilisateur) ; public cible Play **16 ans et plus**.
 
 ## Questions ouvertes
