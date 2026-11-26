@@ -11,6 +11,12 @@ type Props = {
   placeholder?: string;
   /** Chiffres en Plex Mono (dates, heures). */
   mono?: boolean;
+  /** Indication après l'étiquette, en Texte secondaire (« facultative »). */
+  hint?: string;
+  /** En quittant le champ (enregistrement automatique de la fiche d'un membre). */
+  onBlur?: () => void;
+  /** Étiquette lue par le lecteur d'écran seulement (champ de recherche de la maquette). */
+  labelHidden?: boolean;
 };
 
 export const TextField = ({
@@ -20,13 +26,17 @@ export const TextField = ({
   error,
   placeholder,
   mono = false,
+  hint,
+  onBlur,
+  labelHidden = false,
 }: Props) => (
   <View style={styles.field}>
-    <Text style={styles.label}>{label}</Text>
+    {!labelHidden && <FieldLabel label={label} hint={hint} />}
     <TextInput
       accessibilityLabel={label}
       value={value}
       onChangeText={onChangeText}
+      onBlur={onBlur}
       placeholder={placeholder}
       placeholderTextColor={theme.colors.texteSecondaire}
       style={[styles.input, mono && styles.mono, error !== undefined && styles.invalid]}
@@ -39,9 +49,19 @@ export const TextField = ({
   </View>
 );
 
+/** Étiquette d'un champ, suivie d'une indication facultative (« facultative »). */
+export const FieldLabel = ({ label, hint }: { label: string; hint?: string }) => (
+  <View style={styles.labelRow}>
+    <Text style={styles.label}>{label}</Text>
+    {hint !== undefined && <Text style={[styles.label, styles.hint]}>{hint}</Text>}
+  </View>
+);
+
 const styles = StyleSheet.create({
   field: { marginVertical: theme.spacing * 1.5 },
   label: { fontFamily: theme.fonts.textSemi, fontSize: 14, color: theme.colors.texteSecondaire },
+  labelRow: { flexDirection: 'row', flexWrap: 'wrap', columnGap: theme.spacing },
+  hint: { fontFamily: theme.fonts.text, fontStyle: 'italic' },
   input: {
     minHeight: theme.minTouchTarget,
     marginTop: theme.spacing * 1.5,

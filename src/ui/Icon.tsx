@@ -4,6 +4,7 @@
 import Archive from 'lucide-react-native/icons/archive';
 import ArchiveRestore from 'lucide-react-native/icons/archive-restore';
 import Check from 'lucide-react-native/icons/check';
+import ChevronDown from 'lucide-react-native/icons/chevron-down';
 import ChevronLeft from 'lucide-react-native/icons/chevron-left';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import Plus from 'lucide-react-native/icons/plus';
@@ -16,6 +17,8 @@ const ICONS = {
   back: ChevronLeft,
   check: Check,
   chevron: ChevronRight,
+  /** Champ de choix « ▾ » (maquettes). */
+  choices: ChevronDown,
   delete: Trash2,
   unarchive: ArchiveRestore,
 } as const;

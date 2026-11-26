@@ -206,7 +206,7 @@ ${carte(`<div class="rang"><div><div class="l-titre">Poussins mercredi</div><div
 // 13 — Confirmation de suppression (ABS-05)
 ecran('suppression', 1, "Suppression d'un membre", 'EX-03, ABS-05', 'parametres', `
 ${titre('Supprimer Léo Garcia ?', 'membre')}
-${carte(`<p>Seront effacés <b>définitivement</b> :</p><ul><li>sa fiche et sa date de naissance ;</li><li>ses 2 contacts d'urgence ;</li><li>ses <span class="mono">41</span> présences.</li></ul><p class="l-sous">Pour le retirer des listes sans rien effacer, utilisez plutôt « Archiver ».</p>`, 'bandeau')}
+${carte(`<p>Seront effacés <b>définitivement</b> :</p><ul><li>sa fiche et sa date de naissance ;</li><li>ses 2 contacts d'urgence ;</li><li>ses <span class="mono">41</span> présences ;</li><li>ses 2 inscriptions.</li></ul><p class="l-sous">Pour le retirer des listes sans rien effacer, utilisez plutôt « Archiver ».</p>`, 'bandeau')}
 <div class="duo">${go('membre', 'Garder', 'btn-s tiers')}${go('groupe', 'Supprimer définitivement', 'btn-p deuxtiers fond-marge')}</div>`);
 
 // 14 — Créneau (EX-07)
