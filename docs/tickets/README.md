@@ -24,8 +24,10 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 002 | [Couche données testable et migration 1](002-couche-donnees.md) | 0 | F-01 à F-14 (schéma) | oui | fait |
 | 003 | [Garde-fous automatiques, thème et polices](003-garde-fous-theme.md) | 0 | — | non | fait |
 | 004 | [Builds sur la CI et audit des permissions](004-builds-ci.md) | 0 | — | oui | fait |
-| 005 | [Domaine : occurrences des créneaux et appels manquants](005-domaine-occurrences.md) | 1 | F-02, F-03 | oui | en cours |
-| 006 | [Saisons et groupes](006-saisons-groupes.md) | 1 | F-01 | oui | à faire |
+| 005 | [Domaine : occurrences des créneaux et appels manquants](005-domaine-occurrences.md) | 1 | F-02, F-03 | oui | fusionné dans le groupe |
+| 006 | [Saisons et groupes : dépôts et hooks](006-saisons-groupes.md) | 1 | F-01 | oui | en cours |
+| 006b | [Composants de base](006b-composants-base.md) | 1 | F-01 | non | à faire |
+| 006c | [Écrans saisons et groupes](006c-ecrans-saisons-groupes.md) | 1 | F-01 | oui | à faire |
 | 007 | [Membres et inscriptions](007-membres-inscriptions.md) | 1 | F-01 | oui | à faire |
 | 008 | [Contacts d'urgence et recherche rapide](008-contacts-urgence.md) | 1 | F-01 | non | à faire |
 | 009 | [Créneaux récurrents](009-creneaux-recurrents.md) | 1 | F-02 | non | à faire |
