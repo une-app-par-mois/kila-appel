@@ -17,6 +17,10 @@ type Props = {
   onBlur?: () => void;
   /** Étiquette lue par le lecteur d'écran seulement (champ de recherche de la maquette). */
   labelHidden?: boolean;
+  /** Clavier téléphonique (contact d'urgence). */
+  phone?: boolean;
+  /** Clavier ouvert dès l'arrivée (recherche d'un contact d'urgence, EX-06). */
+  autoFocus?: boolean;
 };
 
 export const TextField = ({
@@ -29,6 +33,8 @@ export const TextField = ({
   hint,
   onBlur,
   labelHidden = false,
+  phone = false,
+  autoFocus = false,
 }: Props) => (
   <View style={styles.field}>
     {!labelHidden && <FieldLabel label={label} hint={hint} />}
@@ -37,6 +43,8 @@ export const TextField = ({
       value={value}
       onChangeText={onChangeText}
       onBlur={onBlur}
+      keyboardType={phone ? 'phone-pad' : 'default'}
+      autoFocus={autoFocus}
       placeholder={placeholder}
       placeholderTextColor={theme.colors.texteSecondaire}
       style={[styles.input, mono && styles.mono, error !== undefined && styles.invalid]}

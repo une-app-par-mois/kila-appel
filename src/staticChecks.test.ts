@@ -242,4 +242,19 @@ describe('Le code du dépôt respecte les contrôles', () => {
     );
     expect(violations).toEqual([]);
   });
+
+  // ABS-01 (décision du porteur du 2026-11-26) : react-native-worklets, imposé par Expo, embarque
+  // fetch et XMLHttpRequest, actifs seulement en « Bundle Mode ». Ce mode s'active par la
+  // configuration Babel ou Metro : aucune configuration du dépôt ne doit le demander.
+  it('ABS-01 le « Bundle Mode » de react-native-worklets (son réseau) n’est demandé nulle part', () => {
+    const names = readdirSync(root, { withFileTypes: true }).map((entry) => entry.name);
+    const configs = names.filter((name) =>
+      /^(babel|metro)\.config\.|^\.babelrc|^app\.(json|config\.)|^package\.json$/.test(name),
+    );
+    expect(configs).toContain('package.json');
+    const asking = configs.filter((name) =>
+      /bundleMode/i.test(readFileSync(join(root, name), 'utf8')),
+    );
+    expect(asking).toEqual([]);
+  });
 });

@@ -150,11 +150,11 @@ describe('Écrans des inscriptions (EX-04)', () => {
       ).toBe(1),
     );
     expect(await count(db, 'attendances', 'member_id = ?', [s.memberId])).toBe(1);
-    await waitFor(() =>
-      expect(
-        screen.queryByRole('button', { name: `${t.memberGroups.withdraw}, Poussins` }),
-      ).toBeNull(),
-    );
+    // Fenêtre fermée, fiche relue : plus aucun groupe en cours.
+    expect(await screen.findByText(t.memberGroups.none)).toBeTruthy();
+    expect(
+      screen.queryByRole('header', { name: t.withdrawal.title('Alix Exemple', 'Poussins') }),
+    ).toBeNull();
   });
 
   it('retrait : date avant le début refusée ; « Annuler » ne change rien', async () => {
