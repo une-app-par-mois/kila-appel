@@ -1,6 +1,6 @@
 # 007c — Écrans des inscriptions
 
-Statut : en cours · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : fusionné dans le groupe · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Découpé du ticket 007 le 2026-11-26 (décision du porteur).
 
