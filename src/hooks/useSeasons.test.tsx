@@ -230,7 +230,7 @@ describe('useGroups (EX-02, CONV-10)', () => {
   });
 
   it('useGroup lit un groupe ; « create » rend l’identifiant créé', async () => {
-    const group = { id: 5, seasonId: 1, name: 'Poussins', archivedAt: null, enrollmentCount: 0 };
+    const group = { id: 5, seasonId: 1, name: 'Poussins', archivedAt: null };
     mockGroups.get.mockResolvedValue(group);
     mockGroups.listBySeason.mockResolvedValue([]);
     mockGroups.create.mockResolvedValue(5);

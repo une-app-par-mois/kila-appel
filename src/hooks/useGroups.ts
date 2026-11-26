@@ -3,12 +3,7 @@
 // au changement de saison, la liste est vidée et une réponse tardive de l'ancienne ignorée.
 import { useCallback, useMemo } from 'react';
 import { DataError } from '@/data/errors';
-import {
-  type Group,
-  type GroupDeletionImpact,
-  type GroupDetail,
-  groupsRepo,
-} from '@/data/groupsRepo';
+import { type Group, type GroupDeletionImpact, groupsRepo } from '@/data/groupsRepo';
 import { notifyDataChanged } from '@/hooks/dataChanged';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useLoaded } from '@/hooks/useLoaded';
@@ -57,7 +52,7 @@ export const useGroup = (id: number) => {
     value: group,
     loaded,
     loadFailed,
-  } = useLoaded<GroupDetail | null>(load, 'GROUP_LOAD_FAILED', {
+  } = useLoaded<Group | null>(load, 'GROUP_LOAD_FAILED', {
     groupId: id,
   });
 

@@ -68,13 +68,13 @@ export const useMembers = ({
 export const useMemberCreation = (today: string) => {
   const change = useChange(useRepos());
   return useCallback(
-    (input: MemberInput, groupId: number | null = null) =>
-      change((r) => r.members.create(input, { groupId, today })),
+    (input: MemberInput, groupId: number | null = null, startDate = today) =>
+      change((r) => r.members.create(input, { groupId, today, startDate })),
     [change, today],
   );
 };
 
-/** Un membre, ses groupes en cours et ses actions (fiche). */
+/** Un membre, ses groupes en cours ou à venir et ses actions (fiche). */
 export const useMember = (id: number, today: string) => {
   const repos = useRepos();
   const load = useMemo(
@@ -110,6 +110,22 @@ export const useMember = (id: number, today: string) => {
   );
   const unarchive = useCallback(() => change((r) => r.members.unarchive(id)), [change, id]);
   const remove = useCallback(() => change((r) => r.members.remove(id)), [change, id]);
+  /** EX-04 : retire d'un groupe à `endDate` (premier jour sans lui). */
+  const withdraw = useCallback(
+    (enrollmentId: number, endDate: string) =>
+      change((r) => r.enrollments.withdraw(enrollmentId, endDate)),
+    [change],
+  );
+  /** Annule une inscription à venir (décision du porteur du 2026-11-26). */
+  const cancel = useCallback(
+    (enrollmentId: number) => change((r) => r.enrollments.cancel(enrollmentId, today)),
+    [change, today],
+  );
+  /** Inscrit à un groupe à partir d'aujourd'hui (décision du porteur du 2026-11-26). */
+  const enrollIn = useCallback(
+    (groupId: number) => change((r) => r.enrollments.enroll(groupId, [id], today)),
+    [change, id, today],
+  );
   const deletionImpact = useCallback(async (): Promise<MemberDeletionImpact> => {
     if (!repos) throw new DataError('DB_NOT_READY');
     return repos.members.deletionImpact(id);
@@ -127,21 +143,28 @@ export const useMember = (id: number, today: string) => {
     unarchive,
     remove,
     deletionImpact,
+    withdraw,
+    cancel,
+    enrollIn,
   };
 };
 
-/** Inscriptions en cours d'un groupe, membres qu'on peut y inscrire, et actions (EX-04). */
-export const useEnrollments = (groupId: number, today: string) => {
+/**
+ * Inscrits du jour d'un groupe, ceux à venir, et membres qu'on peut y inscrire à `candidatesOn`
+ * (par défaut `today`) : libres à cette date et après (EX-04).
+ */
+export const useEnrollments = (groupId: number, today: string, candidatesOn = today) => {
   const repos = useRepos();
   const load = useMemo(
     () =>
       repos
         ? async () => ({
             enrollments: await repos.enrollments.listByGroup(groupId, today),
-            candidates: await repos.enrollments.candidates(groupId, today),
+            upcoming: await repos.enrollments.listUpcomingByGroup(groupId, today),
+            candidates: await repos.enrollments.candidates(groupId, candidatesOn),
           })
         : null,
-    [repos, groupId, today],
+    [repos, groupId, today, candidatesOn],
   );
   const { value, loadFailed } = useLoaded(load, 'ENROLLMENTS_LOAD_FAILED', { groupId });
   const change = useChange(repos);
@@ -151,17 +174,12 @@ export const useEnrollments = (groupId: number, today: string) => {
       change((r) => r.enrollments.enroll(groupId, memberIds, startDate)),
     [change, groupId],
   );
-  const withdraw = useCallback(
-    (enrollmentId: number, endDate: string) =>
-      change((r) => r.enrollments.withdraw(enrollmentId, endDate)),
-    [change],
-  );
 
   return {
     enrollments: value?.enrollments ?? null,
+    upcoming: value?.upcoming ?? null,
     candidates: value?.candidates ?? null,
     loadFailed,
     enroll,
-    withdraw,
   };
 };

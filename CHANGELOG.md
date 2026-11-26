@@ -6,6 +6,7 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Ajouté
 
+- Écrans des inscriptions : inscrits du groupe à la date du jour (« jusqu’au » si un retrait est prévu) et section « À venir », ajout de plusieurs membres à une date, nouveau membre déjà inscrit, groupes d’un membre, retrait à une date, ajout à un groupe — ticket 007c.
 - Écrans des membres : liste (recherche, filtre par groupe, archivés), création avec groupe facultatif, fiche enregistrée champ par champ, archivage, suppression avec ce qui sera effacé ; puce de filtre et champ de choix « ▾ » — ticket 007b.
 - Membres et inscriptions (données) : liste avec recherche, filtre par groupe et archivés ; créer avec un groupe facultatif, modifier, archiver, supprimer avec ce qui sera effacé ; inscrire plusieurs membres, retirer à une date — ticket 007.
 - Licences embarquées : écran « À propos › Licences » et texte de chaque licence, registre généré depuis le bundle exporté et les polices (`scripts/licences.js`), vérifié par la CI — ticket 006e.

@@ -21,6 +21,7 @@ const mockMembers = {
 const mockEnrollments = {
   listByGroup: jest.fn(),
   listByMember: jest.fn(),
+  listUpcomingByGroup: jest.fn(),
   candidates: jest.fn(),
   enroll: jest.fn(),
   withdraw: jest.fn(),
@@ -139,20 +140,33 @@ describe('useMembers, useMember, useEnrollments (EX-03, EX-04, CONV-10)', () => 
     expect(log).toHaveBeenCalledWith('MEMBER_LOAD_FAILED', { memberId: 6 });
   });
 
-  it('useEnrollments : inscriptions et candidats du groupe ; inscrire, retirer', async () => {
+  it('useMember : retirer d’un groupe, inscrire à un groupe aujourd’hui (EX-04)', async () => {
+    mockMembers.get.mockResolvedValue({ id: 7 });
+    mockEnrollments.listByMember.mockResolvedValue([]);
+    const { result } = await renderHook(() => useMember(7, TODAY));
+    await waitFor(() => expect(result.current.loaded).toBe(true));
+    await act(async () => {
+      await result.current.withdraw(1, TODAY);
+      await result.current.enrollIn(3);
+    });
+    expect(mockEnrollments.withdraw).toHaveBeenCalledWith(1, TODAY);
+    expect(mockEnrollments.enroll).toHaveBeenCalledWith(3, [7], TODAY);
+  });
+
+  it('useEnrollments : inscrits du jour, à venir et candidats du groupe ; inscrire', async () => {
     mockEnrollments.listByGroup.mockResolvedValue([]);
+    mockEnrollments.listUpcomingByGroup.mockResolvedValue([]);
     mockEnrollments.candidates.mockResolvedValue([
       { id: 8, firstName: 'Noah', lastName: 'Girard' },
     ]);
     const { result } = await renderHook(() => useEnrollments(3, TODAY));
     await waitFor(() => expect(result.current.candidates).toHaveLength(1));
     expect(result.current.enrollments).toEqual([]);
+    expect(result.current.upcoming).toEqual([]);
     await act(async () => {
       await result.current.enroll([8], TODAY);
-      await result.current.withdraw(1, TODAY);
     });
     expect(mockEnrollments.enroll).toHaveBeenCalledWith(3, [8], TODAY);
-    expect(mockEnrollments.withdraw).toHaveBeenCalledWith(1, TODAY);
     mockEnrollments.listByGroup.mockRejectedValue(new Error('BROKEN'));
     const failed = await renderHook(() => useEnrollments(4, TODAY));
     await waitFor(() => expect(failed.result.current.loadFailed).toBe(true));

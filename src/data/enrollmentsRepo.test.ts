@@ -38,6 +38,7 @@ describe('Dépôt des inscriptions (EX-04)', () => {
         firstName: 'Alix',
         lastName: 'Exemple',
         startDate: '2026-09-01',
+        endDate: null,
       },
       {
         enrollmentId: expect.any(Number),
@@ -45,6 +46,7 @@ describe('Dépôt des inscriptions (EX-04)', () => {
         firstName: 'Sam',
         lastName: 'Fictif',
         startDate: '2026-09-01',
+        endDate: null,
       },
     ]);
     await membersRepo(db).archive(s.otherMemberId, TODAY);
@@ -58,6 +60,51 @@ describe('Dépôt des inscriptions (EX-04)', () => {
         groupId: s.groupId,
         groupName: 'Poussins',
         startDate: '2026-09-01',
+        endDate: null,
+      },
+    ]);
+  });
+
+  it('inscriptions à venir d’un groupe ; date de fin prévue lue avec les inscrits du jour', async () => {
+    const repo = enrollmentsRepo(db);
+    await repo.enroll(s.groupId, [newcomer], '2027-01-05');
+    await repo.withdraw((await enrollmentOf(s.memberId))?.enrollmentId ?? 0, '2026-12-01');
+    expect(await repo.listUpcomingByGroup(s.groupId, TODAY)).toEqual([
+      {
+        enrollmentId: expect.any(Number),
+        memberId: newcomer,
+        firstName: 'Noah',
+        lastName: 'Girard',
+        startDate: '2027-01-05',
+        endDate: null,
+      },
+    ]);
+    expect(await enrollmentOf(s.memberId)).toMatchObject({ endDate: '2026-12-01' });
+    await membersRepo(db).archive(newcomer, TODAY);
+    expect(await repo.listUpcomingByGroup(s.groupId, TODAY)).toEqual([]);
+  });
+
+  it('groupes d’un membre : en cours et à venir, avec leurs dates', async () => {
+    const repo = enrollmentsRepo(db);
+    const { lastInsertRowId: other } = await db.execute(
+      "INSERT INTO groups (season_id, name) VALUES (?, 'Benjamins lundi')",
+      [s.seasonId],
+    );
+    await repo.enroll(other, [s.memberId], '2027-01-05');
+    expect(await repo.listByMember(s.memberId, TODAY)).toEqual([
+      {
+        enrollmentId: expect.any(Number),
+        groupId: other,
+        groupName: 'Benjamins lundi',
+        startDate: '2027-01-05',
+        endDate: null,
+      },
+      {
+        enrollmentId: expect.any(Number),
+        groupId: s.groupId,
+        groupName: 'Poussins',
+        startDate: '2026-09-01',
+        endDate: null,
       },
     ]);
   });
@@ -156,6 +203,30 @@ describe('Dépôt des inscriptions (EX-04)', () => {
       code: 'NOT_FOUND',
     });
     expect(await count(db, 'enrollments', 'member_id = ?', [newcomer])).toBe(0);
+  });
+
+  it('annuler une inscription à venir l’efface ; une inscription commencée ne s’annule pas', async () => {
+    const repo = enrollmentsRepo(db);
+    await repo.enroll(s.groupId, [newcomer], '2026-12-10');
+    const [upcoming] = await repo.listUpcomingByGroup(s.groupId, TODAY);
+    await repo.cancel(upcoming?.enrollmentId ?? 0, TODAY);
+    expect(await count(db, 'enrollments', 'member_id = ?', [newcomer])).toBe(0);
+    expect((await repo.candidates(s.groupId, TODAY)).map((m) => m.id)).toContain(newcomer);
+    const started = (await enrollmentOf(s.memberId))?.enrollmentId ?? 0;
+    await expect(repo.cancel(started, TODAY)).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    await expect(repo.cancel(9999, TODAY)).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    expect(await count(db, 'enrollments', 'id = ?', [started])).toBe(1);
+  });
+
+  it('une période vide (fin = début) ne compte nulle part : ni à venir, ni dans ses groupes, ni comme blocage', async () => {
+    const repo = enrollmentsRepo(db);
+    await repo.enroll(s.groupId, [newcomer], '2026-12-10');
+    const [upcoming] = await repo.listUpcomingByGroup(s.groupId, TODAY);
+    await repo.withdraw(upcoming?.enrollmentId ?? 0, '2026-12-10');
+    expect(await repo.listUpcomingByGroup(s.groupId, TODAY)).toEqual([]);
+    expect(await repo.listByMember(newcomer, TODAY)).toEqual([]);
+    expect((await repo.candidates(s.groupId, TODAY)).map((m) => m.id)).toContain(newcomer);
+    await repo.enroll(s.groupId, [newcomer], TODAY);
   });
 
   it('retrait refusé avant le début, sur une inscription déjà close ou introuvable', async () => {

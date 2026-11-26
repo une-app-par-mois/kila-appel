@@ -1,4 +1,10 @@
-import { isIsoDate, parseDisplayDate, toDisplayDate, toIsoDate } from '@/domain/formats';
+import {
+  isIsoDate,
+  parseDisplayDate,
+  previousDay,
+  toDisplayDate,
+  toIsoDate,
+} from '@/domain/formats';
 
 describe('RM-04 : dates stockées en AAAA-MM-JJ, affichées en JJ/MM/AAAA', () => {
   describe('isIsoDate', () => {
@@ -93,5 +99,18 @@ describe('RM-04 : dates stockées en AAAA-MM-JJ, affichées en JJ/MM/AAAA', () =
       expect(toIsoDate(new Date(2026, 2, 1, 0, 30))).toBe('2026-03-01');
       expect(toIsoDate(new Date(2026, 10, 26, 23, 59))).toBe('2026-11-26');
     });
+  });
+});
+
+describe('previousDay : dernier jour d’une inscription dont la fin est exclue (EX-04)', () => {
+  it('recule d’un jour, à travers mois, années et 29 février', () => {
+    expect(previousDay('2026-12-01')).toBe('2026-11-30');
+    expect(previousDay('2027-01-01')).toBe('2026-12-31');
+    expect(previousDay('2028-03-01')).toBe('2028-02-29');
+    expect(previousDay('2026-03-30')).toBe('2026-03-29');
+  });
+
+  it('refuse une date mal écrite (RM-04)', () => {
+    expect(() => previousDay('01/12/2026')).toThrow();
   });
 });

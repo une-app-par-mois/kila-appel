@@ -1,6 +1,6 @@
 # 007c — Écrans des inscriptions
 
-Statut : à faire · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : en cours · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Découpé du ticket 007 le 2026-11-26 (décision du porteur).
 
@@ -16,10 +16,17 @@ Découpé du ticket 007 le 2026-11-26 (décision du porteur).
 
 ## Critères d'acceptation
 
-- [ ] Retirer conserve les présences passées (EX-04)
-- [ ] Le nombre de membres d'un groupe compte les inscriptions en cours à la date du jour (fin absente ou à venir), et non plus seulement celles sans date de fin (`groupsRepo.get`)
+- [x] Retirer conserve les présences passées (EX-04)
+- [x] Le nombre de membres d'un groupe compte les inscriptions en cours à la date du jour (fin absente ou à venir), et non plus seulement celles sans date de fin (`groupsRepo.get`)
 
-- [ ] Une inscription future (date choisie après aujourd'hui) est visible quelque part (« à partir du … ») : les listes ne montrent que les inscriptions en cours
+- [x] Une inscription future (date choisie après aujourd'hui) est visible quelque part (« à partir du … ») : les listes ne montrent que les inscriptions en cours
+
+## Décisions du porteur (2026-11-26)
+
+- Dates futures permises : la fiche du groupe montre les inscrits du jour (« Jusqu'au … » si leur retrait est prévu) et une section « À venir » (« À partir du … »).
+- « + Ajouter à un groupe » (fiche d'un membre) : liste plein écran des groupes de la saison active où il n'est pas inscrit ; inscrit à partir d'aujourd'hui.
+- « Nouveau membre » (écran d'ajout) : création avec ce groupe préchoisi et la date « À partir du » saisie, puis retour à l'écran d'ajout.
+- « Retirer » une inscription qui n'a pas commencé l'annule : elle est effacée (« Annuler », confirmation), il redevient inscriptible.
 
 ## Tests attendus
 

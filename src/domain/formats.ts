@@ -63,3 +63,13 @@ export const toIsoDate = (date: Date): string => {
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 };
+
+/** Veille d'une date stockée : dernier jour d'une inscription dont la fin est exclue (EX-04). */
+export const previousDay = (iso: string): string => {
+  if (!isIsoDate(iso)) {
+    throw new Error('Date stockée invalide (RM-04)');
+  }
+  const [year, month, day] = iso.split('-').map(Number);
+  // Midi : à l'abri des changements d'heure.
+  return toIsoDate(new Date(year ?? 0, (month ?? 1) - 1, (day ?? 1) - 1, 12));
+};

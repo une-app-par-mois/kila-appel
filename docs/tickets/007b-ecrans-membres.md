@@ -1,6 +1,6 @@
 # 007b — Écrans des membres
 
-Statut : en cours · Jalon : 1 · Zone sensible : oui (suppression) · Trivial : non
+Statut : fusionné dans le groupe · Jalon : 1 · Zone sensible : oui (suppression) · Trivial : non
 
 Découpé du ticket 007 le 2026-11-26 (décision du porteur).
 

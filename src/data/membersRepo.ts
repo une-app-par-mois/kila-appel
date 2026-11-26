@@ -109,12 +109,17 @@ export const membersRepo = (db: Db) => ({
     return row ? toMember(row) : null;
   },
 
-  /** EX-03 : crée le membre et, si un groupe est choisi, l'y inscrit à `today`, d'un bloc. */
+  /** EX-03 : crée le membre et, si un groupe est choisi, l'y inscrit à `startDate` (par défaut `today`), d'un bloc. */
   create: async (
     input: MemberInput,
-    { groupId = null, today }: { groupId?: number | null; today: string },
+    {
+      groupId = null,
+      today,
+      startDate = today,
+    }: { groupId?: number | null; today: string; startDate?: string },
   ): Promise<number> => {
     const m = validateMember(input, validateDate(today));
+    validateDate(startDate);
     return db.transaction(async (tx) => {
       const { lastInsertRowId: id } = await tx.execute(
         'INSERT INTO members (first_name, last_name, birth_date) VALUES (?, ?, ?)',
@@ -124,7 +129,7 @@ export const membersRepo = (db: Db) => ({
         await expectEnrollable(tx, groupId, null);
         await tx.execute(
           'INSERT INTO enrollments (member_id, group_id, start_date) VALUES (?, ?, ?)',
-          [id, groupId, today],
+          [id, groupId, startDate],
         );
       }
       return id;

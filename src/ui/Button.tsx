@@ -17,6 +17,8 @@ type Props = {
   disabled?: boolean;
   /** Part de la largeur dans une rangée (« Garder » 1, « Supprimer » 2). */
   flex?: number;
+  /** Libellé lu par le lecteur d'écran quand le texte seul est ambigu (« Retirer, Poussins »). */
+  accessibilityLabel?: string;
 };
 
 const { colors } = theme;
@@ -37,11 +39,19 @@ const VARIANTS = {
   compact: outlined(colors.encre),
 };
 
-export const Button = ({ label, onPress, variant = 'primary', disabled = false, flex }: Props) => {
+export const Button = ({
+  label,
+  onPress,
+  variant = 'primary',
+  disabled = false,
+  flex,
+  accessibilityLabel,
+}: Props) => {
   const v = VARIANTS[variant];
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}

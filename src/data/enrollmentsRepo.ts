@@ -1,15 +1,17 @@
 // Dépôt des inscriptions (EX-04). Inscrit du début (inclus) à la fin (exclue) : la date de fin est
 // le premier jour sans le membre (décision du porteur du 2026-11-26). Requêtes paramétrées.
 import type { Db } from '@/data/db';
-import { DataError } from '@/data/errors';
+import { DataError, expectChanged } from '@/data/errors';
 import { InputError, validateDate } from '@/domain/validation';
 
+/** `endDate` : premier jour sans le membre, ou `null` (aucun retrait prévu). */
 export type GroupEnrollment = {
   enrollmentId: number;
   memberId: number;
   firstName: string;
   lastName: string;
   startDate: string;
+  endDate: string | null;
 };
 
 export type MemberEnrollment = {
@@ -17,7 +19,29 @@ export type MemberEnrollment = {
   groupId: number;
   groupName: string;
   startDate: string;
+  endDate: string | null;
 };
+
+type GroupEnrollmentRow = {
+  enrollment_id: number;
+  member_id: number;
+  first_name: string;
+  last_name: string;
+  start_date: string;
+  end_date: string | null;
+};
+
+const toGroupEnrollment = (r: GroupEnrollmentRow): GroupEnrollment => ({
+  enrollmentId: r.enrollment_id,
+  memberId: r.member_id,
+  firstName: r.first_name,
+  lastName: r.last_name,
+  startDate: r.start_date,
+  endDate: r.end_date,
+});
+
+const GROUP_ENROLLMENT_COLUMNS =
+  'e.id AS enrollment_id, m.id AS member_id, m.first_name, m.last_name, e.start_date, e.end_date';
 
 export type Candidate = { id: number; firstName: string; lastName: string };
 
@@ -29,8 +53,11 @@ const byName = (a: Candidate | GroupEnrollment, b: Candidate | GroupEnrollment) 
 export const current = (n: number) =>
   `(e.start_date <= ?${n} AND (e.end_date IS NULL OR e.end_date > ?${n}))`;
 
+/** Période non vide : une fin le jour même du début (retrait le premier jour) ne compte nulle part. */
+const NOT_EMPTY = '(e.end_date IS NULL OR e.end_date > e.start_date)';
+
 /** Inscription qui n'est pas finie à la date `?n` (en cours ou à venir). */
-const notEnded = (n: number) => `(e.end_date IS NULL OR e.end_date > ?${n})`;
+const notEnded = (n: number) => `((e.end_date IS NULL OR e.end_date > ?${n}) AND ${NOT_EMPTY})`;
 
 /**
  * Groupe où l'on peut inscrire (non archivé, saison active) et membre courant ; sinon NOT_FOUND.
@@ -55,38 +82,44 @@ export const enrollmentsRepo = (db: Db) => ({
   /** Membres courants inscrits au groupe à `today`, triés par nom. */
   listByGroup: async (groupId: number, today: string): Promise<GroupEnrollment[]> =>
     (
-      await db.query<{
-        enrollment_id: number;
-        member_id: number;
-        first_name: string;
-        last_name: string;
-        start_date: string;
-      }>(
-        `SELECT e.id AS enrollment_id, m.id AS member_id, m.first_name, m.last_name, e.start_date
+      await db.query<GroupEnrollmentRow>(
+        `SELECT ${GROUP_ENROLLMENT_COLUMNS}
          FROM enrollments e JOIN members m ON m.id = e.member_id
          WHERE e.group_id = ?1 AND m.archived_at IS NULL AND ${current(2)}
          ORDER BY e.id`,
         [groupId, validateDate(today)],
       )
     )
-      .map((r) => ({
-        enrollmentId: r.enrollment_id,
-        memberId: r.member_id,
-        firstName: r.first_name,
-        lastName: r.last_name,
-        startDate: r.start_date,
-      }))
+      .map(toGroupEnrollment)
       .sort(byName),
 
-  /** Groupes en cours du membre dans la saison active (non archivés), triés par nom. */
+  /** Inscriptions qui commencent après `today` (section « À venir », décision du 2026-11-26). */
+  listUpcomingByGroup: async (groupId: number, today: string): Promise<GroupEnrollment[]> =>
+    (
+      await db.query<GroupEnrollmentRow>(
+        `SELECT ${GROUP_ENROLLMENT_COLUMNS}
+         FROM enrollments e JOIN members m ON m.id = e.member_id
+         WHERE e.group_id = ?1 AND m.archived_at IS NULL AND e.start_date > ?2 AND ${NOT_EMPTY}
+         ORDER BY e.start_date, e.id`,
+        [groupId, validateDate(today)],
+      )
+    ).map(toGroupEnrollment),
+
+  /** Groupes du membre en cours ou à venir, saison active, non archivés ; triés par nom. */
   listByMember: async (memberId: number, today: string): Promise<MemberEnrollment[]> =>
     (
-      await db.query<{ enrollment_id: number; group_id: number; name: string; start_date: string }>(
-        `SELECT e.id AS enrollment_id, g.id AS group_id, g.name, e.start_date
+      await db.query<{
+        enrollment_id: number;
+        group_id: number;
+        name: string;
+        start_date: string;
+        end_date: string | null;
+      }>(
+        `SELECT e.id AS enrollment_id, g.id AS group_id, g.name, e.start_date, e.end_date
          FROM enrollments e
          JOIN groups g ON g.id = e.group_id
          JOIN seasons s ON s.id = g.season_id
-         WHERE e.member_id = ?1 AND s.is_active = 1 AND g.archived_at IS NULL AND ${current(2)}
+         WHERE e.member_id = ?1 AND s.is_active = 1 AND g.archived_at IS NULL AND ${notEnded(2)}
          ORDER BY e.id`,
         [memberId, validateDate(today)],
       )
@@ -96,6 +129,7 @@ export const enrollmentsRepo = (db: Db) => ({
         groupId: r.group_id,
         groupName: r.name,
         startDate: r.start_date,
+        endDate: r.end_date,
       }))
       .sort((a, b) => collator.compare(a.groupName, b.groupName)),
 
@@ -147,5 +181,18 @@ export const enrollmentsRepo = (db: Db) => ({
       if (endDate < row.start_date) throw new InputError('END_BEFORE_START');
       await tx.execute('UPDATE enrollments SET end_date = ? WHERE id = ?', [endDate, enrollmentId]);
     });
+  },
+
+  /**
+   * Annule une inscription qui n'a pas commencé (après `today`) : elle est effacée, il n'a jamais
+   * été dans le groupe (décision du porteur du 2026-11-26). Commencée ou introuvable : NOT_FOUND.
+   */
+  cancel: async (enrollmentId: number, today: string): Promise<void> => {
+    expectChanged(
+      await db.execute('DELETE FROM enrollments WHERE id = ? AND start_date > ?', [
+        enrollmentId,
+        validateDate(today),
+      ]),
+    );
   },
 });
