@@ -14,9 +14,12 @@ export default function Settings() {
   const router = useRouter();
   const { seasons, loadFailed } = useSeasons();
   const active = seasons?.find((s) => s.isActive);
-  const { groups } = useGroups(active?.id ?? null);
+  const { groups, loadFailed: groupsFailed } = useGroups(active?.id ?? null);
   return (
-    <Screen title={t.title} error={loadFailed ? labels.common.loadFailed : undefined}>
+    <Screen
+      title={t.title}
+      error={loadFailed || groupsFailed ? labels.common.loadFailed : undefined}
+    >
       <Section title={t.organisation} />
       <Card>
         <ListRow

@@ -67,7 +67,11 @@ export const useGroups = (seasonId: number | null, { archived = false } = {}) =>
     seasonId: seasonId ?? 0,
   });
 
-  /** Crée un groupe dans la saison et rend son identifiant. */
+  /**
+   * Crée un groupe dans la saison et rend son identifiant. Les rechargements partent sans être
+   * attendus : `groups` peut ne pas contenir le nouveau groupe juste après (l'écran de création
+   * navigue vers la fiche, qui le lit elle-même).
+   */
   const create = useCallback(
     async (name: string): Promise<number> => {
       if (!repo || seasonId === null) throw new DataError('DB_NOT_READY');

@@ -50,6 +50,7 @@ export default function GroupEdit() {
   };
 
   const askDeletion = async () => {
+    setFormError(undefined);
     try {
       setImpact(await deletionImpact());
     } catch (e) {
@@ -85,6 +86,7 @@ export default function GroupEdit() {
             onChangeText={(value) => {
               setName(value);
               setError(undefined);
+              setFormError(undefined);
             }}
             error={error}
           />

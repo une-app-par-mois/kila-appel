@@ -5,7 +5,8 @@ type Code = keyof typeof labels.errors;
 
 export const errorMessage = (error: unknown): string => {
   const code = (error as { code?: unknown })?.code;
-  return typeof code === 'string' && code in labels.errors && code !== 'unknown'
+  // Object.hasOwn : un code hérité du prototype (« constructor ») n'est pas un message.
+  return typeof code === 'string' && Object.hasOwn(labels.errors, code) && code !== 'unknown'
     ? labels.errors[code as Code]
     : labels.errors.unknown;
 };

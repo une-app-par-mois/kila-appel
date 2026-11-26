@@ -19,9 +19,12 @@ export default function Groups() {
   const active = seasons?.find((s) => s.isActive);
   const seasonId = active?.id ?? null;
   const { groups, loadFailed } = useGroups(seasonId, { archived });
-  const { groups: archivedGroups } = useGroups(archived ? null : seasonId, { archived: true });
+  const { groups: archivedGroups, loadFailed: archivedFailed } = useGroups(
+    archived ? null : seasonId,
+    { archived: true },
+  );
   const archivedCount = archivedGroups?.length ?? 0;
-  const failed = seasonsFailed || loadFailed;
+  const failed = seasonsFailed || loadFailed || archivedFailed;
 
   return (
     <Screen

@@ -1,7 +1,7 @@
 // Fiche d'un groupe (maquette, EX-02) : saison, « Renommer ou supprimer », archiver ou désarchiver.
 // La liste des membres et « Ajouter des membres » arrivent au ticket 007.
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
@@ -14,25 +14,44 @@ import { errorMessage } from '@/ui/errorMessage';
 import { Screen } from '@/ui/Screen';
 
 const t = labels.group;
+// Durée minimale du blocage après une action : un double appui (quelques centaines de ms) ne doit
+// pas toucher « Désarchiver », qui remplace « Archiver » dès le rechargement local (quelques ms).
+const ACTION_LOCK_MS = 500;
+const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 export default function GroupDetail() {
   const router = useRouter();
   const id = Number(useLocalSearchParams<{ id: string }>().id);
   const { group, loaded, loadFailed, archive, unarchive } = useGroup(id);
-  const { seasons } = useSeasons();
+  const { seasons, loadFailed: seasonsFailed } = useSeasons();
   const season = seasons?.find((s) => s.id === group?.seasonId);
   const [actionError, setActionError] = useState<string | undefined>();
 
+  // Une action à la fois : sinon un double appui sur « Archiver » toucherait « Désarchiver »,
+  // qui prend sa place dès le rechargement.
+  const pending = useRef(false);
+  const [busy, setBusy] = useState(false);
   const run = (action: () => Promise<void>) => {
+    if (pending.current) return;
+    pending.current = true;
+    setBusy(true);
     setActionError(undefined);
-    action().catch((e: unknown) => setActionError(errorMessage(e)));
+    // Les erreurs sont captées par le catch de l’ction ; rien ne peut rejeter ici.
+    void Promise.all([
+      action().catch((e: unknown) => setActionError(errorMessage(e))),
+      wait(ACTION_LOCK_MS),
+    ]).finally(() => {
+      pending.current = false;
+      setBusy(false);
+    });
   };
 
-  const error = loadFailed
-    ? labels.common.loadFailed
-    : loaded && group === null
-      ? labels.errors.NOT_FOUND
-      : actionError;
+  const error =
+    loadFailed || seasonsFailed
+      ? labels.common.loadFailed
+      : loaded && group === null
+        ? labels.errors.NOT_FOUND
+        : actionError;
   return (
     <Screen
       title={group?.name ?? labels.groups.title}
@@ -64,10 +83,16 @@ export default function GroupDetail() {
             <Button
               label={t.archive}
               variant="secondary"
+              disabled={busy}
               onPress={() => run(() => archive(toIsoDate(new Date())))}
             />
           ) : (
-            <Button label={t.unarchive} variant="secondary" onPress={() => run(unarchive)} />
+            <Button
+              label={t.unarchive}
+              variant="secondary"
+              disabled={busy}
+              onPress={() => run(unarchive)}
+            />
           )}
         </>
       )}

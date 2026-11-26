@@ -86,6 +86,15 @@ describe('Écrans des groupes (EX-02)', () => {
     expect(await count(db, 'groups', 'archived_at IS NULL AND id = ?', [s.groupId])).toBe(1);
   });
 
+  it('un double appui sur « Archiver » archive une seule fois (pas de désarchivage aussitôt)', async () => {
+    await open(`/groupes/${s.groupId}`);
+    const archive = await screen.findByRole('button', { name: t.group.archive });
+    await fireEvent.press(archive);
+    await fireEvent.press(archive);
+    await screen.findByRole('button', { name: t.group.unarchive });
+    expect(await count(db, 'groups', 'archived_at IS NOT NULL AND id = ?', [s.groupId])).toBe(1);
+  });
+
   it('renomme un groupe depuis « Renommer ou supprimer »', async () => {
     await open(`/groupes/${s.groupId}`);
     await fireEvent.press(await screen.findByRole('link', { name: t.group.edit }));
