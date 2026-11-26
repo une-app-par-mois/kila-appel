@@ -6,8 +6,8 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     // Lucide publie ses modules ES en .mjs, que Jest ne transforme pas : version CommonJS du même paquet.
-    '^lucide-react-native$':
-      '<rootDir>/node_modules/lucide-react-native/dist/cjs/lucide-react-native.js',
+    '^lucide-react-native/icons/(.*)$':
+      '<rootDir>/node_modules/lucide-react-native/dist/cjs/icons/$1.js',
   },
   collectCoverageFrom: [
     'src/domain/**/*.{ts,tsx}',

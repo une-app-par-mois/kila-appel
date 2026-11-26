@@ -1,14 +1,13 @@
 // Icônes au trait (charte §8) : liste fermée, trait de 2, grille de 24.
 // Texte secondaire au repos, Encre à l'état actif. Tout est embarqué (ABS-01).
-import {
-  Archive,
-  ArchiveRestore,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  Trash2,
-} from 'lucide-react-native';
+// Import icône par icône : le point d'entrée principal ré-exporte toute la bibliothèque.
+import Archive from 'lucide-react-native/icons/archive';
+import ArchiveRestore from 'lucide-react-native/icons/archive-restore';
+import Check from 'lucide-react-native/icons/check';
+import ChevronLeft from 'lucide-react-native/icons/chevron-left';
+import ChevronRight from 'lucide-react-native/icons/chevron-right';
+import Plus from 'lucide-react-native/icons/plus';
+import Trash2 from 'lucide-react-native/icons/trash-2';
 import { theme } from '@/config/theme';
 
 const ICONS = {

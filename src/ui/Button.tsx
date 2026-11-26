@@ -15,7 +15,7 @@ type Props = {
 
 const { colors } = theme;
 const filled = (backgroundColor: string, color: string) => ({
-  box: { backgroundColor, height: 54 } satisfies ViewStyle,
+  box: { backgroundColor, minHeight: 54, paddingVertical: theme.spacing * 2 } satisfies ViewStyle,
   text: { color, fontSize: 17 },
 });
 const outlined = (color: string) => ({

@@ -37,6 +37,17 @@ const SVG_LOADERS = new Set([
   'fetchText',
 ]);
 const REMOTE_URI = /^(https?|wss?):/i;
+// Attributs JSX qui chargent une ressource (Image de react-native-svg, etc.), et SVG en texte
+// contenant une adresse distante.
+const URI_ATTRIBUTES = new Set(['href', 'xlinkHref', 'uri']);
+const REMOTE_IN_TEXT = /(https?|wss?):\/\//i;
+
+/** Texte d'un attribut JSX : "…" ou {'…'}. */
+const attributeText = (value: ts.JsxAttributeValue | undefined): string | undefined => {
+  if (value === undefined) return undefined;
+  if (ts.isJsxExpression(value)) return value.expression && literalText(value.expression);
+  return literalText(value);
+};
 const PUSH_TOKEN = new Set(['getExpoPushTokenAsync', 'getDevicePushTokenAsync']);
 
 const isText = (node: ts.Node | undefined): boolean =>
@@ -97,12 +108,20 @@ const check = (file: string, source: string): Violation[] => {
     // globalThis['fetch'] : le nom passe par une chaîne.
     if (ts.isElementAccessExpression(node)) {
       const key = literalText(node.argumentExpression);
-      if (key !== undefined && NETWORK.has(key)) add('SEC-01', node);
+      if (key !== undefined && (NETWORK.has(key) || SVG_LOADERS.has(key))) add('SEC-01', node);
     }
     // Ressource chargée à l'exécution : { uri: 'https://…' } (image, son, police).
     if (ts.isPropertyAssignment(node) && node.name.getText() === 'uri') {
       const uri = literalText(node.initializer);
       if (uri !== undefined && REMOTE_URI.test(uri)) add('SEC-01', node);
+    }
+    if (ts.isJsxAttribute(node)) {
+      const name = node.name.getText();
+      const value = attributeText(node.initializer);
+      if (value !== undefined && URI_ATTRIBUTES.has(name) && REMOTE_URI.test(value)) {
+        add('SEC-01', node);
+      }
+      if (value !== undefined && name === 'xml' && REMOTE_IN_TEXT.test(value)) add('SEC-01', node);
     }
     if (ts.isIdentifier(node) && PUSH_TOKEN.has(node.text)) add('SEC-03', node);
     ts.forEachChild(node, visit);
@@ -179,11 +198,25 @@ describe('SEC-01 aucun appel réseau, SEC-03 aucun jeton de notification', () =>
     ['SEC-01', "import { SvgUri } from 'react-native-svg';"],
     ['SEC-01', "import { SvgCssUri as S } from 'react-native-svg/css';"],
     ['SEC-01', 'const s = svg.SvgFromUri;'],
+    ['SEC-01', "const s = svg['SvgUri'];"],
+    ['SEC-01', 'const i = <Image href="https://exemple.invalid/a.png" />;'],
+    ['SEC-01', "const i = <Image xlinkHref={'http://exemple.invalid/a.png'} />;"],
+    ['SEC-01', 'const i = <Video source={{ uri }} uri="wss://exemple.invalid" />;'],
+    [
+      'SEC-01',
+      'const x = <SvgXml xml=\'<svg><image href="https://exemple.invalid/a.png"/></svg>\' />;',
+    ],
     ['SEC-01', "import { LocalSvg } from 'react-native-svg/css';"],
     ['SEC-03', 'await Notifications.getExpoPushTokenAsync();'],
     ['SEC-03', "import { getDevicePushTokenAsync } from 'expo-notifications';"],
   ])('%s repère : %s', (rule, source) => {
-    expect(rules('src/data/sync.ts', source)).toEqual([rule]);
+    expect(rules('src/data/sync.tsx', source)).toEqual([rule]);
+  });
+
+  it('laisse passer une adresse locale et un SVG embarqué sans adresse', () => {
+    const source =
+      'const a = <Image href={icon} />; const b = <SvgXml xml="<svg><path d=\'M0 0\'/></svg>" />;';
+    expect(rules('src/ui/A.tsx', source)).toEqual([]);
   });
 
   it('s’applique aussi aux fichiers de test, mais pas au texte d’une chaîne', () => {

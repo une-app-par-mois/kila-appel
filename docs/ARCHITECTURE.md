@@ -28,7 +28,7 @@ Chaque ligne vaut validation de la dépendance (ADR-001). **Une dépendance n'es
 | expo-font | 58.0.12 | MIT | Polices IBM Plex embarquées au build (extension dans `app.json`) ; `loadAsync` et `useFonts` interdits dans `src/` (ABS-01, décision du 2026-11-26) | Thème et polices (003) |
 | expo-sqlite | 58.0.18 (SQLite 3.53.3 embarqué) | MIT | Base locale | Couche données (002) |
 | react-native-svg | 15.16.0 (fixée par le SDK) | MIT | Dessin, icônes ; ses chargeurs par adresse sont interdits (ABS-01, décision du 2026-11-26) | Installée au ticket 006b |
-| lucide-react-native | 1.81.0 | ISC | Icônes au trait (charte §8) ; Jest charge sa version CommonJS | Installée au ticket 006b |
+| lucide-react-native | 1.81.0 | ISC | Icônes au trait (charte §8), importées une par une ; Jest charge leur version CommonJS | Installée au ticket 006b |
 | expo-file-system | ~58.0.14 | MIT | Fichiers de sauvegarde | F-03 |
 | expo-sharing | ~58.0.23 | MIT | Partage d'un fichier exporté | F-03 |
 | expo-document-picker | ~58.0.5 | MIT | Choix d'un fichier (restauration, import) | F-03 |
