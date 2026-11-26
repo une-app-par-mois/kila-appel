@@ -24,6 +24,18 @@ describe('RM-04 : dates stockées en AAAA-MM-JJ, affichées en JJ/MM/AAAA', () =
     ])('RM-04 refuse %s (%s)', (_cas, iso) => {
       expect(isIsoDate(iso)).toBe(false);
     });
+
+    it('RM-04 accepte les bornes 1900-01-01 et 2100-12-31', () => {
+      expect(isIsoDate('1900-01-01')).toBe(true);
+      expect(isIsoDate('2100-12-31')).toBe(true);
+    });
+
+    it.each(['1899-12-31', '2101-01-01', '0000-02-29', '0202-05-12'])(
+      'RM-04 refuse une année hors de 1900 à 2100 (%s)',
+      (iso) => {
+        expect(isIsoDate(iso)).toBe(false);
+      },
+    );
   });
 
   describe('toDisplayDate', () => {
@@ -65,6 +77,7 @@ describe('RM-04 : dates stockées en AAAA-MM-JJ, affichées en JJ/MM/AAAA', () =
       ['autre séparateur', '26-11-2026'],
       ['lettres', 'aa/bb/cccc'],
       ['texte vide', ''],
+      ['année hors bornes', '01/01/0001'],
     ])('RM-04 refuse la saisie : %s (%s)', (_cas, saisie) => {
       expect(parseDisplayDate(saisie)).toBeNull();
     });

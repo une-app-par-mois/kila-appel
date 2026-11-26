@@ -3,6 +3,9 @@
 
 const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 const DISPLAY_DATE = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+// RM-04 : années acceptées (décision du porteur du 2026-11-26), contre les fautes de frappe.
+const MIN_YEAR = 1900;
+const MAX_YEAR = 2100;
 
 const isLeapYear = (year: number): boolean =>
   (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
@@ -15,9 +18,14 @@ const daysInMonth = (year: number, month: number): number => {
 };
 
 const isRealDate = (year: number, month: number, day: number): boolean =>
-  month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth(year, month);
+  year >= MIN_YEAR &&
+  year <= MAX_YEAR &&
+  month >= 1 &&
+  month <= 12 &&
+  day >= 1 &&
+  day <= daysInMonth(year, month);
 
-/** Vrai si `value` est une date stockée valide (AAAA-MM-JJ, jour existant). */
+/** Vrai si `value` est une date stockée valide (AAAA-MM-JJ, jour existant, année 1900 à 2100). */
 export const isIsoDate = (value: string): boolean => {
   const match = ISO_DATE.exec(value);
   if (!match) {
