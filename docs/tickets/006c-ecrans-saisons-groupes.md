@@ -37,6 +37,7 @@ Premiers écrans de gestion, sur les dépôts du ticket 006 et les composants du
 
 - Paramètres ne montre que les lignes qui mènent à un écran existant.
 - Une saison créée sans saison active devient active.
+- Sans aucune saison : carte d'état vide « Aucune saison. Créez-en une pour y ranger vos groupes et vos appels. », ajoutée au catalogue des maquettes.
 
 ## Hors périmètre
 

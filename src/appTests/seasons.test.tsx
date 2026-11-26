@@ -135,6 +135,14 @@ describe('Écrans des saisons (EX-01)', () => {
     expect(await screen.findByText(t.seasonDeletion.nothingElse)).toBeTruthy();
   });
 
+  it('sans aucune saison : carte d’état vide et bouton principal « Nouvelle saison »', async () => {
+    await db.execute('DELETE FROM seasons');
+    const router = await open('/saisons');
+    expect(await screen.findByText(t.seasons.empty)).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: t.seasons.create }));
+    expect(router.getPathname()).toBe('/saisons/nouvelle');
+  });
+
   it('CONV-15 un échec de lecture affiche un message au lieu d’attendre sans fin', async () => {
     await db.close();
     mockDb = db;

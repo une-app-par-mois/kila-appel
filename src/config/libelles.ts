@@ -49,6 +49,7 @@ export const labels = {
     active: 'Active',
     activate: 'Activer',
     create: 'Nouvelle saison',
+    empty: 'Aucune saison. Créez-en une pour y ranger vos groupes et vos appels.',
     period: (start: string, end: string) => `${start} – ${end}`,
   },
   seasonForm: {

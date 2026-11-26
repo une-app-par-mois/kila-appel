@@ -347,6 +347,7 @@ ${carte(`${ligne('IBM Plex Sans, IBM Plex Mono', 'SIL Open Font License 1.1')}${
 ecran('etats-vides', 1, 'États vides (une carte par liste)', 'P1, NF-06', null, `
 ${titre('États vides')}
 <p class="note">Catalogue : chaque carte remplace le contenu de la liste concernée quand elle est vide.</p>
+${section('Saisons')}${carte(`<p>Aucune saison. Créez-en une pour y ranger vos groupes et vos appels.</p>${go('saison-edition', 'Nouvelle saison')}`)}
 ${section('Groupes')}${carte(`<p>Aucun groupe dans cette saison.</p>${go('groupe-nouveau', 'Créer un groupe')}`)}
 ${section('Groupe sans membre')}${carte(`<p>Personne n'est encore inscrit à ce groupe.</p>${go('inscription', 'Ajouter des membres')}`)}
 ${section('Membres')}${carte(`<p>Aucun membre pour l'instant.</p>${go('membre-nouveau', 'Nouveau membre')}`)}

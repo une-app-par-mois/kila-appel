@@ -2,7 +2,9 @@
 // Un appui sur une saison ouvre son formulaire.
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { StyleSheet, Text } from 'react-native';
 import { labels } from '@/config/libelles';
+import { theme } from '@/config/theme';
 import { toDisplayDate } from '@/domain/formats';
 import { useSeasons } from '@/hooks/useSeasons';
 import { Button } from '@/ui/Button';
@@ -24,6 +26,7 @@ export default function Seasons() {
     setActivateFailed(false);
     activate(id).catch(() => setActivateFailed(true));
   };
+  const createSeason = () => router.push('/saisons/nouvelle');
   const error = loadFailed
     ? labels.common.loadFailed
     : activateFailed
@@ -59,11 +62,24 @@ export default function Seasons() {
           ))}
         </Card>
       )}
-      <Button
-        label={t.create}
-        variant="secondary"
-        onPress={() => router.push('/saisons/nouvelle')}
-      />
+      {seasons !== null && seasons.length > 0 && (
+        <Button label={t.create} variant="secondary" onPress={createSeason} />
+      )}
+      {seasons !== null && seasons.length === 0 && (
+        <Card>
+          <Text style={styles.empty}>{t.empty}</Text>
+          <Button label={t.create} onPress={createSeason} />
+        </Card>
+      )}
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  empty: {
+    fontFamily: theme.fonts.text,
+    fontSize: 16,
+    color: theme.colors.texte,
+    marginBottom: theme.spacing * 3,
+  },
+});
