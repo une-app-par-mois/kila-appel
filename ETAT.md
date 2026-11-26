@@ -10,7 +10,7 @@ Dernière mise à jour : 2026-11-26
 
 ## Prochaines étapes
 
-1. Ticket 003 : codé et vert (144 tests) ; `/code-review`, PR vers le groupe.
+1. Ticket 003 : codé et vert (156 tests), `/code-review` traité ; PR vers le groupe.
 2. Ticket 004 (zone sensible) : builds sur la CI, audit des permissions, migration 1 sur le téléphone (fin d'ADR-008), polices vérifiées à l'écran.
 3. Fin du jalon 0 : PR du jalon vers `main` (CI complète), prétest, réévaluation du calendrier (`docs/PLAN.md` §6).
 

@@ -13,12 +13,40 @@ type Violation = { rule: string; file: string; line: number };
 const LABELS_FILE = 'src/config/libelles.ts';
 const THEME_FILE = 'src/config/theme.ts';
 const TEXT_PROPS = new Set(['accessibilityLabel', 'accessibilityHint', 'placeholder', 'title']);
-const COLOR = /#[0-9a-f]{3,8}\b|\b(rgb|hsl)a?\s*\(/i;
-const NETWORK = new Set(['fetch', 'XMLHttpRequest', 'WebSocket']);
+// Une chaîne qui est entièrement une couleur (un texte contenant « #123 » n'en est pas une).
+const COLOR = /^\s*(#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})|(rgb|hsl)a?\s*\(.*\))\s*$/i;
+// SEC-01 : API réseau, et chargement de police par expo-font à l'exécution (décision du
+// porteur du 2026-11-26 : polices embarquées au build seulement).
+const NETWORK = new Set([
+  'fetch',
+  'XMLHttpRequest',
+  'WebSocket',
+  'EventSource',
+  'sendBeacon',
+  'loadAsync',
+  'useFonts',
+]);
+const REMOTE_URI = /^(https?|wss?):/i;
 const PUSH_TOKEN = new Set(['getExpoPushTokenAsync', 'getDevicePushTokenAsync']);
 
 const isText = (node: ts.Node | undefined): boolean =>
   node !== undefined && (ts.isStringLiteral(node) || ts.isTemplateLiteral(node));
+
+/** Texte en dur dans une expression : directement, ou dans une condition, `+`, `??`, `||`. */
+const containsText = (node: ts.Node | undefined): boolean => {
+  if (node === undefined) return false;
+  if (isText(node)) return true;
+  if (ts.isParenthesizedExpression(node)) return containsText(node.expression);
+  if (ts.isConditionalExpression(node)) {
+    return containsText(node.whenTrue) || containsText(node.whenFalse);
+  }
+  if (ts.isBinaryExpression(node)) return containsText(node.left) || containsText(node.right);
+  return false;
+};
+
+/** Valeur d'une chaîne sans substitution, sinon undefined. */
+const literalText = (node: ts.Node): string | undefined =>
+  ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node) ? node.text : undefined;
 
 /** Liste les écarts d'un fichier. `file` est relatif à la racine du dépôt. */
 const check = (file: string, source: string): Violation[] => {
@@ -32,20 +60,38 @@ const check = (file: string, source: string): Violation[] => {
   const visit = (node: ts.Node) => {
     if (!isTest && file !== LABELS_FILE) {
       if (ts.isJsxText(node) && node.getText().trim() !== '') add('CONV-03', node);
-      if (ts.isJsxExpression(node) && ts.isJsxElement(node.parent) && isText(node.expression)) {
+      if (
+        ts.isJsxExpression(node) &&
+        (ts.isJsxElement(node.parent) || ts.isJsxFragment(node.parent)) &&
+        containsText(node.expression)
+      ) {
         add('CONV-03', node);
       }
       if (ts.isJsxAttribute(node) && TEXT_PROPS.has(node.name.getText())) {
         const value = node.initializer;
-        if (isText(value) || (value && ts.isJsxExpression(value) && isText(value.expression))) {
+        if (
+          isText(value) ||
+          (value && ts.isJsxExpression(value) && containsText(value.expression))
+        ) {
           add('CONV-03', node);
         }
       }
     }
-    if (!isTest && file !== THEME_FILE && isText(node) && COLOR.test(node.getText())) {
+    const text = literalText(node);
+    if (!isTest && file !== THEME_FILE && text !== undefined && COLOR.test(text)) {
       add('CONV-16', node);
     }
     if (ts.isIdentifier(node) && NETWORK.has(node.text)) add('SEC-01', node);
+    // globalThis['fetch'] : le nom passe par une chaîne.
+    if (ts.isElementAccessExpression(node)) {
+      const key = literalText(node.argumentExpression);
+      if (key !== undefined && NETWORK.has(key)) add('SEC-01', node);
+    }
+    // Ressource chargée à l'exécution : { uri: 'https://…' } (image, son, police).
+    if (ts.isPropertyAssignment(node) && node.name.getText() === 'uri') {
+      const uri = literalText(node.initializer);
+      if (uri !== undefined && REMOTE_URI.test(uri)) add('SEC-01', node);
+    }
     if (ts.isIdentifier(node) && PUSH_TOKEN.has(node.text)) add('SEC-03', node);
     ts.forEachChild(node, visit);
   };
@@ -62,13 +108,19 @@ describe('CONV-03 texte de l’interface seulement dans libelles.ts', () => {
     ['gabarit entre accolades', '<Text>{`Appel`}</Text>'],
     ['libellé d’accessibilité', '<Pressable accessibilityLabel="Valider" />'],
     ['placeholder entre accolades', "<TextInput placeholder={'Nom'} />"],
+    ['chaîne dans un fragment', "<>{'Faire l’appel'}</>"],
+    ['texte dans un fragment', '<>Faire l’appel</>'],
+    ['condition', "<Text>{ok ? 'Oui' : 'Non'}</Text>"],
+    ['concaténation', "<Text>{'Appel ' + n}</Text>"],
+    ['valeur par défaut', "<Text>{name ?? 'Aucun'}</Text>"],
   ])('repère %s', (_cas, jsx) => {
     expect(rules('src/app/Screen.tsx', `const A = () => ${jsx};`)).toEqual(['CONV-03']);
   });
 
   it('laisse passer les libellés importés, les espaces et les autres attributs', () => {
     const jsx =
-      '<View testID="appel"><Text accessibilityLabel={labels.save}> {labels.title} </Text></View>';
+      '<View testID="appel"><Text accessibilityLabel={labels.save}> {labels.title} </Text>' +
+      "{items.map((i) => <Item key={'k' + i} />)}{ok ? labels.yes : labels.no}</View>";
     expect(rules('src/app/Screen.tsx', `const A = () => ${jsx};`)).toEqual([]);
   });
 
@@ -89,8 +141,9 @@ describe('CONV-16 couleurs seulement dans le thème', () => {
     },
   );
 
-  it('laisse passer une couleur du thème et un texte qui contient un dièse non coloré', () => {
-    const source = "const s = { color: theme.colors.encre }; const t = 'n° #12 bis';";
+  it('laisse passer une couleur du thème et un texte qui contient un dièse', () => {
+    const source =
+      "const s = { color: theme.colors.encre }; const t = 'Séance n° #123'; const u = 'n° #cafe';";
     expect(rules('src/ui/Card.tsx', source)).toEqual([]);
   });
 
@@ -105,6 +158,12 @@ describe('SEC-01 aucun appel réseau, SEC-03 aucun jeton de notification', () =>
     ['SEC-01', 'const x = new XMLHttpRequest();'],
     ['SEC-01', "const w = new WebSocket('wss://exemple.invalid');"],
     ['SEC-01', "globalThis.fetch('/');"],
+    ['SEC-01', "globalThis['fetch']('/');"],
+    ['SEC-01', "const e = new EventSource('/flux');"],
+    ['SEC-01', 'navigator.sendBeacon(u, d);'],
+    ['SEC-01', "const i = { source: { uri: 'https://exemple.invalid/a.png' } };"],
+    ['SEC-01', "await Font.loadAsync({ plex: 'https://exemple.invalid/p.ttf' });"],
+    ['SEC-01', 'const [loaded] = useFonts(fonts);'],
     ['SEC-03', 'await Notifications.getExpoPushTokenAsync();'],
     ['SEC-03', "import { getDevicePushTokenAsync } from 'expo-notifications';"],
   ])('%s repère : %s', (rule, source) => {

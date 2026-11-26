@@ -20,7 +20,7 @@ Ce que la machine ne vérifie pas encore, l'IA le respecte ; ce qu'elle peut vé
 | --- | --- | --- |
 | CONV-10 | Arborescence et sens des imports de `docs/ARCHITECTURE.md` §1 et §3 : `app` → `hooks` → `domain` → `data`, jamais l'inverse ; `domain` n'importe ni React ni `data` | Règle d'import (Biome ou test qui lit les imports) |
 | CONV-11 | Domaine pur : l'heure (`now`) et tout hasard sont passés en paramètres | Revue ; tests |
-| CONV-12 | TypeScript strict, zéro erreur ; pas de `any`, pas de `@ts-ignore` | `tsc --noEmit` dans `scripts/test.sh` ; lint |
+| CONV-12 | TypeScript strict, zéro erreur ; pas de `any`, pas de `@ts-ignore` | `tsc --noEmit` dans `scripts/test.sh`, sur l'appli (`tsconfig.json`) puis sur les tests (`tsconfig.test.json`) ; lint |
 | CONV-13 | Toute promesse est attendue ou explicitement gérée (bogue de restauration de l'ancienne version) | Lint `noFloatingPromises` en erreur |
 | CONV-14 | Données venues de l'extérieur (fichier importé, sauvegarde, saisie) validées à l'entrée, jamais simplement converties | Tests (SEC-06, SEC-10) |
 | CONV-15 | Erreurs attendues gérées et affichées clairement, sans terme technique ; aucune exception avalée en silence | Revue ; tests d'écrans |

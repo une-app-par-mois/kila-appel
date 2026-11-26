@@ -19,10 +19,10 @@
         "expo-font",
         {
           "fonts": [
-            "./assets/fonts/IBMPlexSans-Regular.ttf",
-            "./assets/fonts/IBMPlexSans-SemiBold.ttf",
+            "./assets/fonts/IBMPlexSans.ttf",
+            "./assets/fonts/IBMPlexSans-SmBld.ttf",
             "./assets/fonts/IBMPlexSans-Bold.ttf",
-            "./assets/fonts/IBMPlexMono-Medium.ttf"
+            "./assets/fonts/IBMPlexMono-Medm.ttf"
           ]
         }
       ]

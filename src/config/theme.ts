@@ -2,12 +2,15 @@
 // Aucune valeur recopiée : modifier un jeton modifie le thème (contrastes : scripts/contrastes.mjs).
 import jetons from '../../design/jetons.json';
 
-/** Polices embarquées par l'extension expo-font ; le nom de fichier est le nom PostScript. */
+/**
+ * Polices embarquées par l'extension expo-font. Chaque fichier porte le nom PostScript de la police :
+ * iOS la trouve par ce nom, Android par le nom de fichier (vérifié par fonts.test.ts).
+ */
 export const fonts = {
-  text: 'IBMPlexSans-Regular',
-  textSemi: 'IBMPlexSans-SemiBold',
+  text: 'IBMPlexSans',
+  textSemi: 'IBMPlexSans-SmBld',
   title: 'IBMPlexSans-Bold',
-  digits: 'IBMPlexMono-Medium',
+  digits: 'IBMPlexMono-Medm',
 } as const;
 
 export const fontFiles = Object.values(fonts).map((name) => `./assets/fonts/${name}.ttf`);
