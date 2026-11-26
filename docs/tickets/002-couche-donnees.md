@@ -16,7 +16,7 @@ Lever le risque d'ADR-008 et poser le schéma complet de la v1 (ADR-003), dont d
 
 - Interface de base minimale (`execute`, `query`, transaction) dans `src/data/db.ts`
 - Adaptateur `expo-sqlite` (appli) et adaptateur `node:sqlite` (tests)
-- Migration 1 : les 14 tables, clés étrangères, cascades, index, `PRAGMA user_version`
+- Migration 1 : les 16 tables (brouillon en tables filles, décision de la revue), clés étrangères, cascades, index, `PRAGMA user_version`
 - Ouverture de base : `PRAGMA foreign_keys = ON`, migrations dans une transaction
 - Seuil de couverture `./src/data/` (90 % lignes, 85 % branches) ajouté dans `jest.config.js` avec le premier fichier de `src/data/` (CONV §5.3)
 

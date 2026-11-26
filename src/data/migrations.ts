@@ -122,16 +122,29 @@ const MIGRATION_1: string[] = [
   ) STRICT`,
   'CREATE INDEX attendances_member ON attendances (member_id)',
 
-  // EX-14 : un seul brouillon à la fois (id = 1) ; group_ids et statuses en JSON.
+  // EX-14 : un seul brouillon à la fois (id = 1).
   `CREATE TABLE roll_call_drafts (
     id INTEGER PRIMARY KEY CHECK (id = 1),
     slot_id INTEGER REFERENCES slots (id) ON DELETE CASCADE,
     date TEXT NOT NULL CHECK ${isoDate('date')},
-    group_ids TEXT NOT NULL CHECK (json_valid(group_ids)),
-    statuses TEXT NOT NULL CHECK (json_valid(statuses)),
     comment TEXT,
     updated_at TEXT NOT NULL
   ) STRICT`,
+  // Groupes et statuts du brouillon en tables filles (décision du porteur du 2026-11-26) :
+  // supprimer un membre ou un groupe les efface aussi (ABS-05, SEC-11).
+  `CREATE TABLE roll_call_draft_groups (
+    draft_id INTEGER NOT NULL REFERENCES roll_call_drafts (id) ON DELETE CASCADE,
+    group_id INTEGER NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
+    PRIMARY KEY (draft_id, group_id)
+  ) STRICT`,
+  'CREATE INDEX roll_call_draft_groups_group ON roll_call_draft_groups (group_id)',
+  `CREATE TABLE roll_call_draft_statuses (
+    draft_id INTEGER NOT NULL REFERENCES roll_call_drafts (id) ON DELETE CASCADE,
+    member_id INTEGER NOT NULL REFERENCES members (id) ON DELETE CASCADE,
+    status TEXT NOT NULL CHECK (status IN ('present', 'absent', 'late', 'excused')),
+    PRIMARY KEY (draft_id, member_id)
+  ) STRICT`,
+  'CREATE INDEX roll_call_draft_statuses_member ON roll_call_draft_statuses (member_id)',
 
   // EX-26 : alerte traitée à ce niveau de série ; SEC-11 : effacée avec le membre.
   `CREATE TABLE alert_acks (
@@ -153,12 +166,17 @@ export const MIGRATIONS: Migration[] = [{ version: 1, statements: MIGRATION_1 }]
 export const LATEST_VERSION = MIGRATIONS.length;
 
 export const UNKNOWN_VERSION = 'Version de base inconnue (plus récente que l’appli)';
+export const BAD_NUMBERING = 'Migrations mal numérotées';
 
 const readVersion = async (db: Db): Promise<number> =>
   (await db.query<{ user_version: number }>('PRAGMA user_version'))[0]?.user_version ?? 0;
 
 /** Applique les migrations manquantes, chacune dans sa transaction. Refuse une base plus récente. */
 export const migrate = async (db: Db, migrations: Migration[] = MIGRATIONS): Promise<void> => {
+  // Versions 1, 2, … n dans l'ordre : la dernière version est alors migrations.length.
+  if (migrations.some((m, i) => m.version !== i + 1)) {
+    throw new Error(BAD_NUMBERING);
+  }
   const current = await readVersion(db);
   if (current > migrations.length) {
     // SEC-10 : une base d'une version future n'est jamais modifiée.

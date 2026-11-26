@@ -90,7 +90,9 @@ Les identifiants suivent le glossaire du cadrage (colonne « Terme du code »).
 | `sessions` | id, season_id, slot_id?, date, start_time, state, comment? | `state` ∈ recorded, prepared, cancelled, unscheduled ; `slot_id` nul = appel sans créneau (EX-39) ; unique (slot_id, date) (RM-05) |
 | `session_groups` | session_id, group_id | Groupes figés au jour de la séance |
 | `attendances` | session_id, member_id, status | `status` ∈ present, absent, late, excused ; cascade depuis `members` et `sessions` |
-| `roll_call_drafts` | slot_id?, date, group_ids, statuses, comment, updated_at | Un seul brouillon à la fois (EX-14) |
+| `roll_call_drafts` | id (= 1), slot_id?, date, comment, updated_at | Un seul brouillon à la fois (EX-14) |
+| `roll_call_draft_groups` | draft_id, group_id | Groupes du brouillon ; cascade depuis `groups` |
+| `roll_call_draft_statuses` | draft_id, member_id, status | Statuts du brouillon ; cascade depuis `members` (ABS-05) |
 | `alert_acks` | member_id, streak_length, acked_at | Alerte traitée à ce niveau de série (EX-26) |
 | `settings` | key, value | Réglages (ADR-002) |
 
@@ -102,7 +104,7 @@ Les identifiants suivent le glossaire du cadrage (colonne « Terme du code »).
 
 | On supprime | Effacé en cascade | Gardé |
 | --- | --- | --- |
-| Un membre | présences, contacts, inscriptions, alertes traitées (SEC-11) | séances |
+| Un membre | présences (brouillon compris), contacts, inscriptions, alertes traitées (SEC-11) | séances |
 | Une saison | groupes, créneaux (et leurs dates et groupes), séances, présences, inscriptions à ses groupes, brouillon de ses créneaux (EX-01) | membres, autres saisons |
 | Un créneau | ses dates, ses groupes, son brouillon | ses séances et leurs présences, `slot_id` vidé (EX-07) ; affichées comme un appel sans créneau |
 | Un groupe | inscriptions, liens créneau-groupe et séance-groupe | séances et présences (EX-02) |
@@ -163,7 +165,7 @@ Liste fermée de ce qu'un journal peut contenir : code d'erreur, nom de l'opéra
 
 - 2026-11-26 : réglages dans SQLite, état React seul, icônes lucide-react-native, polices en fichiers `.ttf`, schéma complet dès la migration 1, builds sur GitHub Actions seul ; brouillon dans une table à part (`roll_call_drafts`) ; **noms de tables au pluriel** (évite le mot réservé `group`) ; tests de données avec `node:sqlite`, à confirmer au ticket d'outillage ; sauvegarde au format base SQLite brute (`.db`).
 - 2026-11-26 (ticket 001) : dépendances obligatoires d'expo-router et de Jest acceptées ; `react-dom` épinglée en 19.3.0 ; `expo-font` installée au ticket 003 (ABS-07).
-- 2026-11-26 (ticket 002) : règles de suppression du §4.1 ; séance d'un créneau supprimé sans colonne d'origine ; types de `node:sqlite` déclarés localement (pas de `@types/node`) ; vérification d'ADR-008 complétée sur téléphone au ticket 004.
+- 2026-11-26 (ticket 002) : règles de suppression du §4.1 ; groupes et statuts du brouillon en tables filles en cascade (16 tables) ; transactions sur la connexion principale par une file commune aux deux adaptateurs (`withExclusiveTransactionAsync` ouvre une connexion sans clés étrangères) ; séance d'un créneau supprimé sans colonne d'origine ; types de `node:sqlite` déclarés localement (pas de `@types/node`) ; vérification d'ADR-008 complétée sur téléphone au ticket 004.
 
 ## Questions ouvertes
 

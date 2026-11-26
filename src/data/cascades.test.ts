@@ -18,7 +18,7 @@ describe('Suppressions en cascade (SEC-11, ABS-05)', () => {
     await db.close();
   });
 
-  it('SEC-11 supprimer un membre efface ses présences, contacts, inscriptions et alertes traitées', async () => {
+  it('SEC-11 supprimer un membre efface ses présences (brouillon compris), contacts, inscriptions et alertes traitées', async () => {
     const own = 'member_id = ?';
     expect(await count(db, 'attendances', own, [s.memberId])).toBe(1);
     expect(await count(db, 'emergency_contacts', own, [s.memberId])).toBe(1);
@@ -32,6 +32,7 @@ describe('Suppressions en cascade (SEC-11, ABS-05)', () => {
       'emergency_contacts',
       'enrollments',
       'alert_acks',
+      'roll_call_draft_statuses',
     ] as const) {
       expect(await count(db, table, own, [s.memberId])).toBe(0);
       expect(await count(db, table, own, [s.otherMemberId])).toBeGreaterThan(0);
@@ -50,6 +51,8 @@ describe('Suppressions en cascade (SEC-11, ABS-05)', () => {
     expect(await count(db, 'session_groups')).toBe(0);
     expect(await count(db, 'attendances')).toBe(0);
     expect(await count(db, 'roll_call_drafts')).toBe(0);
+    expect(await count(db, 'roll_call_draft_groups')).toBe(0);
+    expect(await count(db, 'roll_call_draft_statuses')).toBe(0);
     expect(await count(db, 'enrollments', 'group_id = ?', [s.groupId])).toBe(0);
     // L'autre saison et les membres restent.
     expect(await count(db, 'members')).toBe(2);
@@ -66,6 +69,7 @@ describe('Suppressions en cascade (SEC-11, ABS-05)', () => {
     expect(await count(db, 'slot_groups')).toBe(0);
     expect(await count(db, 'slot_dates')).toBe(0);
     expect(await count(db, 'roll_call_drafts')).toBe(0);
+    expect(await count(db, 'roll_call_draft_statuses')).toBe(0);
   });
 
   it('EX-02 supprimer un groupe le retire des séances passées et garde les présences', async () => {
@@ -76,6 +80,8 @@ describe('Suppressions en cascade (SEC-11, ABS-05)', () => {
     expect(await count(db, 'attendances', 'session_id = ?', [s.sessionId])).toBe(2);
     expect(await count(db, 'enrollments', 'group_id = ?', [s.groupId])).toBe(0);
     expect(await count(db, 'slot_groups')).toBe(0);
+    expect(await count(db, 'roll_call_draft_groups')).toBe(0);
+    expect(await count(db, 'roll_call_draft_statuses')).toBe(2);
     expect(await count(db, 'members')).toBe(2);
   });
 

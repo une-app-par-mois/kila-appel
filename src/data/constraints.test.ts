@@ -68,7 +68,7 @@ describe('Contraintes du schéma', () => {
     ['fin d’inscription avant le début', "UPDATE enrollments SET end_date = '2020-01-01'"],
     ['nom de membre vide (ABS-03)', "UPDATE members SET last_name = '  '"],
     ['prénom absent (ABS-03)', 'UPDATE members SET first_name = NULL'],
-    ['statuts du brouillon hors JSON', "UPDATE roll_call_drafts SET statuses = 'pas du json'"],
+    ['statut inconnu dans le brouillon', "UPDATE roll_call_draft_statuses SET status = 'parti'"],
   ])('refuse : %s', async (_cas, sql) => {
     await expect(db.execute(sql)).rejects.toThrow();
   });
@@ -76,8 +76,8 @@ describe('Contraintes du schéma', () => {
   it('EX-14 un seul brouillon d’appel à la fois', async () => {
     await expect(
       db.execute(
-        'INSERT INTO roll_call_drafts (id, slot_id, date, group_ids, statuses, updated_at) VALUES (2, NULL, ?, ?, ?, ?)',
-        ['2026-12-03', '[]', '{}', '2026-12-03T10:00:00'],
+        'INSERT INTO roll_call_drafts (id, slot_id, date, updated_at) VALUES (2, NULL, ?, ?)',
+        ['2026-12-03', '2026-12-03T10:00:00'],
       ),
     ).rejects.toThrow();
   });

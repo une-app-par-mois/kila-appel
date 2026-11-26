@@ -13,6 +13,8 @@ const TABLES = [
   'enrollments',
   'groups',
   'members',
+  'roll_call_draft_groups',
+  'roll_call_draft_statuses',
   'roll_call_drafts',
   'seasons',
   'session_groups',
@@ -42,7 +44,7 @@ describe('Migration 1 (ADR-003)', () => {
     await db.close();
   });
 
-  it('crée les 14 tables du schéma sur une base vide et pose user_version = 1', async () => {
+  it('crée les 16 tables du schéma sur une base vide et pose user_version = 1', async () => {
     await prepareDatabase(db);
     expect(await tableNames(db)).toEqual(TABLES);
     expect(await userVersion(db)).toBe(1);
@@ -92,6 +94,16 @@ describe('Migration 1 (ADR-003)', () => {
     ];
     await expect(migrate(db, broken)).rejects.toThrow();
     expect(await tableNames(db)).toEqual([]);
+    expect(await userVersion(db)).toBe(0);
+  });
+
+  it.each([
+    ['une version manquante', [2]],
+    ['un trou', [1, 3]],
+    ['un ordre inversé', [2, 1]],
+  ])('SEC-10 refuse une liste de migrations avec %s', async (_cas, versions) => {
+    const migrations = versions.map((version) => ({ version, statements: ['SELECT 1'] }));
+    await expect(migrate(db, migrations)).rejects.toThrow('Migrations mal numérotées');
     expect(await userVersion(db)).toBe(0);
   });
 

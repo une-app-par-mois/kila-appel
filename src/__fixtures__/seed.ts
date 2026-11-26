@@ -89,9 +89,18 @@ export const seed = async (db: Db): Promise<Seeded> => {
     [sessionId, otherMemberId],
   );
   await db.execute(
-    'INSERT INTO roll_call_drafts (id, slot_id, date, group_ids, statuses, updated_at) VALUES (1, ?, ?, ?, ?, ?)',
-    [slotId, '2026-12-02', `[${groupId}]`, '{}', '2026-12-02T17:35:00'],
+    'INSERT INTO roll_call_drafts (id, slot_id, date, updated_at) VALUES (1, ?, ?, ?)',
+    [slotId, '2026-12-02', '2026-12-02T17:35:00'],
   );
+  await db.execute('INSERT INTO roll_call_draft_groups (draft_id, group_id) VALUES (1, ?)', [
+    groupId,
+  ]);
+  for (const id of [memberId, otherMemberId]) {
+    await db.execute(
+      "INSERT INTO roll_call_draft_statuses (draft_id, member_id, status) VALUES (1, ?, 'absent')",
+      [id],
+    );
+  }
   return { seasonId, otherSeasonId, groupId, memberId, otherMemberId, slotId, sessionId };
 };
 
@@ -109,6 +118,8 @@ type Table =
   | 'session_groups'
   | 'attendances'
   | 'roll_call_drafts'
+  | 'roll_call_draft_groups'
+  | 'roll_call_draft_statuses'
   | 'alert_acks'
   | 'settings';
 

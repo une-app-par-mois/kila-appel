@@ -14,12 +14,12 @@ Statut : à faire · Jalon : 1 · Zone sensible : oui · Trivial : non
 
 ## Ce qui change
 
-- Dépôt `roll_call_drafts`
+- Dépôt du brouillon (`roll_call_drafts`, `roll_call_draft_groups`, `roll_call_draft_statuses`)
 - Écriture à chaque appui, reprise, abandon
 
 ## Critères d'acceptation
 
-- [ ] Chaque changement est écrit aussitôt dans `roll_call_drafts`
+- [ ] Chaque changement est écrit aussitôt dans le brouillon (`roll_call_draft_statuses`)
 - [ ] Après fermeture forcée, l'appel est retrouvé tel quel (accueil « Appel en cours »)
 - [ ] Le brouillon disparaît à l'enregistrement ou à l'abandon confirmé
 - [ ] Aucune requête de statistiques ou d'historique ne lit le brouillon

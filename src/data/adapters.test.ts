@@ -1,37 +1,50 @@
 /**
  * @jest-environment node
  */
+import { count, seed } from '@/__fixtures__/seed';
 import type { Db } from '@/data/db';
 import { openExpoDb } from '@/data/expoDb';
 import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
 
-// Imitation d'expo-sqlite sur une vraie base node:sqlite : on teste le code de l'adaptateur,
-// pas le module natif (vérifié sur téléphone au ticket 004, ADR-008).
+// Imitation fidèle d'expo-sqlite sur node:sqlite : base dans un fichier, et
+// withExclusiveTransactionAsync sur une NOUVELLE connexion (comme le module réel,
+// SQLiteDatabase.ts : useNewConnection), où les clés étrangères sont inactives par défaut.
+// On teste le code de l'adaptateur, pas le module natif (ticket 004, ADR-008).
 jest.mock('expo-sqlite', () => {
   const { DatabaseSync } = require('node:sqlite');
-  const wrap = (raw: InstanceType<typeof DatabaseSync>) => {
-    const api = {
-      runAsync: async (sql: string, params: unknown[]) => {
-        const r = raw.prepare(sql).run(...params);
-        return { changes: Number(r.changes), lastInsertRowId: Number(r.lastInsertRowid) };
-      },
-      getAllAsync: async (sql: string, params: unknown[]) => raw.prepare(sql).all(...params),
-      withExclusiveTransactionAsync: async (task: (txn: unknown) => Promise<void>) => {
-        raw.exec('BEGIN IMMEDIATE');
-        try {
-          await task(api);
-          raw.exec('COMMIT');
-        } catch (error) {
-          raw.exec('ROLLBACK');
-          throw error;
-        }
-      },
-      closeAsync: async () => raw.close(),
-    };
-    return api;
+  const { mkdtempSync } = require('node:fs');
+  const { join } = require('node:path');
+  const { tmpdir } = require('node:os');
+  type MockRaw = InstanceType<typeof DatabaseSync>;
+  const wrap = (raw: MockRaw, path: string) => ({
+    runAsync: async (sql: string, params: unknown[]) => {
+      const r = raw.prepare(sql).run(...params);
+      return { changes: Number(r.changes), lastInsertRowId: Number(r.lastInsertRowid) };
+    },
+    getAllAsync: async (sql: string, params: unknown[]) => raw.prepare(sql).all(...params),
+    execAsync: async (sql: string) => raw.exec(sql),
+    withExclusiveTransactionAsync: async (task: (txn: unknown) => Promise<void>) => {
+      const other = new DatabaseSync(path);
+      other.exec('BEGIN IMMEDIATE');
+      try {
+        await task(wrap(other, path));
+        other.exec('COMMIT');
+      } catch (error) {
+        other.exec('ROLLBACK');
+        throw error;
+      } finally {
+        other.close();
+      }
+    },
+    closeAsync: async () => raw.close(),
+  });
+  return {
+    openDatabaseAsync: async (name: string) => {
+      const path = join(mkdtempSync(join(tmpdir(), 'kila-test-')), name);
+      return wrap(new DatabaseSync(path), path);
+    },
   };
-  return { openDatabaseAsync: async () => wrap(new DatabaseSync(':memory:')) };
 });
 
 describe.each([
@@ -66,6 +79,17 @@ describe.each([
     expect(r).toEqual({ changes: 1, lastInsertRowId: 1 });
   });
 
+  it('SEC-11 les suppressions en cascade fonctionnent aussi dans une transaction', async () => {
+    const s = await seed(db);
+    await db.transaction(async (tx) => {
+      const rows = await tx.query<{ foreign_keys: number }>('PRAGMA foreign_keys');
+      expect(rows).toEqual([{ foreign_keys: 1 }]);
+      await tx.execute('DELETE FROM members WHERE id = ?', [s.memberId]);
+    });
+    expect(await count(db, 'attendances', 'member_id = ?', [s.memberId])).toBe(0);
+    expect(await count(db, 'emergency_contacts', 'member_id = ?', [s.memberId])).toBe(0);
+  });
+
   it('une transaction réussie est validée et renvoie sa valeur', async () => {
     const value = await db.transaction(async (tx) => {
       await insertSetting(tx, 'a');
@@ -86,9 +110,39 @@ describe.each([
     expect(await keys()).toEqual([]);
   });
 
-  it('refuse une transaction imbriquée', async () => {
+  it('garde l’erreur d’origine si SQLite a déjà annulé la transaction', async () => {
+    await expect(
+      db.transaction(async (tx) => {
+        await tx.execute('ROLLBACK');
+        throw new Error('cause réelle');
+      }),
+    ).rejects.toThrow('cause réelle');
+    await insertSetting(db, 'après');
+    expect(await keys()).toEqual(['après']);
+  });
+
+  it('une écriture lancée pendant une transaction attend sa fin et n’est pas annulée avec elle', async () => {
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const failing = db.transaction(async (tx) => {
+      await insertSetting(tx, 'dans-la-transaction');
+      await gate;
+      throw new Error('échec voulu');
+    });
+    const outside = insertSetting(db, 'hors-transaction');
+    release();
+    await expect(failing).rejects.toThrow('échec voulu');
+    await outside;
+    expect(await keys()).toEqual(['hors-transaction']);
+  });
+
+  it('refuse une transaction imbriquée et la fermeture de la base dans une transaction', async () => {
     await expect(db.transaction((tx) => tx.transaction(async () => 1))).rejects.toThrow(
       'Transaction imbriquée',
     );
+    await expect(db.transaction((tx) => tx.close())).rejects.toThrow('Fermeture refusée');
+    expect(await keys()).toEqual([]);
   });
 });
