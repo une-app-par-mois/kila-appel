@@ -1,6 +1,6 @@
 # 004 — Builds sur la CI et audit des permissions
 
-Statut : à faire · Jalon : 0 · Zone sensible : oui · Trivial : non
+Statut : en cours · Jalon : 0 · Zone sensible : oui · Trivial : non
 
 ## Contexte
 

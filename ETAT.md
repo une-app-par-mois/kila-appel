@@ -6,13 +6,13 @@ Dernière mise à jour : 2026-11-26
 
 ## En cours
 
-**Ticket 003** (garde-fous automatiques, thème, polices) sur `ticket/003-garde-fous-theme`, partie de `groupe/jalon-0-outillage`. Tickets 001 et 002 fusionnés dans le groupe (PR #2, #3 ; 002 relu par le porteur). La branche du jalon part de `ticket/000-mise-en-route` (décision du 2026-11-26, notée dans `CLAUDE.md`) ; PR n°1 fermée sans fusion.
+**Ticket 004** (builds sur la CI, audit des permissions, zone sensible) sur `ticket/004-builds-ci`, partie de `groupe/jalon-0-outillage`. Tickets 001 à 003 fusionnés dans le groupe (PR #2 à #4). La branche du jalon part de `ticket/000-mise-en-route` (décision du 2026-11-26, notée dans `CLAUDE.md`) ; PR n°1 fermée sans fusion.
 
 ## Prochaines étapes
 
-1. Ticket 003 : codé et vert (156 tests), `/code-review` traité ; PR vers le groupe.
-2. Ticket 004 (zone sensible) : builds sur la CI, audit des permissions, migration 1 sur le téléphone (fin d'ADR-008), polices vérifiées à l'écran.
-3. Fin du jalon 0 : PR du jalon vers `main` (CI complète), prétest, réévaluation du calendrier (`docs/PLAN.md` §6).
+1. Ticket 004 : tests d'abord, build local et audit, `/code-review`, `/security-review`, relecture du porteur, fusion dans le groupe.
+2. PR du jalon 0 vers `main` : CI complète (tests, sécurité, builds Android et iOS) ; APK installé sur le téléphone, migration vue dans `adb logcat` (fin d'ADR-008).
+3. Prétest de fin de jalon, réévaluation du calendrier (`docs/PLAN.md` §6).
 
 ## Points d'attention
 
@@ -33,6 +33,6 @@ Dernière mise à jour : 2026-11-26
 
 - Écran vide du ticket 001 jamais lancé sur un téléphone (`npx expo start` à faire par le porteur).
 - CI jamais lancée (elle tournera sur la PR du jalon 0).
-- Polices jamais vues à l'écran (rendu au ticket 004) ; couleurs nommées (`'red'`) non détectées par le contrôle CONV-16.
+- Polices jamais vues à l'écran (rendu avec les premiers écrans du jalon 1) ; couleurs nommées (`'red'`) non détectées par le contrôle CONV-16.
 - Adaptateur `expo-sqlite` testé sur une imitation branchée sur `node:sqlite`, jamais sur le module natif (ticket 004).
 - Permission INTERNET encore présente par défaut (retrait et audit du binaire : ticket 004). Polices IBM Plex absentes du poste : les maquettes s'affichent dans la police du système.
