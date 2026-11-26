@@ -19,7 +19,7 @@ Le plus gros risque technique d'abord (jalon 0). Chaque jalon se termine par un 
 | Jalon | Objectif | Fonctionnalités | Critère de sortie | Tickets | Heures porteur |
 | --- | --- | --- | --- | --- | --- |
 | 0 | Outillage et risques techniques | — | CI verte avec un premier test du domaine et un test de données sur `node:sqlite` ; APK de développement construit par la CI et installé sur le téléphone ; build iOS de test réussi sur le runner macOS (non signé) | 4 | 6 |
-| 1 | Organiser, appeler, retrouver | F-01, F-02, F-03, EX-39 | Prétest : appel de 20 membres en moins de 30 s ; appel retrouvé après fermeture forcée ; sauvegarde → tout effacer → restauration identique ; campagne Maestro verte | 10 | 16 |
+| 1 | Organiser, appeler, retrouver | F-01, F-02, F-03, EX-39 | Prétest : appel de 20 membres en moins de 30 s ; appel retrouvé après fermeture forcée ; sauvegarde → tout effacer → restauration identique ; campagne Maestro verte | 12 | 19 |
 | 2 | Suivre l'assiduité | F-04, F-05, F-06 | Prétest : alerte levée puis traitée ; taux exacts sur un jeu fictif vérifié à la main ; relance reçue sur le téléphone, sans nom de membre | 5 | 8 |
 | 3 | Entrer et sortir les données | F-07, F-08, F-09 | Prétest : import d'un CSV fictif Excel (UTF-8 et Windows-1252) ; CSV et PDF ouverts sur l'ordinateur | 4 | 6 |
 | 4 | Calendrier complet | F-10, F-11, F-13 | Prétest : stage sur 3 dates à 2 groupes ; séance préparée puis enregistrée ; séance annulée puis rétablie | 4 | 7 |
@@ -27,7 +27,7 @@ Le plus gros risque technique d'abord (jalon 0). Chaque jalon se termine par un 
 | 6 | Publication Android | EX-40 à EX-42 | Pages légales et GitHub Pages en ligne ; audit adverse sans problème critique ou élevé ouvert ; `CHECKLIST-RELEASE.md` coché ; AAB signé par la CI déposé en test interne puis en production | 4 | 10 |
 | 7 | Publication iOS | — | Test sur un vrai iPhone ; IPA signé par la CI sur TestFlight puis en production | 2 | 5 |
 
-Total jusqu'à la publication Android (jalons 0 à 6) : **33 tickets, environ 56 h de porteur**, hors marge.
+Total jusqu'à la publication Android (jalons 0 à 6) : **35 tickets, environ 59 h de porteur**, hors marge.
 
 ## 3. Calendrier estimé
 
@@ -74,9 +74,6 @@ Démarches hors code, à lancer tôt à cause des délais.
 
 À la fin de chaque jalon : heures réellement passées, calendrier recalculé, décision du porteur si la date est menacée. Noté dans `ETAT.md`.
 
-## Points à vérifier en relisant
+## Décisions du porteur
 
-1. **Découpage et ordre des jalons** : F-13 (préparer, annuler) au jalon 4 avec F-10 et F-11, et F-12, F-14 au jalon 5, premiers candidats au report.
-2. **Estimations** : environ 1,5 h de porteur par ticket, plus le prétest.
-3. **Jalon 0** : un build iOS de test dès le début, pour lever le risque des builds sans Mac.
-4. **Bêta d'une semaine** par le porteur seul.
+- 2026-11-26 : ordre des jalons gardé (4 et 5 premiers candidats au report) ; estimation de 1,5 h par ticket, recalée au jalon 0 ; bêta d'une semaine par le porteur seul.
