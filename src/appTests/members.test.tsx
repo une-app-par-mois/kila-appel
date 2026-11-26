@@ -9,6 +9,7 @@ import { labels } from '@/config/libelles';
 import type { Db } from '@/data/db';
 import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
+import { notifyDataChanged } from '@/hooks/dataChanged';
 
 let mockDb: Db | null = null;
 jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => mockDb }));
@@ -143,7 +144,14 @@ describe('Écrans des membres (EX-03)', () => {
     await fireEvent.press(await button(/Alix Exemple/));
     await fireEvent.press(await button(t.memberForm.delete));
     expect(
-      await screen.findByText(t.memberDeletion.message({ contacts: 1, attendances: 1 })),
+      await screen.findByText(
+        t.memberDeletion.message({
+          contacts: 1,
+          attendances: 1,
+          enrollments: 2,
+          hasBirthDate: true,
+        }),
+      ),
     ).toBeTruthy();
     expect(screen.getByText(t.memberDeletion.kept)).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: t.common.deleteForever }));
@@ -151,6 +159,95 @@ describe('Écrans des membres (EX-03)', () => {
     expect(await count(db, 'members', 'id = ?', [s.memberId])).toBe(0);
     expect(await count(db, 'attendances', 'member_id = ?', [s.memberId])).toBe(0);
     expect(await count(db, 'emergency_contacts', 'member_id = ?', [s.memberId])).toBe(0);
+  });
+
+  it('message de suppression : inscriptions citées, date de naissance seulement si elle existe', () => {
+    expect(
+      t.memberDeletion.message({
+        contacts: 2,
+        attendances: 41,
+        enrollments: 2,
+        hasBirthDate: true,
+      }),
+    ).toBe(
+      'Seront effacés définitivement : sa fiche et sa date de naissance ; ses 2 contacts d’urgence ; ses 41 présences ; ses 2 inscriptions.',
+    );
+    expect(
+      t.memberDeletion.message({
+        contacts: 0,
+        attendances: 0,
+        enrollments: 1,
+        hasBirthDate: false,
+      }),
+    ).toBe('Seront effacés définitivement : sa fiche ; son inscription.');
+  });
+
+  it('suppression déjà faite ailleurs (introuvable) : retour à la liste', async () => {
+    const router = await open('/membres');
+    await fireEvent.press(await button(/Alix Exemple/));
+    await fireEvent.press(await button(t.memberForm.delete));
+    await db.execute('DELETE FROM members WHERE id = ?', [s.memberId]);
+    await fireEvent.press(await button(t.common.deleteForever));
+    await waitFor(() => expect(router.getPathname()).toBe('/membres'));
+  });
+
+  it('fiche : deux champs quittés l’un après l’autre sont tous deux enregistrés, nettoyés à l’écran', async () => {
+    await open(`/membres/${s.memberId}`);
+    const first = await screen.findByLabelText(t.memberForm.firstName);
+    const last = screen.getByLabelText(t.memberForm.lastName);
+    await fireEvent.changeText(first, ' Léa ');
+    await fireEvent(first, 'blur');
+    await fireEvent.changeText(last, 'Exemple-Test');
+    await fireEvent(last, 'blur');
+    await waitFor(async () =>
+      expect(await count(db, 'members', "first_name = 'Léa' AND last_name = 'Exemple-Test'")).toBe(
+        1,
+      ),
+    );
+    await waitFor(() =>
+      expect(screen.getByLabelText(t.memberForm.firstName).props.value).toBe('Léa'),
+    );
+  });
+
+  it('fiche : une saisie non quittée est enregistrée en quittant l’écran', async () => {
+    const router = await open('/membres');
+    await fireEvent.press(await button(/Alix Exemple/));
+    await fireEvent.changeText(
+      await screen.findByLabelText(t.memberForm.lastName),
+      'Exemple-Retour',
+    );
+    await fireEvent.press(screen.getByRole('button', { name: t.common.back }));
+    await waitFor(() => expect(router.getPathname()).toBe('/membres'));
+    await waitFor(async () =>
+      expect(await count(db, 'members', "last_name = 'Exemple-Retour'")).toBe(1),
+    );
+  });
+
+  it('archivés : le filtre de groupe ne s’applique pas ; un groupe disparu remet « Tous les groupes »', async () => {
+    await db.execute(
+      "INSERT INTO members (first_name, last_name, archived_at) VALUES ('Zoé', 'Blanc', '2026-11-01')",
+    );
+    await open('/membres');
+    await fireEvent.press(await button(t.members.allGroups));
+    await fireEvent.press(await button('Poussins'));
+    await fireEvent.press(await button(t.members.archived(1)));
+    expect(await button(/Zoé Blanc/)).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: t.members.archived(1) }));
+    await db.execute('UPDATE groups SET archived_at = ? WHERE id = ?', ['2026-11-26', s.groupId]);
+    notifyDataChanged();
+    expect(await button(t.members.allGroups)).toBeTruthy();
+    expect(await button(/Alix Exemple/)).toBeTruthy();
+  });
+
+  it('un groupe sans membre : « aucun membre ne correspond », pas « aucun membre »', async () => {
+    await db.execute('UPDATE enrollments SET end_date = ? WHERE group_id = ?', [
+      '2026-09-01',
+      s.groupId,
+    ]);
+    await open('/membres');
+    await fireEvent.press(await button(t.members.allGroups));
+    await fireEvent.press(await button('Poussins'));
+    expect(await screen.findByText(t.members.noMatch)).toBeTruthy();
   });
 
   it('« Garder » ferme la confirmation sans rien effacer', async () => {

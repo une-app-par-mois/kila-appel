@@ -24,7 +24,12 @@ const GROUP_NOTHING_ELSE = 'Seul le groupe sera effacé : il n’a ni inscriptio
 export type GroupDeletionCounts = { enrollments: number; slots: number; sessions: number };
 
 /** Ce que la suppression d'un membre effacera (EX-03, ABS-05). */
-export type MemberDeletionCounts = { contacts: number; attendances: number };
+export type MemberDeletionCounts = {
+  contacts: number;
+  attendances: number;
+  enrollments: number;
+  hasBirthDate: boolean;
+};
 
 /** Maquette : la licence seule dans la liste, écrite en entier pour les polices. */
 const licenceName = (e: { license: string }) =>
@@ -94,11 +99,13 @@ export const labels = {
     title: (name: string) => `Supprimer ${name} ?`,
     message: (c: MemberDeletionCounts) => {
       const parts = [
-        'sa fiche et sa date de naissance',
+        c.hasBirthDate ? 'sa fiche et sa date de naissance' : 'sa fiche',
         c.contacts === 1 && 'son contact d’urgence',
         c.contacts > 1 && `ses ${c.contacts} contacts d’urgence`,
         c.attendances === 1 && 'sa présence',
         c.attendances > 1 && `ses ${c.attendances} présences`,
+        c.enrollments === 1 && 'son inscription',
+        c.enrollments > 1 && `ses ${c.enrollments} inscriptions`,
       ].filter((part): part is string => typeof part === 'string');
       return `Seront effacés définitivement : ${parts.join(' ; ')}.`;
     },

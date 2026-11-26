@@ -7,7 +7,7 @@ import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
 import { parseDisplayDate, toIsoDate } from '@/domain/formats';
 import { useGroups } from '@/hooks/useGroups';
-import { useMembers } from '@/hooks/useMembers';
+import { useMemberCreation } from '@/hooks/useMembers';
 import { useSeasons } from '@/hooks/useSeasons';
 import { Button } from '@/ui/Button';
 import { errorMessage } from '@/ui/errorMessage';
@@ -34,7 +34,7 @@ export default function NewMember() {
   const { seasons } = useSeasons();
   const active = seasons?.find((s) => s.isActive);
   const { groups } = useGroups(active?.id ?? null);
-  const { create } = useMembers({ today });
+  const create = useMemberCreation(today);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [birth, setBirth] = useState('');

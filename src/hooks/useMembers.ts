@@ -3,6 +3,7 @@
 import { useCallback, useMemo } from 'react';
 import { enrollmentsRepo, type MemberEnrollment } from '@/data/enrollmentsRepo';
 import { DataError } from '@/data/errors';
+import { log } from '@/data/log';
 import {
   filterByQuery,
   type Member,
@@ -63,6 +64,16 @@ export const useMembers = ({
   return { members, loadFailed, create };
 };
 
+/** Création seule, sans lire la liste (écran Nouveau membre). */
+export const useMemberCreation = (today: string) => {
+  const change = useChange(useRepos());
+  return useCallback(
+    (input: MemberInput, groupId: number | null = null) =>
+      change((r) => r.members.create(input, { groupId, today })),
+    [change, today],
+  );
+};
+
 /** Un membre, ses groupes en cours et ses actions (fiche). */
 export const useMember = (id: number, today: string) => {
   const repos = useRepos();
@@ -86,6 +97,13 @@ export const useMember = (id: number, today: string) => {
     (input: MemberInput) => change((r) => r.members.update(id, input, today)),
     [change, id, today],
   );
+  /** En quittant la fiche : aucun écran pour afficher l'échec, qui va au journal (CONV-15). */
+  const updateOnLeave = useCallback(
+    (input: MemberInput) => {
+      update(input).catch(() => log('MEMBER_SAVE_ON_LEAVE_FAILED', { memberId: id }));
+    },
+    [update, id],
+  );
   const archive = useCallback(
     () => change((r) => r.members.archive(id, today)),
     [change, id, today],
@@ -104,6 +122,7 @@ export const useMember = (id: number, today: string) => {
     loaded,
     loadFailed,
     update,
+    updateOnLeave,
     archive,
     unarchive,
     remove,

@@ -1,7 +1,7 @@
 // Membres (maquette, EX-03) : recherche, filtre par groupe (la puce ouvre la liste des groupes de
 // la saison active), bascule sur les archivés (décisions du porteur du 2026-11-26).
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
@@ -29,7 +29,13 @@ export default function Members() {
   const { seasons, loadFailed: seasonsFailed } = useSeasons();
   const active = seasons?.find((s) => s.isActive);
   const { groups, loadFailed: groupsFailed } = useGroups(active?.id ?? null);
-  const { members, loadFailed } = useMembers({ today, archived, groupId, query });
+  // Un groupe choisi qui n'existe plus (archivé, supprimé, autre saison) : retour à tous.
+  const groupGone = groups !== null && groupId !== null && !groups.some((g) => g.id === groupId);
+  useEffect(() => {
+    if (groupGone) setGroupId(null);
+  }, [groupGone]);
+  const filterGroup = archived || groupGone ? null : groupId;
+  const { members, loadFailed } = useMembers({ today, archived, groupId: filterGroup, query });
   const { members: archivedMembers, loadFailed: archivedFailed } = useMembers({
     today,
     archived: true,
@@ -87,7 +93,11 @@ export default function Members() {
       )}
       {members !== null && members.length === 0 && (
         <Text style={styles.text}>
-          {query.trim() !== '' ? t.noMatch : archived ? t.emptyArchived : t.empty}
+          {query.trim() !== '' || filterGroup !== null
+            ? t.noMatch
+            : archived
+              ? t.emptyArchived
+              : t.empty}
         </Text>
       )}
       {!archived && <Button label={t.create} onPress={() => router.push('/membres/nouveau')} />}
