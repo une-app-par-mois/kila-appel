@@ -12,7 +12,7 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 
 | Jalon | Objectif | Critère de sortie | Branche | Statut |
 | --- | --- | --- | --- | --- |
-| 0 | Outillage et risques techniques | Voir `docs/PLAN.md` §2 | `groupe/jalon-0-outillage` | à faire |
+| 0 | Outillage et risques techniques | Voir `docs/PLAN.md` §2 | `groupe/jalon-0-outillage` | en cours |
 | 1 | Organiser, appeler, retrouver | Voir `docs/PLAN.md` §2 | `groupe/jalon-1-appel` | à faire |
 | 2 à 7 | Détaillés au début du jalon précédent | `docs/PLAN.md` §2 | — | à faire |
 
@@ -20,7 +20,7 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 
 | N° | Ticket | Jalon | Fonctionnalités | Zone sensible | Statut |
 | --- | --- | --- | --- | --- | --- |
-| 001 | [Socle Expo SDK 58 et scripts de test](001-socle-expo.md) | 0 | — | non | à faire |
+| 001 | [Socle Expo SDK 58 et scripts de test](001-socle-expo.md) | 0 | — | non | en cours |
 | 002 | [Couche données testable et migration 1](002-couche-donnees.md) | 0 | F-01 à F-14 (schéma) | oui | à faire |
 | 003 | [Garde-fous automatiques, thème et polices](003-garde-fous-theme.md) | 0 | — | non | à faire |
 | 004 | [Builds sur la CI et audit des permissions](004-builds-ci.md) | 0 | — | oui | à faire |

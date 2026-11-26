@@ -16,7 +16,7 @@ Le sens des imports est strict : jamais vers la gauche. Le domaine est pur (ni R
 
 ## 2. Pile technique
 
-Chaque ligne vaut validation de la dépendance (ADR-001). **Une dépendance n'est installée qu'au ticket de la fonctionnalité qui l'utilise** (ABS-07). Versions vérifiées sur npm le 2026-11-26 ; elles sont revérifiées au premier ticket et fixées par `npx expo install`.
+Chaque ligne vaut validation de la dépendance (ADR-001). **Une dépendance n'est installée qu'au ticket de la fonctionnalité qui l'utilise** (ABS-07). Versions vérifiées sur npm le 2026-11-26, revérifiées au ticket 001 et fixées en version exacte dans `package.json` (CONV-31).
 
 | Paquet | Version | Licence | Rôle | Installé avec |
 | --- | --- | --- | --- | --- |
@@ -25,7 +25,7 @@ Chaque ligne vaut validation de la dépendance (ADR-001). **Une dépendance n'es
 | react | 19.3.0 (fixée par le SDK) | MIT | Interface | Outillage |
 | typescript | ~6.0.3 (modèle du SDK 58) | Apache-2.0 | Typage strict | Outillage |
 | expo-router | ~58.0.32 | MIT | Navigation par fichiers | Outillage |
-| expo-font | ~58.0.12 | MIT | Polices IBM Plex embarquées | Outillage |
+| expo-font | ~58.0.12 | MIT | Polices IBM Plex embarquées | Thème et polices (003) |
 | expo-sqlite | ~58.0.18 | MIT | Base locale | F-01 |
 | react-native-svg | 15.16.0 (fixée par le SDK) | MIT | Dessin, icônes | Premier écran |
 | lucide-react-native | 1.81.0 | ISC | Icônes au trait (charte §8) | Premier écran |
@@ -37,6 +37,21 @@ Chaque ligne vaut validation de la dépendance (ADR-001). **Une dépendance n'es
 | jest-expo | ~58.0.15 | MIT | Tests | Outillage |
 | @testing-library/react-native | 14.1.0 | MIT | Tests d'écrans | Outillage |
 | @biomejs/biome | 2.6.9 | MIT ou Apache-2.0 | Lint et format | Outillage |
+
+Dépendances obligatoires des paquets ci-dessus, acceptées par le porteur le 2026-11-26 (ticket 001) :
+
+| Paquet | Version | Licence | Exigée par | Installé avec |
+| --- | --- | --- | --- | --- |
+| react-native-screens | 4.30.1 | MIT | expo-router | Outillage |
+| react-native-safe-area-context | 5.11.1 | MIT | expo-router | Outillage |
+| expo-linking | 58.0.17 | MIT | expo-router | Outillage |
+| expo-constants | 58.0.16 | MIT | expo-router | Outillage |
+| react-dom | 19.3.0 (épinglée sur react) | MIT | expo-router (web) ; épinglée car 19.3.1 exige react 19.3.1 (CONV-31) | Outillage |
+| jest | 30.5.2 | MIT | jest-expo | Outillage |
+| @react-native/jest-preset | 0.88.1 | MIT | jest-expo | Outillage |
+| test-renderer | 1.3.1 | MIT | @testing-library/react-native | Outillage |
+| @types/react | 19.3.3 | MIT | typescript | Outillage |
+| @types/jest | 30.0.0 | MIT | typescript | Outillage |
 
 Hors npm : **Maestro** (parcours de bout en bout, campagne de fin de jalon). Polices : fichiers `.ttf` d'IBM Plex Sans (400, 600, 700) et Plex Mono (500) dans `assets/fonts/`, avec la licence OFL 1.1 à côté.
 
@@ -137,6 +152,7 @@ Liste fermée de ce qu'un journal peut contenir : code d'erreur, nom de l'opéra
 ## Décisions du porteur
 
 - 2026-11-26 : réglages dans SQLite, état React seul, icônes lucide-react-native, polices en fichiers `.ttf`, schéma complet dès la migration 1, builds sur GitHub Actions seul ; brouillon dans une table à part (`roll_call_drafts`) ; **noms de tables au pluriel** (évite le mot réservé `group`) ; tests de données avec `node:sqlite`, à confirmer au ticket d'outillage ; sauvegarde au format base SQLite brute (`.db`).
+- 2026-11-26 (ticket 001) : dépendances obligatoires d'expo-router et de Jest acceptées ; `react-dom` épinglée en 19.3.0 ; `expo-font` installée au ticket 003 (ABS-07).
 
 ## Questions ouvertes
 

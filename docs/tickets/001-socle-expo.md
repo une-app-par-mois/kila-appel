@@ -1,6 +1,6 @@
 # 001 — Socle Expo SDK 58 et scripts de test
 
-Statut : à faire · Jalon : 0 · Zone sensible : non · Trivial : non
+Statut : en cours · Jalon : 0 · Zone sensible : non · Trivial : non
 
 ## Contexte
 

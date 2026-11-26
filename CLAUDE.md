@@ -21,8 +21,8 @@ Ce fichier est lu par Claude Code à chaque session. Il fixe le contexte et les 
 
 ## Commandes
 
-- Installer : `[commande]`, puis une fois par poste `./scripts/setup-hooks.sh`
-- Lancer en développement : `[commande]`
+- Installer : `npm ci` (Node 22), puis une fois par poste `./scripts/setup-hooks.sh`
+- Lancer en développement : `npx expo start`
 - Tests : `./scripts/test.sh` (doit passer avant toute PR)
 - Build : `./scripts/build.sh` (doit produire les fichiers à publier dans `dist/`)
 
@@ -82,7 +82,7 @@ Mode de ce projet : **par jalon**, choisi au cadrage par le porteur le 2026-11-2
 | Par groupe | `groupe/<n°>-<n°>-<intitulé>` (2 à 4 tickets liés, décidés au plan) | la PR du groupe vers `main` |
 | Par jalon | `groupe/jalon-<n>-<intitulé>` (tous les tickets du jalon) | la PR du jalon vers `main`, une fois le dernier ticket fusionné |
 
-La branche de groupe ou de jalon part de `main`. Les workflows ne tournent que sur les PR vers `main`. En zone sensible, le ticket reste dans son groupe, avec `/security-review` et la relecture du porteur avant sa fusion dans le groupe.
+La branche de groupe ou de jalon part de `main`. Seule exception, décidée par le porteur le 2026-11-26 : `groupe/jalon-0-outillage` part de `ticket/000-mise-en-route`, car `main` ne contenait alors que le commit initial ; la PR du jalon 0 vers `main` remplace la PR n°1. Les workflows ne tournent que sur les PR vers `main`. En zone sensible, le ticket reste dans son groupe, avec `/security-review` et la relecture du porteur avant sa fusion dans le groupe.
 
 ## Cycle d'un ticket
 

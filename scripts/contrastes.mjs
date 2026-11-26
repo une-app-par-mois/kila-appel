@@ -7,7 +7,8 @@ const j = JSON.parse(readFileSync(new URL('../design/jetons.json', import.meta.u
 const c = j.couleurs;
 
 const lum = (hex) => {
-  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+  const [r, g, b] = [1, 3, 5]
+    .map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
     .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 };
@@ -26,9 +27,15 @@ const paires = [
   ['Marge sur Papier', c.marge, c.papier, 4.5],
   ['Marge sur Blanc', c.marge, c.blanc, 4.5],
   ...Object.values(j.statuts).map((s) => [`Pastille ${s.libelle}`, s.texte, s.fond, 4.5]),
-  ...Object.values(j.statuts).filter((s) => s.bordure)
+  ...Object.values(j.statuts)
+    .filter((s) => s.bordure)
     .map((s) => [`Contour ${s.libelle} sur Blanc`, s.bordure, c.blanc, 3]),
-  ...Object.values(j.etatsSeance).map((s) => [`Séance ${s.libelle} sur Blanc`, s.texte, c.blanc, 4.5]),
+  ...Object.values(j.etatsSeance).map((s) => [
+    `Séance ${s.libelle} sur Blanc`,
+    s.texte,
+    c.blanc,
+    4.5,
+  ]),
 ];
 
 let echecs = 0;

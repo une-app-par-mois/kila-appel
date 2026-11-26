@@ -13,6 +13,9 @@ dist/
 build/
 out/
 node_modules/
+coverage/
+.expo/
+expo-env.d.ts
 .venv/
 venv/
 __pycache__/
