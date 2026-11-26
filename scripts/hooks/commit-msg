@@ -1,0 +1,30 @@
+#!/bin/sh
+# Hook commit-msg : première ligne « Domaine : ce qui change »,
+# 72 caractères au plus. Les messages produits par Git (fusion, annulation) sont acceptés.
+set -eu
+
+# Première ligne utile : ni vide, ni commentaire de Git.
+subject=$(grep -v -e '^#' -e '^[[:space:]]*$' "$1" | head -n 1 || true)
+
+case "$subject" in
+  "Merge "* | "Revert "*) exit 0 ;;
+esac
+
+# Longueur en caractères (accents compris), pas en octets.
+length=$(printf '%s' "$subject" | LC_ALL=C.UTF-8 wc -m | tr -d ' ')
+
+if [ -z "$subject" ]; then
+  echo "commit-msg : message vide." >&2
+  exit 1
+fi
+if [ "$length" -gt 72 ]; then
+  echo "commit-msg : première ligne de $length caractères, 72 au plus." >&2
+  exit 1
+fi
+# Domaine (sans « : »), espace, deux-points, espace, puis le changement.
+if ! printf '%s\n' "$subject" | grep -Eq '^[^:[:space:]][^:]*[^:[:space:]] : [^[:space:]]'; then
+  echo "commit-msg : forme attendue « Domaine : ce qui change », par exemple :" >&2
+  echo "  Export : fichier CSV des présences (F-03)" >&2
+  echo "Reçu : $subject" >&2
+  exit 1
+fi

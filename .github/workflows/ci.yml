@@ -1,0 +1,24 @@
+# Tests à chaque push et pull request.
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  # PR vers main seulement : les PR vers une branche de groupe ou de jalon ne lancent rien
+  # (mode de CI, CLAUDE.md).
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    # Le dépôt modèle n'a pas d'app à tester : ses garde-fous sont testés par modele.yml.
+    if: github.repository != 'une-app-par-mois/app-template'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # Ajouter ici la mise en place de la stack (setup-node, setup-python…).
+      - name: Lancer les tests
+        run: ./scripts/test.sh

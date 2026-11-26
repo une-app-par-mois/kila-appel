@@ -1,0 +1,14 @@
+#!/bin/sh
+# Hook pre-push : jamais d'envoi vers main, puis les tests avant chaque envoi.
+set -eu
+
+# Git passe sur l'entrée standard : <réf locale> <empreinte> <réf distante> <empreinte>.
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+  if [ "$remote_ref" = "refs/heads/main" ]; then
+    echo "pre-push : envoi vers main refusé. Passer par une pull request." >&2
+    exit 1
+  fi
+done
+
+# Limite : les tests portent sur la copie de travail ; la CI vérifie les commits envoyés.
+./scripts/test.sh

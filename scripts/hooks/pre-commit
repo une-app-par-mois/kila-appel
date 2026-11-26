@@ -1,0 +1,24 @@
+#!/bin/sh
+# Hook pre-commit : vérifications rapides avant chaque commit. La CI reste la vérification
+# qui fait foi. Contourner ce hook (--no-verify) est interdit à l'IA (CLAUDE.md).
+set -eu
+
+# 1. Jamais de commit sur main, sauf le commit d'une fusion en cours.
+branch=$(git symbolic-ref --short -q HEAD || true)
+if [ "$branch" = "main" ] && ! git rev-parse -q --verify MERGE_HEAD >/dev/null; then
+  echo "pre-commit : commit refusé sur main. Créer une branche : git switch -c ticket/<numéro>-<intitulé>" >&2
+  exit 1
+fi
+
+# 2. Aucun secret dans les fichiers indexés. gitleaks absent : on bloque, jamais en silence.
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "pre-commit : gitleaks est introuvable. L'installer depuis" >&2
+  echo "  https://github.com/gitleaks/gitleaks/releases (binaire vérifié par son empreinte, dans ~/.local/bin)" >&2
+  exit 1
+fi
+if ! gitleaks git --pre-commit --staged --no-banner --redact --verbose; then
+  echo "pre-commit : secret détecté dans les fichiers indexés. Le retirer de l'index avant de commiter." >&2
+  exit 1
+fi
+
+# 3. Formatage : ajouter ici le contrôle de la stack (ex. prettier --check, ruff format --check).

@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/*.env)",
+      "Edit(**/.env)",
+      "Edit(**/.env.*)",
+      "Edit(**/.git/**)",
+      "Write(**/.git/**)",
+      "Read(~/.ssh/**)",
+      "Bash(*/.ssh/*)",
+      "Bash(*~/.ssh*)",
+      "Bash(git push -f *)",
+      "Bash(git push * -f)",
+      "Bash(git push * -f *)",
+      "Bash(git push *--force*)",
+      "Bash(git push *+*)",
+      "Bash(git push * main)",
+      "Bash(git push * main *)",
+      "Bash(git push *:main*)",
+      "Bash(git push *refs/heads/main*)",
+      "Bash(git push *--mirror*)",
+      "Bash(git push *--delete*)",
+      "Bash(git push * :*)",
+      "Bash(git * --no-verify*)",
+      "Bash(git * --no-v*)",
+      "Bash(git commit -n*)",
+      "Bash(git commit * -n*)",
+      "Bash(git -c *)",
+      "Bash(git branch -d*)",
+      "Bash(git branch -D*)",
+      "Bash(git branch *--delete*)",
+      "Bash(git branch * -d*)",
+      "Bash(git branch * -D*)",
+      "Bash(gh pr merge *--admin*)",
+      "Bash(gh pr merge *--delete-branch*)",
+      "Bash(gh pr merge * -d*)",
+      "Bash(gh release *)",
+      "Bash(gh repo delete*)",
+      "Bash(gh repo edit*)",
+      "Bash(gh secret *)",
+      "Bash(gh variable *)",
+      "Bash(gh gist *)",
+      "Bash(gh api *DELETE*)",
+      "Bash(gh api *delete*)",
+      "Bash(gh api *git/refs*)",
+      "Bash(gh api */merge*)",
+      "Bash(gh api */protection*)",
+      "Bash(gh api */rulesets*)",
+      "Bash(gh api */secrets*)",
+      "Bash(gh api */variables*)",
+      "Bash(gh api */collaborators*)",
+      "Bash(gh api */keys*)",
+      "Bash(gh api */hooks*)",
+      "Bash(gh api graphql*mutation*)",
+      "Bash(ssh *)",
+      "Bash(scp *)",
+      "Bash(rsync *)"
+    ],
+    "ask": [
+      "Edit(.github/workflows/**)",
+      "Write(.github/workflows/**)",
+      "Edit(LICENSE)",
+      "Edit(SECURITY.md)",
+      "Edit(CLAUDE.md)",
+      "Edit(.claude/**)",
+      "Write(.claude/**)",
+      "Edit(scripts/hooks/**)",
+      "Bash(npm install*)",
+      "Bash(npm i *)",
+      "Bash(npm add*)",
+      "Bash(pip install*)",
+      "Bash(cargo add*)",
+      "Bash(git rebase*)",
+      "Bash(git config *)",
+      "Bash(git tag*)"
+    ],
+    "allow": [
+      "Bash(./scripts/test.sh*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git switch *)",
+      "Bash(git fetch *)",
+      "Bash(git pull *)",
+      "Bash(gh pr create *)",
+      "Bash(gh pr edit *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr checks *)",
+      "Bash(gh pr merge *)",
+      "Bash(gh run *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-secrets.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
