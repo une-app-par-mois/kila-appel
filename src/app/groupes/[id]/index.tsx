@@ -36,7 +36,7 @@ export default function GroupDetail() {
     pending.current = true;
     setBusy(true);
     setActionError(undefined);
-    // Les erreurs sont captées par le catch de l’ction ; rien ne peut rejeter ici.
+    // Les erreurs sont captées par le catch de l’action ; rien ne peut rejeter ici.
     void Promise.all([
       action().catch((e: unknown) => setActionError(errorMessage(e))),
       wait(ACTION_LOCK_MS),
