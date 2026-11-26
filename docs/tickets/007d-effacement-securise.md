@@ -22,6 +22,12 @@ Après un `DELETE`, SQLite laisse les anciennes valeurs dans les pages libérée
 
 - Test sur un fichier `node:sqlite` : nom fictif absent des octets du fichier après suppression
 
+## Limites connues (revues du 2026-11-26)
+
+- **Journal de transaction** (`kila.db-journal`, mode DELETE par défaut, pas de WAL) : avant une suppression, SQLite y copie la page d'origine, puis efface ce fichier sans l'écraser. Le reste n'est lisible que dans le stockage privé de l'appli, chiffré par Android et iOS. `TRUNCATE` ou `PERSIST` n'y changeraient rien.
+- **Pages libérées avant ce ticket** : `secure_delete` ne nettoie que les suppressions suivantes. Aucune version n'est publiée, donc aucune base d'utilisateur n'est concernée ; l'APK de test du porteur ne contient que des données fictives.
+- Copies faites par le système : sauvegarde Android désactivée (`allowBackup` false).
+
 ## Hors périmètre
 
-- Journal WAL et copies faites par le système (sauvegarde Android désactivée : `allowBackup` false)
+- Restauration d'une sauvegarde (ticket 014) : voir la note de ce ticket
