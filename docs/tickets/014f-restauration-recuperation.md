@@ -25,6 +25,12 @@ Depuis l'écran « Base illisible », restaurer une sauvegarde alors que la base
 
 - Séance de lancement du lot 014c-014d-015b (2026-11-27), réponses du porteur : restauration « vérifier d'abord, puis remplacer » (option recommandée) ; reprend les états de l'écran Restauration (maquette annotée par 014c).
 - Plan de zone sensible : à valider à la séance de lancement de son lot.
+- Report de l'intégration du lot 014c-014d-015b (2026-11-27), depuis le 014c :
+  - la variante abîmée de `src/ui/Recovery.tsx` a maintenant « Réessayer » (bouton principal) au-dessus de « Repartir de zéro » (secondaire) ; « Restaurer une sauvegarde » s'ajoute au-dessus de « Repartir de zéro » et devient le bouton principal (maquette), « Réessayer » passe alors en secondaire ;
+  - le texte « Vous pouvez restaurer votre dernière sauvegarde, ou repartir de zéro. » est gardé tel quel jusqu'au 014f (réponse 3 du porteur) : le 014f le rend vrai sur l'écran même ;
+  - la base abîmée n'est pas ouverte (`useDatabase` en état `failed`, cause `damaged`) : la restauration doit d'abord supprimer le fichier (`resetDatabase()` / `deleteAppDatabase()`) et ouvrir une base neuve, puis `restoreBackup` ;
+  - le vidage des dossiers de `useRestore` se fait déjà sous le verrou `'restore'`, au début de chaque restauration ; le nettoyage au démarrage prend `'cleanup'` : la pile n'est montée qu'après sa fin, l'écran de récupération aussi doit l'attendre avant d'ouvrir le sélecteur ;
+  - `resetDatabase()` est sans effet hors d'une base abîmée (garde du 014c) : à garder pour le chemin de restauration.
 
 ## Décisions
 

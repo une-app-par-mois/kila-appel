@@ -6,6 +6,9 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Ajouté
 
+- Base illisible au démarrage : écran de récupération au lieu d'un plantage, en trois variantes (base abîmée : « Réessayer », ou « Repartir de zéro » après confirmation, puis Bienvenue ; réglage refusé ou erreur passagère : « Réessayer », rien n'est effacé ; version plus récente : « mettez l'appli à jour », sans action) ; dossiers temporaires des sauvegardes et restaurations vidés au démarrage (EX-22, SEC-10, SEC-11) — ticket 014c.
+- Données : conservation de 1 à 3 saisons (3 par défaut) et purge des anciennes saisons depuis l'écran Sauvegarde, confirmation chiffrée membres compris ; seules les saisons commencées comptent parmi les gardées ; ligne Conservation dans Paramètres (EX-24, SEC-11) — ticket 015b.
+- Rappels de sauvegarde : invitation unique après le premier appel enregistré, et bandeau sur l'accueil après 30 jours sans sauvegarde (depuis la plus ancienne séance s'il n'y en a jamais eu) (EX-21) — ticket 014d.
 - Écran Restauration : choix d'un fichier par le sélecteur du système, vérification sur une copie à part (« Vérification du fichier… »), résumé et appel en cours remplacé annoncés, confirmation « Remplacer mes données », puis accueil ; quatre messages de refus clairs, rien n'est modifié ; l'écran ne se quitte pas pendant la restauration ; export et restauration jamais en même temps ; copies temporaires effacées dans tous les cas (EX-20, NF-04, SEC-10) — ticket 014e.
 - Écran Sauvegarde : export d'une copie datée de la base par le partage du système, avertissement complet « fichier non protégé » avant l'export, date de la dernière sauvegarde notée à la fin du partage et affichée dans l'écran et dans Paramètres ; copie effacée dès la fin du partage (EX-19, EX-21, SEC-09, ABS-06) — ticket 014b.
 - Sécurité : le mode de journal de la base est fixé à `delete` et vérifié à chaque ouverture ; sinon la base n'est pas ouverte (SEC-11, ABS-05) — ticket 015c.

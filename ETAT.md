@@ -12,11 +12,17 @@ Réévaluation (PLAN §6) : moins de 2 h de porteur pour 6 h prévues ; 1,5 h pa
 
 ## Prochaines étapes
 
-1. **Lots 013-014-015, 014b-015c et 014e fusionnés dans le groupe** (PR #37 à #46 ; 1068 tests). Restauration vérifiée sur l'A55 (export, désinstallation, restauration identique). Travail par lot en place (`CLAUDE.md` § « Travail par lot »). Export vérifié sur l'A55 (Gmail, Drive) ; mode de journal accepté sur l'A55 (`DB_READY`). Prochain lot : 014c (base illisible : `JOURNAL_MODE_OFF`, vider `cache/sauvegardes/` au démarrage), 014d (rappels), 015b (Conservation, Tout effacer ; saisons commencées seulement), enfin 016 (Maestro) et la PR du jalon vers `main`. PR méthode n° 1 sur `une-app-par-mois/methode-vibe-coding` à relire par le porteur, app-template à suivre.
+1. **Lot 4 (014c, 014d, 015b) fusionné dans le groupe** (PR #49 à #51 ; 1197 tests). Lots précédents : 013-014-015, 014b-015c, 014e (PR #37 à #46). Restauration vérifiée sur l'A55 (export, désinstallation, restauration identique) ; export vers Gmail et Drive vérifié ; mode de journal accepté (`DB_READY`).
+   - **Prochain lot** : 014f (restaurer depuis l'écran de récupération), 015f (Tout effacer), 014g (vidage du dossier d'export sous le verrou commun) ; leurs trois plans de zone sensible à valider à la séance de lancement.
+   - Puis 016 (Maestro) et la PR du jalon 1 vers `main`.
+   - File du porteur (`docs/QUESTIONS.md`) : deux accords du 015b (« ses 1 groupe », « Garder les 1 dernières saisons »), à poser à la séance de clôture.
+   - `docs/DECISIONS.md` : historique complet rétabli (les intégrations des lots 2 et 3 avaient remplacé les lignes au lieu d'ajouter en bas).
+   - **À vérifier sur l'A55** : base réellement abîmée (APK de debug, `run-as` ; non faite), écran « abîmée », confirmation, puis Bienvenue ; durée de `quick_check` au démarrage avec une grosse base fictive ; invitation après le premier appel et bandeau des 30 jours (014d).
    - iPhone (avant toute publication iOS) : restauration réelle puis `tmp/` vide ; aucun lien dans `Caches/expo-sharing-tmp/` ; préfixe du cache identique entre expo-file-system et expo-modules-core.
+   - PR méthode n° 1 sur `une-app-par-mois/methode-vibe-coding` à relire par le porteur, app-template à suivre.
    - Branche locale `essai/lot-2-apk` (APK d'essai 014b + 015c), non poussée, gardée (pas de suppression de branche).
    - `@expo/devtools` est dans le bundle de production : client WebSocket d'expo-sqlite, appelé seulement si `__DEV__` (jamais en production) ; INTERNET absente du binaire. Pas une violation d'ABS-01.
-2. Fin du jalon 1 : bilan des décisions automatiques annulées (0 à ce jour).
+2. Fin du jalon 1 : bilan des décisions automatiques annulées : 0 à ce jour.
 ## Points d'attention
 
 - Hook pre-push : il lance `scripts/test.sh` sur la **copie de travail**, pas sur les commits envoyés ; la CI reste la vérification qui fait foi. `groupe/jalon-0-outillage` a été poussée sur `e9c39bc` (documents seuls, sans test.sh réel) depuis la copie verte du ticket 001, par décision du porteur du 2026-11-26.

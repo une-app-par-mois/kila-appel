@@ -161,6 +161,28 @@ Avant de passer aux tickets suivants, je veux voir avec toi comment optimiser le
 - Deux agents ont créé le même code d'erreur sous deux types : conflit résolu à l'intégration.
 - Un agent a élargi un contrôle « si besoin » : le contradicteur l'a fait remonter au porteur.
 
+### Lot 4 (014c, 014d, 015b) — 2026-11-27
+
+**Prompt clé** : séance de lancement en 4 séries de QCM (découpages en 014c/014f et 015b/015f, détection d'une base abîmée, « Repartir de zéro », texte chiffré de la purge, plans de zone sensible), puis 3 agents de code en parallèle.
+
+**Ce que l'IA a fait** :
+- **Développement** : trois agents dans leurs worktrees, un par ticket.
+- **Intégration** : revue de code, contradicteur, revue de sécurité pour 014c et 015b ; corrections renvoyées aux agents ; fusions une par une (PR #49 à #51), la branche du jalon fusionnée dans chaque branche suivante ; 1197 tests.
+- **Suites** : nouveau ticket 014g (vidage du dossier d'export sous le verrou), notes reportées dans les fiches 014f et 015f, limite de « Repartir de zéro » dans SEC-11, nettoyage sous verrou dans SEC-10.
+
+**Ce qui a été corrigé par les revues** :
+- une base saine pouvait être classée « abîmée » (et proposée à l'effacement) : le porteur a tranché, « abîmée » seulement pour un fichier illisible, sinon « Réessayer » sans effacement ;
+- « Garder » restait actif pendant la purge : confirmation figée (`busy`) ;
+- au passage de minuit, la relecture faisait disparaître la section et la confirmation de purge ;
+- tests manquants sur les gardes des membres de la purge ;
+- les notes de la maquette du 015b attribuaient au porteur des décisions automatiques (contradicteur) ;
+- blocage possible sur « Appel enregistré » en attendant la lecture des réglages de l'invitation (014d) : le retour n'attend plus la lecture.
+
+**Ce que j'ai corrigé ou refusé** : deux réponses en cours de lot : le classement « abîmée » (ci-dessus) et la confirmation de purge sans le nom du groupe de l'appel en cours (contrôle EX-14 non élargi).
+
+**Leçons** :
+- Les intégrations des lots 2 et 3 avaient remplacé les lignes de `docs/DECISIONS.md` au lieu d'ajouter en bas : historique rétabli à ce lot.
+
 ### [Étape] — [AAAA-MM-JJ]
 
 **Prompt**
