@@ -1,8 +1,8 @@
 # 015 — Tout effacer et purge : données
 
-Statut : à faire · Jalon : 1 · Zone sensible : oui · Trivial : non
+Statut : codé, à relire (zone sensible : /security-review et relecture du porteur) · Jalon : 1 · Zone sensible : oui · Trivial : non
 
-Dépend de : aucun ticket à faire · Fichiers touchés : `src/data/eraseAll.ts`, `src/data/purge.ts` et leurs tests
+Dépend de : aucun ticket à faire · Fichiers touchés : `src/data/eraseAll.ts`, `src/data/purge.ts` et leurs tests ; `src/data/errors.ts` (deux codes) ; `src/staticChecks.test.ts` (liste EX-14)
 
 Découpé le 2026-11-27 (décision du porteur) : 015 données, 015b écrans (Conservation, Tout effacer, Paramètres), après 014b.
 
@@ -24,9 +24,9 @@ Effacement réel et conservation bornée (EX-23, EX-24, ABS-05).
 
 ## Critères d'acceptation
 
-- [ ] Tout effacer vide la base et les réglages (EX-23, SEC-11)
-- [ ] Purge des saisons au-delà de la durée, jamais la saison active, et des membres qui ne figurent plus dans aucune saison gardée (EX-24)
-- [ ] Ce que la purge effacera est compté avant (pour la confirmation de 015b)
+- [x] Tout effacer vide la base et les réglages (EX-23, SEC-11)
+- [x] Purge des saisons au-delà de la durée, jamais la saison active, et des membres qui ne figurent plus dans aucune saison gardée (EX-24)
+- [x] Ce que la purge effacera est compté avant (pour la confirmation de 015b)
 
 ## Tests attendus
 
@@ -44,10 +44,20 @@ Séance de lancement du 2026-11-27 (réponses du porteur) : découpage en 015 do
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
+| `eraseAll` : comment vider la base ? | `DELETE` sur une liste fixe ; noms lus dans `sqlite_master` ; recréer le fichier | Une transaction, `DELETE` sur les 16 tables listées en dur (`ERASE_STATEMENTS`), des filles aux mères ; schéma et `user_version` gardés ; pas de `VACUUM` | Décision prévue par la pré-analyse : requêtes statiques, `secure_delete` suffit (test des octets) | à relire |
+| `purgeCandidates` : quelles saisons ? | Date de début ; date de fin ; date de création | Rangées comme `seasonsRepo.list` (début décroissant), au-delà des N premières ; une saison à venir compte parmi les gardées ; l'active jamais candidate | Décision prévue par la pré-analyse | à relire |
+| `purgeImpact` : quels comptes ? | Requête propre ; somme des `deletionImpact` | Somme des `seasonsRepo.deletionImpact`, plus `seasons` (nombre de saisons) et `members` ; `rollCallDraft` vrai si une saison en a un | Décision prévue : pas de cascade dupliquée | à relire |
+| `purge` : saison active visée ? | Erreur, rien d'effacé ; l'ignorer | `DataError('ACTIVE_SEASON')` levée dans la transaction, rien d'effacé ; saisons effacées par `seasonsRepo(tx).remove` | Décision prévue par la pré-analyse | à relire |
+| Durée de conservation hors de 1 à 3 : quelle erreur ? | `InputError('RETENTION_INVALID')` ; `DataError('RETENTION_INVALID')` | `DataError` | Un code `InputError` exige un libellé dans `src/config/libelles/` (correspondance exhaustive) ; la valeur vient d'un choix fermé (015b), pas d'une saisie : une autre valeur est une erreur du code, sans texte à l'écran | à relire |
+| Identifiants de saison invalides (non entiers, ≤ 0) | `NOT_FOUND` ; nouveau code | `DataError('NOT_FOUND')`, rien d'effacé ; doublons retirés | Comme une saison introuvable (`remove`) | à relire |
+| Liste de saisons dans une requête | Paramètres `?` générés ; `json_each(?)` | Un seul paramètre JSON lu par `json_each` : SQL entièrement statique | Requête paramétrée sans SQL construit ; JSON intégré à SQLite (node:sqlite et expo-sqlite) | à relire |
+| Membre visé par la purge | Inscription ou présence (réponse du porteur) ; y ajouter les statuts de l'appel en cours | Inscription ou présence seulement, comme la réponse du porteur ; un membre de l'appel en cours d'une saison gardée y est inscrit, donc gardé | Lire le brouillon ici aurait élargi la liste EX-14 des fichiers qui le nomment | à relire |
+| `eraseAll.ts` nomme les tables du brouillon (contrôle EX-14 de `staticChecks`) | Ajouter le fichier à la liste autorisée ; autre moyen | Ajouté à la liste, avec la raison en commentaire | Le plan validé exige d'effacer l'appel en cours ; le fichier ne fait que `DELETE`, aucune lecture. Élargit une liste de contrôle : à relire en priorité | à relire |
+| Journal | — | `ERASE_ALL_DONE` ; `PURGE_DONE` avec `seasonCount` et `memberCount` (ABS-04) | Décision prévue par la pré-analyse | à relire |
 
 ## Questions pour le porteur
 
 ## À reporter
 
-- CHANGELOG :
-- Architecture :
+- CHANGELOG : Données : tout effacer (`eraseAll`, 16 tables, une transaction) et purge des anciennes saisons (`purgeCandidates`, `purgeImpact`, `purge`), membres sans saison gardée compris (EX-23, EX-24, SEC-11).
+- Architecture : couche données, `src/data/eraseAll.ts` (liste fixe `ERASE_STATEMENTS`, à compléter à chaque nouvelle table : un test la compare au schéma) et `src/data/purge.ts` (saisons au-delà de la durée de conservation, saison active exclue et revérifiée dans la transaction ; cascades de `seasonsRepo.remove`). Codes `DataError` ajoutés : `ACTIVE_SEASON`, `RETENTION_INVALID`.
