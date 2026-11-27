@@ -8,6 +8,24 @@ export const accueil = {
     newRollCall: 'Nouvel appel',
     settings: 'Paramètres',
   },
+  /** Bienvenue (maquette, P1, ticket 012b) : un seul bouton, sur la première étape qui reste. */
+  welcome: {
+    title: 'Bienvenue',
+    intro: 'Quatre étapes avant votre premier appel.',
+    season: 'Créer la saison',
+    seasonCreated: (name: string) => `Saison ${name}, créée automatiquement`,
+    seasonActive: (name: string) => `Saison ${name}`,
+    noActiveSeason: 'Aucune saison active',
+    chooseSeason: 'Choisir la saison active',
+    group: 'Créer un groupe',
+    groupHint: 'Par exemple « Poussins mercredi »',
+    createGroup: 'Créer un groupe',
+    members: 'Ajouter les membres',
+    addMembers: 'Ajouter des membres',
+    slots: 'Déclarer les créneaux',
+    addSlots: 'Déclarer les créneaux',
+    done: 'Fait',
+  },
   home: {
     months: [
       'janv.',

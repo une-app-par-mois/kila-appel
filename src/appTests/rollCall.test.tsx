@@ -157,7 +157,9 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
   });
 
   it('EX-39 accueil sans séance à faire : « Nouvel appel » ouvre l’appel sans créneau', async () => {
-    await db.execute('DELETE FROM slots');
+    // Le créneau ne commence qu'en décembre : aucune séance passée ni en cours (la mise en route
+    // reste faite, sinon Bienvenue remplacerait l'accueil).
+    await db.execute("UPDATE slots SET schedule_from = '2026-12-01'");
     const router = await open('/');
     expect(await screen.findByText(t.noSession)).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: new RegExp(`^${t.entry}`) }));

@@ -182,4 +182,45 @@ describe('Dépôt des saisons (EX-01)', () => {
       'Saison 26-27',
     );
   });
+
+  it('P1 première ouverture : la saison est créée et active, une seule fois', async () => {
+    const repo = seasonsRepo(db);
+    const first = { name: '2026-2027', startDate: '2026-09-01', endDate: '2027-08-31' };
+    expect(await repo.createFirst(first)).toBe(true);
+    expect(await repo.createFirst(first)).toBe(false);
+    expect(await repo.list()).toMatchObject([{ name: '2026-2027', isActive: true }]);
+  });
+
+  it('P1 une saison existe déjà (même inactive) : rien n’est créé', async () => {
+    await db.execute(
+      "INSERT INTO seasons (name, start_date, end_date, is_active) VALUES ('Ancienne', '2025-09-01', '2026-08-31', 0)",
+    );
+    expect(
+      await seasonsRepo(db).createFirst({
+        name: '2026-2027',
+        startDate: '2026-09-01',
+        endDate: '2027-08-31',
+      }),
+    ).toBe(false);
+    expect(await count(db, 'seasons')).toBe(1);
+  });
+
+  it('P1 avancement de la mise en route : saison active, groupes, membres inscrits, créneaux', async () => {
+    const repo = seasonsRepo(db);
+    expect(await repo.setupProgress('2026-11-27')).toEqual({
+      season: null,
+      firstGroupId: null,
+      groups: 0,
+      members: 0,
+      slots: 0,
+    });
+    const s = await seed(db);
+    expect(await repo.setupProgress('2026-11-27')).toEqual({
+      season: { id: s.seasonId, name: 'Saison 2026-2027' },
+      firstGroupId: s.groupId,
+      groups: 1,
+      members: 2,
+      slots: 1,
+    });
+  });
 });

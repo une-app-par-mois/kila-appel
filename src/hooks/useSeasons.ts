@@ -4,10 +4,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DataError } from '@/data/errors';
 import { log } from '@/data/log';
-import { type Season, type SeasonDeletionImpact, seasonsRepo } from '@/data/seasonsRepo';
+import {
+  type Season,
+  type SeasonDeletionImpact,
+  type SetupProgress,
+  seasonsRepo,
+} from '@/data/seasonsRepo';
+import { firstSeason } from '@/domain/seasons';
 import type { SeasonInput } from '@/domain/validation';
 import { notifyDataChanged, onDataChanged } from '@/hooks/dataChanged';
 import { useDatabase } from '@/hooks/useDatabase';
+import { useLoaded } from '@/hooks/useLoaded';
 
 type Repo = ReturnType<typeof seasonsRepo>;
 
@@ -66,4 +73,30 @@ export const useSeasons = () => {
   );
 
   return { seasons, loadFailed, create, update, activate, remove, deletionImpact };
+};
+
+/**
+ * P1 (ticket 012b) : avancement de la mise en route. Sans aucune saison, la première est créée
+ * d'abord (`createFirst` ne fait rien s'il en existe une) ; rien d'autre n'est enregistré.
+ */
+export const useSetupProgress = (today: string) => {
+  const db = useDatabase();
+  // « créée automatiquement » (maquette) : seulement si elle l'a été pendant cette ouverture.
+  const createdNow = useRef(false);
+  const load = useMemo(
+    () =>
+      db
+        ? async (): Promise<{ progress: SetupProgress }> => {
+            const repo = seasonsRepo(db);
+            if (await repo.createFirst(firstSeason(today))) {
+              createdNow.current = true;
+              notifyDataChanged();
+            }
+            return { progress: await repo.setupProgress(today) };
+          }
+        : null,
+    [db, today],
+  );
+  const { value, loaded, loadFailed } = useLoaded(load, 'SETUP_PROGRESS_FAILED', {}, true);
+  return { progress: value?.progress ?? null, created: createdNow.current, loaded, loadFailed };
 };

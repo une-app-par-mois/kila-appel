@@ -21,9 +21,14 @@ import { Section } from '@/ui/Screen';
 const d = labels.draft;
 const h = labels.home;
 
-type Props = { now: LocalNow; onError: (message: string | undefined) => void };
+type Props = {
+  now: LocalNow;
+  onError: (message: string | undefined) => void;
+  /** Bienvenue (ticket 012b) : seulement la carte de l'appel en cours, pour pouvoir l'abandonner. */
+  draftOnly?: boolean;
+};
 
-export const RollCallEntry = ({ now, onError }: Props) => {
+export const RollCallEntry = ({ now, onError, draftOnly = false }: Props) => {
   const router = useRouter();
   const proposed = useProposedSession(now);
   const { draft, loaded: draftLoaded, loadFailed: draftFailed, discard } = useDraft();
@@ -76,7 +81,7 @@ export const RollCallEntry = ({ now, onError }: Props) => {
   }
 
   // Rien avant de savoir s'il y a un appel en cours : « Faire l'appel » mènerait à un appel bloqué.
-  if (!proposed.loaded || !draftLoaded) return null;
+  if (draftOnly || !proposed.loaded || !draftLoaded) return null;
   return (
     <>
       <Section title={h.now} />

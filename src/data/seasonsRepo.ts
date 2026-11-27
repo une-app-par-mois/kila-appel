@@ -1,7 +1,8 @@
 // Dépôt des saisons (EX-01). Requêtes paramétrées seulement ; la base est passée en paramètre.
 import type { Db } from '@/data/db';
+import { notEnded } from '@/data/enrollmentsRepo';
 import { DataError, expectChanged, expectFound } from '@/data/errors';
-import { type SeasonInput, validateSeason } from '@/domain/validation';
+import { type SeasonInput, validateDate, validateSeason } from '@/domain/validation';
 
 export type Season = {
   id: number;
@@ -55,10 +56,56 @@ const expectDatesFit = async (tx: Db, id: number, startDate: string, endDate: st
   if ((enrolled?.n ?? 0) > 0) throw new DataError('ENROLLMENTS_OUTSIDE_SEASON');
 };
 
+/** P1 : où en est la mise en route (écran Bienvenue, ticket 012b). */
+export type SetupProgress = {
+  season: { id: number; name: string } | null;
+  /** Premier groupe courant de la saison active : « Ajouter des membres » y inscrit. */
+  firstGroupId: number | null;
+  groups: number;
+  /** Membres courants inscrits (inscription en cours ou à venir) à un groupe courant. */
+  members: number;
+  slots: number;
+};
+
 export const seasonsRepo = (db: Db) => ({
   /** De la plus récente à la plus ancienne. */
   list: async (): Promise<Season[]> =>
     (await db.query<SeasonRow>(`${SELECT} ORDER BY start_date DESC, id DESC`)).map(toSeason),
+
+  /**
+   * P1 : crée la première saison, active, seulement s'il n'en existe aucune ; une seule
+   * instruction, donc pas de doublon si deux ouvertures se suivent. Vrai si elle a été créée.
+   */
+  createFirst: async (input: SeasonInput): Promise<boolean> => {
+    const s = validateSeason(input);
+    const result = await db.execute(
+      `INSERT INTO seasons (name, start_date, end_date, is_active)
+       SELECT ?, ?, ?, 1 WHERE NOT EXISTS (SELECT 1 FROM seasons)`,
+      [s.name, s.startDate, s.endDate],
+    );
+    return result.changes > 0;
+  },
+
+  /** P1 : avancement de la mise en route dans la saison active (`today` : inscriptions finies). */
+  setupProgress: async (today: string): Promise<SetupProgress> => {
+    const [season] = await db.query<{ id: number; name: string }>(
+      'SELECT id, name FROM seasons WHERE is_active = 1',
+    );
+    if (!season) return { season: null, firstGroupId: null, groups: 0, members: 0, slots: 0 };
+    const [row] = await db.query<Omit<SetupProgress, 'season'>>(
+      `SELECT
+        (SELECT MIN(id) FROM groups WHERE season_id = ?1 AND archived_at IS NULL) AS firstGroupId,
+        (SELECT COUNT(*) FROM groups WHERE season_id = ?1 AND archived_at IS NULL) AS groups,
+        (SELECT COUNT(DISTINCT e.member_id) FROM enrollments e
+           JOIN groups g ON g.id = e.group_id
+           JOIN members m ON m.id = e.member_id
+         WHERE g.season_id = ?1 AND g.archived_at IS NULL AND m.archived_at IS NULL
+           AND ${notEnded(2)}) AS members,
+        (SELECT COUNT(*) FROM slots WHERE season_id = ?1 AND weekday IS NOT NULL) AS slots`,
+      [season.id, validateDate(today)],
+    );
+    return { season, ...(row as Omit<SetupProgress, 'season'>) };
+  },
 
   getActive: async (): Promise<Season | null> => {
     const [row] = await db.query<SeasonRow>(`${SELECT} WHERE is_active = 1`);

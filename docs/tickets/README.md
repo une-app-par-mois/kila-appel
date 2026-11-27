@@ -45,8 +45,8 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 010c | [Appel sans créneau, ajout pendant l'appel](010c-appel-libre-ajout.md) | 1 | F-02 | non | fusionné dans le groupe |
 | 011 | [Brouillon d'appel](011-brouillon-appel.md) | 1 | F-02 | oui | fusionné dans le groupe |
 | 011b | [Suppressions et appel en cours](011b-suppressions-appel-en-cours.md) | 1 | F-02 | oui | fusionné dans le groupe |
-| 012 | [Onglets et accueil](012-accueil-navigation.md) | 1 | F-01, F-02, F-03 | non | en cours |
-| 012b | [Bienvenue](012b-bienvenue.md) | 1 | F-01 | non | à faire |
+| 012 | [Onglets et accueil](012-accueil-navigation.md) | 1 | F-01, F-02, F-03 | non | fusionné dans le groupe |
+| 012b | [Bienvenue](012b-bienvenue.md) | 1 | F-01 | non | en cours |
 | 012c | [États vides](012c-etats-vides.md) | 1 | F-01, F-02, F-03 | non | à faire |
 | 013 | [Historique et correction des appels](013-historique.md) | 1 | F-03 | non | à faire |
 | 014 | [Sauvegarde, restauration et base illisible](014-sauvegarde-restauration.md) | 1 | F-03 | oui | à faire |
