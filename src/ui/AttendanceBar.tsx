@@ -7,16 +7,32 @@ import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
 import { NBSP, SHARE_ORDER, type StatusCounts, statusShares } from '@/domain/attendanceRate';
 
+/** Parts non nulles lues par le lecteur d'écran : « 84 % présent, 7 % retard » ; vide sans présence. */
+export const barLabel = (counts: StatusCounts): string => {
+  const shares = statusShares(counts);
+  return SHARE_ORDER.filter((status) => shares[status] > 0)
+    .map((status) => labels.stats.share(`${shares[status]}${NBSP}%`, labels.statuses[status]))
+    .join(', ');
+};
+
+type BarProps = {
+  counts: StatusCounts;
+  /** `false` dans une ligne appuyable qui lit déjà `barLabel` (TalkBack ignore un descendant focusable). */
+  accessible?: boolean;
+};
+
 /** Barre d'un compte de présences ; rien sans aucune présence. */
-export const AttendanceBar = ({ counts }: { counts: StatusCounts }) => {
+export const AttendanceBar = ({ counts, accessible = true }: BarProps) => {
   const shares = statusShares(counts);
   const parts = SHARE_ORDER.filter((status) => shares[status] > 0);
   if (parts.length === 0) return null;
-  const label = parts
-    .map((status) => labels.stats.share(`${shares[status]}${NBSP}%`, labels.statuses[status]))
-    .join(', ');
   return (
-    <View testID="attendance-bar" accessible accessibilityLabel={label} style={styles.bar}>
+    <View
+      testID="attendance-bar"
+      accessible={accessible}
+      accessibilityLabel={accessible ? barLabel(counts) : undefined}
+      style={styles.bar}
+    >
       {parts.map((status) => (
         <View
           key={status}

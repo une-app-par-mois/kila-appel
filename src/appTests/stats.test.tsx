@@ -86,15 +86,23 @@ describe('Onglet Statistiques (ticket 024, EX-27, RM-01)', () => {
 
   it('NF-06 barre par statut : libellé d’accessibilité des parts non nulles, légende affichée', async () => {
     await open();
-    const bar = async (name: string) => (await groupRow(name)).getByTestId('attendance-bar');
+    // Parts lues avec la ligne, la barre n'est pas focusable à part (ticket 025).
+    const parts = async (name: string) => {
+      const rows = await screen.findAllByTestId('stats-group');
+      const row = rows.find((r) => within(r).queryByText(name) !== null);
+      expect(within(row as never).getByTestId('attendance-bar').props.accessible).toBe(false);
+      return row?.props.accessibilityLabel;
+    };
     // Poussins 37 P, 1 R, 3 E, 5 A sur 46 ; Benjamins 7 P, 2 A sur 9 ; Vétérans 1 R.
-    expect((await bar('Poussins')).props.accessibilityLabel).toBe(
-      `${pct(80)} présent, ${pct(2)} retard, ${pct(7)} excusé, ${pct(11)} absent`,
+    expect(await parts('Poussins')).toBe(
+      `Poussins, ${pct(88)}, ${pct(80)} présent, ${pct(2)} retard, ${pct(7)} excusé, ${pct(11)} absent`,
     );
-    expect((await bar('Benjamins')).props.accessibilityLabel).toBe(
-      `${pct(78)} présent, ${pct(22)} absent`,
+    expect(await parts('Benjamins')).toBe(
+      `Benjamins, ${pct(78)}, ${pct(78)} présent, ${pct(22)} absent`,
     );
-    expect((await bar('Vétérans')).props.accessibilityLabel).toBe(`${pct(100)} retard`);
+    expect(await parts('Vétérans')).toBe(
+      `Vétérans, ${t.archived}, ${pct(100)}, ${pct(100)} retard`,
+    );
     const legend = within(screen.getByTestId('attendance-legend'));
     for (const status of ['Présent', 'Retard', 'Excusé', 'Absent'])
       expect(legend.getByText(status)).toBeTruthy();
