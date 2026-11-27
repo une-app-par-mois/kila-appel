@@ -13,8 +13,14 @@ import { notifyDataChanged } from '@/hooks/dataChanged';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useLoaded } from '@/hooks/useLoaded';
 
-/** Séance proposée : un créneau, une date et l'heure de début de cette séance. */
-export type ProposedSession = { slot: Slot; date: string; startTime: string };
+/** Séance proposée : créneau, son groupe actif, date, heure ; `recorded` si son appel est fait. */
+export type ProposedSession = {
+  slot: Slot;
+  group: { id: number; name: string };
+  date: string;
+  startTime: string;
+  recorded: boolean;
+};
 
 /** EX-09 : membres inscrits au groupe à la date de la séance, triés par nom. */
 export const useRoster = (groupId: number | null, date: string) => {
@@ -48,7 +54,11 @@ export const useProposedSession = (now: LocalNow) => {
             );
             const found = proposedSession(slots as WeeklySlot[], season, { date, time });
             const slot = slots.find((s) => s.id === found?.slotId);
-            return found && slot ? { slot, date: found.date, startTime: found.startTime } : null;
+            const group = slot?.groups.find((g) => active.has(g.id));
+            if (!found || !slot || !group) return null;
+            // RM-05 : l'accueil dit que l'appel est fait plutôt que d'ouvrir un appel refusé.
+            const recorded = await sessionsRepo(db, date).isRecorded(slot.id, found.date);
+            return { slot, group, date: found.date, startTime: found.startTime, recorded };
           }
         : null,
     [db, date, time],

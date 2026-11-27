@@ -1,13 +1,17 @@
 // Paramètres (maquette) : écran d'accueil provisoire jusqu'au ticket 012 (barre d'onglets).
 // Seules les lignes qui mènent à un écran existant (décision du porteur du 2026-11-26). En tête,
-// l'entrée de la recherche d'un contact d'urgence, à sa place dans l'accueil du 012 (EX-06).
+// l'entrée de la recherche d'un contact d'urgence, à sa place dans l'accueil du 012 (EX-06), et
+// « Nouvel appel » vers la séance proposée (EX-09) ; sans séance, grisé avec la raison.
 import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
-import { toIsoDate } from '@/domain/formats';
+import { toDisplayDate, toIsoDate, toLocalTime } from '@/domain/formats';
+import { weekdayOfDate } from '@/domain/occurrences';
 import { useGroups } from '@/hooks/useGroups';
 import { useMembers } from '@/hooks/useMembers';
+import { useProposedSession } from '@/hooks/useRollCall';
 import { useSeasons } from '@/hooks/useSeasons';
 import { useSlots } from '@/hooks/useSlots';
 import { Card } from '@/ui/Card';
@@ -24,15 +28,57 @@ export default function Settings() {
   const { groups, loadFailed: groupsFailed } = useGroups(active?.id ?? null);
   const { members, loadFailed: membersFailed } = useMembers({ today: toIsoDate(new Date()) });
   const { slots, loadFailed: slotsFailed } = useSlots(active?.id ?? null);
+  // L'heure avance d'elle-même : la séance proposée suit sans autre action (une fois par minute).
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
+  const proposed = useProposedSession({ date: toIsoDate(now), time: toLocalTime(now) });
+  const call = proposed.session;
+  const callParts =
+    call &&
+    ([
+      call.group.name,
+      labels.weekdaysAbbr[weekdayOfDate(call.date) - 1] ?? '',
+      toDisplayDate(call.date).slice(0, 5),
+      call.startTime,
+    ] as const);
   return (
     <Screen
       title={t.title}
       error={
-        loadFailed || groupsFailed || membersFailed || slotsFailed
+        loadFailed || groupsFailed || membersFailed || slotsFailed || proposed.loadFailed
           ? labels.common.loadFailed
           : undefined
       }
     >
+      <Card>
+        {call && callParts && !call.recorded ? (
+          <ListRow
+            title={labels.rollCall.entry}
+            subtitle={labels.rollCall.proposed(...callParts)}
+            onPress={() =>
+              router.push({
+                pathname: '/appel',
+                params: { creneau: call.slot.id, date: call.date },
+              })
+            }
+          />
+        ) : (
+          <ListRow
+            title={labels.rollCall.entry}
+            subtitle={
+              callParts
+                ? labels.rollCall.proposedRecorded(...callParts)
+                : proposed.loaded
+                  ? labels.rollCall.noSession
+                  : undefined
+            }
+            chevron={false}
+          />
+        )}
+      </Card>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={labels.emergency.entry}

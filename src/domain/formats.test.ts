@@ -5,6 +5,7 @@ import {
   startInSeason,
   toDisplayDate,
   toIsoDate,
+  toLocalTime,
 } from '@/domain/formats';
 
 describe('RM-04 : dates stockées en AAAA-MM-JJ, affichées en JJ/MM/AAAA', () => {
@@ -128,5 +129,12 @@ describe('previousDay : dernier jour d’une inscription dont la fin est exclue 
     it('sans saison active : aujourd’hui', () => {
       expect(startInSeason('2026-11-26', null)).toBe('2026-11-26');
     });
+  });
+});
+
+describe('EX-09 heure locale', () => {
+  it('écrit l’heure locale en HH:MM', () => {
+    expect(toLocalTime(new Date(2026, 10, 18, 9, 5))).toBe('09:05');
+    expect(toLocalTime(new Date(2026, 10, 18, 23, 59))).toBe('23:59');
   });
 });

@@ -135,6 +135,27 @@ describe('EX-09 proposedSession : séance en cours, sinon la plus proche', () =>
     });
   });
 
+  it('EX-09 ne propose jamais une date future : la veille d’une séance, la dernière passée (décision du 2026-11-27)', () => {
+    // Mardi 22 h : la séance de demain mercredi serait la plus proche, mais elle est future.
+    expect(proposedSession([wednesday], SEASON, at('2026-11-17', '22:00'))).toEqual({
+      slotId: 1,
+      date: '2026-11-11',
+      startTime: '17:30',
+    });
+    // Aujourd'hui, une séance plus tard dans la journée reste proposée.
+    expect(proposedSession([wednesday], SEASON, at('2026-11-18', '08:00'))?.date).toBe(
+      '2026-11-18',
+    );
+    // Saison qui commence demain : rien.
+    expect(
+      proposedSession(
+        [wednesday],
+        { ...SEASON, startDate: '2026-11-18' },
+        at('2026-11-17', '22:00'),
+      ),
+    ).toBeNull();
+  });
+
   it('juste après minuit, propose la séance qui vient de finir plutôt qu’une séance du soir', () => {
     const night: WeeklySlot = {
       ...wednesday,

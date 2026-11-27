@@ -40,8 +40,8 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 008b | [Contacts d'urgence : écrans](008b-ecrans-contacts.md) | 1 | F-01 | non | fusionné dans le groupe |
 | 009 | [Créneaux récurrents : données](009-creneaux-donnees.md) | 1 | F-02 | non | fusionné dans le groupe |
 | 009b | [Créneaux récurrents : écrans](009b-creneaux-ecrans.md) | 1 | F-02 | non | fusionné dans le groupe |
-| 010 | [Appel : données](010-appel-donnees.md) | 1 | F-02 | non | en cours |
-| 010b | [Écran d'appel](010b-ecran-appel.md) | 1 | F-02 | non | à faire |
+| 010 | [Appel : données](010-appel-donnees.md) | 1 | F-02 | non | fusionné dans le groupe |
+| 010b | [Écran d'appel](010b-ecran-appel.md) | 1 | F-02 | non | en cours |
 | 010c | [Appel sans créneau, ajout pendant l'appel](010c-appel-libre-ajout.md) | 1 | F-02 | non | à faire |
 | 011 | [Brouillon d'appel](011-brouillon-appel.md) | 1 | F-02 | oui | à faire |
 | 012 | [Accueil, mise en route et navigation](012-accueil-navigation.md) | 1 | F-01, F-02, F-03 | non | à faire |

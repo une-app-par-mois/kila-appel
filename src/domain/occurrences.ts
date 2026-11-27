@@ -38,6 +38,16 @@ const dayNumber = (date: IsoDate): number =>
 const isoFromDay = (day: number): IsoDate => new Date(day * DAY_MS).toISOString().slice(0, 10);
 // Le 1970-01-01 était un jeudi (4).
 const weekdayOf = (day: number): number => ((((day + 3) % 7) + 7) % 7) + 1;
+
+/** Jour de la semaine d'une date, 1 = lundi … 7 = dimanche (en-tête de l'appel). */
+export const weekdayOfDate = (date: IsoDate): number => weekdayOf(dayNumber(date));
+
+/** EX-17 : `date` est un jour du créneau, depuis sa date d'effet, jamais future (décision du 2026-11-27). */
+export const isSlotDate = (
+  slot: { weekday: number; scheduleFrom: IsoDate },
+  date: IsoDate,
+  today: IsoDate,
+): boolean => date <= today && date >= slot.scheduleFrom && weekdayOfDate(date) === slot.weekday;
 const minutes = (time: Time): number => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
 // Dates ISO : l'ordre alphabétique est l'ordre chronologique.
 const later = (a: IsoDate, b: IsoDate): IsoDate => (b.localeCompare(a) > 0 ? b : a);
@@ -81,8 +91,9 @@ const plain = ({ slotId, date, startTime }: Timed): Occurrence => ({ slotId, dat
 const nowMinutes = (now: LocalNow) => dayNumber(now.date) * DAY_MIN + minutes(now.time);
 
 /**
- * EX-09 : séance en cours ; sinon la plus proche de maintenant (fin passée ou début à venir),
- * celles du jour d'abord (qui commencent ou finissent aujourd'hui). À égalité, une séance finie passe avant une séance à venir.
+ * EX-09 : séance en cours ; sinon la plus proche de maintenant (fin passée ou début à venir plus
+ * tard dans la journée, jamais un jour futur), celles du jour d'abord (qui commencent ou finissent
+ * aujourd'hui). À égalité, une séance finie passe avant une séance à venir.
  */
 export const proposedSession = (
   slots: WeeklySlot[],
@@ -92,8 +103,9 @@ export const proposedSession = (
   checkNow(now);
   const t = nowMinutes(now);
   const today = dayNumber(now.date);
-  // Une semaine de part et d'autre contient toujours une occurrence de chaque créneau actif.
-  const all = timedOccurrences(slots, season, isoFromDay(today - 7), isoFromDay(today + 7));
+  // La semaine passée contient toujours une occurrence de chaque créneau actif. Jamais une date
+  // future : l'appel d'une séance à venir un autre jour ne s'enregistre pas (décision du 2026-11-27).
+  const all = timedOccurrences(slots, season, isoFromDay(today - 7), now.date);
   const current = all
     .filter((o) => o.start <= t && t < o.end)
     .sort((a, b) => b.start - a.start || a.slotId - b.slotId)[0];

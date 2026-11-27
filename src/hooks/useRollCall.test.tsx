@@ -54,10 +54,18 @@ describe('useRoster, useProposedSession, useRollCall (EX-09, EX-15)', () => {
     mockSeasons.getActive.mockResolvedValue(season);
     mockSlots.listBySeason.mockResolvedValue([slot]);
     mockGroups.listBySeason.mockResolvedValue([{ id: 2 }]);
+    mockSessions.isRecorded.mockResolvedValue(false);
     const now = { date: '2026-12-02', time: '18:00' };
     const { result } = await renderHook(() => useProposedSession(now));
     await waitFor(() => expect(result.current.loaded).toBe(true));
-    expect(result.current.session).toEqual({ slot, date: '2026-12-02', startTime: '17:30' });
+    expect(result.current.session).toEqual({
+      slot,
+      group: { id: 2, name: 'Poussins' },
+      date: '2026-12-02',
+      startTime: '17:30',
+      recorded: false,
+    });
+    expect(mockSessions.isRecorded).toHaveBeenCalledWith(3, '2026-12-02');
   });
 
   it('EX-09 un créneau dont le groupe est archivé n’est pas proposé (l’enregistrement le refuserait)', async () => {

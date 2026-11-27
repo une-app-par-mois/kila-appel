@@ -21,6 +21,10 @@ type Props = {
   phone?: boolean;
   /** Clavier ouvert dès l'arrivée (recherche d'un contact d'urgence, EX-06). */
   autoFocus?: boolean;
+  /** Plusieurs lignes (commentaire de la séance, EX-13). */
+  multiline?: boolean;
+  /** Faux pendant et après un enregistrement (rien ne change plus). */
+  editable?: boolean;
 };
 
 export const TextField = ({
@@ -35,6 +39,8 @@ export const TextField = ({
   labelHidden = false,
   phone = false,
   autoFocus = false,
+  multiline = false,
+  editable = true,
 }: Props) => (
   <View style={styles.field}>
     {!labelHidden && <FieldLabel label={label} hint={hint} />}
@@ -45,9 +51,16 @@ export const TextField = ({
       onBlur={onBlur}
       keyboardType={phone ? 'phone-pad' : 'default'}
       autoFocus={autoFocus}
+      multiline={multiline}
+      editable={editable}
       placeholder={placeholder}
       placeholderTextColor={theme.colors.texteSecondaire}
-      style={[styles.input, mono && styles.mono, error !== undefined && styles.invalid]}
+      style={[
+        styles.input,
+        mono && styles.mono,
+        multiline && styles.multiline,
+        error !== undefined && styles.invalid,
+      ]}
     />
     {error !== undefined && <FieldError error={error} />}
   </View>
@@ -73,6 +86,7 @@ const styles = StyleSheet.create({
   label: { fontFamily: theme.fonts.textSemi, fontSize: 14, color: theme.colors.texteSecondaire },
   labelRow: { flexDirection: 'row', flexWrap: 'wrap', columnGap: theme.spacing },
   hint: { fontFamily: theme.fonts.text, fontStyle: 'italic' },
+  multiline: { minHeight: theme.minTouchTarget * 2, textAlignVertical: 'top' },
   input: {
     minHeight: theme.minTouchTarget,
     marginTop: theme.spacing * 1.5,
