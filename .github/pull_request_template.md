@@ -23,6 +23,10 @@ PR d'un groupe ou d'un jalon vers `main` : lister ici les tickets et leurs PR ; 
 - [ ] Documents de référence à jour si une décision écrite change.
 - [ ] `ETAT.md` à jour.
 
+## Décisions automatiques à relire
+
+[Lignes de `docs/DECISIONS.md` ajoutées par ce ticket, ou « Aucune ».]
+
 ## Non vérifié
 
 [Ce qui n'a pas été vérifié, et comment le faire. « Rien » seulement si c'est vrai.]

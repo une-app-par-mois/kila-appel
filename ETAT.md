@@ -12,7 +12,7 @@ Réévaluation (PLAN §6) : moins de 2 h de porteur pour 6 h prévues ; 1,5 h pa
 
 ## Prochaines étapes
 
-1. **Ticket 012** (onglets et accueil) sur `ticket/012-onglets-accueil`, puis 012b (Bienvenue) et 012c (états vides). 011 et 011b fusionnés dans le groupe (PR #28, #29). **Désinstaller l'APK de test avant le suivant** (migration 1 corrigée : `started_at`). 010c fusionné dans le groupe (PR #27). 006f fusionné dans le groupe (PR #22) après relecture du porteur. APK local de 008b audité conforme (SHA-256 `976feabc…`, aucune permission nouvelle) ; **à installer sur l'A55** : glisser la poignée ≡, « Appeler », et secure_delete à vérifier.
+1. **Ticket 012b** (Bienvenue ; décidé : saison du 1er sept. au 31 août, Bienvenue tant qu'une étape reste), puis 012c (états vides). 012 fusionné dans le groupe (PR #30). **Décisions automatiques** en vigueur depuis le 2026-11-27 (`CLAUDE.md`, `docs/DECISIONS.md`) ; PR à faire sur `une-app-par-mois/methode-vibe-coding`. **Désinstaller l'APK de test avant le suivant** (migration 1 corrigée : `started_at`). 010c fusionné dans le groupe (PR #27). 006f fusionné dans le groupe (PR #22) après relecture du porteur. APK local de 008b audité conforme (SHA-256 `976feabc…`, aucune permission nouvelle) ; **à installer sur l'A55** : glisser la poignée ≡, « Appeler », et secure_delete à vérifier.
    - `@expo/devtools` est dans le bundle de production : client WebSocket d'expo-sqlite, appelé seulement si `__DEV__` (jamais en production) ; INTERNET absente du binaire. Pas une violation d'ABS-01.
 2. Tickets 010 à 016 du jalon 1, puis PR du jalon vers `main`.
 
