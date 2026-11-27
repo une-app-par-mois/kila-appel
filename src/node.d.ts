@@ -28,6 +28,9 @@ declare module 'node:fs' {
   // Dossier temporaire du test d'effacement dans le fichier (ticket 007d).
   export function mkdtempSync(prefix: string): string;
   export function rmSync(path: string, options: { recursive: true; force: true }): void;
+  // Fichiers piégés des tests de sauvegarde (ticket 014).
+  export function writeFileSync(path: string, data: string | Uint8Array): void;
+  export function copyFileSync(from: string, to: string): void;
 }
 
 declare module 'node:os' {

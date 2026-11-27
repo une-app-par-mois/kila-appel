@@ -9,6 +9,7 @@ export type DataErrorCode =
   | 'NOT_A_SLOT_SESSION'
   | 'DRAFT_IN_PROGRESS'
   | 'DB_NOT_READY'
+  | 'RESTORE_FAILED'
   | 'ACTIVE_SEASON'
   | 'RETENTION_INVALID'
   | 'NOT_PURGEABLE';
