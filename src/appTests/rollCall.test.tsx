@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { act, fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
 import { count, type Seeded, seed } from '@/__fixtures__/seed';
 import RollCall from '@/app/appel';
+import FreeRollCall from '@/app/appel-libre';
 import Settings from '@/app/index';
 import { labels } from '@/config/libelles';
 import type { Db } from '@/data/db';
@@ -14,7 +15,7 @@ let mockDb: Db | null = null;
 jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => mockDb }));
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
 
-const routes = { index: Settings, appel: RollCall };
+const routes = { index: Settings, appel: RollCall, 'appel-libre': FreeRollCall };
 const open = (initialUrl: string) => renderRouter(routes, { initialUrl });
 const t = labels.rollCall;
 const st = labels.statuses;
@@ -99,11 +100,12 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
       jest.advanceTimersByTime(1500);
     });
     await waitFor(() => expect(screenRouter.getPathname()).toBe('/'));
-    // Retour à l'accueil : la séance est marquée enregistrée, la ligne ne s'ouvre plus.
+    // Retour à l'accueil : la séance est marquée enregistrée, la ligne mène à l'appel sans créneau.
     expect(
       await screen.findByText(t.proposedRecorded('Poussins', 'Mer.', '18/11', '17:30')),
     ).toBeTruthy();
-    expect(screen.queryByRole('button', { name: new RegExp(`^${t.entry}`) })).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: new RegExp(`^${t.entry}`) }));
+    expect(screenRouter.getPathname()).toBe('/appel-libre');
   });
 
   it('EX-15 séance déjà enregistrée (RM-05) : le message, sans bouton d’enregistrement', async () => {
@@ -153,11 +155,12 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
     expect(await screen.findByRole('header', { name: 'Poussins' })).toBeTruthy();
   });
 
-  it('EX-09 accueil sans créneau : « Nouvel appel » grisé avec la raison, sans action', async () => {
+  it('EX-39 accueil sans séance à faire : « Nouvel appel » ouvre l’appel sans créneau', async () => {
     await db.execute('DELETE FROM slots');
-    await open('/');
+    const router = await open('/');
     expect(await screen.findByText(t.noSession)).toBeTruthy();
-    expect(screen.queryByRole('button', { name: new RegExp(`^${t.entry}`) })).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: new RegExp(`^${t.entry}`) }));
+    expect(router.getPathname()).toBe('/appel-libre');
   });
 
   it.each([
@@ -167,6 +170,24 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
     await open(`/appel?creneau=${s.slotId}&date=${date}`);
     expect(await screen.findByText(labels.errors.NOT_A_SLOT_SESSION)).toBeTruthy();
     expect(screen.queryByRole('button', { name: t.save })).toBeNull();
+    expect(screen.queryByTestId('roll-call-name')).toBeNull();
+  });
+
+  it('EX-09 créneau d’une saison qui n’est pas active : refusé dès l’ouverture', async () => {
+    const [benjamins] = await db.query<{ id: number }>(
+      'SELECT id FROM groups WHERE season_id = ?',
+      [s.otherSeasonId],
+    );
+    const { lastInsertRowId: old } = await db.execute(
+      "INSERT INTO slots (season_id, weekday, start_time, duration_min, schedule_from) VALUES (?, 3, '17:30', 90, '2025-09-01')",
+      [s.otherSeasonId],
+    );
+    await db.execute('INSERT INTO slot_groups (slot_id, group_id) VALUES (?, ?)', [
+      old,
+      benjamins?.id ?? 0,
+    ]);
+    await open(`/appel?creneau=${old}&date=2026-11-18`);
+    expect(await screen.findByText(labels.errors.NOT_FOUND)).toBeTruthy();
     expect(screen.queryByTestId('roll-call-name')).toBeNull();
   });
 

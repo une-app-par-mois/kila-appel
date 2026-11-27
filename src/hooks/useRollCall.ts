@@ -90,5 +90,13 @@ export const useRollCall = () => {
     },
     [repo],
   );
-  return { record, isRecorded };
+  const isGroupRecorded = useCallback(
+    async (groupId: number, date: string): Promise<boolean> => {
+      const sessions = repo();
+      if (!sessions) throw new DataError('DB_NOT_READY');
+      return sessions.isGroupRecorded(groupId, date);
+    },
+    [repo],
+  );
+  return { record, isRecorded, isGroupRecorded };
 };

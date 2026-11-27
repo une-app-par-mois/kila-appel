@@ -96,7 +96,7 @@ ${section('Groupe')}
 ${carte(`${ligne('Poussins mercredi', '22 membres', 'data-go="appel"')}${ligne('Benjamins lundi', '18 membres', 'data-go="appel"')}${ligne('Adultes jeudi', '25 membres', 'data-go="appel"')}`)}
 ${section('Date')}
 <div class="champ mono">26/11/2026</div>
-<p class="note">S'affiche quand on touche « Nouvel appel » hors de tout créneau proche.</p>`);
+<p class="note">S'affiche quand on touche « Nouvel appel » sans séance à faire : aucune proposée, ou la proposée déjà enregistrée. Groupes listés par leur nom, sans le nombre de membres au lot 1. Date jamais future, dans la saison active ; l'heure de la séance est celle de l'ouverture de l'appel. Appel du groupe déjà enregistré ce jour-là : « Un appel de Poussins est déjà enregistré le 16/11/2026. En faire un autre ? » (Annuler / Faire un autre appel) (décisions du 2026-11-27).</p>`);
 
 // 06 — Ajout d'un membre pendant l'appel (EX-12)
 ecran('ajout', 1, "Ajout d'un membre pendant l'appel", 'EX-12, EX-03', 'appel', `
@@ -105,6 +105,7 @@ ${titre('Nouveau membre', 'appel')}
 <label>Nom</label><div class="champ">Colin</div>
 <label>Date de naissance <span class="facultatif">facultative</span></label><div class="champ vide">JJ/MM/AAAA</div>
 <p class="aide">Il sera inscrit à « Poussins mercredi » à partir d'aujourd'hui.</p>
+<p class="note">Inscrit à la date de la séance : « à partir du 18/11/2026 » pour le rattrapage d'une séance passée (décision du 2026-11-27).</p>
 ${go('appel', "Ajouter et revenir à l'appel")}`);
 
 // 07 — Historique

@@ -6,6 +6,7 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Ajouté
 
+- Appel sans créneau : groupe et date (jamais future, dans la saison), heure de l'ouverture de l'appel ; « Ajouter un membre » pendant l'appel, inscrit à la date de la séance et ajouté à Présent, statuts gardés ; « Nouvel appel » y mène sans séance à faire — ticket 010c.
 - Écran d'appel : membres inscrits à la date, tous à Présent ; un appui fait passer à Absent, Retard, Excusé ; pastilles avec icône et libellé, compteur, recherche au-delà de 20 membres, commentaire, « Enregistrer l'appel » puis « Appel enregistré » ; « Nouvel appel » en tête de l'accueil, vers la séance proposée (jamais d'un jour à venir) — ticket 010b.
 - Enregistrement d'un appel (données) : séance, groupe figé et présences d'un bloc ; une séance par créneau et par date ; membres inscrits à la date ; commentaire de 500 caractères au plus ; séance proposée (créneau en cours ou le plus proche) — ticket 010.
 - Écrans des créneaux : liste « Mercredi 14:00 – 15:30 », création et modification (jour, début, durée « 1 h 30 », groupe, lieu et nom facultatifs), suppression après confirmation qui garde les séances ; ligne « Créneaux » dans Paramètres — ticket 009b.

@@ -1,4 +1,5 @@
-// Appel (maquette Appel, EX-09 à EX-15) : `?creneau=<id>&date=<AAAA-MM-JJ>`. Tous les inscrits à
+// Appel (maquette Appel, EX-09 à EX-15, EX-39) : `?creneau=<id>&date=<AAAA-MM-JJ>`, ou `?groupe=`
+// pour un appel sans créneau (`useRollCallTarget`). Tous les inscrits à
 // la date démarrent à Présent ; un appui fait passer au statut suivant. Le brouillon arrive au
 // ticket 011 : d'ici là, quitter sans enregistrer perd l'appel (décision du porteur du 2026-11-27).
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -7,12 +8,11 @@ import { Pressable, StyleSheet, Text } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
 import { countStatuses, matchesName, nextStatus, SEARCH_FROM } from '@/domain/attendance';
-import { isIsoDate, toDisplayDate, toIsoDate } from '@/domain/formats';
-import { isSlotDate, weekdayOfDate } from '@/domain/occurrences';
+import { toDisplayDate } from '@/domain/formats';
+import { weekdayOfDate } from '@/domain/occurrences';
 import type { AttendanceStatus } from '@/domain/validation';
-import { useGroups } from '@/hooks/useGroups';
 import { useRollCall, useRoster } from '@/hooks/useRollCall';
-import { useSlot } from '@/hooks/useSlots';
+import { useRollCallTarget } from '@/hooks/useRollCallTarget';
 import { AttendanceCounter, StatusPill } from '@/ui/Attendance';
 import { Button } from '@/ui/Button';
 import { Card } from '@/ui/Card';
@@ -26,44 +26,29 @@ const SAVED_DELAY_MS = 1200;
 
 export default function RollCallScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ creneau: string; date: string }>();
-  const slotId = /^\d+$/.test(params.creneau ?? '') ? Number(params.creneau) : 0;
-  const date = isIsoDate(params.date ?? '') ? (params.date ?? '') : '';
-  const { slot, loaded, loadFailed } = useSlot(slotId);
-  // Le groupe actif du créneau, comme à l'accueil (un groupe archivé refuserait l'enregistrement).
-  const { groups, loadFailed: groupsFailed } = useGroups(slot?.seasonId ?? null);
-  const group = slot?.groups.find((g) => groups?.some((x) => x.id === g.id)) ?? null;
-  // EX-17 : un jour du créneau, jamais futur ; sinon refusé dès l'ouverture, pas après l'appel.
-  const validDate = slot !== null && date !== '' && isSlotDate(slot, date, toIsoDate(new Date()));
+  const params = useLocalSearchParams<{ creneau?: string; groupe?: string; date?: string }>();
+  const { target, groupName, problem, loadFailed } = useRollCallTarget(params);
   const { roster, loadFailed: rosterFailed } = useRoster(
-    validDate ? (group?.id ?? null) : null,
-    date,
+    target?.group.id ?? null,
+    target?.date ?? '',
   );
-  const { record, isRecorded } = useRollCall();
+  const { record } = useRollCall();
 
   const [statuses, setStatuses] = useState<Record<number, AttendanceStatus>>({});
   const [query, setQuery] = useState('');
   const [comment, setComment] = useState('');
   const [commentError, setCommentError] = useState<string | undefined>();
   const [formError, setFormError] = useState<string | undefined>();
-  const [alreadyRecorded, setAlreadyRecorded] = useState<boolean | null>(null);
   const [saved, setSaved] = useState(false);
   const saving = useRef(false);
   const [busy, setBusy] = useState(false);
-
-  // RM-05 : l'écran dit tout de suite qu'une séance est déjà enregistrée (correction au 013).
-  // Vérifié une fois par séance : après l'enregistrement, le rechargement ne le refait pas.
-  const foundSlotId = slot?.id ?? null;
-  useEffect(() => {
-    if (foundSlotId === null || !validDate) return;
-    isRecorded(foundSlotId, date).then(setAlreadyRecorded, (e) => setFormError(errorMessage(e)));
-  }, [foundSlotId, validDate, date, isRecorded]);
 
   // « Appel enregistré », puis retour à l'accueil (décision du porteur du 2026-11-27).
   useEffect(() => {
     if (!saved) return;
     const timer = setTimeout(
-      () => (router.canGoBack() ? router.back() : router.replace('/')),
+      // Accueil, même depuis l'appel sans créneau (pile : accueil → choix → appel).
+      () => (router.canDismiss() ? router.dismissTo('/') : router.replace('/')),
       SAVED_DELAY_MS,
     );
     return () => clearTimeout(timer);
@@ -76,15 +61,15 @@ export default function RollCallScreen() {
   const shown = searchable ? members.filter((m) => matchesName(query, m)) : members;
 
   const save = async () => {
-    if (!slot || !group || saving.current) return;
+    if (!target || saving.current) return;
     saving.current = true;
     setBusy(true);
     try {
       await record({
-        slotId: slot.id,
-        groupId: group.id,
-        date,
-        startTime: slot.startTime,
+        slotId: target.slotId,
+        groupId: target.group.id,
+        date: target.date,
+        startTime: target.startTime,
         statuses: members.map((m) => ({ memberId: m.memberId, status: statusOf(m.memberId) })),
         comment,
       });
@@ -98,32 +83,35 @@ export default function RollCallScreen() {
     }
   };
 
-  const notFound =
-    (loaded && slot === null) || (groups !== null && !group) || !date || slotId === 0;
   const error =
-    loadFailed || rosterFailed || groupsFailed
+    loadFailed || rosterFailed
       ? labels.common.loadFailed
-      : notFound
-        ? labels.errors.NOT_FOUND
-        : slot && !validDate
-          ? labels.errors.NOT_A_SLOT_SESSION
-          : alreadyRecorded
-            ? labels.errors.ALREADY_RECORDED
-            : formError;
-  const ready = validDate && group && roster && alreadyRecorded === false && !notFound;
-  const subtitle =
-    slot && date
-      ? t.subtitle(
-          labels.weekdaysAbbr[weekdayOfDate(date) - 1] ?? '',
-          toDisplayDate(date),
-          slot.startTime,
-          slot.place,
-        )
-      : undefined;
+      : problem
+        ? labels.errors[problem]
+        : formError;
+  const ready = target && roster;
+  const subtitle = target
+    ? t.subtitle(
+        labels.weekdaysAbbr[weekdayOfDate(target.date) - 1] ?? '',
+        toDisplayDate(target.date),
+        target.startTime,
+        target.place,
+      )
+    : undefined;
+  // EX-12 : nouveau membre inscrit au groupe à la date de la séance, puis retour à l'appel.
+  const addMember = () => {
+    if (!target) return;
+    // Le nouveau membre doit apparaître au retour : la recherche est vidée.
+    setQuery('');
+    router.push({
+      pathname: '/membres/nouveau',
+      params: { groupe: target.group.id, debut: target.date, retour: '1', appel: '1' },
+    });
+  };
 
   return (
     <Screen
-      title={group?.name ?? t.entry}
+      title={groupName ?? t.entry}
       subtitle={subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
       onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))}
       error={error}
@@ -167,6 +155,9 @@ export default function RollCallScreen() {
               <Text style={styles.empty}>{members.length === 0 ? t.noMember : t.noMatch}</Text>
             )}
           </Card>
+          {!saved && (
+            <Button label={t.addMember} variant="secondary" disabled={busy} onPress={addMember} />
+          )}
           <TextField
             label={t.comment}
             hint={t.optional}

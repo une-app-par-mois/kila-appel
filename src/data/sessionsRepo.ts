@@ -34,6 +34,8 @@ export const sessionsRepo = (db: Db, today: string) => ({
       if (!group) throw new DataError('NOT_FOUND');
       if (call.date < group.start_date || call.date > group.end_date)
         throw new InputError('DATE_OUTSIDE_SEASON');
+      // EX-39 : un appel sans créneau n'est jamais futur non plus (décision du 2026-11-27).
+      if (call.slotId === null && call.date > today) throw new InputError('DATE_IN_FUTURE');
       if (call.slotId !== null) {
         const [slot] = await tx.query<{
           weekday: WeeklySlot['weekday'];
@@ -96,6 +98,16 @@ export const sessionsRepo = (db: Db, today: string) => ({
       return id;
     });
   },
+
+  /** EX-39 : un appel du groupe est déjà enregistré ce jour-là, avec ou sans créneau. */
+  isGroupRecorded: async (groupId: number, date: string): Promise<boolean> =>
+    (
+      await db.query<{ id: number }>(
+        `SELECT s.id FROM sessions s JOIN session_groups sg ON sg.session_id = s.id
+         WHERE sg.group_id = ? AND s.date = ? AND s.state = 'recorded'`,
+        [groupId, date],
+      )
+    ).length > 0,
 
   /** RM-05 : une séance existe déjà pour ce créneau à cette date (l'écran le dit avant l'appel). */
   isRecorded: async (slotId: number, date: string): Promise<boolean> =>
