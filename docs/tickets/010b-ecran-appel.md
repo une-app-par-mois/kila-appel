@@ -1,6 +1,6 @@
 # 010b — Écran d'appel
 
-Statut : à faire · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : en cours · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Découpé le 2026-11-27 (décision du porteur) depuis le ticket 010.
 
@@ -15,6 +15,8 @@ Découpé le 2026-11-27 (décision du porteur) depuis le ticket 010.
 - Après l'enregistrement : « Appel enregistré », puis retour à l'accueil provisoire (décision du porteur du 2026-11-27 ; l'Historique arrive au 013)
 - Séance déjà enregistrée : « L'appel de cette séance est déjà enregistré. », pas d'enregistrement (décision du porteur du 2026-11-27 ; correction au 013)
 - Entrée « Nouvel appel » en haut de l'accueil provisoire, vers la séance proposée (EX-09)
+
+- Plan validé le 2026-11-27 : sans chronomètre (démo de la maquette) ; la ligne « Brouillon enregistré à chaque appui » arrive au 011 ; quitter sans enregistrer perd l'appel jusqu'au 011 ; sans séance proposée, « Nouvel appel » est grisé avec la raison
 
 ## Critères d'acceptation
 
