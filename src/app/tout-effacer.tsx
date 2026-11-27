@@ -1,7 +1,8 @@
 // Tout effacer (maquette « Tout effacer », ticket 015f, EX-23, SEC-10, SEC-11, ABS-05 ; zone
 // sensible). Double confirmation (réponse du porteur du 2026-11-27) : le bouton « Tout effacer… »
 // qui ouvre cet écran, puis le mot EFFACER et le bouton rouge, sans boîte en plus. L'effacement
-// prend le verrou commun, vide la base ouverte puis les copies du cache ; ensuite Bienvenue, qui
+// prend le verrou commun, vide la base ouverte, les copies du cache puis les relances (ticket
+// 028c) ; ensuite Bienvenue, qui
 // recrée la saison comme à une installation neuve. Pendant l'effacement, l'écran ne peut pas être
 // quitté (bouton, geste ou retour du système), comme l'écran Restauration.
 import { usePreventRemove, useRouter } from 'expo-router';
@@ -11,7 +12,7 @@ import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
 import { clearCacheCopies } from '@/hooks/cacheCopies';
 import { useFileLock } from '@/hooks/fileLock';
-import { type EraseAllDeps, useEraseAll } from '@/hooks/useErase';
+import { clearAllReminders, type EraseAllDeps, useEraseAll } from '@/hooks/useErase';
 import { Button } from '@/ui/Button';
 import { Card } from '@/ui/Card';
 import { Screen } from '@/ui/Screen';
@@ -19,11 +20,15 @@ import { TextField } from '@/ui/TextField';
 
 const t = labels.eraseAll;
 
-/** SEC-10 : les trois dossiers du cache, vidés ensemble ; refusé si l'un d'eux a échoué. */
+/**
+ * SEC-10 : les trois dossiers du cache, vidés ensemble ; refusé si l'un d'eux a échoué. SEC-11 :
+ * relances annulées et retirées.
+ */
 const deps: EraseAllDeps = {
   clearCopies: async () => {
     if (!(await clearCacheCopies())) throw new Error('copies');
   },
+  clearReminders: clearAllReminders,
 };
 
 /** Le mot tapé, majuscules et espaces autour ignorés (réponse du porteur du 2026-11-27). */

@@ -237,8 +237,21 @@ export const createReminderChannel = async (name: string): Promise<boolean> => {
   }
 };
 
-const targetOfResponse = (response: Response): ReminderTarget | null =>
-  targetOf(response.notification);
+/**
+ * SEC-12 (revue du 028c) : seule une relance programmée par l'appli compte. Une appli tierce peut
+ * lancer l'activité avec une fausse notification push : déclencheur `push` refusé, et identifiant
+ * exigé tel que `scheduleReminders` l'écrit.
+ */
+const targetOfResponse = (response: Response): ReminderTarget | null => {
+  const { request } = response.notification;
+  // CONV-14 : donnée du module natif, lue sans se fier à son type.
+  const trigger = request.trigger as unknown as { type?: unknown } | null | undefined;
+  if (trigger?.type === 'push') return null;
+  const target = targetOf(response.notification);
+  if (target === null || request.identifier !== `relance-${target.slotId}-${target.date}`)
+    return null;
+  return target;
+};
 
 /** Appli ouverte par une relance : sa cible validée, ou null. */
 export const lastReminderTarget = (): ReminderTarget | null => {
