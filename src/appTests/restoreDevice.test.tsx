@@ -72,9 +72,8 @@ describe('EX-20 NF-04 restauration par le vrai adaptateur de fichiers', () => {
     };
     exported();
     const router = await renderRouter(routes, { initialUrl: '/donnees' });
-    // L'écran Sauvegarde vide son propre dossier ; la restauration ne doit jamais y toucher.
-    await waitFor(() => expect(existsSync(exportDir)).toBe(false));
-    exported();
+    // L'écran Sauvegarde ne vide rien à l'ouverture (SEC-10, ticket 014g) ; la restauration ne
+    // touche jamais à son dossier.
     await fireEvent.press(await screen.findByRole('button', { name: 'Choisir un fichier…' }));
     await fireEvent.press(await screen.findByRole('button', { name: 'Remplacer mes données' }));
     await waitFor(() => expect(router.getPathname()).toBe('/'));

@@ -1,13 +1,14 @@
 // Export de la sauvegarde pour l'écran Sauvegarde (ticket 014b, EX-19, EX-21 ; zone sensible).
 // Les fichiers, le partage et l'ouverture brute d'une copie sont passés en paramètre (expo dans
 // l'appli, node:fs et node:sqlite dans les tests) : le même cycle est testé et livré.
-// ABS-04 : le journal ne reçoit que des codes.
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+// SEC-10 (ticket 014g) : le dossier dédié n'est vidé que sous le verrou commun, au début de chaque
+// export, jamais au montage de l'écran. ABS-04 : le journal ne reçoit que des codes.
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { LastBackup } from '@/config/libelles';
 import { exportBackup } from '@/data/backup';
 import { verifyBackup } from '@/data/backupCheck';
 import type { Db } from '@/data/db';
-import type { BackupDeps, BackupStorage } from '@/data/expoFiles';
+import type { BackupDeps } from '@/data/expoFiles';
 import { log } from '@/data/log';
 import { settingsRepo } from '@/data/settingsRepo';
 import { daysSince, toDisplayDate, toIsoDate } from '@/domain/formats';
@@ -28,21 +29,19 @@ export const useLastBackup = () => {
   return { lastBackup: value, loaded, loadFailed };
 };
 
-// Un seul export à la fois dans l'appli, et jamais pendant une restauration (verrou commun,
-// revues du 014b et du 014e) : un second écran Sauvegarde, monté pendant un partage, ne vide pas
-// le dossier et ne lance pas un autre export.
-// Vidage du dossier dédié : un export attend qu'il soit fini avant d'y écrire.
-let clearing: Promise<void> = Promise.resolve();
+// Un seul export à la fois dans l'appli, et jamais pendant une restauration, une purge ou le
+// nettoyage au démarrage (verrou commun, revues du 014b et du 014e) : un second écran Sauvegarde,
+// monté pendant un partage, ne vide pas le dossier et ne lance pas un autre export.
 
-/** Copies restées d'un arrêt brutal pendant un partage ; rien pendant un export en cours. */
-const clearDir = (files: BackupStorage) => {
-  if (fileLock.holder() === 'export') return;
-  clearing = clearing.then(() => files.clear()).catch(() => log('BACKUP_CLEAR_FAILED'));
-};
-
-/** Rend faux si aucun fichier n'a été partagé. */
+/**
+ * Appelé sous le verrou 'export'. Rend faux si aucun fichier n'a été partagé. Vide d'abord le
+ * dossier dédié (copies restées d'un arrêt brutal) ; un échec, même levé tout de suite, est
+ * journalisé sans empêcher l'export.
+ */
 const exportOnce = async (db: Db, deps: BackupDeps): Promise<boolean> => {
-  await clearing;
+  await Promise.resolve()
+    .then(() => deps.files.clear())
+    .catch(() => log('BACKUP_CLEAR_FAILED'));
   const today = toIsoDate(new Date());
   let dir: string | null = null;
   try {
@@ -76,7 +75,7 @@ const exportOnce = async (db: Db, deps: BackupDeps): Promise<boolean> => {
  * EX-19 : copie datée dans un sous-dossier neuf du dossier dédié, vérifiée, partagée ; la date
  * est notée quand la feuille de partage se ferme sans erreur (un partage annulé ne se détecte
  * pas : décision du porteur du 2026-11-27). Le sous-dossier est effacé dès la fin, réussite ou
- * échec ; le dossier dédié est vidé une fois à chaque ouverture de l'écran.
+ * échec ; le dossier dédié est vidé au début de chaque export, sous le verrou (SEC-10).
  */
 export const useBackupExport = (deps: BackupDeps) => {
   const db = useDatabase();
@@ -84,8 +83,6 @@ export const useBackupExport = (deps: BackupDeps) => {
   const [failed, setFailed] = useState(false);
   const depsRef = useRef(deps);
   depsRef.current = deps;
-
-  useEffect(() => clearDir(depsRef.current.files), []);
 
   const exportNow = useCallback(async () => {
     if (!db || !fileLock.acquire('export')) return;

@@ -139,11 +139,16 @@ describe('EX-19 écran Sauvegarde : export', () => {
     expect(await settingsRepo(db).lastBackupDate()).toBeNull();
   });
 
-  it('EX-19 le dossier dédié est vidé à l’ouverture de l’écran', async () => {
+  it('EX-19 SEC-10 le dossier dédié est vidé au début de l’export, pas à l’ouverture', async () => {
+    const old = join(backups, 'ancien', 'kila-sauvegarde-2026-10-01.db');
     mkdirSync(join(backups, 'ancien'), { recursive: true });
-    writeFileSync(join(backups, 'ancien', 'kila-sauvegarde-2026-10-01.db'), 'reste');
+    writeFileSync(old, 'reste');
     await open();
-    await waitFor(() => expect(existsSync(backups)).toBe(false));
+    await exportButton();
+    expect(existsSync(old)).toBe(true);
+    await fireEvent.press(await exportButton());
+    await waitFor(() => expect(log).toHaveBeenCalledWith('BACKUP_SHARED'));
+    expect(existsSync(old)).toBe(false);
   });
 
   it('un deuxième appui pendant le partage ne lance pas un deuxième export', async () => {
