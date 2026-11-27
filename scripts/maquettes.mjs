@@ -364,6 +364,7 @@ ${section('Créneaux')}${carte(`<p>Aucun créneau. Déclarez quand vos groupes s
 ${section('Historique')}${carte(`<p>Aucun appel enregistré. Votre premier appel apparaîtra ici.</p>${go('appel', "Faire l'appel")}`)}
 ${section('Recherche sans résultat')}${carte(`<p>Aucun membre ne correspond à « xyz ».</p><p class="l-sous">Vérifiez l'orthographe, ou cherchez par le prénom.</p>`)}
 ${section("Appel d'un groupe vide")}${carte(`<p>Ce groupe n'a aucun membre à appeler.</p>${go('inscription', 'Ajouter des membres', 'btn-s')}`)}
+<p class="note">Décisions du porteur du 2026-11-27 : l'appel d'un groupe vide garde aussi « Ajouter un membre » (EX-12) sous la carte ; « + » est l'icône du bouton, le libellé est « Ajouter un contact ».</p>
 ${section("Membre sans contact d'urgence")}${carte(`<p>Aucun contact d'urgence pour Léo Garcia.</p>${go('contact', '+ Ajouter un contact', 'btn-s')}`)}`);
 
 // 17 — Annuler une séance (lot 2, F-13) : laissée en lien depuis l'accueil, page d'attente

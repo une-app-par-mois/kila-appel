@@ -133,9 +133,11 @@ describe('Écrans des contacts d’urgence (EX-05, EX-06)', () => {
     await db.execute('UPDATE members SET archived_at = ? WHERE id = ?', ['2026-11-01', s.memberId]);
     await open('/urgence');
     const field = await screen.findByLabelText(t.emergency.search);
-    expect(screen.queryByText(t.members.noMatch)).toBeNull();
+    expect(screen.queryByText(t.members.noMatchHint)).toBeNull();
     await fireEvent.changeText(field, 'alix');
-    expect(await screen.findByText(t.members.noMatch)).toBeTruthy();
+    // P1 NF-06 : la carte « Recherche sans résultat » de la maquette.
+    expect(await screen.findByText(t.members.noMatch('alix'))).toBeTruthy();
+    expect(screen.getByText(t.members.noMatchHint)).toBeTruthy();
   });
 
   it('appel impossible (tablette sans téléphonie) : un message, pas de plantage', async () => {

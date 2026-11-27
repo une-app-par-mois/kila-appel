@@ -5,6 +5,7 @@ import { act, fireEvent, renderRouter, screen, waitFor } from 'expo-router/testi
 import { count, type Seeded, seed } from '@/__fixtures__/seed';
 import RollCall from '@/app/appel';
 import FreeRollCall from '@/app/appel-libre';
+import Enroll from '@/app/groupes/[id]/inscrire';
 import { tabRoutes } from '@/appTests/tabRoutes';
 import { labels } from '@/config/libelles';
 import type { Db } from '@/data/db';
@@ -15,7 +16,12 @@ let mockDb: Db | null = null;
 jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => mockDb }));
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
 
-const routes = { ...tabRoutes, appel: RollCall, 'appel-libre': FreeRollCall };
+const routes = {
+  ...tabRoutes,
+  appel: RollCall,
+  'appel-libre': FreeRollCall,
+  'groupes/[id]/inscrire': Enroll,
+};
 const open = (initialUrl: string) => renderRouter(routes, { initialUrl });
 const t = labels.rollCall;
 const st = labels.statuses;
@@ -140,6 +146,28 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
     expect(screen.queryByRole('button', { name: t.row('Sam Fictif', st.present) })).toBeNull();
     // Le compteur compte tout le groupe, pas seulement les membres affichés.
     expect(screen.getByText(t.counter.present(22))).toBeTruthy();
+    // P1 NF-06 : sans résultat, le texte de la maquette.
+    await fireEvent.changeText(search, 'xyz');
+    expect(await screen.findByText(labels.members.noMatch('xyz'))).toBeTruthy();
+    expect(screen.getByText(labels.members.noMatchHint)).toBeTruthy();
+  });
+
+  it('P1 NF-06 EX-12 appel d’un groupe vide : « Ajouter des membres » inscrit dès la date de l’appel, puis revient (décision du 2026-11-27)', async () => {
+    await db.execute('DELETE FROM enrollments');
+    const screenRouter = await open('/');
+    await act(async () => {
+      router.push(`/appel?creneau=${s.slotId}&date=${DATE}`);
+    });
+    expect(await screen.findByText(t.noMember)).toBeTruthy();
+    // « Ajouter un membre » (EX-12, membre tout neuf) reste aussi.
+    expect(screen.getByRole('button', { name: t.addMember })).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: labels.group.addMembers }));
+    expect(screenRouter.getPathname()).toBe(`/groupes/${s.groupId}/inscrire`);
+    expect(await screen.findByDisplayValue('18/11/2026')).toBeTruthy();
+    await fireEvent.press(await screen.findByRole('checkbox', { name: /Alix Exemple/ }));
+    await fireEvent.press(screen.getByRole('button', { name: labels.enrollment.submit(1) }));
+    await waitFor(() => expect(screenRouter.getPathname()).toBe('/appel'));
+    expect(await row('Alix Exemple', st.present)).toBeTruthy();
   });
 
   it('EX-09 créneau ou date invalides dans l’adresse : introuvable, rien à enregistrer', async () => {

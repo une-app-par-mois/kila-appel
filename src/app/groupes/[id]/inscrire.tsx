@@ -7,7 +7,13 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
 import { DataError } from '@/data/errors';
-import { parseDisplayDate, startInSeason, toDisplayDate, toIsoDate } from '@/domain/formats';
+import {
+  isIsoDate,
+  parseDisplayDate,
+  startInSeason,
+  toDisplayDate,
+  toIsoDate,
+} from '@/domain/formats';
 import { useGroup } from '@/hooks/useGroups';
 import { useEnrollments } from '@/hooks/useMembers';
 import { useSeasons } from '@/hooks/useSeasons';
@@ -22,16 +28,19 @@ const t = labels.enrollment;
 
 export default function Enroll() {
   const router = useRouter();
-  const param = useLocalSearchParams<{ id: string }>().id;
+  // `debut` : date de l'appel quand on vient d'un appel d'un groupe vide (ticket 012c) ; le
+  // retour après l'inscription ramène alors à l'appel (pile de navigation).
+  const { id: param, debut } = useLocalSearchParams<{ id: string; debut?: string }>();
   const id = param && /^\d+$/.test(param) ? Number(param) : 0;
   const today = toIsoDate(new Date());
   const { group, loaded, loadFailed } = useGroup(id);
   const [selected, setSelected] = useState<number[]>([]);
   const { seasons, loadFailed: seasonsFailed } = useSeasons();
   const active = seasons?.find((s) => s.isActive);
-  // Saisie, sinon aujourd'hui ramené dans la saison active (EX-04, ticket 007e).
+  // Saisie, sinon la date de l'appel, sinon aujourd'hui ramené dans la saison active (EX-04).
   const [typed, setDate] = useState<string | null>(null);
-  const date = typed ?? toDisplayDate(startInSeason(today, active));
+  const date =
+    typed ?? toDisplayDate(debut && isIsoDate(debut) ? debut : startInSeason(today, active));
   // Candidats libres à la date saisie : l'inscription y est refusée sinon (chevauchement).
   const startDate = parseDisplayDate(date);
   const {

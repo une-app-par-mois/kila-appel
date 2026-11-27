@@ -1,6 +1,6 @@
 # 012c — États vides
 
-Statut : à faire · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : en cours · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Découpé le 2026-11-27 (décision du porteur) depuis le ticket 012.
 
@@ -14,8 +14,12 @@ Chaque liste vide du jalon affiche la carte de la maquette « États vides » (P
 
 ## Critères d'acceptation
 
-- [ ] États vides de toutes les listes du jalon, textes et boutons de la maquette
+- [x] États vides de toutes les listes du jalon, textes et boutons de la maquette (l'historique, ticket 013, aura le sien)
+
+## Décisions
+
+- Automatiques : voir `docs/DECISIONS.md` (ticket 012c)
 
 ## Tests attendus
 
-- Tests d'écrans
+- Tests d'écrans ; textes comparés à la maquette (`src/config/emptyStates.test.ts`)
