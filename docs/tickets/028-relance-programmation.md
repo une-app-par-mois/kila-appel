@@ -1,6 +1,8 @@
 # 028 — Relance : programmation sur l'appareil
 
-Statut : à faire · Jalon : 2 · Zone sensible : **oui** (notifications, ABS-01 : aucune fonction réseau d'expo-notifications ; ABS-04 ; effacement : Tout effacer annule les relances) · Trivial : non
+> Découpé le 2026-11-27 : ce fichier couvre le 028a ; la suite est dans 028b (`028b-relance-reprogrammation.md`).
+
+Statut : 028a fusionné dans le groupe (PR #79) ; 028b à faire · Jalon : 2 · Zone sensible : **oui** (notifications, ABS-01 : aucune fonction réseau d'expo-notifications ; ABS-04 ; effacement : Tout effacer annule les relances) · Trivial : non
 
 Dépend de : 026 (dépendance installée), 027 (calcul et réglages) · Fichiers touchés : `src/data/expoNotifications.ts` (nouveau), `src/hooks/useReminders.ts` et son test (nouveaux), `src/app/_layout.tsx`, `src/hooks/useErase.ts`, `src/staticChecksFiles.test.ts`, `src/__fixtures__/expoModules.ts`, `src/config/licences.json`, `src/hooks/useEraseAll.test.tsx` — 9 fichiers
 
@@ -29,13 +31,13 @@ Programmer sur l'appareil les relances calculées par le 027 : tout annuler puis
 
 ## Critères d'acceptation
 
-- [ ] EX-28 : relance activée, créneau dans 1 h → une notification programmée à début + délai (test sur l'adaptateur simulé, puis sur le téléphone).
-- [ ] Enregistrer l'appel annule la relance de cette séance ; modifier ou supprimer un créneau, un groupe, la saison, la reprogramme.
-- [ ] Relance désactivée ou permission refusée : rien n'est programmé, tout est annulé.
-- [ ] Tout effacer : plus aucune relance programmée (IDEES, SEC-11) ; restauration : relances recalculées sur les données restaurées.
-- [ ] Appui sur la notification : l'appel du créneau à la bonne date s'ouvre ; données hors format refusées.
-- [ ] SEC-01 et SEC-03 : contrôles statiques étendus, chacun vu en échec sur un exemple.
-- [ ] ABS-04 : aucun nom dans le journal ni dans la notification.
+- [ ] EX-28 : relance activée, créneau dans 1 h → une notification programmée à début + délai (test sur l'adaptateur simulé, puis sur le téléphone). 028a : `scheduleReminders` programme à date fixe (adaptateur simulé) ; branchement et téléphone au 028b.
+- [ ] Enregistrer l'appel annule la relance de cette séance ; modifier ou supprimer un créneau, un groupe, la saison, la reprogramme. → 028b.
+- [ ] Relance désactivée ou permission refusée : rien n'est programmé, tout est annulé. → 028b.
+- [ ] Tout effacer : plus aucune relance programmée (IDEES, SEC-11) ; restauration : relances recalculées sur les données restaurées. → 028b (`dismissAllReminders` posé au 028a).
+- [ ] Appui sur la notification : l'appel du créneau à la bonne date s'ouvre ; données hors format refusées. 028a : données hors format → `null` (testé) ; ouverture de l'appel au 028b.
+- [x] SEC-01 et SEC-03 : contrôles statiques étendus, chacun vu en échec sur un exemple (028a, `src/staticChecksNotifications.test.ts`).
+- [ ] ABS-04 : aucun nom dans le journal ni dans la notification. 028a : codes de journal sans nom, `slotId` seulement (testé) ; notification reçue sur le téléphone non vérifiée (028b).
 
 ## Tests attendus
 
@@ -88,7 +90,7 @@ Reports de l'intégration du lot J2-2 (2026-11-27) :
 | Erreurs de l'adaptateur | lever ; journaliser et rendre une valeur sûre | aucune fonction ne lève : échec journalisé par un code (`REMINDER_DATE_INVALID`, `REMINDER_SCHEDULE_FAILED` avec `slotId`, `REMINDER_CANCEL_FAILED`, `REMINDER_DISMISS_FAILED`, `REMINDER_PERMISSION_FAILED`, `REMINDER_CHANNEL_FAILED`, `REMINDER_RESPONSE_FAILED`, `REMINDER_LISTEN_FAILED`), puis `false`, `0`, `null` ou « non accordée » ; une relance en échec n'empêche pas les autres | un échec de relance ne doit jamais bloquer l'appli ni faire paraître un appel échoué ; ABS-04 | à relire |
 | Identifiant de la notification | laissé au système ; `relance-<slotId>-<date>` | `relance-<slotId>-<date>` | programmer deux fois la même séance remplace sa relance au lieu de la doubler ; identifiants seulement | à relire |
 | Son | sans ; son par défaut | `sound: 'default'` | réponse du porteur au 026 (alerte et son, sans pastille) ; sur Android 8+, le canal décide | à relire |
-| Canal : identifiant, importance, pastille, nom | — | identifiant `relances`, importance `HIGH` (bannière), `showBadge: false` ; le nom est passé en paramètre (le libellé « Relances » vient au 028b dans `relance.ts`) | une relance doit se voir pendant la séance ; sans pastille comme sur iOS. L'importance d'un canal ne change plus une fois créé sur l'appareil : à confirmer avant le 028b | en attente du porteur |
+| Canal : identifiant, importance, pastille, nom | — | identifiant `relances`, importance `HIGH` (bannière), `showBadge: false` ; le nom est passé en paramètre (le libellé « Relances » vient au 028b dans `relance.ts`) | une relance doit se voir pendant la séance ; sans pastille comme sur iOS. L'importance d'un canal ne change plus une fois créé sur l'appareil : à confirmer avant le 028b | tranchée par le porteur le 2026-11-27 : importance haute (voir 028b) |
 | Heure doublée (heure d'hiver) | choix du moteur JavaScript ; première occurrence imposée | première occurrence imposée (`firstOccurrence` cherche la même heure locale jusqu'à 3 h plus tôt) | V8 prend déjà la première, Hermes n'est pas vérifié ; une seule notification par séance | à relire |
 | Heure absente (heure d'été) | décalage du moteur (02:30 → 03:30) ; première minute valide | première minute valide qui suit (02:30 → 03:00), cherchée minute par minute sur 3 h au plus ; la date construite est relue (jour, heures, minutes) | demande du porteur ; V8 décale d'une heure entière | à relire |
 | Déclencheur passé | — | écarté s'il tombe avant ou dans la minute courante (`now` réel) ; après revue, l'horloge (`Date.now()`) est aussi relue juste avant chaque appel natif, et un déclencheur à moins de 5 s est écarté | le calcul et la programmation n'ont pas lieu à la même minute (027) ; iOS refuse un déclencheur passé et la relance serait perdue | à relire |
@@ -96,12 +98,14 @@ Reports de l'intégration du lot J2-2 (2026-11-27) :
 | Appui : données hors format | ignorer ; signaler `null` | `lastReminderTarget` et l'écouteur rendent `null` (CONV-14 : `slotId` entier positif, `date` ISO valide) | le 028b renvoie alors à l'accueil | à relire |
 | `reminderSessions` et appels sans créneau | inclus (`slotId` null) ; exclus | exclus (`slot_id IS NOT NULL`) | sans effet sur les relances (EX-39) | à relire |
 | `moduleName` partagé | dupliqué ; partagé | déplacé de `staticChecksFiles.test.ts` vers `src/__fixtures__/expoAccess.ts`, importé par les deux contrôles | pas de doublon ; comportement inchangé (tests verts) | à relire |
-| Taille du 028a | découper encore ; garder | gardé : 12 fichiers avec la fiche et `jest.config.js` (correction de revue), au-delà des environ 8 prévus et de la limite de 10 ; `expoAccess.ts` et `staticChecksFiles.test.ts` pour le partage de `moduleName` | une session ; compte corrigé après revue (il était annoncé à 10), question posée au porteur par l'intégration | à relire |
+| Taille du 028a | découper encore ; garder | gardé : 12 fichiers avec la fiche et `jest.config.js` (correction de revue), au-delà des environ 8 prévus et de la limite de 10 ; `expoAccess.ts` et `staticChecksFiles.test.ts` pour le partage de `moduleName` | une session ; compte corrigé après revue (il était annoncé à 10), question posée au porteur par l'intégration | décidée par le porteur le 2026-11-27 : gardé entier à 12 fichiers |
 | Fuseau horaire des tests | `process.env.TZ` dans le fichier de test ; `jest.config.js` ; `globalSetup` | `process.env.TZ = 'Europe/Paris'` en tête de `jest.config.js`, avant le démarrage des workers ; test de garde sur le décalage de janvier et de juillet | posé dans un fichier de test, il était sans effet (chaque worker copie l'environnement) : 7 tests échouaient en UTC, le fuseau de la CI ; vérifié avec `TZ=UTC ./scripts/test.sh` et `TZ=America/New_York` | à relire |
 | M1 d) import relatif hors de `src/` | parcourir les fichiers de la racine que Metro atteint ; refuser l'import | refuser tout import relatif qui sort de `src/`, sauf un fichier `.json` (données sans code : `app.json`, `design/jetons.json`, déjà importés) | plus simple et plus sûr : rien à parcourir, aucun code hors de `src/` n'est atteignable sans se voir | à relire |
 | M1, autres trous | — | refusés partout : tout chemin contenant `node_modules/` ; `import N = require()` compté comme import ; clé écrite en chaîne (`{ 'nom': x }`, `{ ['nom']: x }`) comptée parmi les fonctions refusées ; `jest.requireActual` et `jest.mock` sans fabrique comptés comme des imports ; `jest.requireMock` aussi, sauf d'un module simulé par une fabrique dans le même fichier (il rend alors la simulation) ; test « seul importeur » appuyé sur `moduleName` | revue de sécurité du 028a ; l'exception de `requireMock` évite de réécrire les tests de l'adaptateur des fichiers, sans ouvrir le vrai module | à relire |
 
 ## Questions pour le porteur
+
+Réponses du porteur du 2026-11-27 (reprises dans la fiche 028b) : option A pour les deux questions ci-dessous (retrait des relances affichées dont l'appel est fait ; `setNotificationHandler` ajouté, bannière et son quand l'appli est ouverte, sans pastille) ; canal « Relances » en importance haute.
 
 Aucune ne bloque le 028a ; les deux sont à trancher avant le 028b.
 

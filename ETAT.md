@@ -6,14 +6,14 @@ Dernière mise à jour : 2026-11-27
 
 ## En cours
 
-**Jalon 2 (Suivre l'assiduité), lot J2-2 fusionné** dans `groupe/jalon-2-suivre-assiduite` : 022 alertes, écrans (PR #72), 024 onglet Stats et période (PR #73), 027 relance, calcul et réglages (PR #74) ; **1526 tests**. Lot J2-1 fusionné avant (021, 023, 026 : PR #68, #69, #70). Intégration documentaire : branche `ticket/lot-j2-2-integration`. Jalon 1 fait (PR #63, `main` à `91ed684`), jalon 0 fait (PR #7).
+**Jalon 2 (Suivre l'assiduité), lot J2-3 fusionné** dans `groupe/jalon-2-suivre-assiduite` : 020 accords au singulier (PR #77), 025 statistiques d'un groupe et d'un membre (PR #78), 028a relance, adaptateur et garde-fous (PR #79) ; **1653 tests**. Lots J2-1 (021, 023, 026) et J2-2 (022, 024, 027) fusionnés avant. Le 028 est découpé par le porteur en 028a (fait) et 028b (fiche `docs/tickets/028b-relance-reprogrammation.md`). Intégration documentaire : branche `ticket/lot-j2-3-integration`. Jalon 1 fait (PR #63, `main` à `91ed684`), jalon 0 fait (PR #7).
 
-Décisions du lot : 50 lignes ajoutées à `docs/DECISIONS.md` (5 du 027 déjà présentes depuis le découpage, non dupliquées) ; 1 en attente du porteur, dans `docs/QUESTIONS.md` (027 : un appel sans créneau du même jour ne retire pas la relance). ABS-08 du 027 et public cible 16 ans et plus (§8, décision du porteur) au journal de `docs/CONFORMITE.md`.
+Décisions du lot : 63 lignes ajoutées à `docs/DECISIONS.md` (la ligne « Tout effacer et relances » du 028, déjà présente, non dupliquée), dont les réponses du porteur au QCM (020, 025, découpage du 028, plan ajusté, 028a gardé à 12 fichiers) et ses trois réponses pour le 028b. Aucune nouvelle question en file ; la question 023 « séance sans statut » sort de `docs/QUESTIONS.md` (répondue au 025).
 
 ## Prochaines étapes
 
-1. **Lot J2-3 : 020, 025, 028** (séance de lancement, pré-analyse, QCM ; plan du 028 en zone sensible). Reports déjà écrits dans les fiches : appui sur un groupe de l'onglet Stats et case vide de `SessionSquares` (025) ; requête des séances avec `state` dans `sessionsRepo.ts`, heure d'été et d'hiver, déclencheur passé, erreur de `plannedReminders` attrapée (028).
-2. Lots suivants : 029 (état réel après une restauration, ligne Relance, clé `alerts.settingsSection`), puis 030 (campagne Maestro, NF-08 sur l'appareil, focus de l'écran d'alerte et `dismissTo` de l'écran Période).
+1. **Lot J2-4 : 028b et 029** (séance de lancement, pré-analyse, QCM ; plans en zone sensible). 028b : `useReminders` (ouverture, premier plan, chaque écriture), appui sur la notification, `_layout.tsx`, Tout effacer, canal « Relances » en importance haute, `setNotificationHandler`, retrait des relances affichées dont l'appel est fait ; reports B1 à B4, Doze, appui appli fermée, registre des licences. 029 (dépend du 028a seulement) : `requestPermissionsAsync` avec les options iOS, échec de lecture de la permission, état réel après une restauration, ligne Relance, clé `alerts.settingsSection`.
+2. Puis 030 (campagne Maestro, NF-08 sur l'appareil, focus de l'écran d'alerte, `dismissTo` de l'écran Période, lecture de « — » par TalkBack).
 3. **Recette sur l'A55 du 2026-11-27, faite par le porteur** avec l'APK de production du jalon 2 (`1a23be4`, après les PR #72 à #74). L'audit SEC-02 est conforme. Par le câble : 2 permissions (`POST_NOTIFICATIONS` non accordée, `RECEIVE_BOOT_COMPLETED`), `DB_READY` version 1, aucune ligne Firebase dans le processus de Ki&La (celles du journal venaient de `com.facebook.katana`). Le porteur a validé :
    - Bienvenue, mise en route, appel au doigt (NF-01, dit « ok », durée non relevée), onglet Stats ;
    - brouillon repris après redémarrage de l'appareil ;
@@ -25,7 +25,8 @@ Décisions du lot : 50 lignes ajoutées à `docs/DECISIONS.md` (5 du 027 déjà 
    - durée de `quick_check` avec une grosse base fictive ;
    - bandeau des 30 jours (014d) ; `scripts/e2e.sh --appareil-reel` ;
    - écrans des alertes (022) et du choix de période (024) : focus, retour Android, `dismissTo` ;
-   - **relances réelles** (028, 029) : notification reçue, sans nom de membre, après un redémarrage ;
+   - écrans du lot J2-3 : « Garder la [1 ▾] dernière saison » (020), statistiques d'un groupe et d'un membre (025 : 35 cases, tablette, TalkBack) ;
+   - **relances réelles** (028b, 029) : notification reçue, sans nom de membre, après un redémarrage ;
    - **durées NF-08 sur l'appareil** (alertes et statistiques, jeux de volume, 030).
 4. **Vérifications iPhone avant le jalon 7** (toute publication iOS) : restauration réelle puis `tmp/` vide ; aucun lien dans `Caches/expo-sharing-tmp/` ; préfixe du cache identique entre expo-file-system et expo-modules-core ; Inbox `tmp/<identifiant>-Inbox/` vidée par Tout effacer et par le démarrage ; restauration depuis l'écran de récupération ; build iOS avec expo-notifications sans habilitation.
 5. PR méthode n° 1 sur `une-app-par-mois/methode-vibe-coding` à relire par le porteur, app-template à suivre.
@@ -54,6 +55,7 @@ Décisions du lot : 50 lignes ajoutées à `docs/DECISIONS.md` (5 du 027 déjà 
 - **Bases de test à effacer** (Galaxy A55, émulateur) : une base d'un ancien build (migration 1 sans `slots.schedule_from`) fait échouer la création d'un créneau et donne aussi un accueil vide (`DRAFT_LOAD_FAILED`, `PROPOSED_SESSION_FAILED`, `MISSING_CALLS_FAILED`, avec `DB_READY` version 1), constaté sur l'émulateur au 016. **Désinstaller Ki&La avant d'installer** un nouvel APK.
 - Requêtes métier sur le module natif `expo-sqlite` : vues sur l'émulateur (016) ; sur le Galaxy A55, recette des lots 4 à 6 non faite. Rien encore sur un iPhone réel.
 - **Requêtes du lot J2-1 jamais lancées par expo-sqlite sur un appareil** : séries d'absences (CTE, `ROW_NUMBER`, 021) et agrégats des statistiques (`+e.group_id` pour forcer l'index `enrollments_member`, 023) ; vérifiées sur `node:sqlite` seulement. APK de la CI et build iOS avec expo-notifications : à la PR du jalon vers `main`.
-- **Écrans du lot J2-2 jamais vus sur un appareil** : alertes (focus et retour Android de l'écran d'alerte, recherche d'urgence limitée au membre), onglet Stats (`router.dismissTo` de l'écran Période, textes agrandis, tablette) ; testés avec le routeur simulé de Jest seulement.
+- **Écrans des lots J2-2 et J2-3 jamais vus sur un appareil** : statistiques d'un groupe et d'un membre, phrase de conservation du 020 ; alertes (focus et retour Android de l'écran d'alerte, recherche d'urgence limitée au membre), onglet Stats (`router.dismissTo` de l'écran Période, textes agrandis, tablette) ; testés avec le routeur simulé de Jest seulement.
+- **Adaptateur des relances (028a)** : importé par aucun écran, donc absent du bundle ; APK de production construit et audité en local (conforme, INTERNET absente, aucune ligne Firebase), mais aucune notification programmée sur un appareil ; Hermes non vérifié pour les heures doublées. Contrôle statique SEC-03 : un nom calculé (`obj[a + b]`) n'est pas détecté.
 - Couleurs nommées (`'red'`) non détectées par le contrôle CONV-16.
 - Habilitations iOS contrôlées sur le projet généré, pas sur un binaire signé : à revoir avec la signature (jalon 6). Polices IBM Plex absentes du poste : les maquettes s'affichent dans la police du système.

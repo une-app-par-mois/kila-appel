@@ -6,6 +6,9 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Ajouté
 
+- Relance : adaptateur des notifications locales (date fixe, heures d'été et d'hiver, annulation, retrait des relances affichées), contrôle statique d'expo-notifications en liste fermée, séances lues avec leur état ; rien n'est encore programmé (F-06, EX-28, ABS-01, ABS-04, SEC-03) — ticket 028a.
+- Stats : taux de présence de chaque membre d'un groupe, séance par séance ; un appui sur un groupe de l'onglet ouvre ses statistiques (F-05, EX-27) — ticket 025.
+- Effacement : accords au singulier dans la confirmation de purge (« son groupe », « leur présence ») et « Garder la dernière saison » pour une saison — ticket 020.
 - Relance : calcul des relances des 7 jours à venir et réglages (désactivée par défaut, 30 min) (F-06, EX-28) — ticket 027.
 - Onglet Stats : taux de présence de la période et par groupe, période au choix (F-05, EX-27) — ticket 024.
 - Accueil : alertes d'assiduité, écran de l'alerte avec « Marquer comme traitée », réglage du seuil dans Paramètres (F-04, EX-25, EX-26) ; « Voir ses contacts d'urgence » ouvre la recherche d'urgence limitée au membre — ticket 022.
