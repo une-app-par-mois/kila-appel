@@ -2,7 +2,7 @@
 
 Statut : à faire · Jalon : 2 · Zone sensible : **oui** (demande de permission du système, EX-29, ABS-07) · Trivial : non
 
-Dépend de : 028 · Fichiers touchés : `src/app/relance.tsx` (nouveau), `src/app/permission-notifications.tsx` (nouveau), `src/hooks/useReminderSettings.ts` (nouveau), `src/app/(tabs)/parametres.tsx`, `src/config/libelles/relance.ts`, `src/appTests/reminderSettings.test.tsx` (nouveau), `src/appTests/notificationPermission.test.tsx` (nouveau) — 7 fichiers
+Dépend de : 028a (adaptateur `src/data/expoNotifications.ts`, `reminderPermission` ; pas le 028b, décision du porteur du 2026-11-27) · Fichiers touchés : `src/app/relance.tsx` (nouveau), `src/app/permission-notifications.tsx` (nouveau), `src/hooks/useReminderSettings.ts` (nouveau), `src/app/(tabs)/parametres.tsx`, `src/config/libelles/relance.ts`, `src/appTests/reminderSettings.test.tsx` (nouveau), `src/appTests/notificationPermission.test.tsx` (nouveau) — 7 fichiers
 
 Découpé le 2026-11-27 (séance de découpage du jalon 2).
 
@@ -14,7 +14,7 @@ EX-29 : la permission n'est demandée qu'à l'activation de la relance, et le r�
 
 - `design/maquettes/` : écrans ci-dessus (notes : « L'interrupteur montre l'état effectif », « Affiché à l'activation de la relance, juste avant la demande du système »)
 - `docs/PRD.md` : EX-28, EX-29 ; tickets 026 à 028
-- `src/data/expoNotifications.ts` (028), `src/app/(tabs)/parametres.tsx`, `src/ui/Select.tsx`
+- `src/data/expoNotifications.ts` (028a), `src/app/(tabs)/parametres.tsx`, `src/ui/Select.tsx`
 
 ## Ce qui change
 
@@ -57,6 +57,12 @@ Reports de l'intégration du lot J2-2 (2026-11-27) :
 - la clé `alerts.settingsSection` (« Réglages », `src/config/libelles/alertes.ts`) est à déplacer quand la section reçoit la ligne Relance (022).
 - section « Réglages » de Paramètres (022) : une seule ligne aujourd'hui, « Alertes d'assiduité · Après N absences » ; la ligne Relance s'ajoute au-dessus (maquette Paramètres).
 - sous le réglage, la mention « le nom du groupe s'affiche sur l'écran verrouillé » (027, revue de sécurité ; `docs/IDEES.md`).
+
+Reports de l'intégration du lot J2-3 (2026-11-27) :
+
+- le 029 dépend seulement du 028a (décision du porteur du 2026-11-27) : il peut avancer dans le même lot que le 028b, qui branche la reprogrammation ; « Délai modifié : reprogrammation » se vérifie par `notifyDataChanged` émis, la reprogrammation elle-même étant testée au 028b.
+- `requestPermissionsAsync` est permis par la liste fermée de l'adaptateur mais ni importé ni exposé au 028a : l'ajouter dans `src/data/expoNotifications.ts` avec `ios: { allowAlert: true, allowSound: true, allowBadge: false }` (alerte et son, sans pastille, réponse du porteur au 026) ; le contrôle `src/staticChecksNotifications.test.ts` l'accepte déjà dans l'adaptateur seulement (028a).
+- quand la lecture de la permission échoue, `reminderPermission` rend `canAskAgain: false` (code `REMINDER_PERMISSION_FAILED`) : ne pas afficher alors « Notifications refusées dans les réglages du téléphone » (028a).
 
 ## Décisions
 

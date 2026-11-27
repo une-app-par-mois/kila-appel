@@ -20,14 +20,14 @@ Le plus gros risque technique d'abord (jalon 0). Chaque jalon se termine par un 
 | --- | --- | --- | --- | --- | --- |
 | 0 | Outillage et risques techniques | — | CI verte avec un premier test du domaine et un test de données sur `node:sqlite` ; APK de développement construit par la CI et installé sur le téléphone ; build iOS de test réussi sur le runner macOS (non signé) | 4 | 6 |
 | 1 | Organiser, appeler, retrouver | F-01, F-02, F-03, EX-39 | Prétest : appel de 20 membres en moins de 30 s ; appel retrouvé après fermeture forcée ; sauvegarde → tout effacer → restauration identique ; campagne Maestro verte | 12 | 19 |
-| 2 | Suivre l'assiduité | F-04, F-05, F-06 | Prétest : alerte levée puis traitée ; taux exacts sur un jeu fictif vérifié à la main ; relance reçue sur le téléphone, sans nom de membre | 11 | 18 |
+| 2 | Suivre l'assiduité | F-04, F-05, F-06 | Prétest : alerte levée puis traitée ; taux exacts sur un jeu fictif vérifié à la main ; relance reçue sur le téléphone, sans nom de membre | 12 | 18 |
 | 3 | Entrer et sortir les données | F-07, F-08, F-09 | Prétest : import d'un CSV fictif Excel (UTF-8 et Windows-1252) ; CSV et PDF ouverts sur l'ordinateur | 4 | 6 |
 | 4 | Calendrier complet | F-10, F-11, F-13 | Prétest : stage sur 3 dates à 2 groupes ; séance préparée puis enregistrée ; séance annulée puis rétablie | 4 | 7 |
 | 5 | Confort | F-12, F-14 | Prétest : frise et podium conformes aux maquettes | 2 | 3 |
 | 6 | Publication Android | EX-40 à EX-42 | Pages légales et GitHub Pages en ligne ; audit adverse sans problème critique ou élevé ouvert ; `CHECKLIST-RELEASE.md` coché ; AAB signé par la CI déposé en test interne puis en production | 4 | 10 |
 | 7 | Publication iOS | — | Test sur un vrai iPhone ; IPA signé par la CI sur TestFlight puis en production | 2 | 5 |
 
-Total jusqu'à la publication Android (jalons 0 à 6) : **41 tickets, environ 69 h de porteur**, hors marge.
+Total jusqu'à la publication Android (jalons 0 à 6) : **42 tickets, environ 69 h de porteur**, hors marge.
 
 ## 3. Calendrier estimé
 
@@ -76,6 +76,7 @@ Démarches hors code, à lancer tôt à cause des délais.
 
 ## Décisions du porteur
 
+- 2026-11-27 (séance de lancement du lot J2-3) : ticket 028 découpé en 028a (adaptateur et garde-fous) et 028b (reprogrammation, appui sur la notification, Tout effacer) ; jalon 2 : 12 tickets au lieu de 11, total jusqu'au jalon 6 : 42 tickets ; heures du porteur inchangées (18 h pour le jalon 2), le 028b reprenant une partie du travail prévu au 028.
 - 2026-11-27 (séance de découpage du jalon 2) : découpage accepté, 11 tickets (020 à 030) au lieu de 5, chacun sous 10 fichiers ; heures du porteur recalées en proportion de l'estimation du plan (8 h pour 5 tickets, soit 1,6 h par ticket : 11 × 1,6 = 17,6, arrondi à 18 h) ; total jusqu'au jalon 6 : 41 tickets et environ 69 h (59 + 10).
 - 2026-11-26 (fin du jalon 0) : jalon 0 terminé le 26 nov. au lieu du 6 déc., en moins de 2 h de porteur pour 6 h prévues ; estimation de 1,5 h par ticket **gardée** (jalon d'outillage, peu représentatif), l'avance d'une semaine devient de la marge ; recalage à la fin du jalon 1.
 - 2026-11-26 : ordre des jalons gardé (4 et 5 premiers candidats au report) ; estimation de 1,5 h par ticket, recalée au jalon 0 ; bêta d'une semaine par le porteur seul.

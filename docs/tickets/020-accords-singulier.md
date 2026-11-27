@@ -1,6 +1,6 @@
 # 020 — Accords au singulier : purge et conservation (réponses du porteur)
 
-Statut : à faire · Jalon : 2 · Zone sensible : non (textes seulement) · Trivial : non
+Statut : fusionné dans le groupe (PR #77) · Jalon : 2 · Zone sensible : non (textes seulement) · Trivial : non
 
 Dépend de : 015b · Fichiers touchés : `src/config/libelles/effacement.ts`, `src/app/donnees.tsx`, `src/config/purgeTexts.test.ts`, `src/appTests/purge.test.tsx`
 
@@ -30,12 +30,13 @@ Seuls les textes changent : ni les données, ni la purge, ni le verrou.
 
 ## Critères d'acceptation
 
-- [ ] Compte de 1 dans la confirmation : « la saison 2023-2024, son groupe… » (jamais « ses 1 groupe »), et de même pour un créneau, une séance, une présence (EX-24).
-- [ ] Compte de 2 : « ses 2 groupes… », texte du porteur inchangé ; le test « au caractère près » du 015b (3 groupes, 2 créneaux, 31 séances, 412 présences) passe sans modification.
-- [ ] Plusieurs saisons : « leur groupe » au compte de 1, « leurs 2 groupes » au compte de 2.
-- [ ] Ligne de conservation pour 1 : « Garder la dernière saison » (texte affiché et libellé d'accessibilité) ; pour 2 : « Garder les 2 dernières saisons ».
-- [ ] Aucun autre texte ne change (titres, boutons, note des membres, liste du choix « 1 saison », « 2 saisons », « 3 saisons »).
-- [ ] `./scripts/test.sh` vert.
+- [x] Compte de 1 dans la confirmation : « la saison 2023-2024, son groupe… » (jamais « ses 1 groupe »), et de même pour un créneau, une séance, une présence (EX-24).
+- [x] Compte de 2 : « ses 2 groupes… », texte du porteur inchangé ; le test « au caractère près » du 015b (3 groupes, 2 créneaux, 31 séances, 412 présences) passe sans modification.
+- [x] Plusieurs saisons : « leur groupe » au compte de 1, « leurs 2 groupes » au compte de 2.
+- [x] Ligne de conservation pour 1 : « Garder la dernière saison » (texte affiché et libellé d'accessibilité) ; pour 2 : « Garder les 2 dernières saisons ».
+- [x] Aucun autre texte ne change (titres, boutons, note des membres, liste du choix « 1 saison », « 2 saisons », « 3 saisons »). Seules les notes des maquettes passent de « En attente du porteur » à « Réponse du porteur ».
+- Non vérifié : la phrase « Garder la [1 ▾] dernière saison » sur le téléphone, et sa lecture par TalkBack (lecture unique testée dans Jest seulement).
+- [x] `./scripts/test.sh` vert.
 
 ## Tests attendus
 

@@ -296,6 +296,30 @@ Avant de passer aux tickets suivants, je veux voir avec toi comment optimiser le
 - Pré-remplir une recherche dans un écran d'urgence n'est pas neutre : le résultat doit désigner une seule personne.
 - Surveiller la place libre avant de lancer trois agents en parallèle.
 
+### Lot J2-3 (020, 025, 028a) — 2026-11-27
+
+**Prompt clé** : séance de lancement du lot J2-3 (pré-analyse, QCM des questions prévisibles, plan du 028 en zone sensible ajusté et validé, découpage du 028 en 028a et 028b), puis trois agents de code en parallèle.
+
+**Réponses du porteur au QCM du lot** :
+- 020 : possessif à chaque compte de 1 (« son groupe, son créneau, sa séance et ses 3 présences ») ; « Garder la [1 ▾] dernière saison », le champ reste dans la phrase ;
+- 025 : comptes accordés (« 6 présents », « 0 retard ») ; séance sans statut en case vide, libellé « Sans statut » ; « Archivé » ; états vides ; pas de légende des couleurs sur l'écran membre ; période en paramètre `periode=saison` ou `periode=mois` ;
+- 028 : découpé en 028a (adaptateur et garde-fous) et 028b (reprogrammation, appui, Tout effacer) ; le 029 dépend seulement du 028a ; plan ajusté (liste fermée, nouveau contrôle statique, canal créé seulement relance activée et permission accordée, aucune demande de permission avant le 029, `reminderSessions`) ; relances affichées : on retire celles qui ne sont plus dues ; 028a gardé entier à 12 fichiers ;
+- pour le 028b : `setNotificationHandler` ajouté (bannière et son appli ouverte, sans pastille), canal « Relances » en importance haute, retrait des relances affichées dont l'appel est fait.
+
+**Ce que l'IA a fait** :
+- **Développement** : 020 (accords de la confirmation de purge et de la phrase de conservation, 81 combinaisons de comptes testées) ; 025 (écrans des statistiques d'un groupe et d'un membre, case vide de `SessionSquares`, `statsPeriodParams.ts`, appui sur un groupe de l'onglet) ; 028a (adaptateur `expoNotifications.ts` en liste fermée, heures d'été et d'hiver, `reminderSessions`, contrôle `staticChecksNotifications.test.ts`, APK construit et audité en local).
+- **Intégration** : revue de code, contradicteur, revue de sécurité du 028a ; corrections renvoyées aux agents ; fusions une par une (PR #77, #78, #79) ; 1653 tests ; 63 décisions ajoutées à `docs/DECISIONS.md` ; fiche 028b créée.
+
+**Ce qui a été corrigé par les revues** :
+- **contrôle statique contournable** (revue de sécurité du 028a) : un import par `node_modules/`, `import N = require()`, une clé écrite en chaîne, `jest.requireActual` ou un import relatif hors de `src/` passait le contrôle ; une fonction réseau d'expo-notifications restait donc appelable, avec un appel réseau possible sur iOS ; tous refusés, chacun vu en échec ; limite connue : un nom calculé (`obj[a + b]`) ;
+- **tests dépendants du fuseau horaire** : `process.env.TZ` posé dans un fichier de test était sans effet sur les workers de Jest ; 7 tests échouaient en UTC, le fuseau de la CI, qui aurait échoué à la PR du jalon ; fuseau fixé en tête de `jest.config.js`, vérifié avec `TZ=UTC` et `TZ=America/New_York` ;
+- **« Archivé » et la couleur Encre** (025, contradicteur) : « Archivé » manquait sur l'écran d'un membre ; les taux étaient en couleur Texte, 16 pt, alors que la charte met les chiffres en Encre (18 dans les listes, 26 pour le chiffre clé) ;
+- **lecture en double** (020) : le lecteur d'écran lisait « Garder la » et « dernière saison » en plus du bouton qui lit la phrase entière ; les deux morceaux sont cachés au lecteur d'écran.
+
+**Leçons** :
+- Un contrôle statique par motifs se teste en cherchant à le contourner : chaque forme d'import (chemin, `require`, simulation de Jest) est une porte.
+- Un test qui dépend de l'heure doit fixer son fuseau là où les workers démarrent, et passer aussi en UTC avant la PR.
+
 ### [Étape] — [AAAA-MM-JJ]
 
 **Prompt**

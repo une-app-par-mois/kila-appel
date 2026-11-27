@@ -1,6 +1,6 @@
 # 025 — Statistiques d'un groupe et d'un membre
 
-Statut : à faire · Jalon : 2 · Zone sensible : non (affiche sans calculer : taux, cases et arrondi viennent du 023) · Trivial : non
+Statut : fusionné dans le groupe (PR #78) · Jalon : 2 · Zone sensible : non (affiche sans calculer : taux, cases et arrondi viennent du 023) · Trivial : non
 
 Dépend de : 022 (`SessionSquares`), 023, 024 · Fichiers touchés : `src/app/stats/groupes/[id].tsx` (nouveau), `src/app/stats/membres/[id].tsx` (nouveau), `src/ui/SessionSquares.tsx` (case vide « hors inscription »), `src/config/libelles/stats.ts`, `src/appTests/statsGroup.test.tsx` (nouveau), `src/appTests/statsMember.test.tsx` (nouveau), `src/app/(tabs)/stats.tsx` (appui sur un groupe, report du 024) — 7 fichiers
 
@@ -25,12 +25,13 @@ EX-27 demande le taux par membre : écrans « Statistiques d'un groupe » (sans 
 
 ## Critères d'acceptation
 
-- [ ] EX-27 : sur le jeu fictif du 023, chaque membre d'un groupe affiche le taux attendu et ses comptes par statut.
-- [ ] RM-03 : un membre inscrit en cours de période a des cases vides avant son inscription ; ses présences dans un autre groupe n'apparaissent pas ici.
-- [ ] RM-01 : membre sans séance sur la période : « — ».
-- [ ] Accords des comptes (« 1 retard », « 2 retards » ; maquette : « présent », « absent » invariables dans la ligne) suivant les textes validés.
-- [ ] Un appui sur un groupe de l'onglet Stats ouvre ses statistiques (`stats/groupes/[id]`, avec `du` et `au` de la période affichée ; report du 024).
-- [ ] NF-06, CONV-03, CONV-16 ; écarts avec la maquette listés dans la PR.
+- [x] EX-27 : sur le jeu fictif du 023, chaque membre d'un groupe affiche le taux attendu et ses comptes par statut.
+- [x] RM-03 : un membre inscrit en cours de période a des cases vides avant son inscription ; ses présences dans un autre groupe n'apparaissent pas ici.
+- [x] RM-01 : membre sans séance sur la période : « — ».
+- [x] Accords des comptes (« 1 retard », « 2 retards » ; maquette : « présent », « absent » invariables dans la ligne) suivant les textes validés. Ajusté par le porteur : tous les comptes s'accordent (« 6 présents », « 4 absents »).
+- [x] Un appui sur un groupe de l'onglet Stats ouvre ses statistiques (`stats/groupes/[id]`, avec `du` et `au` de la période affichée ; report du 024). Ajusté par le porteur : `periode=saison` ou `periode=mois`, `du` et `au` pour des dates libres seulement.
+- [x] NF-06, CONV-03, CONV-16 ; écarts avec la maquette listés dans la PR.
+- Non vérifié : écrans sur le téléphone et la tablette (35 cases sur une saison, retour à la ligne, textes agrandis), lecture par TalkBack et VoiceOver (dont « — ») ; testés avec le routeur simulé de Jest seulement.
 
 ## Tests attendus
 
