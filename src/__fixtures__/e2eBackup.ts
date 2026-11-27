@@ -31,11 +31,26 @@ export const E2E_BACKUP = {
 const daysBefore = (iso: string, n: number) =>
   Array.from({ length: n }).reduce<string>((day) => previousDay(day), iso);
 
+/**
+ * Saison qui contient `today`. En juillet et en août, Bienvenue prépare déjà la saison de
+ * septembre : la sauvegarde prend alors celle qui se termine, pour que ses appels soient passés.
+ */
+export const seasonContaining = (today: string) => {
+  const next = firstSeason(today);
+  if (next.startDate <= today) return next;
+  const start = Number(next.startDate.slice(0, 4)) - 1;
+  return {
+    name: `${start}-${start + 1}`,
+    startDate: `${start}-09-01`,
+    endDate: `${start + 1}-08-31`,
+  };
+};
+
 /** Écrit la sauvegarde fictive dans `path` (fichier neuf), datée de `today` (AAAA-MM-JJ). */
 export const writeE2eBackup = async (path: string, today: string): Promise<void> => {
   const db = await prepareDatabase(openNodeDb());
   try {
-    const season = firstSeason(today);
+    const season = seasonContaining(today);
     await seasonsRepo(db).createFirst(season);
     const active = await seasonsRepo(db).getActive();
     if (active === null) throw new Error('Saison fictive absente');

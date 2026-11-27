@@ -1,23 +1,23 @@
 # Sous-parcours (ticket 016) : dans le sélecteur de fichiers du système (DocumentsUI d'Android),
 # ouvre Téléchargements et choisit la sauvegarde fictive que scripts/e2e.sh y a déposée.
-# Écran du système : libellés de l'émulateur en anglais (« Show roots », « Downloads »).
+# Écran du système : libellés en anglais ou en français ; DocumentsUI de Google ou d'AOSP.
 appId: com.jitavision.kila
 ---
 - extendedWaitUntil:
     visible:
-      id: 'com.google.android.documentsui:id/header_title'
+      id: 'com\.(google\.)?android\.documentsui:id/header_title'
     timeout: 10000
-- tapOn: 'Show roots'
+- tapOn: 'Show roots|Afficher les (répertoires )?racines'
 # Le tiroir des emplacements s'ouvre avec une animation : attendre qu'il soit posé.
 - extendedWaitUntil:
     visible:
-      id: 'com.google.android.documentsui:id/roots_list'
+      id: 'com\.(google\.)?android\.documentsui:id/roots_list'
     timeout: 5000
 - waitForAnimationToEnd
 - tapOn:
-    text: 'Downloads'
+    text: 'Downloads|Téléchargements'
     childOf:
-      id: 'com.google.android.documentsui:id/roots_list'
+      id: 'com\.(google\.)?android\.documentsui:id/roots_list'
 - extendedWaitUntil:
     visible: 'kila-e2e-sauvegarde-fictive\.db'
     timeout: 10000

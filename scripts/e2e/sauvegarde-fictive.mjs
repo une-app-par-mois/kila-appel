@@ -3,15 +3,23 @@
 // Elle réutilise le code de src/data/ tel quel (node:sqlite, comme les tests, ADR-008) : Node 22
 // traduit le TypeScript (l'option est nécessaire : src/ a des propriétés de paramètre), et ce
 // crochet de résolution traduit l'alias « @/ » vers src/.
-// Aucune dépendance ; aucun fichier versionné (SEC-13).
+// Aucune dépendance ; aucun fichier versionné (SEC-13). Node 22.15 au moins (module.registerHooks).
 import { existsSync } from 'node:fs';
-import { registerHooks } from 'node:module';
+import * as nodeModule from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'src');
 
-registerHooks({
+// Import en espace de noms : un Node plus ancien atteint ce message au lieu d'une erreur de liaison.
+if (typeof nodeModule.registerHooks !== 'function') {
+  console.error(
+    `Node 22.15 ou plus récent est nécessaire (version actuelle : ${process.version}).`,
+  );
+  process.exit(1);
+}
+
+nodeModule.registerHooks({
   resolve(specifier, context, next) {
     if (!specifier.startsWith('@/')) return next(specifier, context);
     const base = join(SRC, specifier.slice(2));
@@ -26,10 +34,17 @@ if (target === undefined) {
   console.error('Usage : node scripts/e2e/sauvegarde-fictive.mjs <fichier.db> [AAAA-MM-JJ]');
   process.exit(2);
 }
-// Le jour local de la machine : celui de l'émulateur, réglé sur la même horloge.
+// Sans date : le jour local de la machine. Une date donnée (même vide) doit être AAAA-MM-JJ.
 const now = new Date();
 const pad = (n) => String(n).padStart(2, '0');
-const today = date ?? `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+const today =
+  date === undefined
+    ? `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+    : date;
+if (!/^\d{4}-\d{2}-\d{2}$/.test(today)) {
+  console.error(`Date invalide : « ${today} » (attendu : AAAA-MM-JJ).`);
+  process.exit(2);
+}
 
 const { writeE2eBackup } = await import('@/__fixtures__/e2eBackup');
 await writeE2eBackup(resolve(target), today);

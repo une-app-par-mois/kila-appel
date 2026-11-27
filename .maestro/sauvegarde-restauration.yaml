@@ -22,11 +22,10 @@ appId: com.jitavision.kila
 - assertVisible: '.*toutes leurs présences, en clair\. Toute personne qui l’obtient peut les lire\..*'
 - tapOn: 'Exporter une sauvegarde'
 # Feuille de partage du système : le fichier de la sauvegarde du jour y est prêt, puis on la ferme
-# sans rien partager.
+# sans rien partager. Repérée par le nom du fichier seul (l'identifiant de la feuille change selon
+# la version d'Android).
 - extendedWaitUntil:
-    visible:
-      id: 'com.android.intentresolver:id/content_preview_filename'
-      text: 'kila-sauvegarde-\d{4}-\d{2}-\d{2}\.db'
+    visible: 'kila-sauvegarde-\d{4}-\d{2}-\d{2}\.db'
     timeout: 10000
 - back
 - extendedWaitUntil:

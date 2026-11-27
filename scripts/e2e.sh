@@ -36,6 +36,12 @@ if [ ! -d node_modules ]; then
   exit 1
 fi
 
+# Le générateur de la sauvegarde fictive a besoin de module.registerHooks (Node 22.15).
+if ! node -e 'process.exit(typeof require("node:module").registerHooks === "function" ? 0 : 1)'; then
+  echo "::error::Node 22.15 ou plus récent est nécessaire (version actuelle : $(node --version))." >&2
+  exit 1
+fi
+
 # Aucune statistique envoyée par Maestro (ABS-01 côté outillage, réponse du porteur).
 export MAESTRO_CLI_NO_ANALYTICS=1
 maestro="$(command -v maestro || true)"
@@ -58,10 +64,10 @@ else
   echo "::error::Plusieurs appareils adb : choisir avec ANDROID_SERIAL=<numéro>." >&2
   exit 1
 fi
-# Un émulateur : numéro « emulator-NNNN » et propriété qemu à 1.
+# Un émulateur : propriété qemu à 1, quel que soit son numéro (émulateur relié en TCP compris).
 qemu="$(adb -s "$serial" shell getprop ro.kernel.qemu | tr -d '\r')"
 [ -n "$qemu" ] || qemu="$(adb -s "$serial" shell getprop ro.boot.qemu | tr -d '\r')"
-if [[ "$serial" != emulator-* || "$qemu" != "1" ]]; then
+if [ "$qemu" != "1" ]; then
   if [ "$real_device" -ne 1 ]; then
     echo "::error::$serial n'est pas un émulateur : refusé (ses données seraient effacées)." >&2
     echo "Pour un téléphone de test, relancer avec --appareil-reel." >&2
@@ -82,6 +88,10 @@ work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 # Le jour de l'appareil : les séances fictives tombent dans ses 30 derniers jours.
 today="$(adb_ shell date +%F | tr -d '\r')"
+if [[ ! "$today" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+  echo "::error::Date de l'appareil illisible : « $today » (attendu : AAAA-MM-JJ)." >&2
+  exit 1
+fi
 node --experimental-transform-types --disable-warning=ExperimentalWarning \
   scripts/e2e/sauvegarde-fictive.mjs "$work/$BACKUP_NAME" "$today"
 adb_ shell rm -f "$DOWNLOADS/$BACKUP_NAME"

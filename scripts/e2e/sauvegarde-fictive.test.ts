@@ -39,6 +39,13 @@ describe('016 EX-20 sauvegarde fictive des parcours de bout en bout', () => {
     expect(result.ok && result.backup.summary.recordedSessions).toBe(3);
   });
 
+  // En juillet et en août, la saison de Bienvenue commence en septembre : la sauvegarde doit rester
+  // valable (saison qui contient aujourd'hui, séances jamais à venir).
+  it.each(['2026-07-15', '2026-08-31'])('le %s, la sauvegarde s’écrit et passe', async (today) => {
+    const result = await verify(today);
+    expect(result.ok && result.backup.summary.recordedSessions).toBe(3);
+  });
+
   it('les séances tombent dans les 30 derniers jours, sans aucune à venir', async () => {
     const path = dir.path('fictive.db');
     await writeE2eBackup(path, '2026-11-27');

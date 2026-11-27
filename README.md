@@ -87,7 +87,7 @@ Les règles du projet pour l'IA sont dans [`CLAUDE.md`](CLAUDE.md), ses garde-fo
 
 Parcours [Maestro](https://maestro.dev) (`.maestro/`), lancés en fin de jalon : appel de 20 membres chronométré, brouillon retrouvé après une fermeture forcée, sauvegarde puis tout effacer puis restauration.
 
-Prérequis : Node 22 et `npm ci` ; Maestro 2.12.0 (`~/.maestro/bin/maestro` ou dans le `PATH`) ; `adb` ; un émulateur Android démarré, et un seul appareil branché (sinon `ANDROID_SERIAL=<numéro>`).
+Prérequis : Node 22.15 ou plus récent (le générateur de la sauvegarde fictive utilise `module.registerHooks`) et `npm ci` ; Maestro 2.12.0 (`~/.maestro/bin/maestro` ou dans le `PATH`) ; `adb` ; un émulateur Android démarré, et un seul appareil branché (sinon `ANDROID_SERIAL=<numéro>`). Sélecteur de fichiers du système en anglais ou en français.
 
 ```bash
 # APK de version, construit en local (ou l'artefact de la CI de la PR du jalon)
