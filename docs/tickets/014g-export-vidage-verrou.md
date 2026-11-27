@@ -1,6 +1,6 @@
 # 014g — Vidage du dossier d'export sous le verrou commun
 
-Statut : fusionné dans le groupe (PR #54, 2026-11-27 ; pas encore essayé sur l'A55) · Jalon : 1 · Zone sensible : oui · Trivial : non
+Statut : fait (PR #63 vers `main` ; PR #54, 2026-11-27 ; pas encore essayé sur l'A55) · Jalon : 1 · Zone sensible : oui · Trivial : non
 
 Dépend de : 014b, 014c, 014e · Fichiers touchés : `src/hooks/useBackupExport.ts`, `src/hooks/useBackupExport.test.tsx`, tests
 

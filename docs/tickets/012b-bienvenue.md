@@ -1,6 +1,6 @@
 # 012b — Bienvenue (première mise en route)
 
-Statut : fusionné dans le groupe (PR #32) · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : fait (PR #63 vers `main` ; PR #32) · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Découpé le 2026-11-27 (décision du porteur) depuis le ticket 012.
 

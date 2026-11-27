@@ -225,6 +225,28 @@ Avant de passer aux tickets suivants, je veux voir avec toi comment optimiser le
 - Maestro mesure surtout son propre coût (environ 2,2 s par appui) : sur l'émulateur, NF-01 se lit comme une alerte ; la mesure qui fait foi reste sur un téléphone.
 - Une base d'un ancien build laisse l'accueil vide sans message : désinstaller avant chaque installation de test.
 
+### Clôture du jalon 1 — 2026-11-27
+
+**Prompt clé** : PR du jalon 1 vers `main`, correction des alertes de la CI, campagne Maestro sur l'APK de la CI, accord du porteur, fusion, puis séance de clôture (questions de `docs/QUESTIONS.md`, bilan des décisions).
+
+**Ce que l'IA a fait** :
+- **CI de la PR #63** : tout vert sauf Semgrep (`detect-non-literal-regexp` dans `purge.test.tsx`, RegExp construite depuis un paramètre de test) et CodeQL (« Incomplete multi-character sanitization » dans `authorOf`, `scripts/licences.js` : avec des chevrons imbriqués, `Alix Exemple <a<b>c>` donnait `Alix Exemplec>`). Ticket 019 : regex écrites en dur ; `authorOf` retire les groupes `<…>` et `(…)` caractère par caractère, imbrications comprises ; aucune règle désactivée.
+- **Campagne Maestro** sur l'APK de la CI (`kila-apk-test`) : verte, appel de 20 membres en 23,5 s.
+- **Fusion** de la PR #63 en squash après l'accord du porteur (`main` à `91ed684`) ; alertes Dependabot fermées (0 ouverte) ; branche `groupe/jalon-2-suivre-assiduite` créée depuis `main`.
+- **Séance de clôture** : les deux questions du 015b posées ; ticket 020 créé ; tickets du jalon 1 passés à « fait ».
+
+**Ce qui a été corrigé par les revues** : la première version du 019 coupait le nom d'auteur au premier « < » ou « ( » ; la revue l'a refusée (un auteur « (c) Acme Corp » ou avec une parenthèse au milieu perdait son nom).
+
+**Ce que j'ai corrigé ou refusé** : réponses de clôture du 2026-11-27, qui annulent les deux décisions du 015b :
+- confirmation de purge : avec un compte de 1, le possessif s'accorde (« son groupe », « son créneau ») ; au-delà, « ses 3 groupes » ;
+- ligne de conservation : « Garder la dernière saison » pour 1 ; la phrase de la maquette pour 2 et plus.
+
+**Bilan des décisions du jalon 1** : 2 annulées (les deux du 015b, par des accords) ; 9 changées après contradiction ; 27 changées après revue ; 3 décidées par le porteur ; 0 en attente.
+
+**Leçons** :
+- Corriger une alerte de sécurité plutôt que la classer : CodeQL avait raison sur un reste de chevron, et classer une alerte est un réglage extérieur réservé au porteur.
+- La file du porteur a bien fonctionné : deux questions de texte n'ont rien bloqué, et la correction part sur un ticket.
+
 ### [Étape] — [AAAA-MM-JJ]
 
 **Prompt**

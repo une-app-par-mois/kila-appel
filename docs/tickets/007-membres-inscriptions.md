@@ -1,6 +1,6 @@
 # 007 — Membres et inscriptions : dépôts et hooks
 
-Statut : fusionné dans le groupe · Jalon : 1 · Zone sensible : oui · Trivial : non
+Statut : fait (PR #63 vers `main`) · Jalon : 1 · Zone sensible : oui · Trivial : non
 
 Découpé le 2026-11-26 (décision du porteur) : 007 (données), 007b (écrans des membres), 007c (inscriptions).
 

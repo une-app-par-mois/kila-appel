@@ -1,6 +1,6 @@
 # 005 — Domaine : occurrences des créneaux et appels manquants
 
-Statut : fusionné dans le groupe · Jalon : 1 · Zone sensible : oui (schéma : `slots.schedule_from` dans la migration 1, décisions du porteur du 2026-11-26) · Trivial : non
+Statut : fait (PR #63 vers `main`) · Jalon : 1 · Zone sensible : oui (schéma : `slots.schedule_from` dans la migration 1, décisions du porteur du 2026-11-26) · Trivial : non
 
 ## Contexte
 

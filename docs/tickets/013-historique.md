@@ -1,6 +1,6 @@
 # 013 — Historique et correction des appels
 
-Statut : fusionné dans le groupe (PR #38) · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : fait (PR #63 vers `main` ; PR #38) · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Dépend de : aucun ticket à faire · Fichiers touchés : `src/app/(tabs)/historique.tsx`, `src/app/seances/[id].tsx`, `src/data/sessionsRepo.ts`, onglets, `src/app/appel.tsx` (retour après l'enregistrement), libellés
 

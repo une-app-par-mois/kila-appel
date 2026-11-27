@@ -1,6 +1,6 @@
 # 014b — Écran Sauvegarde : export
 
-Statut : fusionné dans le groupe (PR #43, relu et accepté par le porteur le 2026-11-27 ; export vers Gmail et Drive vérifié sur l'A55) · Jalon : 1 · Zone sensible : oui (plan validé par le porteur le 2026-11-27) · Trivial : non
+Statut : fait (PR #63 vers `main` ; PR #43, relu et accepté par le porteur le 2026-11-27 ; export vers Gmail et Drive vérifié sur l'A55) · Jalon : 1 · Zone sensible : oui (plan validé par le porteur le 2026-11-27) · Trivial : non
 
 Dépend de : 014, 013 · Fichiers touchés : `package.json`, `package-lock.json`, `src/config/licences.json`, `src/data/expoFiles.ts` (nouveau), `src/data/expoDb.ts`, `src/hooks/useBackupExport.ts` (nouveau), `src/app/donnees.tsx` (nouveau), `src/app/(tabs)/parametres.tsx`, libellés, `src/staticChecks.test.ts`, `jest.setup.js`, tests
 

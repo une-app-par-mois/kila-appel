@@ -1,6 +1,6 @@
 # 019 — Alertes Semgrep et CodeQL de la PR du jalon 1
 
-Statut : en cours · Jalon : 1 · Zone sensible : non · Trivial : oui
+Statut : fait (PR #63 vers `main`) · Jalon : 1 · Zone sensible : non · Trivial : oui
 
 ## Contexte
 
@@ -22,7 +22,7 @@ Aucune règle n'est désactivée, aucun contrôle n'est affaibli.
 
 - [x] Le test des chevrons imbriqués échoue avant la correction et passe après.
 - [x] `./scripts/test.sh` vert, registre des licences inchangé.
-- [ ] Semgrep et CodeQL verts sur la PR #63.
+- [x] Semgrep et CodeQL verts sur la PR #63.
 
 ## Décisions
 

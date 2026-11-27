@@ -1,6 +1,6 @@
 # 006c — Écrans des saisons
 
-Statut : fusionné dans le groupe · Jalon : 1 · Zone sensible : oui (confirmation de suppression) · Trivial : non
+Statut : fait (PR #63 vers `main`) · Jalon : 1 · Zone sensible : oui (confirmation de suppression) · Trivial : non
 
 Issu du découpage du ticket 006, puis redécoupé le 2026-11-26 (décision du porteur) : 006c (saisons), 006d (groupes), 006e (licences).
 
