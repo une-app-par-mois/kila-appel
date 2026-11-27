@@ -12,6 +12,7 @@ export type DataErrorCode =
   | 'RESTORE_FAILED'
   | 'ACTIVE_SEASON'
   | 'RETENTION_INVALID'
+  | 'ALERT_THRESHOLD_INVALID'
   | 'NOT_PURGEABLE';
 
 export class DataError extends Error {
