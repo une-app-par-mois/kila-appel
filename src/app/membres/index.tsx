@@ -13,6 +13,7 @@ import { Button } from '@/ui/Button';
 import { Card } from '@/ui/Card';
 import { FilterChip } from '@/ui/FilterChip';
 import { ListRow } from '@/ui/ListRow';
+import { NoMatch } from '@/ui/NoMatch';
 import { Screen } from '@/ui/Screen';
 import { ChoiceList } from '@/ui/Select';
 import { TextField } from '@/ui/TextField';
@@ -41,6 +42,10 @@ export default function Members() {
     archived: true,
   });
   const failed = loadFailed || archivedFailed || seasonsFailed || groupsFailed;
+  // Aucun membre du tout (ni recherche ni filtre) : « Nouveau membre » dans la carte, un seul bouton.
+  const searching = query.trim() !== '';
+  const empty =
+    members !== null && members.length === 0 && !archived && filterGroup === null && !searching;
   const groupChoices = [
     { value: null, label: t.allGroups },
     ...(groups ?? []).map((g) => ({ value: g.id as number | null, label: g.name })),
@@ -91,16 +96,23 @@ export default function Members() {
           ))}
         </Card>
       )}
-      {members !== null && members.length === 0 && (
-        <Text style={styles.text}>
-          {query.trim() !== '' || filterGroup !== null
-            ? t.noMatch
-            : archived
-              ? t.emptyArchived
-              : t.empty}
-        </Text>
+      {/* États vides (maquette, P1, NF-06) : la carte remplace la liste. */}
+      {members !== null && members.length === 0 && searching && (
+        <Card>
+          <NoMatch query={query} />
+        </Card>
       )}
-      {!archived && <Button label={t.create} onPress={() => router.push('/membres/nouveau')} />}
+      {members !== null && members.length === 0 && !searching && (
+        <Card>
+          <Text style={styles.text}>
+            {filterGroup !== null ? t.noMatchGroup : archived ? t.emptyArchived : t.empty}
+          </Text>
+          {empty && <Button label={t.create} onPress={() => router.push('/membres/nouveau')} />}
+        </Card>
+      )}
+      {!archived && !empty && (
+        <Button label={t.create} onPress={() => router.push('/membres/nouveau')} />
+      )}
     </Screen>
   );
 }

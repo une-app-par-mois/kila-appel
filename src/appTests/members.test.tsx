@@ -46,14 +46,24 @@ describe('Écrans des membres (EX-03)', () => {
     expect(await button(`Sam Fictif, Poussins`)).toBeTruthy();
   });
 
-  it('recherche sans accents ni casse ; aucun résultat dit', async () => {
+  it('P1 NF-06 recherche sans accents ni casse ; sans résultat, la carte de la maquette', async () => {
     await open('/membres');
     await button(/Alix Exemple/);
     await fireEvent.changeText(screen.getByLabelText(t.members.search), 'FICT');
     expect(screen.queryByRole('button', { name: /Alix Exemple/ })).toBeNull();
     expect(screen.getByRole('button', { name: /Sam Fictif/ })).toBeTruthy();
     await fireEvent.changeText(screen.getByLabelText(t.members.search), 'xyz');
-    expect(await screen.findByText(t.members.noMatch)).toBeTruthy();
+    expect(await screen.findByText(t.members.noMatch('xyz'))).toBeTruthy();
+    expect(screen.getByText(t.members.noMatchHint)).toBeTruthy();
+  });
+
+  it('P1 NF-06 aucun membre : la carte « Aucun membre pour l’instant » et « Nouveau membre »', async () => {
+    await db.execute('DELETE FROM members');
+    const router = await open('/membres');
+    expect(await screen.findByText(t.members.empty)).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: t.members.create })).toHaveLength(1);
+    await fireEvent.press(screen.getByRole('button', { name: t.members.create }));
+    expect(router.getPathname()).toBe('/membres/nouveau');
   });
 
   it('filtre par groupe (la puce ouvre la liste) et bascule sur les archivés', async () => {
@@ -242,7 +252,7 @@ describe('Écrans des membres (EX-03)', () => {
     expect(await button(/Alix Exemple/)).toBeTruthy();
   });
 
-  it('un groupe sans membre : « aucun membre ne correspond », pas « aucun membre »', async () => {
+  it('P1 un groupe filtré sans membre : « aucun membre dans ce groupe », pas « aucun membre »', async () => {
     await db.execute('UPDATE enrollments SET end_date = ? WHERE group_id = ?', [
       '2026-09-01',
       s.groupId,
@@ -250,7 +260,8 @@ describe('Écrans des membres (EX-03)', () => {
     await open('/membres');
     await fireEvent.press(await button(t.members.allGroups));
     await fireEvent.press(await button('Poussins'));
-    expect(await screen.findByText(t.members.noMatch)).toBeTruthy();
+    expect(await screen.findByText(t.members.noMatchGroup)).toBeTruthy();
+    expect(screen.queryByText(t.members.empty)).toBeNull();
   });
 
   it('« Garder » ferme la confirmation sans rien effacer', async () => {

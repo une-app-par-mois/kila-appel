@@ -12,6 +12,7 @@ import { formatPhone } from '@/domain/phone';
 import { useContactSearch } from '@/hooks/useContacts';
 import { Button } from '@/ui/Button';
 import { Card } from '@/ui/Card';
+import { NoMatch } from '@/ui/NoMatch';
 import { Screen } from '@/ui/Screen';
 import { TextField } from '@/ui/TextField';
 
@@ -41,7 +42,9 @@ export default function Emergency() {
     >
       <TextField label={t.search} labelHidden autoFocus value={query} onChangeText={setQuery} />
       {searching && results?.length === 0 && (
-        <Text style={styles.text}>{labels.members.noMatch}</Text>
+        <Card>
+          <NoMatch query={query} />
+        </Card>
       )}
       {results?.map((r) => (
         <Card key={r.memberId}>

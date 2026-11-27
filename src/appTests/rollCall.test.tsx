@@ -140,6 +140,18 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
     expect(screen.queryByRole('button', { name: t.row('Sam Fictif', st.present) })).toBeNull();
     // Le compteur compte tout le groupe, pas seulement les membres affichés.
     expect(screen.getByText(t.counter.present(22))).toBeTruthy();
+    // P1 NF-06 : sans résultat, le texte de la maquette.
+    await fireEvent.changeText(search, 'xyz');
+    expect(await screen.findByText(labels.members.noMatch('xyz'))).toBeTruthy();
+    expect(screen.getByText(labels.members.noMatchHint)).toBeTruthy();
+  });
+
+  it('P1 NF-06 appel d’un groupe vide : « Ce groupe n’a aucun membre à appeler », « Ajouter un membre »', async () => {
+    await db.execute('DELETE FROM enrollments');
+    await openCall();
+    expect(await screen.findByText(t.noMember)).toBeTruthy();
+    expect(t.noMember).toBe('Ce groupe n’a aucun membre à appeler.');
+    expect(screen.getByRole('button', { name: t.addMember })).toBeTruthy();
   });
 
   it('EX-09 créneau ou date invalides dans l’adresse : introuvable, rien à enregistrer', async () => {

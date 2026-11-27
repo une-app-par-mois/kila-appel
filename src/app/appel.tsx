@@ -18,6 +18,7 @@ import { AttendanceCounter, StatusPill } from '@/ui/Attendance';
 import { Button } from '@/ui/Button';
 import { Card } from '@/ui/Card';
 import { errorMessage } from '@/ui/errorMessage';
+import { NoMatch } from '@/ui/NoMatch';
 import { Screen } from '@/ui/Screen';
 import { TextField } from '@/ui/TextField';
 
@@ -205,9 +206,12 @@ export default function RollCallScreen() {
                 </Pressable>
               );
             })}
-            {shown.length === 0 && (
-              <Text style={styles.empty}>{members.length === 0 ? t.noMember : t.noMatch}</Text>
-            )}
+            {shown.length === 0 &&
+              (members.length === 0 ? (
+                <Text style={styles.empty}>{t.noMember}</Text>
+              ) : (
+                <NoMatch query={query} />
+              ))}
           </Card>
           {!saved && (
             <Button label={t.addMember} variant="secondary" disabled={busy} onPress={addMember} />
