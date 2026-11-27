@@ -205,6 +205,26 @@ Avant de passer aux tickets suivants, je veux voir avec toi comment optimiser le
 **Leçons** :
 - Une suite verte ne prouve pas qu'une dépendance forcée marche : le 017 l'a vu en chargeant `test-exclude@6` à la main ; critère repris dans le 018.
 
+### Lot 6 (018, 016) — 2026-11-27
+
+**Prompt clé** : séance de lancement du lot 018-016 (aller-retour de la sauvegarde par une sauvegarde fictive générée par le script et déposée dans Téléchargements ; émulateur seul, A55 « non vérifié » ; Maestro 2.12.0 local, statistiques désactivées ; override de glob limité comme au 017), puis deux agents de code en parallèle.
+
+**Ce que l'IA a fait** :
+- **Développement** : 018 (glob 14.0.6 par `overrides`, garde-fou `scripts/glob.test.js`, chargement de chaque paquet vérifié hors de la suite, APK audité) ; 016 (`.maestro/`, `scripts/e2e.sh`, générateur de sauvegarde fictive sans dépendance, campagne verte sur l'émulateur API 36).
+- **Intégration** : revue de code et contradicteur ; corrections renvoyées aux agents ; fusions une par une (PR #60 et #61) ; 1304 tests ; 14 décisions ajoutées à `docs/DECISIONS.md` ; bilan des décisions du jalon 1 : 0 annulée.
+
+**Ce qui a été corrigé par les revues** :
+- le générateur de la sauvegarde fictive plantait en juillet et en août (saison de Bienvenue au 1er septembre suivant, appels dans le futur) : saison qui contient aujourd'hui ;
+- garde-fous de versions : comparaison écrite en double (`scripts/lock-versions.js` commun), suffixe `+build` mal lu, entrée du verrou sans version qui faisait planter le fichier ;
+- l'override sans borne haute pouvait redescendre en silence une future version de glob ou de minimatch : échec « ajuster l'override » ;
+- parcours fragiles : feuille de partage repérée par un identifiant qui n'existe qu'à partir d'Android 14, sélecteur en anglais seulement, émulateur relié en TCP refusé, version de Node trop basse non signalée (22.15 au moins).
+
+**Ce que j'ai corrigé ou refusé** : **NF-01, décision du porteur du 2026-11-27** : le scénario d'appel ordinaire (3 absents, 1 retard), le seuil de 30 s et le départ du chronomètre depuis la liste des groupes sont gardés tels quels (écart au cadrage « de l'ouverture à l'enregistrement » noté ; 24,9 s mesurées) ; recette sur l'A55 des lots 4, 5 et 6 non faite (liste dans `ETAT.md`).
+
+**Leçons** :
+- Maestro mesure surtout son propre coût (environ 2,2 s par appui) : sur l'émulateur, NF-01 se lit comme une alerte ; la mesure qui fait foi reste sur un téléphone.
+- Une base d'un ancien build laisse l'accueil vide sans message : désinstaller avant chaque installation de test.
+
 ### [Étape] — [AAAA-MM-JJ]
 
 **Prompt**

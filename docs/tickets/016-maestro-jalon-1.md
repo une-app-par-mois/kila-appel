@@ -1,6 +1,6 @@
 # 016 — Campagne Maestro du jalon 1
 
-Statut : à faire · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : fusionné dans le groupe (PR #61, 2026-11-27) · Jalon : 1 · Zone sensible : non · Trivial : non
 
 ## Contexte
 
@@ -17,9 +17,10 @@ Parcours de bout en bout en fin de jalon, sur l'APK de la CI.
 
 ## Critères d'acceptation
 
-- [ ] Appel de 20 membres chronométré
-- [ ] Brouillon retrouvé après fermeture forcée
-- [ ] Sauvegarde jusqu'à la feuille de partage (avertissement « en clair » visible) → tout effacer → restauration d'une sauvegarde fictive générée par le script (déposée dans Téléchargements), données vérifiées à l'écran ; aller-retour réel à faire à la main sur un téléphone
+- [x] Appel de 20 membres chronométré — 24,9 s sur l'émulateur API 36, chronomètre parti de la liste des groupes (décision du porteur du 2026-11-27, écart au cadrage noté) ; jamais mesuré sur l'A55
+- [x] Brouillon retrouvé après fermeture forcée — `stopApp` sur l'émulateur ; redémarrage de l'appareil non vérifié
+- [x] Sauvegarde jusqu'à la feuille de partage (avertissement « en clair » visible) → tout effacer → restauration d'une sauvegarde fictive générée par le script (déposée dans Téléchargements), données vérifiées à l'écran, sur l'émulateur
+- [ ] Aller-retour réel à faire à la main sur un téléphone — **non vérifié** (export vers Drive ou Gmail puis restauration de ce fichier ; A55 indisponible)
 
 ## Tests attendus
 
@@ -46,7 +47,7 @@ Parcours de bout en bout en fin de jalon, sur l'APK de la CI.
 | Sélecteurs ambigus | `testID` dans `src/app/` ; `index` ou `childOf` dans le parcours | `index: 1` pour le bouton « Créer un groupe » de Bienvenue (le titre de l'étape porte le même texte), `childOf` le tiroir du sélecteur pour « Downloads » ; `testID` existant `history-row` pour compter les appels | Aucun changement dans `src/app/` | à relire |
 | Choix de l'appareil par le script | Un seul appareil adb, sinon `ANDROID_SERIAL` ; émulateur reconnu par son numéro `emulator-*` **et** `ro.kernel.qemu`/`ro.boot.qemu` à 1 | Les deux conditions ; sinon refus, sauf `--appareil-reel` | Un téléphone n'est jamais pris pour un émulateur par son seul nom | à relire |
 | Jour des données fictives | Jour de la machine ; jour de l'appareil | Jour de l'appareil (`adb shell date +%F`), passé au générateur | Les séances fictives tombent dans les 30 derniers jours de l'appareil, même si son horloge diffère | à relire |
-| Mesure de NF-01 sur l'émulateur | Seuil de 30 s tel quel ; seuil relevé pour Maestro | 30 s tel quel, de l'appui sur le groupe jusqu'à « Appel enregistré » | Demande du ticket ; un dépassement se lit comme une alerte, la mesure qui fait foi reste sur le téléphone | à relire |
+| Mesure de NF-01 sur l'émulateur | Seuil de 30 s tel quel ; seuil relevé pour Maestro | 30 s tel quel, de l'appui sur le groupe jusqu'à « Appel enregistré » | Demande du ticket ; un dépassement se lit comme une alerte, la mesure qui fait foi reste sur le téléphone | décidée par le porteur le 2026-11-27 |
 | Appuis de l'appel chronométré : Maestro coûte environ 2,2 s par appui (même par point, ou avec `retryTapIfNoChange: false` et `waitToSettleTimeoutMs`) et jusqu'à 5 s par défilement sur l'émulateur local ; un premier scénario à 8 changements de statut (3 absents, 1 retard, 1 excusé à 3 appuis) a mesuré 30,6 s et 30,9 s | Garder ce scénario et échouer ; relever le seuil ; un appel ordinaire plus court | Appel ordinaire : 3 absents et 1 retard (5 appuis sur les membres), seuil de 30 s inchangé | Le seuil n'est pas affaibli ; la durée mesure surtout l'outil, pas l'appli (chaque appui est rendu aussitôt) ; un excusé à 3 appuis n'est pas un cas ordinaire. Le porteur garde tel quel ce scénario, le seuil de 30 s et le départ du chronomètre | décidée par le porteur le 2026-11-27 |
 | Départ du chronomètre : CADRAGE l.113 et NF-01 disent « de l'ouverture à l'enregistrement » ; le parcours part de l'appui sur le groupe dans la liste des groupes (Nouvel appel), donc l'ouverture de l'appel est comprise | Partir de l'écran d'appel affiché ; partir de la liste des groupes | Partir de la liste des groupes, tel quel | Écart au cadrage noté. Marge mince : 25,4 s avec 3 absents et 1 retard, contre 30,6 s et 30,9 s avec 8 changements de statut | décidée par le porteur le 2026-11-27 |
 | Saison de la sauvegarde fictive en juillet et en août (revue) | Saison de Bienvenue (`firstSeason`, qui commence le 1er septembre suivant) ; saison qui contient aujourd'hui | Saison qui contient aujourd'hui (`seasonContaining`) | Sinon les appels fictifs tombent avant le début de la saison ou dans le futur (`DATE_IN_FUTURE`) ; tests au 2026-07-15 et au 2026-08-31 | à relire |

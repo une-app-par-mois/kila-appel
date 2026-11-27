@@ -12,8 +12,8 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 
 | Jalon | Objectif | Critère de sortie | Branche | Statut |
 | --- | --- | --- | --- | --- |
-| 0 | Outillage et risques techniques | Voir `docs/PLAN.md` §2 | `groupe/jalon-0-outillage` | en cours |
-| 1 | Organiser, appeler, retrouver | Voir `docs/PLAN.md` §2 | `groupe/jalon-1-appel` | à faire |
+| 0 | Outillage et risques techniques | Voir `docs/PLAN.md` §2 | `groupe/jalon-0-outillage` | fait (PR #7) |
+| 1 | Organiser, appeler, retrouver | Voir `docs/PLAN.md` §2 | `groupe/jalon-1-organiser-appeler-retrouver` | tous les tickets fusionnés dans le groupe ; PR vers `main` à ouvrir |
 | 2 à 7 | Détaillés au début du jalon précédent | `docs/PLAN.md` §2 | — | à faire |
 
 ## Tickets
@@ -60,6 +60,6 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 015b | [Conservation et purge des anciennes saisons](015b-ecrans-effacement.md) | 1 | F-03 | oui | fusionné dans le groupe |
 | 015f | [Tout effacer](015f-tout-effacer.md) | 1 | F-03 | oui | fusionné dans le groupe |
 | 015c | [Mode de journal de la base fixé à l'ouverture](015c-mode-journal.md) | 1 | F-03 | oui | fusionné dans le groupe |
-| 016 | [Campagne Maestro du jalon 1](016-maestro-jalon-1.md) | 1 | F-01 à F-03 | non | à faire |
+| 016 | [Campagne Maestro du jalon 1](016-maestro-jalon-1.md) | 1 | F-01 à F-03 | non | fusionné dans le groupe |
 | 017 | [minimatch 11 forcé (Dependabot n° 2)](017-minimatch-overrides.md) | 1 | — | non | fusionné dans le groupe |
-| 018 | [Faille modérée de glob (GHSA-3g3m-2fjr-6pw4) dans l'outillage](018-glob-ghsa-3g3m.md) | 1 | — | non | à faire |
+| 018 | [Faille modérée de glob (GHSA-3g3m-2fjr-6pw4) dans l'outillage](018-glob-ghsa-3g3m.md) | 1 | — | non | fusionné dans le groupe |
