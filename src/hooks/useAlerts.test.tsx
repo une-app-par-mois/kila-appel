@@ -40,6 +40,7 @@ describe('useAlerts (EX-25, EX-26, CONV-10)', () => {
     const { result } = await renderHook(() => useAlerts(TODAY));
     await waitFor(() => expect(result.current.alerts).toEqual([]));
     expect(mockAlerts.list).toHaveBeenCalledWith(TODAY, 4);
+    expect(result.current.threshold).toBe(4);
     await act(async () => notifyDataChanged());
     await waitFor(() => expect(result.current.alerts).toEqual([alert]));
   });

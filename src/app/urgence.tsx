@@ -2,7 +2,9 @@
 // leurs groupes et leurs contacts ; « Appeler » ouvre le composeur du système (lien tel:, aucune
 // permission d'appel). Le numéro n'est jamais écrit dans le journal (ABS-04). Ouverte depuis une
 // alerte (ticket 022, décision du porteur du 2026-11-27) : `?membre=<id>` remplit la recherche avec
-// le nom du membre, modifiable ; le nom ne passe jamais dans la route (ABS-04). Identifiant
+// le nom du membre, modifiable ; le nom ne passe jamais dans la route (ABS-04). Tant que la saisie
+// n'est pas modifiée, seule la carte de ce membre s'affiche (ni homonyme ni « Martinez » : pas
+// d'appel au mauvais parent) et le clavier ne s'ouvre pas (« Appeler » visible). Identifiant
 // invalide ou inconnu : recherche vide.
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -28,18 +30,28 @@ const idFrom = (param: string | undefined) => (param && /^\d+$/.test(param) ? Nu
 export default function Emergency() {
   const router = useRouter();
   const [query, setQuery] = useState('');
+  // Vrai tant que la recherche contient le nom pré-rempli, sans modification.
+  const [pinned, setPinned] = useState(false);
   const [callFailed, setCallFailed] = useState(false);
   const today = toIsoDate(new Date());
   const { results, loadFailed } = useContactSearch(query, today);
-  const { member } = useMember(idFrom(useLocalSearchParams<{ membre?: string }>().membre), today);
+  const memberParam = useLocalSearchParams<{ membre?: string }>().membre;
+  const memberId = idFrom(memberParam);
+  const { member, loadFailed: memberLoadFailed } = useMember(memberId, today);
   // Remplie une seule fois, et jamais par-dessus une saisie déjà commencée.
   const prefilled = useRef(false);
   useEffect(() => {
     if (member === null || prefilled.current) return;
     prefilled.current = true;
-    const name = labels.memberForm.fullName(member.firstName, member.lastName);
-    setQuery((typed) => (typed === '' ? name : typed));
-  }, [member]);
+    if (query !== '') return;
+    setQuery(labels.memberForm.fullName(member.firstName, member.lastName));
+    setPinned(true);
+  }, [member, query]);
+  const type = (text: string) => {
+    setPinned(false);
+    setQuery(text);
+  };
+  const shown = pinned ? results?.filter((r) => r.memberId === memberId) : results;
 
   const call = (contactId: number, phone: string) => {
     setCallFailed(false);
@@ -49,7 +61,12 @@ export default function Emergency() {
     });
   };
 
-  const error = loadFailed ? labels.common.loadFailed : callFailed ? t.callFailed : undefined;
+  const error =
+    loadFailed || memberLoadFailed
+      ? labels.common.loadFailed
+      : callFailed
+        ? t.callFailed
+        : undefined;
   const searching = query.trim() !== '';
   return (
     <Screen
@@ -57,13 +74,19 @@ export default function Emergency() {
       onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))}
       error={error}
     >
-      <TextField label={t.search} labelHidden autoFocus value={query} onChangeText={setQuery} />
-      {searching && results?.length === 0 && (
+      <TextField
+        label={t.search}
+        labelHidden
+        autoFocus={memberParam === undefined}
+        value={query}
+        onChangeText={type}
+      />
+      {searching && shown?.length === 0 && (
         <Card>
           <NoMatch query={query} />
         </Card>
       )}
-      {results?.map((r) => (
+      {shown?.map((r) => (
         <Card key={r.memberId}>
           <Text style={styles.name}>{labels.memberForm.fullName(r.firstName, r.lastName)}</Text>
           {r.groups.length > 0 && <Text style={styles.groups}>{r.groups.join(', ')}</Text>}

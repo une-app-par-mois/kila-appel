@@ -22,20 +22,31 @@ const useAcknowledge = (today: string) => {
   );
 };
 
-/** EX-25 : alertes du jour, au seuil réglé. */
+/**
+ * EX-25 : alertes du jour, avec le seuil lu pour les calculer (état vide de l'accueil) : une seule
+ * lecture, donc ni seuil d'une autre lecture ni échec de l'un sans l'autre (revue du 022).
+ */
 export const useAlerts = (today: string) => {
   const db = useDatabase();
   const load = useMemo(
     () =>
       db
-        ? async (): Promise<AttendanceAlert[]> =>
-            alertsRepo(db).list(today, await settingsRepo(db).alertThreshold())
+        ? async (): Promise<{ alerts: AttendanceAlert[]; threshold: number }> => {
+            const threshold = await settingsRepo(db).alertThreshold();
+            return { alerts: await alertsRepo(db).list(today, threshold), threshold };
+          }
         : null,
     [db, today],
   );
-  const { value: alerts, loaded, loadFailed } = useLoaded(load, 'ALERTS_LOAD_FAILED');
+  const { value, loaded, loadFailed } = useLoaded(load, 'ALERTS_LOAD_FAILED');
   const acknowledge = useAcknowledge(today);
-  return { alerts, loaded, loadFailed, acknowledge };
+  return {
+    alerts: value?.alerts ?? null,
+    threshold: value?.threshold ?? null,
+    loaded,
+    loadFailed,
+    acknowledge,
+  };
 };
 
 /** Écran de l'alerte (ticket 022) : l'alerte du membre (null s'il n'en a plus) et ses dernières séances. */

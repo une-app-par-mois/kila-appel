@@ -12,7 +12,7 @@ import { Pressable, StyleSheet, Text } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
 import { weekdayOfDate } from '@/domain/occurrences';
-import { useAlerts, useAlertThreshold } from '@/hooks/useAlerts';
+import { useAlerts } from '@/hooks/useAlerts';
 import { useBackupBanner } from '@/hooks/useBackupReminder';
 import { useLocalNow } from '@/hooks/useLocalNow';
 import { useDraft, useMissingRollCalls } from '@/hooks/useRollCall';
@@ -37,7 +37,6 @@ export default function Home() {
   const { missing, loadFailed } = useMissingRollCalls(now);
   const setup = useSetupProgress(now.date);
   const alerts = useAlerts(now.date);
-  const { threshold } = useAlertThreshold();
   // Bandeau illisible : caché, sans message (revue du 014d).
   const backupDays = useBackupBanner(now.date);
   // Seule l'existence d'un appel en cours compte ici (pas de Bienvenue pendant un appel).
@@ -74,7 +73,9 @@ export default function Home() {
       </Pressable>
       <RollCallEntry now={now} onError={setEntryError} />
       <MissingCalls missing={missing} />
-      {!alerts.loadFailed && <AttendanceAlerts alerts={alerts.alerts} threshold={threshold} />}
+      {!alerts.loadFailed && (
+        <AttendanceAlerts alerts={alerts.alerts} threshold={alerts.threshold} />
+      )}
       {backupDays !== null && (
         <Card warning>
           <Text style={styles.bannerTitle}>{h.backupBanner(backupDays)}</Text>

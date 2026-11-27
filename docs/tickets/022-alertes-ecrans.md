@@ -70,11 +70,11 @@ Reports de l'intégration du lot J2-1 (2026-11-27) :
 | Pendant un appel en cours | Section cachée ; visible | Visible ; Bienvenue garde la priorité (retour anticipé inchangé) | L'accueil reste l'accueil pendant un appel ; pré-analyse | à relire |
 | État vide et échec de lecture | — | État vide seulement quand la liste et le seuil sont lus ; en cas d'échec, section cachée et `labels.common.loadFailed` dans l'erreur de l'accueil | Pas de clignotement ni d'état vide trompeur (CONV-15) ; pré-analyse | à relire |
 | Sans saison active | — | Liste vide (calcul du 021) et état vide normal | Pré-analyse | à relire |
-| Seuil lu par l'accueil | — | `useAlertThreshold()`, rechargé par `dataChanged` | Contrat des hooks (CONV-10) ; pré-analyse | à relire |
+| Seuil lu par l'accueil | — | `useAlerts` renvoie le seuil qu'il a lu pour la liste (une seule lecture) ; l'accueil n'appelle plus `useAlertThreshold()` ; `src/hooks/useAlerts.ts` (et son test) ajoutés aux fichiers | Contrat des hooks (CONV-10) ; pré-analyse | contestée, changée après contradiction (revue du 022) : un seuil lu à part pouvait échouer sans erreur affichée ou différer de celui de la liste |
 | Ligne d'alerte | Étendre `ListRow` ; ligne propre | Ligne propre à `AttendanceAlerts.tsx` : nom en 600, groupe en Texte secondaire, « N absences » en Plex Mono Marge, 44 pt au moins, lue d'un bloc (« Alix Exemple, Poussins, 3 absences ») ; `ListRow` inchangé | Pas de changement d'un composant partagé ; pré-analyse | à relire |
-| Alerte qui n'est plus montrée (`alert: null`) | État vide ; retour | Retour à l'accueil (`router.back()`, sinon `replace('/')`), sans état vide | Report du 021 ; pré-analyse | à relire |
+| Alerte qui n'est plus montrée (`alert: null`) | État vide ; retour | Retour à l'accueil (`router.back()`, sinon `replace('/')`), sans état vide, seulement quand l'écran a le focus (`useIsFocused`), donc aussi au retour du focus ; pendant la lecture et après le départ, rien n'est affiché (pas d'en-tête vide) ; lecture en échec : titre « Alertes d'assiduité » et message | Report du 021 ; pré-analyse | à relire (corrigée après revue : la recherche d'urgence ouverte par-dessus se fermait) |
 | Navigation après « Marquer comme traitée » | — | Une seule navigation, protégée par une ref (le rechargement qui suit ne revient pas une seconde fois) ; le retour « ‹ » passe par la même fonction | Pré-analyse | à relire |
-| Traitement refusé | — | `errorMessage` dans l'erreur de l'écran ; l'écran reste et recharge | CONV-15 ; pré-analyse | à relire |
+| Traitement refusé | — | `errorMessage` dans l'erreur de l'écran ; l'écran reste et `notifyDataChanged()` relit l'alerte : une longueur périmée (`RangeError`) se corrige, un nouvel appui réussit | CONV-15 ; pré-analyse | à relire (corrigée après revue) |
 | Cases des dernières séances | — | `SessionSquares.tsx` : 22 pt, non cliquables, icône et libellé d'accessibilité « Absent, 03/12/2026 », la plus récente d'abord, sans case vide (025) | NF-06 ; maquette ; pré-analyse | à relire |
 | Réglage du seuil | Champ libre ; liste de choix | « Alerter après [N ▾] absences de suite » avec la `ChoiceList` existante, de 2 à 10 ; enregistré au choix | Même forme que la conservation (EX-24) ; pré-analyse | à relire |
 | Textes | — | Tous dans `src/config/libelles/alertes.ts`, clé unique `alerts` (y compris le titre de section « Réglages ») ; `commun.ts` et `accueil.ts` inchangés | CONV-03 ; limiter les fichiers communs du lot ; pré-analyse | à relire |
@@ -82,6 +82,7 @@ Reports de l'intégration du lot J2-1 (2026-11-27) :
 | Identifiant de route invalide | — | Même règle que `idFrom` de `membres/[id].tsx` (chiffres seulement, sinon 0) pour `alertes/[id]` et `urgence?membre=` | Pré-analyse | à relire |
 | Recherche d'urgence remplie après une saisie déjà commencée | Remplacer ; garder la saisie | Garder la saisie : le nom ne remplit la recherche que si elle est encore vide, une seule fois | Ne jamais écraser ce que l'utilisateur tape (champ en autoFocus) | à relire |
 | Libellé des choix du seuil | « 4 » ; « 4 absences » | « 4 absences » dans la liste ; le champ affiche le nombre seul, comme la maquette | Liste lisible hors contexte | à relire |
+| Recherche d'urgence ouverte depuis une alerte | Tous les résultats ; seulement le membre | Tant que la saisie pré-remplie n'est pas modifiée, seule la carte du membre (`memberId`) ; toute modification rend la recherche normale ; pas d'`autoFocus` (« Appeler » reste visible) ; `loadFailed` de `useMember` dans l'erreur de l'écran | Un homonyme ou un « Martinez » ferait appeler le mauvais parent (revue du 022) | à relire |
 
 ## Questions pour le porteur
 
@@ -93,4 +94,5 @@ Aucune.
 - Architecture : écrans `alertes/[id].tsx`, `assiduite.tsx` ; section `AttendanceAlerts` de l'accueil.
 - Architecture (suite) : composant `SessionSquares` (repris par le 025) ; `urgence.tsx` accepte `?membre=<id>` (identifiant seul, ABS-04).
 - Écarts de maquette, pour la PR : section des alertes placée après « Appels manquants » (absents de la maquette « Accueil complet ») ; pas de ligne Relance dans « Réglages » (029) ; ni frise ni bouton « Annuler » sur l'accueil (F-12, F-13 : jalons 4 et 5) ; libellé « 4 absences » dans la liste de choix du seuil.
-- Fichiers touchés : 10 (`src/app/urgence.tsx` ajouté par la réponse du porteur) ; `src/appTests/home.test.tsx` non modifié (tests dans `alerts.test.tsx`).
+- Fichiers touchés : 12 (`src/app/urgence.tsx` ajouté par la réponse du porteur ; `src/hooks/useAlerts.ts` et `src/hooks/useAlerts.test.tsx` après la revue : le seuil vient de la même lecture que la liste) ; `src/appTests/home.test.tsx` non modifié (tests dans `alerts.test.tsx`).
+- Pour un ticket de nettoyage : `idFrom` est copié dans `membres/[id].tsx`, `alertes/[id].tsx` et `urgence.tsx`, à factoriser ; la clé `alerts.settingsSection` (« Réglages ») est à déplacer au ticket 029, quand la section reçoit la ligne Relance.

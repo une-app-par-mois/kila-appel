@@ -2,12 +2,14 @@
 // de la série, dernières séances, « Voir ses contacts d'urgence » (recherche remplie par
 // l'identifiant seul, ABS-04 ; décision du porteur du 2026-11-27) et « Marquer comme traitée ».
 // Une alerte qui n'est plus montrée (traitée, série retombée) ramène à l'accueil, une seule fois,
-// sans état vide ici. Un traitement refusé reste à l'écran, avec son message.
-import { useLocalSearchParams, useRouter } from 'expo-router';
+// sans état vide ici, et seulement quand l'écran a le focus (sinon la recherche d'urgence ouverte
+// par-dessus se fermerait). Un traitement refusé reste à l'écran, avec son message, et recharge.
+import { useIsFocused, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
+import { notifyDataChanged } from '@/hooks/dataChanged';
 import { useAlert } from '@/hooks/useAlerts';
 import { useLocalNow } from '@/hooks/useLocalNow';
 import { Button } from '@/ui/Button';
@@ -27,6 +29,7 @@ export default function AlertDetail() {
   const today = useLocalNow().date;
   const { alert, recent, loaded, loadFailed, acknowledge } = useAlert(memberId, today);
   const [error, setError] = useState<string | undefined>();
+  const focused = useIsFocused();
   // Une seule navigation : le rechargement qui suit le traitement ne doit pas revenir deux fois.
   const left = useRef(false);
   const leave = useCallback(() => {
@@ -37,8 +40,8 @@ export default function AlertDetail() {
   }, [router]);
 
   useEffect(() => {
-    if (loaded && !loadFailed && alert === null) leave();
-  }, [loaded, loadFailed, alert, leave]);
+    if (focused && loaded && !loadFailed && alert === null) leave();
+  }, [focused, loaded, loadFailed, alert, leave]);
 
   const markDone = async () => {
     if (alert === null) return;
@@ -47,35 +50,34 @@ export default function AlertDetail() {
       await acknowledge(alert.memberId, alert.streak);
       leave();
     } catch (e) {
+      // Longueur périmée (série allongée entre la lecture et l'appui) : relire, puis réessayer.
       setError(errorMessage(e));
+      notifyDataChanged();
     }
   };
 
-  const name = alert ? labels.memberForm.fullName(alert.firstName, alert.lastName) : '';
+  if (loadFailed)
+    return <Screen title={a.section} onBack={leave} error={labels.common.loadFailed} />;
+  // Pendant la lecture et après un départ : rien, pas d'en-tête au titre vide.
+  if (alert === null) return null;
   return (
     <Screen
-      title={name}
-      subtitle={
-        alert && <Text style={styles.subtitle}>{a.subtitle(alert.groupName, alert.streak)}</Text>
-      }
+      title={labels.memberForm.fullName(alert.firstName, alert.lastName)}
+      subtitle={<Text style={styles.subtitle}>{a.subtitle(alert.groupName, alert.streak)}</Text>}
       onBack={leave}
-      error={loadFailed ? labels.common.loadFailed : error}
+      error={error}
     >
-      {alert && (
-        <>
-          <Card>
-            <Text style={styles.label}>{a.recent}</Text>
-            <SessionSquares sessions={recent} />
-            <Text style={styles.label}>{a.recentOrder}</Text>
-          </Card>
-          <Button
-            label={a.contacts}
-            variant="secondary"
-            onPress={() => router.push(`/urgence?membre=${alert.memberId}`)}
-          />
-          <Button label={a.acknowledge} onPress={() => void markDone()} />
-        </>
-      )}
+      <Card>
+        <Text style={styles.label}>{a.recent}</Text>
+        <SessionSquares sessions={recent} />
+        <Text style={styles.label}>{a.recentOrder}</Text>
+      </Card>
+      <Button
+        label={a.contacts}
+        variant="secondary"
+        onPress={() => router.push(`/urgence?membre=${alert.memberId}`)}
+      />
+      <Button label={a.acknowledge} onPress={() => void markDone()} />
     </Screen>
   );
 }

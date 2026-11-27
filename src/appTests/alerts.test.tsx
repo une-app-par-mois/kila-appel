@@ -10,8 +10,10 @@ import Emergency from '@/app/urgence';
 import { RootStack, tabRoutes } from '@/appTests/tabRoutes';
 import { labels } from '@/config/libelles';
 import type { Db } from '@/data/db';
+import * as enrollments from '@/data/enrollmentsRepo';
 import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
+import * as settings from '@/data/settingsRepo';
 import { notifyDataChanged } from '@/hooks/dataChanged';
 
 let mockDb: Db | null = null;
@@ -49,6 +51,7 @@ describe('Alertes d’assiduité : écrans (ticket 022)', () => {
     jest.useFakeTimers({ advanceTimers: true, now: new Date(2026, 11, 4, 10, 0) });
   });
   afterEach(async () => {
+    jest.restoreAllMocks();
     jest.useRealTimers();
     mockDb = null;
     await db.close();
@@ -95,6 +98,21 @@ describe('Alertes d’assiduité : écrans (ticket 022)', () => {
     await open();
     expect(await screen.findByText(labels.common.loadFailed)).toBeTruthy();
     expect(screen.queryByText(a.section)).toBeNull();
+  });
+
+  it('EX-25 état vide lu avec la liste : une seule lecture du seuil, pas de seconde lecture qui échoue', async () => {
+    await db.execute("INSERT INTO settings (key, value) VALUES ('alert_threshold', '4')");
+    const real = settings.settingsRepo;
+    let reads = 0;
+    jest.spyOn(settings, 'settingsRepo').mockImplementation((d) => ({
+      ...real(d),
+      alertThreshold: () => {
+        reads += 1;
+        return reads === 1 ? real(d).alertThreshold() : Promise.reject(new Error('refus'));
+      },
+    }));
+    await open();
+    expect(await screen.findByText(a.empty(4))).toBeTruthy();
   });
 
   it('EX-26 écran de l’alerte : sous-titre, dernières séances (icône et libellé, NF-06)', async () => {
@@ -147,6 +165,64 @@ describe('Alertes d’assiduité : écrans (ticket 022)', () => {
     expect(router.getSearchParams()).toEqual({ membre: String(s.memberId) });
     expect(await screen.findByDisplayValue('Alix Exemple')).toBeTruthy();
     expect(await screen.findByText('Parent')).toBeTruthy();
+  });
+
+  it('EX-26 alerte disparue pendant la recherche d’urgence : on y reste ; au retour, l’accueil', async () => {
+    const router = await open();
+    await fireEvent.press(await screen.findByRole('button', { name: ALIX }));
+    await fireEvent.press(await screen.findByRole('button', { name: a.contacts }));
+    expect(await screen.findByDisplayValue('Alix Exemple')).toBeTruthy();
+    await db.execute("INSERT INTO settings (key, value) VALUES ('alert_threshold', '4')");
+    await act(async () => notifyDataChanged());
+    await act(async () => undefined);
+    expect(router.getPathname()).toBe('/urgence');
+    await fireEvent.press(screen.getByRole('button', { name: labels.common.back }));
+    await waitFor(() => expect(router.getPathname()).toBe('/'));
+    expect(screen.queryByRole('header', { name: '' })).toBeNull();
+  });
+
+  it('EX-26 série allongée entre l’ouverture et l’appui : message, rechargement, nouvel appui réussi', async () => {
+    const router = await open();
+    await fireEvent.press(await screen.findByRole('button', { name: ALIX }));
+    await absentOn('2026-12-04');
+    await fireEvent.press(await screen.findByRole('button', { name: a.acknowledge }));
+    expect(await screen.findByText(labels.errors.unknown)).toBeTruthy();
+    expect(await screen.findByText(a.subtitle('Poussins', 4))).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: a.acknowledge }));
+    await waitFor(() => expect(router.getPathname()).toBe('/'));
+  });
+
+  it('EX-06 depuis une alerte : seule la carte du membre, homonymes compris ; la saisie modifiée rend la recherche normale', async () => {
+    const w = alertsWorld(db);
+    const ids: number[] = [];
+    for (const [last, first] of [
+      ['Martin', 'Léa'],
+      ['Martin', 'Léa'],
+      ['Martinez', 'Léa'],
+    ] as const) {
+      const id = await w.member(last, first);
+      await w.enroll(id, s.groupId, '2026-09-01');
+      ids.push(id);
+    }
+    await open(`/urgence?membre=${ids[1]}`);
+    const field = await screen.findByDisplayValue('Léa Martin');
+    expect(field.props.autoFocus).toBeFalsy();
+    await act(async () => undefined);
+    expect(screen.getAllByText('Léa Martin')).toHaveLength(1);
+    expect(screen.queryByText('Léa Martinez')).toBeNull();
+    await fireEvent.changeText(field, 'Léa Mart');
+    expect(await screen.findByText('Léa Martinez')).toBeTruthy();
+    expect(screen.getAllByText('Léa Martin')).toHaveLength(2);
+  });
+
+  it('EX-06 depuis une alerte, membre illisible : message d’erreur', async () => {
+    const real = enrollments.enrollmentsRepo;
+    jest.spyOn(enrollments, 'enrollmentsRepo').mockImplementation((d) => ({
+      ...real(d),
+      listByMember: () => Promise.reject(new Error('refus')),
+    }));
+    await open(`/urgence?membre=${s.memberId}`);
+    expect(await screen.findByText(labels.common.loadFailed)).toBeTruthy();
   });
 
   it.each(['abc', '999'])(
