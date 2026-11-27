@@ -4,6 +4,8 @@ Journal des choix que l'IA a faits seule en appliquant sa recommandation, sans p
 
 Les décisions posées au porteur restent dans les tickets, l'architecture et le PRD, comme avant.
 
+État : « à relire » (pas contestée par le contradicteur), « contestée, maintenue : <raison> », « changée après contradiction », « posée au porteur », « annulée (<date>, ticket) ».
+
 | Date | Ticket | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- | --- | --- |
 | 2026-11-27 | 012b | Nom de la saison créée automatiquement | « 2026-2027 » ; « Saison 2026-2027 » | « 2026-2027 » | la maquette Paramètres affiche « Active : 2026-2027 » ; Bienvenue ajoute « Saison » devant | à relire |

@@ -25,7 +25,7 @@ PR d'un groupe ou d'un jalon vers `main` : lister ici les tickets et leurs PR ; 
 
 ## Décisions automatiques à relire
 
-[Lignes de `docs/DECISIONS.md` ajoutées par ce ticket, ou « Aucune ».]
+[Lignes de `docs/DECISIONS.md` ajoutées par ce ticket, ou « Aucune ». Les décisions contestées par le contradicteur d'abord, avec son argument.]
 
 ## Non vérifié
 

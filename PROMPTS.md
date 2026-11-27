@@ -98,6 +98,20 @@ Pour une très importante partie (très majoritaire) quand tu poses des question
 
 **Décision** : « projet puis méthode » : Ki&La d'abord, puis une PR sur `une-app-par-mois/methode-vibe-coding`, relue par le porteur. Bilan au jalon : nombre de décisions annulées.
 
+### Contradicteur — 2026-11-27
+
+**Prompt**
+
+```text
+On peut ajouter un sous agent autonome pour être le contradicteur ?
+```
+
+**Ce que l'IA a fait** : sous-agent `.claude/agents/contradicteur.md` (lecture seule, sans le raisonnement de l'IA), lancé une fois par ticket avant la PR sur ses décisions automatiques ; suites selon le verdict dans `CLAUDE.md` ; états dans `docs/DECISIONS.md` ; modèle de PR.
+
+**Ce que j'ai corrigé ou refusé** : rien.
+
+**Décision** : premier usage sur le ticket 012b.
+
 ### [Étape] — [AAAA-MM-JJ]
 
 **Prompt**
