@@ -6,6 +6,7 @@ export type MemberDeletionCounts = {
   contacts: number;
   attendances: number;
   enrollments: number;
+  rollCallDraft: boolean;
   hasBirthDate: boolean;
 };
 
@@ -54,6 +55,7 @@ export const membres = {
         c.attendances > 1 && `ses ${c.attendances} présences`,
         c.enrollments === 1 && 'son inscription',
         c.enrollments > 1 && `ses ${c.enrollments} inscriptions`,
+        c.rollCallDraft && 'son statut dans l’appel en cours',
       ].filter((part): part is string => typeof part === 'string');
       return `Seront effacés définitivement : ${parts.join(' ; ')}.`;
     },

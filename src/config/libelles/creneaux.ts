@@ -54,7 +54,7 @@ export const creneaux = {
     title: 'Supprimer ce créneau ?',
     message: (withDraft: boolean) =>
       withDraft
-        ? 'Le créneau sera supprimé. L’appel interrompu sur ce créneau sera effacé.'
+        ? 'Le créneau sera supprimé. L’appel en cours (non enregistré) sur ce créneau sera effacé.'
         : 'Le créneau sera supprimé.',
     note: 'Les séances déjà enregistrées sont conservées.',
     confirm: 'Supprimer',

@@ -177,12 +177,20 @@ describe('Dépôt des membres (EX-03)', () => {
     expect(await repo.get(s.memberId)).toMatchObject({ archivedAt: '2026-09-01' });
   });
 
+  it('EX-14 sans statut dans l’appel en cours, la suppression ne l’annonce pas', async () => {
+    await db.execute('DELETE FROM roll_call_draft_statuses WHERE member_id = ?', [s.memberId]);
+    expect(await membersRepo(db).deletionImpact(s.memberId)).toMatchObject({
+      rollCallDraft: false,
+    });
+  });
+
   it('ABS-05 dit ce que la suppression effacera, puis efface vraiment (contacts, présences, inscriptions)', async () => {
     const repo = membersRepo(db);
     expect(await repo.deletionImpact(s.memberId)).toEqual({
       contacts: 1,
       attendances: 1,
       enrollments: 2,
+      rollCallDraft: true,
     });
     await repo.remove(s.memberId);
     expect(await repo.get(s.memberId)).toBeNull();

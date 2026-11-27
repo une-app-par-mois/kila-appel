@@ -149,6 +149,7 @@ describe('Écrans des membres (EX-03)', () => {
           contacts: 1,
           attendances: 1,
           enrollments: 2,
+          rollCallDraft: true,
           hasBirthDate: true,
         }),
       ),
@@ -167,16 +168,18 @@ describe('Écrans des membres (EX-03)', () => {
         contacts: 2,
         attendances: 41,
         enrollments: 2,
+        rollCallDraft: true,
         hasBirthDate: true,
       }),
     ).toBe(
-      'Seront effacés définitivement : sa fiche et sa date de naissance ; ses 2 contacts d’urgence ; ses 41 présences ; ses 2 inscriptions.',
+      'Seront effacés définitivement : sa fiche et sa date de naissance ; ses 2 contacts d’urgence ; ses 41 présences ; ses 2 inscriptions ; son statut dans l’appel en cours.',
     );
     expect(
       t.memberDeletion.message({
         contacts: 0,
         attendances: 0,
         enrollments: 1,
+        rollCallDraft: false,
         hasBirthDate: false,
       }),
     ).toBe('Seront effacés définitivement : sa fiche ; son inscription.');

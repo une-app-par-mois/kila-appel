@@ -13,9 +13,16 @@ export type SeasonDeletionCounts = {
 
 const NOTHING_ELSE = 'Seule la saison sera effacée : elle ne contient aucune donnée.';
 const GROUP_NOTHING_ELSE = 'Seul le groupe sera effacé : il n’a ni inscription ni lien.';
+/** Nom de l'appel en cours dans les confirmations de suppression (décision du 2026-11-27). */
+export const ROLL_CALL_DRAFT = 'l’appel en cours (non enregistré)';
 
 /** Ce que la suppression d'un groupe effacera (EX-02, ARCHITECTURE §4.1). */
-export type GroupDeletionCounts = { enrollments: number; slots: number; sessions: number };
+export type GroupDeletionCounts = {
+  enrollments: number;
+  slots: number;
+  sessions: number;
+  rollCallDraft: boolean;
+};
 
 export const organisation = {
   groups: {
@@ -68,9 +75,14 @@ export const organisation = {
         c.enrollments > 1 && `ses ${c.enrollments} inscriptions`,
         links.length > 0 && `ses liens ${links.join(' et ')}`,
       ].filter((part): part is string => typeof part === 'string');
-      return parts.length === 0
-        ? GROUP_NOTHING_ELSE
-        : `Seront effacés définitivement : ${parts.join(' et ')}.`;
+      const main =
+        parts.length === 0
+          ? GROUP_NOTHING_ELSE
+          : `Seront effacés définitivement : ${parts.join(' et ')}.`;
+      // Phrase à part : la liste des liens contient déjà « et » (décision du 2026-11-27).
+      return c.rollCallDraft
+        ? `${main} L’appel en cours (non enregistré) sera aussi effacé.`
+        : main;
     },
     nothingElse: GROUP_NOTHING_ELSE,
     kept: 'Les séances, leurs présences et les membres sont conservés. Pour le retirer des écrans sans rien effacer, utilisez plutôt « Archiver ».',
@@ -100,7 +112,7 @@ export const organisation = {
         c.slots > 0 && plural(c.slots, 'créneau', 'créneaux'),
         c.sessions > 0 && plural(c.sessions, 'séance', 'séances'),
         c.attendances > 0 && plural(c.attendances, 'présence', 'présences'),
-        c.rollCallDraft && 'l’appel en cours',
+        c.rollCallDraft && ROLL_CALL_DRAFT,
       ].filter((part): part is string => typeof part === 'string');
       return parts.length === 0
         ? NOTHING_ELSE
