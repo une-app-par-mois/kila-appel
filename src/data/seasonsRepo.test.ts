@@ -126,7 +126,42 @@ describe('Dépôt des saisons (EX-01)', () => {
     await expect(
       repo.update(s.seasonId, input('2026-2027', '2026-09-01', '2026-11-24')),
     ).rejects.toThrow('SESSIONS_OUTSIDE_SEASON');
-    await repo.update(s.seasonId, input('2026-2027', '2026-11-25', '2026-11-25'));
+    await repo.update(s.seasonId, input('2026-2027', '2026-09-01', '2026-11-25'));
     expect((await repo.list()).find((x) => x.id === s.seasonId)?.endDate).toBe('2026-11-25');
+  });
+
+  it('EX-01 EX-04 refuse des dates qui laisseraient une inscription commencer hors de la saison', async () => {
+    const s = await seed(db);
+    const repo = seasonsRepo(db);
+    // Inscriptions du jeu fictif au 2026-09-01 ; une arrivée prévue au 2027-06-01.
+    const { lastInsertRowId: lundi } = await db.execute(
+      "INSERT INTO groups (season_id, name) VALUES (?, 'Benjamins lundi')",
+      [s.seasonId],
+    );
+    await db.execute(
+      "INSERT INTO enrollments (member_id, group_id, start_date) VALUES (?, ?, '2027-06-01')",
+      [s.memberId, lundi],
+    );
+    for (const [start, end] of [
+      ['2026-09-02', '2027-07-31'],
+      ['2026-09-01', '2027-05-31'],
+    ]) {
+      await expect(repo.update(s.seasonId, input('2026-2027', start, end))).rejects.toMatchObject({
+        code: 'ENROLLMENTS_OUTSIDE_SEASON',
+      });
+    }
+    expect((await repo.list()).find((x) => x.id === s.seasonId)?.endDate).toBe('2027-07-31');
+    // Membre et groupe archivés : leurs inscriptions comptent aussi.
+    await db.execute("UPDATE members SET archived_at = '2026-11-01'");
+    await db.execute("UPDATE groups SET archived_at = '2026-11-01'");
+    await expect(
+      repo.update(s.seasonId, input('2026-2027', '2026-09-01', '2027-05-31')),
+    ).rejects.toThrow('ENROLLMENTS_OUTSIDE_SEASON');
+    // Une période vide (fin = début) ne compte pas.
+    await db.execute(
+      "UPDATE enrollments SET end_date = start_date WHERE start_date = '2027-06-01'",
+    );
+    await repo.update(s.seasonId, input('2026-2027', '2026-09-01', '2027-05-31'));
+    expect((await repo.list()).find((x) => x.id === s.seasonId)?.endDate).toBe('2027-05-31');
   });
 });

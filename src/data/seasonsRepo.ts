@@ -63,7 +63,11 @@ export const seasonsRepo = (db: Db) => ({
     return result.lastInsertRowId;
   },
 
-  /** EX-01 : refusé si des séances tomberaient hors des nouvelles dates (décision du porteur du 2026-11-26). */
+  /**
+   * EX-01 : refusé si des séances tomberaient hors des nouvelles dates, ou si une inscription à l'un
+   * de ses groupes y commencerait (EX-04, ticket 006f) ; membres et groupes archivés compris, période
+   * vide exclue (décisions du porteur du 2026-11-26).
+   */
   update: (id: number, input: SeasonInput): Promise<void> => {
     const s = validateSeason(input);
     return db.transaction(async (tx) => {
@@ -72,6 +76,13 @@ export const seasonsRepo = (db: Db) => ({
         [id, s.startDate, s.endDate],
       );
       if ((outside?.n ?? 0) > 0) throw new DataError('SESSIONS_OUTSIDE_SEASON');
+      const [enrolled] = await tx.query<{ n: number }>(
+        `SELECT COUNT(*) AS n FROM enrollments e JOIN groups g ON g.id = e.group_id
+         WHERE g.season_id = ? AND (e.start_date < ? OR e.start_date > ?)
+           AND (e.end_date IS NULL OR e.end_date > e.start_date)`,
+        [id, s.startDate, s.endDate],
+      );
+      if ((enrolled?.n ?? 0) > 0) throw new DataError('ENROLLMENTS_OUTSIDE_SEASON');
       expectChanged(
         await tx.execute('UPDATE seasons SET name = ?, start_date = ?, end_date = ? WHERE id = ?', [
           s.name,

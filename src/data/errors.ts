@@ -2,6 +2,7 @@
 export type DataErrorCode =
   | 'NOT_FOUND'
   | 'SESSIONS_OUTSIDE_SEASON'
+  | 'ENROLLMENTS_OUTSIDE_SEASON'
   | 'ALREADY_ENROLLED'
   | 'DB_NOT_READY';
 

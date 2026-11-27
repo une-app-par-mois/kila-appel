@@ -31,6 +31,8 @@ const toErrors = (error: unknown): Errors => {
       return { end: E.END_BEFORE_START };
     case 'SESSIONS_OUTSIDE_SEASON':
       return { form: E.SESSIONS_OUTSIDE_SEASON };
+    case 'ENROLLMENTS_OUTSIDE_SEASON':
+      return { form: E.ENROLLMENTS_OUTSIDE_SEASON };
     case 'NOT_FOUND':
       return { form: E.NOT_FOUND };
     default:

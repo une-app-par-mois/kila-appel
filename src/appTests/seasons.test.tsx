@@ -107,6 +107,24 @@ describe('Écrans des saisons (EX-01)', () => {
     expect(await count(db, 'seasons', "start_date = '2026-09-01'")).toBe(1);
   });
 
+  it('EX-04 refuse des dates qui laisseraient une inscription commencer hors de la saison', async () => {
+    const { lastInsertRowId: lundi } = await db.execute(
+      "INSERT INTO groups (season_id, name) VALUES (?, 'Benjamins lundi')",
+      [s.seasonId],
+    );
+    await db.execute(
+      "INSERT INTO enrollments (member_id, group_id, start_date) VALUES (?, ?, '2027-06-01')",
+      [s.memberId, lundi],
+    );
+    await open(`/saisons/${s.seasonId}`);
+    const end = await screen.findByLabelText(t.seasonForm.end);
+    await waitFor(() => expect(end.props.value).toBe('31/07/2027'));
+    await fireEvent.changeText(end, '31/05/2027');
+    await fireEvent.press(screen.getByRole('button', { name: t.common.save }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(t.errors.ENROLLMENTS_OUTSIDE_SEASON);
+    expect(await count(db, 'seasons', "end_date = '2027-07-31'")).toBe(1);
+  });
+
   it('EX-01 la suppression dit ce qui sera effacé ; « Garder » ne touche à rien', async () => {
     const router = await open(`/saisons/${s.seasonId}`);
     await fireEvent.press(await screen.findByRole('button', { name: t.seasonForm.delete }));
