@@ -119,8 +119,8 @@ describe('Brouillon d’appel (EX-14)', () => {
     await fireEvent.press(screen.getByRole('button', { name: t.save }));
     expect(await screen.findByText(t.saved)).toBeTruthy();
     expect(await count(db, 'roll_call_drafts')).toBe(0);
-    // Le retour à l'accueil (1,2 s) se fait dans ce test, pas pendant le suivant.
-    await waitFor(() => expect(router.getPathname()).toBe('/'), { timeout: 3000 });
+    // Le retour à l'Historique (1,2 s) se fait dans ce test, pas pendant le suivant.
+    await waitFor(() => expect(router.getPathname()).toBe('/historique'), { timeout: 3000 });
     expect(
       await db.query(
         'SELECT status FROM attendances a JOIN sessions s ON s.id = a.session_id WHERE s.date = ? AND a.member_id = ?',
@@ -201,6 +201,6 @@ describe('Brouillon d’appel (EX-14)', () => {
     expect(await db.query("SELECT start_time FROM sessions WHERE date = '2026-11-17'")).toEqual([
       { start_time: '18:00' },
     ]);
-    await waitFor(() => expect(second.getPathname()).toBe('/'), { timeout: 3000 });
+    await waitFor(() => expect(second.getPathname()).toBe('/historique'), { timeout: 3000 });
   });
 });
