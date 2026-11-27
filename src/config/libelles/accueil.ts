@@ -6,6 +6,7 @@ export const accueil = {
     label: 'Navigation',
     home: 'Accueil',
     newRollCall: 'Nouvel appel',
+    history: 'Historique',
     settings: 'Paramètres',
   },
   /** Bienvenue (maquette, P1, ticket 012b) : un seul bouton, sur la première étape qui reste. */

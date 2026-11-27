@@ -1,6 +1,7 @@
 // Appel pour les écrans (EX-09, EX-15, CONV-10) : liste de l'appel, séance proposée,
 // enregistrement. Même contrat que les autres hooks de données.
 import { useCallback, useMemo } from 'react';
+import type { Db } from '@/data/db';
 import { type DraftTarget, draftsRepo, type RollCallDraft } from '@/data/draftsRepo';
 import { enrollmentsRepo, type GroupEnrollment } from '@/data/enrollmentsRepo';
 import { DataError } from '@/data/errors';
@@ -153,39 +154,47 @@ export const useDraft = () => {
   return { draft, loaded, loadFailed, setStatus, setComment, discard };
 };
 
-/** Appel manquant de l'accueil : séance passée, son groupe actif (EX-17). */
-export type MissingRollCall = Occurrence & { groupName: string };
+/** Appel manquant : séance passée d'un créneau, son groupe actif (EX-17). */
+export type MissingRollCall = Occurrence & { groupId: number; groupName: string };
 
 /**
- * EX-17 : séances finies sans appel, les plus récentes d'abord ; créneaux sans groupe actif exclus,
- * comme la séance proposée (EX-09), déjà sous « Maintenant » (revue du ticket 012).
+ * EX-17 : séances finies sans appel de la saison active, les plus récentes d'abord ; créneaux sans
+ * groupe actif exclus, comme la séance proposée (EX-09). L'accueil retire celle déjà sous
+ * « Maintenant » (revue du ticket 012) ; l'Historique la garde (décision du 2026-11-27).
  */
+export const loadMissingRollCalls = async (
+  db: Db,
+  { date, time }: LocalNow,
+  { keepShown = false } = {},
+): Promise<MissingRollCall[]> => {
+  const season = await seasonsRepo(db).getActive();
+  if (!season) return [];
+  const active = new Set((await groupsRepo(db).listBySeason(season.id)).map((g) => g.id));
+  const slots = await slotsRepo(db).listBySeason(season.id);
+  const groupOf = new Map(
+    slots.flatMap((s) => {
+      const g = s.groups.find((x) => active.has(x.id));
+      return g ? [[s.id, g] as const] : [];
+    }),
+  );
+  const recorded = await sessionsRepo(db, date).slotSessions(season.id);
+  const usable = slots.filter((s) => groupOf.has(s.id)) as WeeklySlot[];
+  const shown = keepShown ? null : proposedSession(usable, season, { date, time });
+  return missingRollCalls(usable, season, recorded, { date, time })
+    .filter((o) => !(o.slotId === shown?.slotId && o.date === shown.date))
+    .reverse()
+    .map((o) => {
+      const group = groupOf.get(o.slotId);
+      return { ...o, groupId: group?.id ?? 0, groupName: group?.name ?? '' };
+    });
+};
+
+/** EX-17 : appels manquants de l'accueil. */
 export const useMissingRollCalls = (now: LocalNow) => {
   const db = useDatabase();
   const { date, time } = now;
   const load = useMemo(
-    () =>
-      db
-        ? async (): Promise<MissingRollCall[]> => {
-            const season = await seasonsRepo(db).getActive();
-            if (!season) return [];
-            const active = new Set((await groupsRepo(db).listBySeason(season.id)).map((g) => g.id));
-            const slots = await slotsRepo(db).listBySeason(season.id);
-            const groupOf = new Map(
-              slots.flatMap((s) => {
-                const g = s.groups.find((x) => active.has(x.id));
-                return g ? [[s.id, g.name] as const] : [];
-              }),
-            );
-            const recorded = await sessionsRepo(db, date).slotSessions(season.id);
-            const usable = slots.filter((s) => groupOf.has(s.id)) as WeeklySlot[];
-            const shown = proposedSession(usable, season, { date, time });
-            return missingRollCalls(usable, season, recorded, { date, time })
-              .filter((o) => !(o.slotId === shown?.slotId && o.date === shown.date))
-              .reverse()
-              .map((o) => ({ ...o, groupName: groupOf.get(o.slotId) ?? '' }));
-          }
-        : null,
+    () => (db ? () => loadMissingRollCalls(db, { date, time }) : null),
     [db, date, time],
   );
   const { value, loaded, loadFailed } = useLoaded(load, 'MISSING_CALLS_FAILED', {}, true);

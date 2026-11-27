@@ -61,8 +61,8 @@ describe('Appel sans créneau, ajout pendant l’appel (EX-12, EX-39)', () => {
     await fireEvent.press(await row('Sam Fictif', st.present));
     await fireEvent.press(screen.getByRole('button', { name: t.save }));
     expect(await screen.findByText(t.saved)).toBeTruthy();
-    // Retour à l'accueil, pas au choix du groupe (décision du 2026-11-27).
-    await waitFor(() => expect(router.getPathname()).toBe('/'), { timeout: 3000 });
+    // Retour à l'Historique, pas au choix du groupe (ticket 013, décision du 2026-11-27).
+    await waitFor(() => expect(router.getPathname()).toBe('/historique'), { timeout: 3000 });
     const sessions = await db.query<{ id: number; slot_id: number | null; start_time: string }>(
       "SELECT id, slot_id, start_time FROM sessions WHERE date = '2026-11-16'",
     );

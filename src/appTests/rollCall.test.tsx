@@ -78,7 +78,7 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
     expect(screen.getAllByText(st.present).length).toBeGreaterThanOrEqual(2);
   });
 
-  it('EX-13 EX-15 enregistrer : séance, présences et commentaire écrits, « Appel enregistré », retour', async () => {
+  it('EX-13 EX-15 enregistrer : séance, présences et commentaire écrits, « Appel enregistré », retour à l’Historique', async () => {
     const screenRouter = await open('/');
     await act(async () => {
       router.push(`/appel?creneau=${s.slotId}&date=${DATE}`);
@@ -107,10 +107,14 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
     await act(async () => {
       jest.advanceTimersByTime(1500);
     });
-    await waitFor(() => expect(screenRouter.getPathname()).toBe('/'));
-    // Retour à l'accueil : la séance est marquée enregistrée, « Nouvel appel » mène à l'appel sans
+    await waitFor(() => expect(screenRouter.getPathname()).toBe('/historique'));
+    // Retour à l'Historique (ticket 013) : la séance y est, « Nouvel appel » mène à l'appel sans
     // créneau.
-    expect(await screen.findByText(labels.home.recorded)).toBeTruthy();
+    expect(
+      await screen.findByRole('button', {
+        name: labels.rowAccessibility('Poussins', labels.history.sessionWhen('Mer. 18/11', 1, 2)),
+      }),
+    ).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: labels.tabs.newRollCall }));
     expect(screenRouter.getPathname()).toBe('/appel-libre');
   });

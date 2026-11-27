@@ -2,14 +2,12 @@
 // jeu fictif : créneau du mercredi 17:30–19:00 au Gymnase, groupe Poussins, deux membres, séance
 // du 25/11 enregistrée. Horloge figée au mercredi 18/11/2026 18:00, pendant la séance.
 import { Stack } from 'expo-router';
-import { fireEvent, renderRouter, screen } from 'expo-router/testing-library';
+import { fireEvent, renderRouter, screen, within } from 'expo-router/testing-library';
 import { type Seeded, seed } from '@/__fixtures__/seed';
-import TabsLayout from '@/app/(tabs)/_layout';
-import Home from '@/app/(tabs)/index';
-import Settings from '@/app/(tabs)/parametres';
 import RollCall from '@/app/appel';
 import FreeRollCall from '@/app/appel-libre';
 import Emergency from '@/app/urgence';
+import { tabRoutes } from '@/appTests/tabRoutes';
 import { labels } from '@/config/libelles';
 import type { Db } from '@/data/db';
 import { openNodeDb } from '@/data/nodeDb';
@@ -21,9 +19,7 @@ jest.mock('@/data/log', () => ({ log: jest.fn() }));
 
 const routes = {
   _layout: () => <Stack screenOptions={{ headerShown: false }} />,
-  '(tabs)/_layout': TabsLayout,
-  '(tabs)/index': Home,
-  '(tabs)/parametres': Settings,
+  ...tabRoutes,
   appel: RollCall,
   'appel-libre': FreeRollCall,
   urgence: Emergency,
@@ -110,10 +106,17 @@ describe('Onglets et accueil (ticket 012)', () => {
     expect(router.getPathname()).toBe('/urgence');
   });
 
-  it('EX-09 onglets : Accueil, Nouvel appel, Paramètres ; Paramètres garde l’organisation', async () => {
+  it('EX-09 EX-16 onglets : Accueil, Nouvel appel, Historique, Paramètres (ordre de la maquette)', async () => {
     const router = await open();
     expect(await button(tab.home)).toBeTruthy();
-    expect(screen.getByRole('button', { name: tab.newRollCall })).toBeTruthy();
+    const bar = screen.getByLabelText(tab.label);
+    expect(
+      within(bar)
+        .getAllByRole('button')
+        .map((b) => b.props.accessibilityLabel),
+    ).toEqual([tab.home, tab.newRollCall, tab.history, tab.settings]);
+    await fireEvent.press(screen.getByRole('button', { name: tab.history }));
+    expect(router.getPathname()).toBe('/historique');
     await fireEvent.press(screen.getByRole('button', { name: tab.settings }));
     expect(router.getPathname()).toBe('/parametres');
     expect(await screen.findByText(labels.settings.organisation)).toBeTruthy();

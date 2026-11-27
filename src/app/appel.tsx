@@ -14,6 +14,7 @@ import type { AttendanceStatus } from '@/domain/validation';
 import { notifyDataChanged } from '@/hooks/dataChanged';
 import { draftRoute, useDraft, useRollCall, useRoster } from '@/hooks/useRollCall';
 import { useRollCallTarget } from '@/hooks/useRollCallTarget';
+import { useSavedReturn } from '@/hooks/useSavedReturn';
 import { AttendanceCounter, StatusPill } from '@/ui/Attendance';
 import { Button } from '@/ui/Button';
 import { Card } from '@/ui/Card';
@@ -23,8 +24,6 @@ import { Screen } from '@/ui/Screen';
 import { TextField } from '@/ui/TextField';
 
 const t = labels.rollCall;
-/** Durée d'affichage de « Appel enregistré » avant le retour (maquette : 1,2 s). */
-const SAVED_DELAY_MS = 1200;
 
 export default function RollCallScreen() {
   const router = useRouter();
@@ -81,16 +80,8 @@ export default function RollCallScreen() {
     );
   };
 
-  // « Appel enregistré », puis retour à l'accueil (décision du porteur du 2026-11-27).
-  useEffect(() => {
-    if (!saved) return;
-    const timer = setTimeout(
-      // Accueil, même depuis l'appel sans créneau (pile : accueil → choix → appel).
-      () => (router.canDismiss() ? router.dismissTo('/') : router.replace('/')),
-      SAVED_DELAY_MS,
-    );
-    return () => clearTimeout(timer);
-  }, [saved, router]);
+  // « Appel enregistré », puis retour à l'Historique (ticket 013).
+  useSavedReturn(saved);
 
   const statusOf = (memberId: number) => statuses[memberId] ?? 'present';
   const members = roster ?? [];

@@ -4,6 +4,7 @@ import { accueil } from './accueil';
 import { appel } from './appel';
 import { commun } from './commun';
 import { creneaux } from './creneaux';
+import { historique } from './historique';
 import { membres } from './membres';
 import { organisation } from './organisation';
 
@@ -17,4 +18,5 @@ export const labels = {
   ...creneaux,
   ...appel,
   ...accueil,
+  ...historique,
 } as const;

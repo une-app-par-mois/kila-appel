@@ -14,6 +14,9 @@ export type GroupDeletionImpact = {
   rollCallDraft: boolean;
 };
 
+/** EX-16 : groupe proposé au filtre de l'Historique, avec sa saison. */
+export type HistoryGroup = { id: number; name: string; seasonName: string; activeSeason: boolean };
+
 const byName = new Intl.Collator('fr', { sensitivity: 'base' });
 
 type GroupRow = { id: number; season_id: number; name: string; archived_at: string | null };
@@ -38,6 +41,28 @@ export const groupsRepo = (db: Db) => ({
     )
       .map(toGroup)
       .sort((a, b) => byName.compare(a.name, b.name)),
+
+  /**
+   * EX-16 : groupes du filtre de l'Historique, archivés compris (ils ont des séances) : ceux d'une
+   * saison, ou de toutes (`null`), la saison active d'abord, puis les plus récentes.
+   */
+  listForHistory: async (seasonId: number | null): Promise<HistoryGroup[]> => {
+    const rows = await db.query<GroupRow & { season_name: string; active: number; rank: number }>(
+      `SELECT g.id, g.name, s.name AS season_name, s.is_active AS active,
+         DENSE_RANK() OVER (ORDER BY s.is_active DESC, s.start_date DESC, s.id DESC) AS rank
+       FROM groups g JOIN seasons s ON s.id = g.season_id
+       WHERE ?1 IS NULL OR g.season_id = ?1`,
+      [seasonId],
+    );
+    return rows
+      .sort((a, b) => a.rank - b.rank || byName.compare(a.name, b.name))
+      .map((r) => ({
+        id: r.id,
+        name: r.name,
+        seasonName: r.season_name,
+        activeSeason: r.active === 1,
+      }));
+  },
 
   /** Ses inscrits, à la date du jour : `enrollmentsRepo.listByGroup` (ticket 007c). */
   get: async (id: number): Promise<Group | null> => {

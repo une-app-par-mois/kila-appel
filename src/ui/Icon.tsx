@@ -11,6 +11,7 @@ import Clock from 'lucide-react-native/icons/clock';
 import EqualApproximately from 'lucide-react-native/icons/equal-approximately';
 import Grip from 'lucide-react-native/icons/grip-horizontal';
 import House from 'lucide-react-native/icons/house';
+import List from 'lucide-react-native/icons/list';
 import Phone from 'lucide-react-native/icons/phone';
 import Plus from 'lucide-react-native/icons/plus';
 import Search from 'lucide-react-native/icons/search';
@@ -30,8 +31,9 @@ const ICONS = {
   delete: Trash2,
   /** Poignée ≡ pour glisser (maquette Fiche membre). */
   grip: Grip,
-  /** Onglets (maquette : ⌂ et ⚙). */
+  /** Onglets (maquette : ⌂, ☰ et ⚙). */
   home: House,
+  list: List,
   settings: Settings,
   phone: Phone,
   search: Search,

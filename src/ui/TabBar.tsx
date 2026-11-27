@@ -1,5 +1,5 @@
-// Barre d'onglets (maquette) : Accueil, « Nouvel appel » en rond central, Paramètres. Seulement les
-// écrans existants (décision du porteur du 2026-11-27) : Historique au ticket 013, Stats au jalon 2.
+// Barre d'onglets (maquette) : Accueil, « Nouvel appel » en rond, Historique, Paramètres. Seulement
+// les écrans existants (décision du porteur du 2026-11-27) : Stats au jalon 2.
 // Le rond n'est pas un onglet : il ouvre l'appel par-dessus (`useNewRollCallRoute`).
 import { useRouter } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
@@ -13,6 +13,7 @@ import { Icon } from '@/ui/Icon';
 const t = labels.tabs;
 const TABS = {
   index: { label: t.home, icon: 'home' },
+  historique: { label: t.history, icon: 'list' },
   parametres: { label: t.settings, icon: 'settings' },
 } as const;
 
@@ -60,6 +61,7 @@ export const TabBar = ({ state, navigateToTab, insets }: BottomTabBarProps) => {
         <Text style={styles.label}>{t.newRollCall}</Text>
       </Pressable>
       {tab(1)}
+      {tab(2)}
     </View>
   );
 };
