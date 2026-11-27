@@ -91,7 +91,8 @@ describe('Dépôt des créneaux (EX-07)', () => {
     expect(await repo.get(s.slotId)).toMatchObject({
       durationMin: 60,
       place: null,
-      scheduleFrom: '2025-09-01',
+      // Changer de groupe décale la date d'effet comme le jour ou l'heure (décision du 2026-11-27).
+      scheduleFrom: TODAY,
       groups: [{ id: lundi, name: 'Benjamins lundi' }],
     });
     expect(await session()).toEqual(before);
@@ -111,6 +112,16 @@ describe('Dépôt des créneaux (EX-07)', () => {
     expect(
       await count(db, 'roll_call_drafts', 'slot_id = ? AND date = ?', [s.slotId, '2026-12-02']),
     ).toBe(1);
+  });
+
+  it('EX-07 changer seulement durée, lieu ou nom garde la date d’effet', async () => {
+    const repo = slotsRepo(db);
+    await repo.update(
+      s.slotId,
+      input({ weekday: 3, startTime: '17:30', durationMin: 45, place: 'Dojo', name: 'Technique' }),
+      TODAY,
+    );
+    expect((await repo.get(s.slotId))?.scheduleFrom).toBe('2025-09-01');
   });
 
   it('EX-07 la date d’effet ne recule jamais, même si l’horloge de l’appareil recule', async () => {

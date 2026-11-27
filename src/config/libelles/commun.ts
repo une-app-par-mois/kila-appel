@@ -62,6 +62,8 @@ export const commun = {
     STATUS_INVALID: 'Statut de présence inconnu.',
     COMMENT_TOO_LONG: '500 caractères au plus.',
     ALREADY_RECORDED: 'L’appel de cette séance est déjà enregistré.',
+    SLOT_INVALID: 'Créneau introuvable.',
+    NOT_A_SLOT_SESSION: 'Ce créneau n’a pas lieu à cette date et à cette heure.',
     NOT_ENROLLED: 'Un membre de la liste n’est pas inscrit au groupe à cette date.',
     PHONE_INVALID: 'Numéro à 10 chiffres commençant par 0, ou +33 suivi de 9 chiffres.',
     ALREADY_ENROLLED: 'Un des membres est déjà inscrit à ce groupe.',

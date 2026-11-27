@@ -3,9 +3,11 @@
 import { useCallback, useMemo } from 'react';
 import { enrollmentsRepo, type GroupEnrollment } from '@/data/enrollmentsRepo';
 import { DataError } from '@/data/errors';
+import { groupsRepo } from '@/data/groupsRepo';
 import { seasonsRepo } from '@/data/seasonsRepo';
 import { type RollCall, sessionsRepo } from '@/data/sessionsRepo';
 import { type Slot, slotsRepo } from '@/data/slotsRepo';
+import { toIsoDate } from '@/domain/formats';
 import { type LocalNow, proposedSession, type WeeklySlot } from '@/domain/occurrences';
 import { notifyDataChanged } from '@/hooks/dataChanged';
 import { useDatabase } from '@/hooks/useDatabase';
@@ -21,10 +23,12 @@ export const useRoster = (groupId: number | null, date: string) => {
     () => (db && groupId !== null ? () => enrollmentsRepo(db).listByGroup(groupId, date) : null),
     [db, groupId, date],
   );
-  const { value: roster, loadFailed } = useLoaded<GroupEnrollment[]>(load, 'ROSTER_LOAD_FAILED', {
-    groupId: groupId ?? 0,
-  });
-  return { roster, loadFailed };
+  const {
+    value: roster,
+    loaded,
+    loadFailed,
+  } = useLoaded<GroupEnrollment[]>(load, 'ROSTER_LOAD_FAILED', { groupId: groupId ?? 0 });
+  return { roster, loaded, loadFailed };
 };
 
 /** EX-09 : séance du créneau en cours, sinon la plus proche (ticket 005) ; `null` s'il n'y en a pas. */
@@ -37,7 +41,11 @@ export const useProposedSession = (now: LocalNow) => {
         ? async (): Promise<ProposedSession | null> => {
             const season = await seasonsRepo(db).getActive();
             if (!season) return null;
-            const slots = await slotsRepo(db).listBySeason(season.id);
+            // Un créneau sans groupe actif n'est pas proposé : l'enregistrement le refuserait.
+            const active = new Set((await groupsRepo(db).listBySeason(season.id)).map((g) => g.id));
+            const slots = (await slotsRepo(db).listBySeason(season.id)).filter((s) =>
+              s.groups.some((g) => active.has(g.id)),
+            );
             const found = proposedSession(slots as WeeklySlot[], season, { date, time });
             const slot = slots.find((s) => s.id === found?.slotId);
             return found && slot ? { slot, date: found.date, startTime: found.startTime } : null;
@@ -52,11 +60,13 @@ export const useProposedSession = (now: LocalNow) => {
 /** EX-15 : enregistrer un appel ; savoir si une séance de créneau l'est déjà (RM-05). */
 export const useRollCall = () => {
   const db = useDatabase();
-  const repo = useMemo(() => (db ? sessionsRepo(db) : null), [db]);
+  // Le jour est lu à chaque appel : l'écran peut rester ouvert après minuit.
+  const repo = useCallback(() => (db ? sessionsRepo(db, toIsoDate(new Date())) : null), [db]);
   const record = useCallback(
     async (call: RollCall): Promise<number> => {
-      if (!repo) throw new DataError('DB_NOT_READY');
-      const id = await repo.record(call);
+      const sessions = repo();
+      if (!sessions) throw new DataError('DB_NOT_READY');
+      const id = await sessions.record(call);
       notifyDataChanged();
       return id;
     },
@@ -64,8 +74,9 @@ export const useRollCall = () => {
   );
   const isRecorded = useCallback(
     async (slotId: number, date: string): Promise<boolean> => {
-      if (!repo) throw new DataError('DB_NOT_READY');
-      return repo.isRecorded(slotId, date);
+      const sessions = repo();
+      if (!sessions) throw new DataError('DB_NOT_READY');
+      return sessions.isRecorded(slotId, date);
     },
     [repo],
   );

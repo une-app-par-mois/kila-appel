@@ -199,6 +199,23 @@ describe('EX-15 appel à enregistrer', () => {
     ).toThrow(expect.objectContaining({ code: 'STATUS_INVALID' }));
   });
 
+  it('EX-15 refuse un créneau ou un membre sans identifiant entier positif', () => {
+    for (const slotId of [0, -1, 1.5, Number.NaN]) {
+      expect(() => validateRollCall({ ...call, slotId })).toThrow(
+        expect.objectContaining({ code: 'SLOT_INVALID' }),
+      );
+    }
+    for (const memberId of [0, Number.NaN]) {
+      expect(() =>
+        validateRollCall({ ...call, statuses: [{ memberId, status: 'present' }] }),
+      ).toThrow(expect.objectContaining({ code: 'STATUS_INVALID' }));
+    }
+  });
+
+  it('EX-13 la limite compte les caractères vus, pas les unités UTF-16', () => {
+    expect(validateRollCall({ ...call, comment: '⚽'.repeat(300) }).comment).toBe('⚽'.repeat(300));
+  });
+
   it('refuse une date, une heure ou un groupe invalides (RM-04)', () => {
     expect(() => validateRollCall({ ...call, date: '02/12/2026' })).toThrow(
       expect.objectContaining({ code: 'DATE_INVALID' }),

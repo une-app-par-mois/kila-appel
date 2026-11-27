@@ -7,6 +7,9 @@ import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
 import { type RollCall, sessionsRepo } from '@/data/sessionsRepo';
 
+// Mercredi 2026-12-02 : jour du créneau du jeu fictif (mercredi 17:30 depuis 2025-09-01).
+const TODAY = '2026-12-02';
+
 describe('Dépôt des séances (EX-15, RM-03, RM-05)', () => {
   let db: Db;
   let s: Seeded;
@@ -33,7 +36,7 @@ describe('Dépôt des séances (EX-15, RM-03, RM-05)', () => {
   const sessionsOn = (date: string) => count(db, 'sessions', 'date = ?', [date]);
 
   it('EX-15 enregistre la séance, son groupe figé et une présence par membre, d’un bloc', async () => {
-    const id = await sessionsRepo(db).record(call());
+    const id = await sessionsRepo(db, TODAY).record(call());
     expect(
       await db.query(
         'SELECT season_id, slot_id, date, start_time, state, comment FROM sessions WHERE id = ?',
@@ -66,7 +69,7 @@ describe('Dépôt des séances (EX-15, RM-03, RM-05)', () => {
   });
 
   it('RM-05 une seule séance par créneau et par date ; sans créneau (EX-39), plusieurs possibles', async () => {
-    const repo = sessionsRepo(db);
+    const repo = sessionsRepo(db, TODAY);
     // La séance du jeu fictif : créneau du jeu, le 2026-11-25.
     await expect(repo.record(call({ date: '2026-11-25' }))).rejects.toMatchObject({
       code: 'ALREADY_RECORDED',
@@ -88,7 +91,7 @@ describe('Dépôt des séances (EX-15, RM-03, RM-05)', () => {
       [noah, s.groupId],
     );
     await expect(
-      sessionsRepo(db).record(
+      sessionsRepo(db, TODAY).record(
         call({
           statuses: [
             { memberId: s.memberId, status: 'present' },
@@ -102,7 +105,7 @@ describe('Dépôt des séances (EX-15, RM-03, RM-05)', () => {
   });
 
   it('EX-04 date hors de la saison active refusée ; groupe archivé, d’une autre saison ou inconnu refusé', async () => {
-    const repo = sessionsRepo(db);
+    const repo = sessionsRepo(db, TODAY);
     await expect(repo.record(call({ date: '2027-08-04' }))).rejects.toMatchObject({
       code: 'DATE_OUTSIDE_SEASON',
     });
@@ -120,7 +123,7 @@ describe('Dépôt des séances (EX-15, RM-03, RM-05)', () => {
   });
 
   it('EX-07 un créneau d’un autre groupe ou inconnu est refusé', async () => {
-    const repo = sessionsRepo(db);
+    const repo = sessionsRepo(db, TODAY);
     const { lastInsertRowId: lundi } = await db.execute(
       "INSERT INTO groups (season_id, name) VALUES (?, 'Benjamins lundi')",
       [s.seasonId],
@@ -137,9 +140,28 @@ describe('Dépôt des séances (EX-15, RM-03, RM-05)', () => {
       "INSERT INTO groups (season_id, name) VALUES (?, 'Benjamins lundi')",
       [s.seasonId],
     );
-    const id = await sessionsRepo(db).record(
+    const id = await sessionsRepo(db, TODAY).record(
       call({ slotId: null, groupId: lundi, statuses: [], comment: null }),
     );
     expect(await count(db, 'attendances', 'session_id = ?', [id])).toBe(0);
+  });
+
+  it('EX-17 une séance de créneau est une vraie séance : bon jour, bonne heure, pas future (décision du 2026-11-27)', async () => {
+    const repo = sessionsRepo(db, TODAY);
+    for (const bad of [
+      { date: '2026-11-30' }, // un lundi
+      { date: '2026-12-09' }, // mercredi suivant : futur
+      { startTime: '09:00' },
+    ]) {
+      await expect(repo.record(call(bad))).rejects.toMatchObject({ code: 'NOT_A_SLOT_SESSION' });
+    }
+    await db.execute("UPDATE slots SET schedule_from = '2026-11-26' WHERE id = ?", [s.slotId]);
+    await expect(repo.record(call({ date: '2026-11-18' }))).rejects.toMatchObject({
+      code: 'NOT_A_SLOT_SESSION',
+    });
+    expect(await count(db, 'sessions')).toBe(1);
+    await repo.record(call({ date: '2026-11-18', slotId: null, startTime: '09:00' }));
+    await repo.record(call());
+    expect(await count(db, 'sessions')).toBe(3);
   });
 });

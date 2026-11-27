@@ -49,7 +49,7 @@ const collator = new Intl.Collator('fr', { sensitivity: 'base' });
 const byName = (a: Candidate | GroupEnrollment, b: Candidate | GroupEnrollment) =>
   collator.compare(a.lastName, b.lastName) || collator.compare(a.firstName, b.firstName);
 
-/** Inscription en cours à la date du paramètre `?n` : commencée, et fin absente ou après. */
+/** Inscription en cours à la date du paramètre `?n` : commencée, et fin absente ou après (RM-03). */
 export const current = (n: number) =>
   `(e.start_date <= ?${n} AND (e.end_date IS NULL OR e.end_date > ?${n}))`;
 

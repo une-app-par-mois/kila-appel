@@ -17,6 +17,7 @@ Le cœur de l'appli : faire l'appel en moins de 30 s (NF-01).
 
 - Dépôt `sessionsRepo` : enregistrer une séance d'un bloc (séance `recorded`, groupes figés, une présence par membre, commentaire facultatif) ; savoir si une séance de créneau est déjà enregistrée à une date
 - Commentaire de séance : 500 caractères au plus (décision du porteur du 2026-11-27)
+- Revue (décisions du porteur du 2026-11-27) : une séance de créneau tombe un jour du créneau, à son heure, et n'est jamais future ; changer le groupe d'un créneau avance sa date d'effet comme le jour ou l'heure
 - Contrôles : groupe de la saison active, date dans la saison, membres inscrits au groupe à la date (RM-03), une séance par créneau et par date (RM-05)
 - Hooks : liste de l'appel (inscrits à la date, triés par nom), séance proposée (EX-09), enregistrement
 

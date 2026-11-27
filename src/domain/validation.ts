@@ -15,6 +15,7 @@ export type InputErrorCode =
   | 'DURATION_INVALID'
   | 'GROUP_REQUIRED'
   | 'STATUS_INVALID'
+  | 'SLOT_INVALID'
   | 'COMMENT_TOO_LONG';
 
 export class InputError extends Error {
@@ -110,6 +111,8 @@ const STATUSES: readonly string[] = ['present', 'absent', 'late', 'excused'];
 /** EX-13 : 500 caractères au plus (décision du porteur du 2026-11-27). */
 export const COMMENT_MAX = 500;
 
+const isId = (n: number) => Number.isInteger(n) && n >= 1;
+
 /** EX-15 : un appel à enregistrer ; `slotId` nul : appel sans créneau (EX-39). */
 export type RollCallInput = {
   slotId: number | null;
@@ -124,14 +127,18 @@ export type RollCallInput = {
 export const validateRollCall = (input: RollCallInput): RollCallInput => {
   validateDate(input.date);
   if (!HHMM.test(input.startTime)) throw new InputError('TIME_INVALID');
-  if (!Number.isInteger(input.groupId) || input.groupId < 1) throw new InputError('GROUP_REQUIRED');
+  if (!isId(input.groupId)) throw new InputError('GROUP_REQUIRED');
+  if (input.slotId !== null && !isId(input.slotId)) throw new InputError('SLOT_INVALID');
   const seen = new Set<number>();
   for (const { memberId, status } of input.statuses) {
-    if (!STATUSES.includes(status) || seen.has(memberId)) throw new InputError('STATUS_INVALID');
+    if (!isId(memberId) || !STATUSES.includes(status) || seen.has(memberId))
+      throw new InputError('STATUS_INVALID');
     seen.add(memberId);
   }
   const comment = optional(input.comment);
-  if (comment !== null && comment.length > COMMENT_MAX) throw new InputError('COMMENT_TOO_LONG');
+  // Caractères vus (points de code), pas unités UTF-16 : un émoji compte pour un.
+  if (comment !== null && [...comment].length > COMMENT_MAX)
+    throw new InputError('COMMENT_TOO_LONG');
   return {
     slotId: input.slotId,
     groupId: input.groupId,

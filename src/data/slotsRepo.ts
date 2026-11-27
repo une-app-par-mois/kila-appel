@@ -100,7 +100,7 @@ export const slotsRepo = (db: Db) => ({
   },
 
   /**
-   * EX-07 : un nouveau jour ou une nouvelle heure prennent effet `today` (date d'effet avancée,
+   * EX-07 : un nouveau jour, une nouvelle heure ou un autre groupe prennent effet `today` (date d'effet avancée,
    * jamais reculée : le passé n'est pas recalculé avec le nouvel horaire, ticket 005). Un appel
    * interrompu sur ce créneau est gardé tel quel (décision du porteur du 2026-11-27).
    */
@@ -119,7 +119,11 @@ export const slotsRepo = (db: Db) => ({
         ])
       ).map((r) => r.group_id);
       await expectGroup(tx, current.season_id, s.groupId, linked);
-      const moved = s.weekday !== current.weekday || s.startTime !== current.start_time;
+      // Changer de groupe compte comme changer d'horaire (décision du porteur du 2026-11-27) :
+      // les séances d'avant ne sont pas rattachées au nouveau groupe.
+      const regrouped = linked.length !== 1 || linked[0] !== s.groupId;
+      const moved =
+        s.weekday !== current.weekday || s.startTime !== current.start_time || regrouped;
       const scheduleFrom = moved && today > current.schedule_from ? today : current.schedule_from;
       expectChanged(
         await tx.execute(
@@ -128,7 +132,7 @@ export const slotsRepo = (db: Db) => ({
           [s.weekday, s.startTime, s.durationMin, s.place, s.name, scheduleFrom, id],
         ),
       );
-      if (linked.length !== 1 || linked[0] !== s.groupId) {
+      if (regrouped) {
         await tx.execute('DELETE FROM slot_groups WHERE slot_id = ?', [id]);
         await tx.execute('INSERT INTO slot_groups (slot_id, group_id) VALUES (?, ?)', [
           id,
