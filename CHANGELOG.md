@@ -6,6 +6,7 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Ajouté
 
+- Créneaux hebdomadaires (données) : jour, début, durée, lieu et nom facultatifs, un groupe ; un nouveau jour ou une nouvelle heure prennent effet le jour même ; modifier ou supprimer un créneau ne touche à aucune séance enregistrée — ticket 009.
 - Saisons : changer les dates est refusé si une inscription à l’un de ses groupes commencerait hors des nouvelles dates — ticket 006f.
 - Inscription dans les dates de la saison : une date de début hors de la saison active est refusée avec un message ; la date proposée est aujourd’hui, ramené au premier ou au dernier jour de la saison — ticket 007e.
 - Écrans des contacts d’urgence : section de la fiche avec poignée ≡ pour changer l’ordre (glisser, ou « Monter » et « Descendre » au lecteur d’écran), formulaire, recherche depuis l’accueil provisoire et « Appeler » vers le composeur du système ; react-native-gesture-handler, react-native-reanimated et react-native-worklets explicites aux versions du SDK — ticket 008b.
