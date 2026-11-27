@@ -16,6 +16,7 @@ Les écrans de la conservation, de la purge et de « tout effacer » (EX-23, EX-
 
 ## Ce qui change
 
+- `purgeCandidates` ne compte parmi les N saisons gardées que les saisons **commencées** (date de début ≤ aujourd'hui) ; une saison à venir est toujours gardée en plus (décision du porteur du 2026-11-27) ; `purge` reçoit la même date
 - Réglage de conservation (dans `settings`, par `settingsRepo`) ; proposition et confirmation de la purge ; « Tout effacer » avec le mot à taper ; lignes de Paramètres
 
 ## Critères d'acceptation
@@ -34,7 +35,7 @@ Les écrans de la conservation, de la purge et de « tout effacer » (EX-23, EX-
 
 ## Questions prévues
 
-Séance du 2026-11-27 : conservation de 1 à 3 saisons.
+Séance du 2026-11-27 : conservation de 1 à 3 saisons. Clôture du 2026-11-27 : seules les saisons commencées comptent parmi les gardées.
 
 ## Décisions
 
