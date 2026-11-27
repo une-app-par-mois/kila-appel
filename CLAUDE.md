@@ -68,12 +68,23 @@ Ces cas attendent toujours la réponse du porteur, même avec une recommandation
 - Besoin d'une nouvelle dépendance ou d'une dépense.
 - Ce qui touche aux règles absolues ABS-xx, à la sécurité (SEC-xx), aux données personnelles ou à la conformité (stores, RGPD, licences).
 - Modification d'une zone sensible que le ticket ne prévoit pas ; plan d'un ticket en zone sensible.
-- Choix sans recommandation nette (options équivalentes, ou information qui manque).
+- Choix sans recommandation nette (options équivalentes, ou information qui manque), sauf s'il va dans la file du porteur (ci-dessous).
 - Test existant qui échoue sans rapport avec le ticket.
 - Ticket plus gros que prévu (plus de 10 fichiers, plus d'une session) : on le découpe **avant** ; le découpage suit la recommandation et se note dans `docs/DECISIONS.md`, sauf en zone sensible.
 - Toute action irréversible ou extérieure au dépôt (publication, tag, réglages GitHub).
 
 Pose chaque décision sous forme de choix (options, avec ta recommandation en premier).
+
+**File du porteur** (décision du porteur du 2026-11-27) : deux sortes de questions ne bloquent plus le ticket :
+
+- un choix sans recommandation nette ;
+- un cas limite qui demande d'ajuster une décision que le porteur a prise dans un ticket.
+
+Il faut qu'elles soient faciles à défaire et qu'elles ne relèvent d'aucun autre cas de la liste ci-dessus. Facile à défaire veut dire : aucune donnée effacée ni réécrite, pas de migration, pas de texte légal ni de déclaration aux stores.
+
+Pour ces questions, l'IA applique l'option qu'elle préfère. Elle ajoute la ligne dans `docs/DECISIONS.md` avec l'état « en attente du porteur », puis continue. La PR du ticket les liste en tête. À la fin du jalon, avant la PR vers `main`, l'IA pose toute la file d'un coup, en QCM. Une réponse différente de son choix se corrige sur un ticket.
+
+Le reste de la liste (écart avec la maquette compris) est toujours posé sur le moment.
 
 ## Décisions automatiques
 

@@ -25,7 +25,7 @@ PR d'un groupe ou d'un jalon vers `main` : lister ici les tickets et leurs PR ; 
 
 ## Décisions automatiques à relire
 
-[Lignes de `docs/DECISIONS.md` ajoutées par ce ticket, ou « Aucune ». Les décisions contestées par le contradicteur d'abord, avec son argument.]
+[Lignes de `docs/DECISIONS.md` ajoutées par ce ticket, ou « Aucune ». D'abord celles « en attente du porteur » (file relue en fin de jalon), puis celles contestées par le contradicteur, avec son argument.]
 
 ## Non vérifié
 

@@ -4,7 +4,7 @@ Journal des choix que l'IA a faits seule en appliquant sa recommandation, sans p
 
 Les décisions posées au porteur restent dans les tickets, l'architecture et le PRD, comme avant.
 
-État : « à relire » (pas contestée par le contradicteur), « contestée, maintenue : <raison> », « changée après contradiction », « posée au porteur », « annulée (<date>, ticket) ».
+État : « à relire » (pas contestée par le contradicteur), « contestée, maintenue : <raison> », « changée après contradiction », « posée au porteur », « en attente du porteur » (file du porteur, `CLAUDE.md` : appliquée, posée en fin de jalon), « annulée (<date>, ticket) ».
 
 | Date | Ticket | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- | --- | --- |
