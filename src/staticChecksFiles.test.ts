@@ -11,6 +11,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import ts from 'typescript';
 import { tempDir } from '@/__fixtures__/backupFiles';
+import { literalText, readsExpoModules, readsGlobalExpo } from '@/__fixtures__/expoAccess';
 import { scriptKind, TEST_FILE, walkSources } from '@/__fixtures__/sourceFiles';
 
 /** Seul fichier autorisé à importer ces modules de fichiers (liste testée). */
@@ -41,11 +42,6 @@ const FILE_NETWORK = new Set([
 
 type Violation = { rule: string; line: number };
 
-const literalText = (node: ts.Node | undefined): string | undefined =>
-  node !== undefined && (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node))
-    ? node.text
-    : undefined;
-
 /** Module nommé par un import, un export, un require() ou un import() ; sinon undefined. */
 const moduleName = (node: ts.Node): string | undefined => {
   if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
@@ -64,28 +60,6 @@ const moduleName = (node: ts.Node): string | undefined => {
   return undefined;
 };
 
-/** `expo`, `globalThis.expo`, `global['expo']` : l'objet qui porte la table des modules natifs. */
-const isExpo = (node: ts.Expression): boolean =>
-  (ts.isIdentifier(node) && node.text === 'expo') ||
-  (ts.isPropertyAccessExpression(node) && node.name.text === 'expo') ||
-  (ts.isElementAccessExpression(node) && literalText(node.argumentExpression) === 'expo');
-
-/** Lecture de `modules` sur `expo` : par un point, des crochets ou une déstructuration. */
-const readsExpoModules = (node: ts.Node): boolean => {
-  if (ts.isPropertyAccessExpression(node)) {
-    return node.name.text === 'modules' && isExpo(node.expression);
-  }
-  if (ts.isElementAccessExpression(node)) {
-    return literalText(node.argumentExpression) === 'modules' && isExpo(node.expression);
-  }
-  if (ts.isVariableDeclaration(node) && ts.isObjectBindingPattern(node.name) && node.initializer) {
-    const names = node.name.elements.map((e) => (e.propertyName ?? e.name).getText());
-    return names.includes('modules') && isExpo(node.initializer);
-  }
-  return false;
-};
-
-/** Écarts d'un fichier (`file` relatif à la racine du dépôt). */
 const check = (file: string, source: string): Violation[] => {
   const tree = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, scriptKind(file));
   const found: Violation[] = [];
@@ -105,6 +79,9 @@ const check = (file: string, source: string): Violation[] => {
     if (key !== undefined && FILE_NETWORK.has(key)) add('ABS-01 réseau', node);
     if (key !== undefined && NATIVE_ACCESS.has(key)) add('ABS-01 module natif', node);
     if (readsExpoModules(node)) add('ABS-01 module natif', node);
+    if (readsGlobalExpo(node) && !FILE_MODULE_OWNERS.includes(file)) {
+      add('ABS-01 objet expo global', node);
+    }
     const named = ts.isIdentifier(node) ? node.text : literalText(node);
     if (named !== undefined && NATIVE_NAMES.has(named) && !FILE_MODULE_OWNERS.includes(file)) {
       add('ABS-01 nom de module natif', node);
@@ -186,6 +163,15 @@ describe('ABS-01 modules de fichiers seulement dans src/data/expoFiles.ts', () =
     'const n = `FileSystem`;',
   ])('refuse le nom d’un module natif hors de l’adaptateur : %s', (source) => {
     expect(rules('src/hooks/useRestore.ts', source)).toEqual(['ABS-01 nom de module natif']);
+    expect(rules('src/data/expoFiles.ts', source)).toEqual([]);
+  });
+
+  it.each([
+    'const e = globalThis.expo; e.modules[name];',
+    "const e = global['expo'];",
+    'const { expo } = globalThis;',
+  ])('refuse l’objet global expo hors de l’adaptateur : %s', (source) => {
+    expect(rules('src/hooks/useRestore.ts', source)).toEqual(['ABS-01 objet expo global']);
     expect(rules('src/data/expoFiles.ts', source)).toEqual([]);
   });
 

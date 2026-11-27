@@ -15,6 +15,7 @@ let mockSize: number | undefined;
 const mockOptions = jest.fn();
 jest.mock('expo-sqlite', () => ({ openDatabaseAsync: jest.fn() }));
 jest.mock('expo-sharing', () => ({ shareAsync: jest.fn() }));
+jest.mock('@/data/log', () => ({ log: jest.fn() }));
 jest.mock('expo-file-system', () => require('@/__fixtures__/expoModules').fakeFileSystem('ios'));
 jest.mock('expo-document-picker', () => {
   const { join: joinPath } = require('node:path');

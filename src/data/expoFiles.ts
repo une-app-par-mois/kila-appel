@@ -12,6 +12,7 @@ import { shareAsync } from 'expo-sharing';
 import { Platform } from 'react-native';
 import { type BackupFiles, MAX_BACKUP_BYTES, type OpenDb } from '@/data/backupCheck';
 import { checkSystemPath, openExpoCopy } from '@/data/expoDb';
+import { log } from '@/data/log';
 
 const FILE_SCHEME = 'file://';
 // Dossier où expo-document-picker copie le fichier choisi avec `copyToCacheDirectory`.
@@ -161,11 +162,18 @@ export const expoPicker = (os: string): PickerAccess => {
         path = uriToPath(asset.uri);
         checkChild(pickedRoot(), path);
       } catch (error) {
+        // Code à part : un chemin inattendu n'est pas une panne du sélecteur (revue du 014e).
+        log('RESTORE_PICK_PATH_REFUSED');
         await clearPicked();
         throw error;
       }
       if (asset.size !== undefined && asset.size > MAX_BACKUP_BYTES) {
-        deleteFile(path);
+        log('RESTORE_REJECTED_TOO_LARGE');
+        try {
+          deleteFile(path);
+        } catch {
+          await clearPicked();
+        }
         return { reason: 'TOO_LARGE' };
       }
       return { path };
