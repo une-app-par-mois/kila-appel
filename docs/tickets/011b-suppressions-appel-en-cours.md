@@ -19,6 +19,11 @@ Note de la revue de sécurité des tickets 006d et 007 : supprimer un groupe ou 
 - Le calcul se fait dans les dépôts (`deletionImpact` de `groupsRepo` et `membersRepo`, comme `slotsRepo`) ; ces deux fichiers rejoignent la liste du contrôle EX-14 de `staticChecks`
 - Membre : « son statut dans l'appel en cours » ajouté à la liste de la confirmation
 
+## Revue de code (2026-11-27, décisions du porteur)
+
+- Groupe : l'appel en cours dit dans une phrase à part (« L'appel en cours (non enregistré) sera aussi effacé. »), la liste des liens contenant déjà « et »
+- Même nom partout : « l'appel en cours (non enregistré) » pour la saison, le créneau et le groupe
+
 ## Critères d'acceptation
 
 - [x] Message de suppression d'un groupe qui nomme l'appel en cours, seulement s'il le concerne

@@ -133,7 +133,7 @@ describe('Écrans des saisons (EX-01)', () => {
     ).toBeTruthy();
     expect(
       screen.getByText(
-        'Seront effacés définitivement : 1 groupe, 2 inscriptions, 1 créneau, 1 séance, 2 présences et l’appel en cours.',
+        'Seront effacés définitivement : 1 groupe, 2 inscriptions, 1 créneau, 1 séance, 2 présences et l’appel en cours (non enregistré).',
       ),
     ).toBeTruthy();
     expect(screen.getByText(t.seasonDeletion.kept)).toBeTruthy();

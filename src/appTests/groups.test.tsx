@@ -111,7 +111,7 @@ describe('Écrans des groupes (EX-02)', () => {
     expect(await screen.findByRole('header', { name: 'Supprimer Poussins ?' })).toBeTruthy();
     expect(
       screen.getByText(
-        'Seront effacés définitivement : ses 2 inscriptions, ses liens à 1 créneau et à 1 séance et l’appel en cours (non enregistré).',
+        'Seront effacés définitivement : ses 2 inscriptions et ses liens à 1 créneau et à 1 séance. L’appel en cours (non enregistré) sera aussi effacé.',
       ),
     ).toBeTruthy();
     expect(screen.getByText(t.groupDeletion.kept)).toBeTruthy();
@@ -121,6 +121,12 @@ describe('Écrans des groupes (EX-02)', () => {
     expect(await count(db, 'roll_call_drafts')).toBe(0);
     expect(await count(db, 'sessions', 'id = ?', [s.sessionId])).toBe(1);
     expect(await count(db, 'attendances', 'session_id = ?', [s.sessionId])).toBe(2);
+  });
+
+  it('EX-14 groupe sans inscription ni lien mais avec l’appel en cours : les deux sont dits', () => {
+    expect(
+      t.groupDeletion.message({ enrollments: 0, slots: 0, sessions: 0, rollCallDraft: true }),
+    ).toBe(`${t.groupDeletion.nothingElse} L’appel en cours (non enregistré) sera aussi effacé.`);
   });
 
   it('un groupe sans inscription ni lien : le message le dit', async () => {

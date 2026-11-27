@@ -104,6 +104,10 @@ describe('Écrans des créneaux (EX-07)', () => {
     const router = await open(`/creneaux/${s.slotId}`);
     await fireEvent.press(await button(f.delete));
     expect(await screen.findByText(t.slotDeletion.message(true))).toBeTruthy();
+    // Même nom de l'appel en cours partout (décision du porteur du 2026-11-27, ticket 011b).
+    expect(t.slotDeletion.message(true)).toBe(
+      'Le créneau sera supprimé. L’appel en cours (non enregistré) sur ce créneau sera effacé.',
+    );
     expect(screen.getByText(t.slotDeletion.note)).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: t.slotDeletion.confirm }));
     await waitFor(() => expect(router.getPathname()).toBe('/creneaux'));
