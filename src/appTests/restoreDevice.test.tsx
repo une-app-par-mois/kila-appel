@@ -66,11 +66,8 @@ describe('EX-20 NF-04 restauration par le vrai adaptateur de fichiers', () => {
     await saved.close();
     mockChoice = backup;
     const exportDir = join(cache, 'sauvegardes', 'export');
-    const exported = () => {
-      mkdirSync(exportDir, { recursive: true });
-      writeFileSync(join(exportDir, 'kila-sauvegarde-2026-11-27.db'), 'x');
-    };
-    exported();
+    mkdirSync(exportDir, { recursive: true });
+    writeFileSync(join(exportDir, 'kila-sauvegarde-2026-11-27.db'), 'x');
     const router = await renderRouter(routes, { initialUrl: '/donnees' });
     // L'écran Sauvegarde ne vide rien à l'ouverture (SEC-10, ticket 014g) ; la restauration ne
     // touche jamais à son dossier.

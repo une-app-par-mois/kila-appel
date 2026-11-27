@@ -22,9 +22,9 @@ Créé le 2026-11-27 à l'intégration du lot 014c-014d-015b, depuis la section 
 
 ## Critères d'acceptation
 
-- [ ] Aucun vidage de `cache/sauvegardes/` hors du verrou commun ; plus de vidage au montage de l'écran Sauvegarde (SEC-10)
-- [ ] Chaque export commence par vider le dossier, sous `'export'` ; un échec du vidage est journalisé (`BACKUP_CLEAR_FAILED`, sans détail, ABS-04) sans empêcher l'export
-- [ ] Un écran Sauvegarde monté pendant une restauration, une purge ou le nettoyage au démarrage ne touche à aucun dossier
+- [x] Aucun vidage de `cache/sauvegardes/` hors du verrou commun ; plus de vidage au montage de l'écran Sauvegarde (SEC-10)
+- [x] Chaque export commence par vider le dossier, sous `'export'` ; un échec du vidage est journalisé (`BACKUP_CLEAR_FAILED`, sans détail, ABS-04) sans empêcher l'export
+- [x] Un écran Sauvegarde monté pendant une restauration, une purge ou le nettoyage au démarrage ne touche à aucun dossier
 
 ## Tests attendus
 
@@ -53,3 +53,4 @@ Créé le 2026-11-27 à l'intégration du lot 014c-014d-015b, depuis la section 
 - CHANGELOG : « Sauvegarde : le dossier d'export est vidé au début de chaque export, sous le verrou commun, et plus à l'ouverture de l'écran (SEC-10, ticket 014g). »
 - Architecture : ligne 183 de `docs/ARCHITECTURE.md` (ticket 014b), remplacer « vidé à chaque ouverture de l'écran » par « vidé au début de chaque export, sous le verrou commun (`'export'`), jamais à l'ouverture de l'écran (ticket 014g) ».
 - SEC-10 (`docs/SECURITE.md`), après « jamais au montage de l'écran ; » : « l'export vide `cache/sauvegardes/` sous le verrou commun (`'export'`), au début de chaque export, jamais au montage (ticket 014g) ; » ; colonne Vérification : ajouter `src/hooks/useBackupExportClear.test.tsx` (vidage sous le verrou, avant le sous-dossier, rien au montage ni pendant `'restore'`, `'erase'`, `'cleanup'`, échec journalisé).
+- SEC-10, limite (revue de sécurité du 014g) : si le nettoyage au démarrage échoue, un reste de copie laissé par un arrêt brutal n'est plus effacé à l'ouverture de l'écran Sauvegarde ; il attend le prochain export ou le prochain lancement. Le fichier reste dans le cache privé de l'appli ; conforme au plan validé par le porteur.

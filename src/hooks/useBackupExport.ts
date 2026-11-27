@@ -29,10 +29,6 @@ export const useLastBackup = () => {
   return { lastBackup: value, loaded, loadFailed };
 };
 
-// Un seul export à la fois dans l'appli, et jamais pendant une restauration, une purge ou le
-// nettoyage au démarrage (verrou commun, revues du 014b et du 014e) : un second écran Sauvegarde,
-// monté pendant un partage, ne vide pas le dossier et ne lance pas un autre export.
-
 /**
  * Appelé sous le verrou 'export'. Rend faux si aucun fichier n'a été partagé. Vide d'abord le
  * dossier dédié (copies restées d'un arrêt brutal) ; un échec, même levé tout de suite, est
@@ -84,6 +80,9 @@ export const useBackupExport = (deps: BackupDeps) => {
   const depsRef = useRef(deps);
   depsRef.current = deps;
 
+  // Un seul export à la fois dans l'appli, et jamais pendant une restauration, une purge ou le
+  // nettoyage au démarrage (verrou commun, revues du 014b et du 014e) : un second écran
+  // Sauvegarde, monté pendant un partage, ne vide pas le dossier et ne lance pas un autre export.
   const exportNow = useCallback(async () => {
     if (!db || !fileLock.acquire('export')) return;
     setBusy(true);

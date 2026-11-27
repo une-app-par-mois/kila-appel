@@ -145,6 +145,8 @@ describe('EX-19 écran Sauvegarde : export', () => {
     writeFileSync(old, 'reste');
     await open();
     await exportButton();
+    // Effets et promesses en attente terminés : un vidage asynchrone au montage se verrait ici.
+    await act(async () => undefined);
     expect(existsSync(old)).toBe(true);
     await fireEvent.press(await exportButton());
     await waitFor(() => expect(log).toHaveBeenCalledWith('BACKUP_SHARED'));

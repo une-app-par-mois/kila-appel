@@ -109,16 +109,19 @@ describe('useBackupExport : vidage sous le verrou (SEC-10)', () => {
         throw new Error('disque');
       },
     ],
-  ])('un vidage en échec par %s est journalisé et le partage a lieu', async (_label, fail) => {
-    files.clear = jest.fn(fail as () => Promise<void>);
-    const { result, unmount } = await renderHook(() => useBackupExport(deps()));
-    await act(() => result.current.exportNow());
-    expect(log).toHaveBeenCalledWith('BACKUP_CLEAR_FAILED');
-    expect(share).toHaveBeenCalledTimes(1);
-    expect(log).toHaveBeenCalledWith('BACKUP_SHARED');
-    expect(log).not.toHaveBeenCalledWith('BACKUP_EXPORT_FAILED');
-    expect(result.current.failed).toBe(false);
-    expect(fileLock.holder()).toBeNull();
-    await unmount();
-  });
+  ])(
+    'SEC-10 : un vidage en échec par %s est journalisé et le partage a lieu',
+    async (_label, fail) => {
+      files.clear = jest.fn(fail as () => Promise<void>);
+      const { result, unmount } = await renderHook(() => useBackupExport(deps()));
+      await act(() => result.current.exportNow());
+      expect(log).toHaveBeenCalledWith('BACKUP_CLEAR_FAILED');
+      expect(share).toHaveBeenCalledTimes(1);
+      expect(log).toHaveBeenCalledWith('BACKUP_SHARED');
+      expect(log).not.toHaveBeenCalledWith('BACKUP_EXPORT_FAILED');
+      expect(result.current.failed).toBe(false);
+      expect(fileLock.holder()).toBeNull();
+      await unmount();
+    },
+  );
 });
