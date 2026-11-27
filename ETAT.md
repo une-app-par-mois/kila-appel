@@ -14,15 +14,17 @@ Décisions du lot : 50 lignes ajoutées à `docs/DECISIONS.md` (5 du 027 déjà 
 
 1. **Lot J2-3 : 020, 025, 028** (séance de lancement, pré-analyse, QCM ; plan du 028 en zone sensible). Reports déjà écrits dans les fiches : appui sur un groupe de l'onglet Stats et case vide de `SessionSquares` (025) ; requête des séances avec `state` dans `sessionsRepo.ts`, heure d'été et d'hiver, déclencheur passé, erreur de `plannedReminders` attrapée (028).
 2. Lots suivants : 029 (état réel après une restauration, ligne Relance, clé `alerts.settingsSection`), puis 030 (campagne Maestro, NF-08 sur l'appareil, focus de l'écran d'alerte et `dismissTo` de l'écran Période).
-3. **Recette sur l'A55 en cours le 2026-11-27** (lots 4, 5, 6 du jalon 1 et lot J2-1 ; décision du porteur du 2026-11-27 ; liste mise à jour par le porteur après la recette). À vérifier à la main dès que le téléphone est disponible :
-   - aller-retour réel : export vers Drive ou Gmail, puis restauration de ce fichier ; restauration depuis Drive ;
-   - base réellement abîmée (APK de debug, `run-as`) : écran « abîmée », confirmation, Bienvenue ; restauration depuis l'écran de récupération (014f) ;
-   - brouillon après redémarrage de l'appareil ;
+3. **Recette sur l'A55 du 2026-11-27, faite par le porteur** avec l'APK de production du jalon 2 (`1a23be4`, après les PR #72 à #74). L'audit SEC-02 est conforme. Par le câble : 2 permissions (`POST_NOTIFICATIONS` non accordée, `RECEIVE_BOOT_COMPLETED`), `DB_READY` version 1, aucune ligne Firebase dans le processus de Ki&La (celles du journal venaient de `com.facebook.katana`). Le porteur a validé :
+   - Bienvenue, mise en route, appel au doigt (NF-01, dit « ok », durée non relevée), onglet Stats ;
+   - brouillon repris après redémarrage de l'appareil ;
+   - export vers Drive, modification, puis restauration depuis Drive, retour Android bloqué ;
+   - Tout effacer (retour bloqué), retour à Bienvenue, puis restauration de la sauvegarde sur la base recréée.
+
+   **Reste à vérifier sur l'A55**, laissé de côté par le porteur le 2026-11-27 :
+   - base réellement abîmée (APK de debug, `run-as`) et restauration depuis l'écran de récupération (014f) ;
    - durée de `quick_check` avec une grosse base fictive ;
-   - blocage du retour Android pendant l'effacement et la recopie (014f) et pendant Tout effacer (015f) ;
-   - Tout effacer, restauration sur une base recréée et invitation après le premier appel : vus **sur l'émulateur seulement** (016) ;
-   - bandeau des 30 jours (014d) ; NF-01 au vrai doigt ; `scripts/e2e.sh --appareil-reel` ;
-   - **APK avec expo-notifications** (026) : installation, démarrage, aucune ligne Firebase dans `adb logcat`, permissions affichées par le système ;
+   - bandeau des 30 jours (014d) ; `scripts/e2e.sh --appareil-reel` ;
+   - écrans des alertes (022) et du choix de période (024) : focus, retour Android, `dismissTo` ;
    - **relances réelles** (028, 029) : notification reçue, sans nom de membre, après un redémarrage ;
    - **durées NF-08 sur l'appareil** (alertes et statistiques, jeux de volume, 030).
 4. **Vérifications iPhone avant le jalon 7** (toute publication iOS) : restauration réelle puis `tmp/` vide ; aucun lien dans `Caches/expo-sharing-tmp/` ; préfixe du cache identique entre expo-file-system et expo-modules-core ; Inbox `tmp/<identifiant>-Inbox/` vidée par Tout effacer et par le démarrage ; restauration depuis l'écran de récupération ; build iOS avec expo-notifications sans habilitation.
