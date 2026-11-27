@@ -274,6 +274,28 @@ Avant de passer aux tickets suivants, je veux voir avec toi comment optimiser le
 - Lire les manifestes et les POM de chaque bibliothèque native avant d'accepter une dépendance : la licence et les permissions ne se voient pas dans `package.json`.
 - Un audit par motifs se contourne par un alias ou une référence : l'échec fermé et une liste figée versionnée rendent tout ajout visible au diff.
 
+### Lot J2-2 (022, 024, 027) — 2026-11-27
+
+**Prompt clé** : séance de lancement du lot J2-2 (plan du 027 en zone sensible validé, QCM des questions de la pré-analyse, destination de « Voir ses contacts d'urgence » tranchée par le porteur), puis trois agents de code en parallèle.
+
+**Ce que l'IA a fait** :
+- **Développement** : 022 (section des alertes sur l'accueil, écran de l'alerte et « Marquer comme traitée », réglage du seuil, cases `SessionSquares`, recherche d'urgence ouverte par `?membre=<id>`) ; 024 (onglet Stats, écran Période, barre `AttendanceBar`) ; 027 (calcul pur des relances des 7 jours à venir, réglages désactivée par défaut et 30 min, textes de la maquette, test SEC-12 sur un jeu fictif lu par les dépôts).
+- **Intégration** : revue de code, contradicteur, revue de sécurité du 027 ; corrections renvoyées aux agents ; fusions une par une (PR #72, #73, #74) ; 1526 tests ; 50 décisions ajoutées à `docs/DECISIONS.md`, 1 en attente du porteur mise en file.
+
+**Ce qui a été corrigé par les revues** :
+- **urgence limitée au membre** : la recherche pré-remplie avec le nom montrait aussi les homonymes (ou un « Martinez » pour « Martin ») : risque d'appeler le mauvais parent ; tant que la saisie n'est pas modifiée, seule la carte du membre s'affiche, sans `autoFocus` ;
+- **fermeture de l'écran d'urgence par l'alerte** : l'écran d'alerte revenait à l'accueil dès que l'alerte n'était plus montrée, et fermait la recherche d'urgence ouverte par-dessus ; le retour n'a lieu que quand l'écran d'alerte a le focus ;
+- **pile de navigation de l'écran Période** : `router.navigate` empilait un second `(tabs)`, un retour rouvrait l'écran Période ; retour par `router.dismissTo` vers `/stats`, testé par deux applications de suite ;
+- **fenêtre de 7 jours des relances** : elle s'arrêtait à aujourd'hui + 6, la relance de la semaine suivante manquait dès que celle du jour était passée ; occurrences d'hier à aujourd'hui + 7, bornées par maintenant + 7 jours (ADR-007) ;
+- **seuil des alertes** (contradicteur) : un seuil lu à part pouvait échouer sans message ou différer de celui de la liste ; `useAlerts` renvoie le seuil lu avec la liste.
+
+**Incident** : disque plein pendant le lot ; chaque copie de travail des agents pesait de 4 à 12 Go ; 59 Go libérés avant de reprendre.
+
+**Leçons** :
+- Un écran qui navigue seul (retour automatique) doit vérifier qu'il a le focus : un écran ouvert par-dessus n'est pas le sien.
+- Pré-remplir une recherche dans un écran d'urgence n'est pas neutre : le résultat doit désigner une seule personne.
+- Surveiller la place libre avant de lancer trois agents en parallèle.
+
 ### [Étape] — [AAAA-MM-JJ]
 
 **Prompt**

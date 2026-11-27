@@ -51,6 +51,13 @@ Séance de découpage du jalon 2 (2026-11-27), réponses du porteur :
 
 - Plan validé par le porteur le 2026-11-27.
 
+Reports de l'intégration du lot J2-2 (2026-11-27) :
+
+- une sauvegarde restaurée avec `reminder_enabled = 1` alors que la permission n'est pas accordée doit afficher l'état réel (EX-29) (027).
+- la clé `alerts.settingsSection` (« Réglages », `src/config/libelles/alertes.ts`) est à déplacer quand la section reçoit la ligne Relance (022).
+- section « Réglages » de Paramètres (022) : une seule ligne aujourd'hui, « Alertes d'assiduité · Après N absences » ; la ligne Relance s'ajoute au-dessus (maquette Paramètres).
+- sous le réglage, la mention « le nom du groupe s'affiche sur l'écran verrouillé » (027, revue de sécurité ; `docs/IDEES.md`).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

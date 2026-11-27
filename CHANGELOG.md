@@ -6,6 +6,9 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Ajouté
 
+- Relance : calcul des relances des 7 jours à venir et réglages (désactivée par défaut, 30 min) (F-06, EX-28) — ticket 027.
+- Onglet Stats : taux de présence de la période et par groupe, période au choix (F-05, EX-27) — ticket 024.
+- Accueil : alertes d'assiduité, écran de l'alerte avec « Marquer comme traitée », réglage du seuil dans Paramètres (F-04, EX-25, EX-26) ; « Voir ses contacts d'urgence » ouvre la recherche d'urgence limitée au membre — ticket 022.
 - Statistiques : calcul des taux de présence par groupe et par membre, sur la saison, le mois ou des dates libres (F-05, EX-27, RM-01, RM-03) — ticket 023.
 - Assiduité : calcul des séries d'absences et des alertes, traitement d'une alerte et seuil réglable de 2 à 10 (F-04, EX-25, EX-26, RM-02) — ticket 021.
 - Tests : campagne Maestro du jalon 1 (`scripts/e2e.sh`, `.maestro/`) : appel de 20 membres chronométré, brouillon après fermeture forcée, sauvegarde puis tout effacer puis restauration d'une sauvegarde fictive générée à chaque lancement — ticket 016.

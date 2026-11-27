@@ -1,6 +1,6 @@
 # 027 — Relance : calcul des relances et réglages
 
-Statut : à faire · Jalon : 2 · Zone sensible : **oui** (notifications : aucun nom de membre, ABS-04, SEC-12 ; texte et moments calculés) · Trivial : non
+Statut : fusionné dans le groupe (PR #74) · Jalon : 2 · Zone sensible : **oui** (notifications : aucun nom de membre, ABS-04, SEC-12 ; texte et moments calculés) · Trivial : non
 
 Dépend de : aucun (aucune dépendance installée : domaine pur et réglages) · Fichiers touchés : `src/domain/reminders.ts` et son test (nouveaux), `src/domain/occurrences.ts` (exports, après revue), `src/data/settingsRepo.ts`, `src/data/settingsRepo.test.ts`, `src/config/libelles/relance.ts` (nouveau), `src/config/libelles/index.ts`, `src/config/reminderTexts.test.ts` (nouveau) — 7 fichiers
 
@@ -36,13 +36,13 @@ EX-28 : une notification locale si aucun appel n'est enregistré X minutes aprè
 
 ## Critères d'acceptation
 
-- [ ] EX-28 : créneau le mercredi à 14:00, délai 30 → relance le mercredi à 14:30 ; délai 45 → 14:45 ; créneau à 23:45, délai 30 → lendemain 00:15.
-- [ ] EX-28 : séance enregistrée ce jour-là → pas de relance ; séance annulée ou non planifiée → pas de relance ; préparée → relance.
-- [ ] Relance déjà passée (ouverture à 15:00 pour un créneau à 14:00) → non programmée.
-- [ ] 7 jours exactement, bornés par la saison active et `schedule_from` ; au plus 64.
-- [ ] Désactivée (défaut) → aucune relance (EX-29 : rien sans activation).
-- [ ] Titre et corps nomment le groupe, jamais un membre (ABS-04, SEC-12), test nommé avec `SEC-12`.
-- [ ] Réglages : valeurs autorisées seulement (`REMINDER_DELAY_INVALID`) ; une sauvegarde qui contient ces clés reste valide.
+- [x] EX-28 : créneau le mercredi à 14:00, délai 30 → relance le mercredi à 14:30 ; délai 45 → 14:45 ; créneau à 23:45, délai 30 → lendemain 00:15. — tests du domaine (`src/domain/reminders.test.ts`)
+- [x] EX-28 : séance enregistrée ce jour-là → pas de relance ; séance annulée ou non planifiée → pas de relance ; préparée → relance. — tests du domaine ; « préparée → relance » par le dépôt : au 028 (la requête ne renvoie pas encore `state`)
+- [x] Relance déjà passée (ouverture à 15:00 pour un créneau à 14:00) → non programmée. — test du domaine ; déclencheur écarté au moment de programmer : au 028
+- [x] 7 jours exactement, bornés par la saison active et `schedule_from` ; au plus 64. — tests du domaine (fenêtre corrigée après revue : jusqu'à maintenant + 7 jours)
+- [x] Désactivée (défaut) → aucune relance (EX-29 : rien sans activation). — test du domaine et du dépôt
+- [x] Titre et corps nomment le groupe, jamais un membre (ABS-04, SEC-12), test nommé avec `SEC-12`. — `src/config/reminderTexts.test.ts` ; limite : séances lues marquées `recorded`, `state` lu au 028 ; notification réelle sur l'écran verrouillé : non vérifié sur le téléphone (028, 030)
+- [x] Réglages : valeurs autorisées seulement (`REMINDER_DELAY_INVALID`) ; une sauvegarde qui contient ces clés reste valide. — `src/data/settingsRepo.test.ts`
 
 ## Tests attendus
 
