@@ -1,0 +1,94 @@
+# Réglage de la relance et demande de permission (ticket 030, EX-28, EX-29) : décision du porteur
+# du 2026-11-27, le dialogue du système est piloté. Trois cas : « Pas maintenant » ; « Continuer »
+# puis « Autoriser » ; « Continuer » puis « Ne pas autoriser ». Aucune relance n'est attendue ici
+# (vérifiée à la main sur le téléphone). Maestro accorde toutes les permissions au lancement par
+# défaut : `notifications: unset` laisse la permission à demander, comme après une installation.
+appId: com.jitavision.kila
+---
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: unset
+- extendedWaitUntil:
+    visible: 'Bienvenue'
+    timeout: 15000
+# EX-29 : aucun dialogue du système au lancement.
+- assertNotVisible:
+    id: 'com\.android\.permissioncontroller:id/permission_allow_button'
+- runFlow: sous-parcours/relance-ouvrir.yaml
+
+# « Pas maintenant » : rien d'activé ni demandé.
+- tapOn: 'Me relancer si l’appel n’est pas fait'
+- extendedWaitUntil:
+    visible: 'Autoriser les notifications \?'
+    timeout: 5000
+# EX-29 : l'écran de l'appli d'abord, sans dialogue du système.
+- assertNotVisible:
+    id: 'com\.android\.permissioncontroller:id/permission_allow_button'
+- tapOn: 'Pas maintenant'
+- extendedWaitUntil:
+    visible:
+      text: 'Me relancer si l’appel n’est pas fait'
+      checked: false
+    timeout: 5000
+- assertNotVisible: 'Notifications refusées dans les réglages du téléphone'
+- back
+- extendedWaitUntil:
+    visible: 'Relance, Désactivée'
+    timeout: 5000
+
+# « Continuer » puis « Autoriser » : relance activée, 30 min par défaut.
+- tapOn: 'Relance, Désactivée'
+- tapOn: 'Me relancer si l’appel n’est pas fait'
+- extendedWaitUntil:
+    visible: 'Autoriser les notifications \?'
+    timeout: 5000
+- tapOn: 'Continuer'
+- extendedWaitUntil:
+    visible:
+      id: 'com\.android\.permissioncontroller:id/permission_allow_button'
+    timeout: 10000
+- tapOn:
+    id: 'com\.android\.permissioncontroller:id/permission_allow_button'
+- extendedWaitUntil:
+    visible:
+      text: 'Me relancer si l’appel n’est pas fait'
+      checked: true
+    timeout: 5000
+- assertNotVisible: 'Notifications refusées dans les réglages du téléphone'
+- back
+- extendedWaitUntil:
+    visible: 'Relance, Activée · 30 min'
+    timeout: 5000
+
+# Variante, sur une appli vierge : « Continuer » puis « Ne pas autoriser » : le bandeau.
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: unset
+- extendedWaitUntil:
+    visible: 'Bienvenue'
+    timeout: 15000
+- runFlow: sous-parcours/relance-ouvrir.yaml
+- tapOn: 'Me relancer si l’appel n’est pas fait'
+- extendedWaitUntil:
+    visible: 'Autoriser les notifications \?'
+    timeout: 5000
+- tapOn: 'Continuer'
+- extendedWaitUntil:
+    visible:
+      id: 'com\.android\.permissioncontroller:id/permission_deny_button'
+    timeout: 10000
+- tapOn:
+    id: 'com\.android\.permissioncontroller:id/permission_deny_button'
+- extendedWaitUntil:
+    visible: 'Notifications refusées dans les réglages du téléphone'
+    timeout: 5000
+- assertVisible: 'La relance est activée ici mais ne peut pas s’afficher\.'
+- assertVisible:
+    text: 'Me relancer si l’appel n’est pas fait'
+    checked: false
+- back
+- extendedWaitUntil:
+    visible: 'Relance, Refusée par le téléphone'
+    timeout: 5000

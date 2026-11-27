@@ -1,0 +1,32 @@
+# Sous-parcours (ticket 030) : appli vierge, puis, depuis Bienvenue, restauration d'une sauvegarde
+# fictive que scripts/e2e.sh a déposée dans Téléchargements (EX-20). Paramètres (runFlow, env) :
+# FICHIER, nom du fichier ; RESUME, résumé attendu avant de remplacer (expression régulière).
+# Finit sur l'accueil, données restaurées.
+appId: com.jitavision.kila
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: 'Bienvenue'
+    timeout: 15000
+- tapOn: 'Paramètres'
+- scrollUntilVisible:
+    element: 'Sauvegarde et restauration, .*'
+- tapOn: 'Sauvegarde et restauration, .*'
+- scrollUntilVisible:
+    element: 'Choisir un fichier…'
+- tapOn: 'Choisir un fichier…'
+- runFlow:
+    file: selecteur-telechargements.yaml
+    env:
+      FICHIER: ${FICHIER}
+- extendedWaitUntil:
+    visible: 'Restaurer \?'
+    timeout: 20000
+- assertVisible: ${RESUME}
+- tapOn: 'Remplacer mes données'
+# La restauration ramène à l'accueil (restauration.tsx).
+- extendedWaitUntil:
+    notVisible: 'Restaurer \?'
+    timeout: 30000
+- assertNotVisible: 'Bienvenue'

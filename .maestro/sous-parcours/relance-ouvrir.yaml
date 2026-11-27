@@ -1,0 +1,13 @@
+# Sous-parcours (ticket 030) : depuis l'accueil ou Bienvenue, ouvre le réglage de la relance par
+# Paramètres ; la relance y est désactivée (appli vierge).
+appId: com.jitavision.kila
+---
+- tapOn: 'Paramètres'
+- scrollUntilVisible:
+    element: 'Relance, Désactivée'
+- tapOn: 'Relance, Désactivée'
+- extendedWaitUntil:
+    visible:
+      text: 'Me relancer si l’appel n’est pas fait'
+      checked: false
+    timeout: 5000

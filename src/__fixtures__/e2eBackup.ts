@@ -1,9 +1,13 @@
-// Sauvegarde fictive des parcours de bout en bout (ticket 016) : produite à chaque lancement de
-// `scripts/e2e.sh` par `scripts/e2e/sauvegarde-fictive.mjs`, jamais versionnée (SEC-13). Elle passe
-// par les dépôts de l'appli, puis par l'export (EX-19) : c'est une vraie sauvegarde de l'appli.
-// Données fictives seulement ; le parcours `.maestro/sauvegarde-restauration.yaml` les vérifie.
+// Sauvegardes fictives des parcours de bout en bout (tickets 016 et 030) : produites à chaque
+// lancement de `scripts/e2e.sh` par `scripts/e2e/sauvegarde-fictive.mjs`, jamais versionnées
+// (SEC-13). Toutes passent par l'export (EX-19) : ce sont de vraies sauvegardes de l'appli. Une par
+// parcours : jalon 1 (`sauvegarde-restauration.yaml`), alerte (`alerte-traitee.yaml`), statistiques
+// du 023 (`statistiques.yaml`) et volume de NF-08 (`volume-nf08.yaml`). Données fictives seulement.
 
+import { join } from 'node:path';
+import { statsSeed, volumeSeed } from '@/__fixtures__/statsSeed';
 import { exportBackup } from '@/data/backup';
+import type { Db } from '@/data/db';
 import { groupsRepo } from '@/data/groupsRepo';
 import { membersRepo } from '@/data/membersRepo';
 import { openNodeDb } from '@/data/nodeDb';
@@ -14,18 +18,58 @@ import { previousDay, startInSeason } from '@/domain/formats';
 import { firstSeason } from '@/domain/seasons';
 import type { AttendanceStatus } from '@/domain/validation';
 
-/** Ce que le parcours retrouve à l'écran après la restauration. */
-export const E2E_BACKUP = {
+/** Noms des fichiers déposés dans Téléchargements, un par parcours. */
+export const E2E_FILES = {
+  milestone1: 'kila-e2e-sauvegarde-fictive.db',
+  alerts: 'kila-e2e-alertes.db',
+  stats: 'kila-e2e-statistiques.db',
+  volume: 'kila-e2e-volume.db',
+} as const;
+
+type SmallBackup = {
+  groups: { name: string; members: string[] }[];
+  /** Groupe (indice), jours avant aujourd'hui, statuts dans l'ordre des membres du groupe. */
+  sessions: { group: number; daysAgo: number; statuses: AttendanceStatus[] }[];
+};
+
+/** Ce que le parcours du jalon 1 retrouve à l'écran après la restauration. */
+export const E2E_BACKUP: SmallBackup = {
   groups: [
     { name: 'Poussins mercredi', members: ['Alix Exemple', 'Sam Fictif', 'Lou Modèle'] },
     { name: 'Benjamins samedi', members: ['Noa Essai', 'Eden Témoin'] },
   ],
-  /** Groupe (indice), jours avant aujourd'hui, statuts dans l'ordre des membres du groupe. */
   sessions: [
     { group: 0, daysAgo: 7, statuses: ['present', 'present', 'late'] },
     { group: 1, daysAgo: 10, statuses: ['present', 'absent'] },
     { group: 0, daysAgo: 14, statuses: ['present', 'excused', 'absent'] },
-  ] as { group: number; daysAgo: number; statuses: AttendanceStatus[] }[],
+  ],
+};
+
+/**
+ * Alerte (ticket 030, EX-25) : Rémi Exemple absent à J-14, J-10 et J-7, soit 3 absences non
+ * excusées de suite, le seuil par défaut ; Inès Fictif toujours présente.
+ */
+export const ALERTS_BACKUP: SmallBackup = {
+  groups: [{ name: 'Minimes jeudi', members: ['Rémi Exemple', 'Inès Fictif'] }],
+  sessions: [14, 10, 7].map((daysAgo) => ({
+    group: 0,
+    daysAgo,
+    statuses: ['absent', 'present'] as AttendanceStatus[],
+  })),
+};
+
+/**
+ * Jours de l'appareil où le jeu du 023 garde ses taux sur la période « Saison » : de sa dernière
+ * séance (25/11/2026) à la fin de sa saison (31/07/2027).
+ */
+export const STATS_DAYS = { first: '2026-11-25', last: '2027-07-31' } as const;
+
+const checkStatsDay = (today: string) => {
+  if (today < STATS_DAYS.first || today > STATS_DAYS.last)
+    throw new Error(
+      `Jour de l'appareil ${today} hors du jeu des statistiques (du ${STATS_DAYS.first} au ${STATS_DAYS.last}) : ` +
+        'régler la date de l’émulateur.',
+    );
 };
 
 const daysBefore = (iso: string, n: number) =>
@@ -46,47 +90,79 @@ export const seasonContaining = (today: string) => {
   };
 };
 
-/** Écrit la sauvegarde fictive dans `path` (fichier neuf), datée de `today` (AAAA-MM-JJ). */
-export const writeE2eBackup = async (path: string, today: string): Promise<void> => {
+/** Base neuve remplie par `fill`, exportée dans `path` (fichier neuf), datée de `today`. */
+const writeBackup = async (path: string, today: string, fill: (db: Db) => Promise<unknown>) => {
   const db = await prepareDatabase(openNodeDb());
   try {
-    const season = seasonContaining(today);
-    await seasonsRepo(db).createFirst(season);
-    const active = await seasonsRepo(db).getActive();
-    if (active === null) throw new Error('Saison fictive absente');
-    const groups = [];
-    for (const group of E2E_BACKUP.groups) {
-      const id = await groupsRepo(db).create(active.id, group.name);
-      const members = [];
-      for (const fullName of group.members) {
-        const [firstName = '', lastName = ''] = fullName.split(' ');
-        members.push(
-          await membersRepo(db).create(
-            { firstName, lastName, birthDate: null },
-            { groupId: id, today, startDate: season.startDate },
-          ),
-        );
-      }
-      groups.push({ id, members });
-    }
-    for (const session of E2E_BACKUP.sessions) {
-      const group = groups[session.group];
-      if (!group) throw new Error('Groupe fictif absent');
-      await sessionsRepo(db, today).record({
-        slotId: null,
-        groupId: group.id,
-        // Jamais avant le début de la saison (lancement en tout début de saison).
-        date: startInSeason(daysBefore(today, session.daysAgo), season),
-        startTime: '18:00',
-        statuses: group.members.map((memberId, i) => ({
-          memberId,
-          status: session.statuses[i] ?? 'present',
-        })),
-        comment: null,
-      });
-    }
+    await fill(db);
     await exportBackup(db, path, today);
   } finally {
     await db.close();
   }
+};
+
+/** Petit jeu passé par les dépôts de l'appli, dans la saison qui contient `today`. */
+const fillSmall = (data: SmallBackup, today: string) => async (db: Db) => {
+  const season = seasonContaining(today);
+  await seasonsRepo(db).createFirst(season);
+  const active = await seasonsRepo(db).getActive();
+  if (active === null) throw new Error('Saison fictive absente');
+  const groups = [];
+  for (const group of data.groups) {
+    const id = await groupsRepo(db).create(active.id, group.name);
+    const members = [];
+    for (const fullName of group.members) {
+      const [firstName = '', lastName = ''] = fullName.split(' ');
+      members.push(
+        await membersRepo(db).create(
+          { firstName, lastName, birthDate: null },
+          { groupId: id, today, startDate: season.startDate },
+        ),
+      );
+    }
+    groups.push({ id, members });
+  }
+  for (const session of data.sessions) {
+    const group = groups[session.group];
+    if (!group) throw new Error('Groupe fictif absent');
+    await sessionsRepo(db, today).record({
+      slotId: null,
+      groupId: group.id,
+      // Jamais avant le début de la saison (lancement en tout début de saison).
+      date: startInSeason(daysBefore(today, session.daysAgo), season),
+      startTime: '18:00',
+      statuses: group.members.map((memberId, i) => ({
+        memberId,
+        status: session.statuses[i] ?? 'present',
+      })),
+      comment: null,
+    });
+  }
+};
+
+/** Sauvegarde du jalon 1 dans `path` (fichier neuf), datée de `today` (AAAA-MM-JJ). */
+export const writeE2eBackup = (path: string, today: string) =>
+  writeBackup(path, today, fillSmall(E2E_BACKUP, today));
+
+/** Sauvegarde de l'alerte (ticket 030). */
+export const writeAlertsBackup = (path: string, today: string) =>
+  writeBackup(path, today, fillSmall(ALERTS_BACKUP, today));
+
+/** Sauvegarde du jeu du 023 tel quel ; refusée hors de `STATS_DAYS`. */
+export const writeStatsBackup = async (path: string, today: string) => {
+  checkStatsDay(today);
+  await writeBackup(path, today, statsSeed);
+};
+
+/** Sauvegarde de NF-08 : `volumeSeed` tel quel (500 membres, 3 saisons). */
+export const writeVolumeBackup = (path: string, today: string) =>
+  writeBackup(path, today, (db) => volumeSeed(db));
+
+/** Les quatre sauvegardes de la campagne dans `dir` ; aucune si le jour est refusé. */
+export const writeE2eBackups = async (dir: string, today: string): Promise<void> => {
+  checkStatsDay(today);
+  await writeE2eBackup(join(dir, E2E_FILES.milestone1), today);
+  await writeAlertsBackup(join(dir, E2E_FILES.alerts), today);
+  await writeStatsBackup(join(dir, E2E_FILES.stats), today);
+  await writeVolumeBackup(join(dir, E2E_FILES.volume), today);
 };

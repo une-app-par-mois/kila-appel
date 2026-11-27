@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Parcours de bout en bout Maestro (docs/CONVENTIONS.md §5.2, campagne de fin de jalon, ticket 016).
+# Parcours de bout en bout Maestro (docs/CONVENTIONS.md §5.2, campagne de fin de jalon, tickets 016
+# et 030).
 #   ./scripts/e2e.sh [--appareil-reel] <fichier.apk>
 # EFFACE LES DONNÉES DE L'APPLI SUR L'APPAREIL : désinstallation, puis réinstallation de l'APK.
 # Par défaut, seul un émulateur est accepté ; un téléphone branché est refusé, sauf
@@ -9,7 +10,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 readonly PACKAGE="com.jitavision.kila"
-readonly BACKUP_NAME="kila-e2e-sauvegarde-fictive.db"
+readonly BACKUP_PREFIX="kila-e2e-"
 readonly DOWNLOADS="/sdcard/Download"
 
 usage() {
@@ -83,19 +84,24 @@ echo "== Installation (efface les données de l'appli)"
 adb_ uninstall "$PACKAGE" >/dev/null 2>&1 || true
 adb_ install "$apk"
 
-echo "== Sauvegarde fictive dans Téléchargements (aucun binaire versionné, SEC-13)"
+echo "== Sauvegardes fictives dans Téléchargements (aucun binaire versionné, SEC-13)"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
-# Le jour de l'appareil : les séances fictives tombent dans ses 30 derniers jours.
+# Le jour de l'appareil : les séances fictives tombent dans ses 30 derniers jours ; le jeu des
+# statistiques (ticket 030) n'est valable que du 2026-11-25 au 2027-07-31, sinon refus.
 today="$(adb_ shell date +%F | tr -d '\r')"
 if [[ ! "$today" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
   echo "::error::Date de l'appareil illisible : « $today » (attendu : AAAA-MM-JJ)." >&2
   exit 1
 fi
 node --experimental-transform-types --disable-warning=ExperimentalWarning \
-  scripts/e2e/sauvegarde-fictive.mjs "$work/$BACKUP_NAME" "$today"
-adb_ shell rm -f "$DOWNLOADS/$BACKUP_NAME"
-adb_ push "$work/$BACKUP_NAME" "$DOWNLOADS/$BACKUP_NAME"
+  scripts/e2e/sauvegarde-fictive.mjs "$work" "$today"
+# Une par parcours : jalon 1, alerte, statistiques, volume de NF-08 (ticket 030).
+for backup in "$work/$BACKUP_PREFIX"*.db; do
+  name="$(basename "$backup")"
+  adb_ shell rm -f "$DOWNLOADS/$name"
+  adb_ push "$backup" "$DOWNLOADS/$name"
+done
 
 echo "== Parcours Maestro"
 "$maestro" --device "$serial" test .maestro

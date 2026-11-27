@@ -1,5 +1,6 @@
-# Campagne Maestro du jalon 1 (ticket 016, docs/CONVENTIONS.md §5.2). Lancée par scripts/e2e.sh,
-# qui installe l'APK et dépose la sauvegarde fictive. Chaque parcours repart d'une appli vierge.
+# Campagne Maestro des jalons 1 et 2 (tickets 016 et 030, docs/CONVENTIONS.md §5.2). Lancée par
+# scripts/e2e.sh, qui installe l'APK et dépose les sauvegardes fictives. Chaque parcours repart
+# d'une appli vierge (clearState) ; ceux du jalon 2 viennent après ceux du jalon 1.
 # Les sous-parcours (sous-parcours/) ne sont pas lancés seuls.
 flows:
   - '*'
@@ -9,3 +10,7 @@ executionOrder:
     - appel-20-membres
     - brouillon-fermeture-forcee
     - sauvegarde-restauration
+    - alerte-traitee
+    - statistiques
+    - relance-reglage
+    - volume-nf08

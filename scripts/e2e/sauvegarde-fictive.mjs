@@ -1,5 +1,6 @@
-// Sauvegarde fictive des parcours de bout en bout (ticket 016), lancée par scripts/e2e.sh :
-//   node --experimental-transform-types scripts/e2e/sauvegarde-fictive.mjs <fichier.db> [AAAA-MM-JJ]
+// Sauvegardes fictives des parcours de bout en bout (tickets 016 et 030), lancées par scripts/e2e.sh :
+//   node --experimental-transform-types scripts/e2e/sauvegarde-fictive.mjs <dossier> [AAAA-MM-JJ]
+// Écrit dans <dossier> les quatre sauvegardes de la campagne (E2E_FILES de e2eBackup.ts).
 // Elle réutilise le code de src/data/ tel quel (node:sqlite, comme les tests, ADR-008) : Node 22
 // traduit le TypeScript (l'option est nécessaire : src/ a des propriétés de paramètre), et ce
 // crochet de résolution traduit l'alias « @/ » vers src/.
@@ -31,7 +32,7 @@ nodeModule.registerHooks({
 
 const [target, date] = process.argv.slice(2);
 if (target === undefined) {
-  console.error('Usage : node scripts/e2e/sauvegarde-fictive.mjs <fichier.db> [AAAA-MM-JJ]');
+  console.error('Usage : node scripts/e2e/sauvegarde-fictive.mjs <dossier> [AAAA-MM-JJ]');
   process.exit(2);
 }
 // Sans date : le jour local de la machine. Une date donnée (même vide) doit être AAAA-MM-JJ.
@@ -46,6 +47,13 @@ if (!/^\d{4}-\d{2}-\d{2}$/.test(today)) {
   process.exit(2);
 }
 
-const { writeE2eBackup } = await import('@/__fixtures__/e2eBackup');
-await writeE2eBackup(resolve(target), today);
-console.log(`Sauvegarde fictive écrite : ${target} (${today})`);
+const { E2E_FILES, writeE2eBackups } = await import('@/__fixtures__/e2eBackup');
+try {
+  await writeE2eBackups(resolve(target), today);
+} catch (error) {
+  // Refus attendu (jour hors du jeu des statistiques) : le message seul, sans pile.
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exit(1);
+}
+console.log(`Sauvegardes fictives écrites dans ${target} (${today}) :`);
+for (const name of Object.values(E2E_FILES)) console.log(`  ${name}`);
