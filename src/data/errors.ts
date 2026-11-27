@@ -13,6 +13,7 @@ export type DataErrorCode =
   | 'ACTIVE_SEASON'
   | 'RETENTION_INVALID'
   | 'ALERT_THRESHOLD_INVALID'
+  | 'REMINDER_DELAY_INVALID'
   | 'NOT_PURGEABLE';
 
 export class DataError extends Error {
