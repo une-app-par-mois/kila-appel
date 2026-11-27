@@ -43,6 +43,8 @@ export const donnees = {
     choose: 'Choisir un fichier…',
     /** Écran Restauration (maquette « Restaurer ? »). */
     title: 'Restaurer ?',
+    /** Pendant la vérification du fichier (réponse du porteur du 2026-11-27). */
+    verifying: 'Vérification du fichier…',
     /** Date de la sauvegarde (JJ/MM/AAAA), ou null si le fichier n'en porte pas. */
     backupOf: (date: string | null) => (date === null ? 'Sauvegarde' : `Sauvegarde du ${date}`),
     counts: (members: number, groups: number, sessions: number) =>

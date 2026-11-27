@@ -20,6 +20,9 @@ const FILE_MODULES = /^(expo-file-system|expo-sharing|expo-document-picker)$/;
 const SUBPATH = /^(expo-file-system|expo-sharing|expo-document-picker)\//;
 // Accès direct à un module natif, qui contournerait l'adaptateur et ce contrôle.
 const NATIVE_ACCESS = new Set(['requireNativeModule', 'requireOptionalNativeModule']);
+// Noms des modules natifs de fichiers (revue du 014e) : refusés hors de l'adaptateur, en chaîne
+// comme en identifiant (`globalThis.expo.modules.ExpoDocumentPicker`, `NativeModules[…]`).
+const NATIVE_NAMES = new Set(['ExpoDocumentPicker', 'FileSystem', 'ExpoSharing']);
 // Téléchargement et envoi d'expo-file-system (nouvelle API et legacy), et résolution d'un contenu
 // partagé par expo-sharing (« peut demander une connexion au réseau »).
 const FILE_NETWORK = new Set([
@@ -61,6 +64,27 @@ const moduleName = (node: ts.Node): string | undefined => {
   return undefined;
 };
 
+/** `expo`, `globalThis.expo`, `global['expo']` : l'objet qui porte la table des modules natifs. */
+const isExpo = (node: ts.Expression): boolean =>
+  (ts.isIdentifier(node) && node.text === 'expo') ||
+  (ts.isPropertyAccessExpression(node) && node.name.text === 'expo') ||
+  (ts.isElementAccessExpression(node) && literalText(node.argumentExpression) === 'expo');
+
+/** Lecture de `modules` sur `expo` : par un point, des crochets ou une déstructuration. */
+const readsExpoModules = (node: ts.Node): boolean => {
+  if (ts.isPropertyAccessExpression(node)) {
+    return node.name.text === 'modules' && isExpo(node.expression);
+  }
+  if (ts.isElementAccessExpression(node)) {
+    return literalText(node.argumentExpression) === 'modules' && isExpo(node.expression);
+  }
+  if (ts.isVariableDeclaration(node) && ts.isObjectBindingPattern(node.name) && node.initializer) {
+    const names = node.name.elements.map((e) => (e.propertyName ?? e.name).getText());
+    return names.includes('modules') && isExpo(node.initializer);
+  }
+  return false;
+};
+
 /** Écarts d'un fichier (`file` relatif à la racine du dépôt). */
 const check = (file: string, source: string): Violation[] => {
   const tree = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, scriptKind(file));
@@ -80,6 +104,11 @@ const check = (file: string, source: string): Violation[] => {
         : undefined;
     if (key !== undefined && FILE_NETWORK.has(key)) add('ABS-01 réseau', node);
     if (key !== undefined && NATIVE_ACCESS.has(key)) add('ABS-01 module natif', node);
+    if (readsExpoModules(node)) add('ABS-01 module natif', node);
+    const named = ts.isIdentifier(node) ? node.text : literalText(node);
+    if (named !== undefined && NATIVE_NAMES.has(named) && !FILE_MODULE_OWNERS.includes(file)) {
+      add('ABS-01 nom de module natif', node);
+    }
     ts.forEachChild(node, visit);
   };
   visit(tree);
@@ -139,6 +168,31 @@ describe('ABS-01 modules de fichiers seulement dans src/data/expoFiles.ts', () =
     "const m = expo['requireNativeModule']('FileSystem');",
   ])('refuse l’accès direct à un module natif, partout : %s', (source) => {
     expect(rules('src/data/expoFiles.ts', source)).toEqual(['ABS-01 module natif']);
+  });
+
+  it.each([
+    'const m = globalThis.expo.modules.ExpoDocumentPicker;',
+    "const m = globalThis.expo['modules'];",
+    'const m = global.expo.modules;',
+    'const { modules } = globalThis.expo;',
+  ])('refuse la table des modules natifs (expo.modules), partout : %s', (source) => {
+    expect(rules('src/data/expoFiles.ts', source)).toEqual(['ABS-01 module natif']);
+  });
+
+  it.each([
+    "const name = 'ExpoDocumentPicker';",
+    'const m = FileSystem;',
+    "const n = NativeModules['ExpoSharing'];",
+    'const n = `FileSystem`;',
+  ])('refuse le nom d’un module natif hors de l’adaptateur : %s', (source) => {
+    expect(rules('src/hooks/useRestore.ts', source)).toEqual(['ABS-01 nom de module natif']);
+    expect(rules('src/data/expoFiles.ts', source)).toEqual([]);
+  });
+
+  it('laisse passer `modules` lu ailleurs que sur expo', () => {
+    expect(
+      rules('src/hooks/useRestore.ts', 'const m = config.modules; const e = expo.version;'),
+    ).toEqual([]);
   });
 
   it('analyse aussi le JavaScript (.js, .jsx, .mjs, .cjs)', () => {

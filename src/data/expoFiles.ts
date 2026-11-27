@@ -3,23 +3,29 @@
 // (src/staticChecksFiles.test.ts) ; leurs fonctions réseau et leurs sous-chemins y sont refusés
 // comme partout (ABS-01, décisions du porteur du 2026-11-27).
 // Les fichiers vivent dans des sous-dossiers dédiés du cache, exclu de la sauvegarde du système :
-// `sauvegardes` (export) et `restauration` (copie vérifiée), jamais vidés l'un par l'autre ; le
-// sélecteur copie le fichier choisi dans `DocumentPicker`. ABS-06 : copies en clair.
+// `sauvegardes` (export) et `restauration` (copie vérifiée), jamais vidés l'un par l'autre. Le
+// fichier choisi est copié par le sélecteur dans `cache/DocumentPicker/` (Android) ou dans
+// `tmp/<identifiant>-Inbox/` (iOS). ABS-06 : copies en clair.
 import { getDocumentAsync } from 'expo-document-picker';
 import { Directory, File, FileMode, Paths } from 'expo-file-system';
 import { shareAsync } from 'expo-sharing';
-import type { BackupFiles, OpenDb } from '@/data/backupCheck';
+import { Platform } from 'react-native';
+import { type BackupFiles, MAX_BACKUP_BYTES, type OpenDb } from '@/data/backupCheck';
 import { checkSystemPath, openExpoCopy } from '@/data/expoDb';
 
 const FILE_SCHEME = 'file://';
-// Dossier où expo-document-picker copie le fichier choisi (Android et iOS).
+// Dossier où expo-document-picker copie le fichier choisi avec `copyToCacheDirectory`.
 const PICKER_DIR = 'DocumentPicker';
+/** iOS : dossier où le sélecteur (`asCopy`) dépose sa copie ; identifiant de app.json (testé). */
+export const IOS_INBOX = 'com.jitavision.kila-Inbox';
+const IOS_CACHES = '/Library/Caches';
 // Type générique : sur iOS, un type connu ajouterait son extension (« .db.sqlite »).
 const SHARE_MIME_TYPE = 'application/octet-stream';
+const refused = () => new Error('Chemin de fichier refusé');
 
 /** URI d'expo-file-system (`file:///…`) → chemin du système, attendu par SQLite. */
 export const uriToPath = (uri: string): string => {
-  if (!uri.startsWith(FILE_SCHEME)) throw new Error('Chemin de fichier refusé');
+  if (!uri.startsWith(FILE_SCHEME)) throw refused();
   const path = decodeURIComponent(uri.slice(FILE_SCHEME.length)).replace(/\/+$/, '');
   return checkSystemPath(path);
 };
@@ -45,28 +51,34 @@ export type BackupDeps = {
   open: OpenDb;
 };
 
-/** Ce dont la restauration a besoin : sélecteur et sa copie, dossier dédié, ouverture brute. */
-export type RestoreDeps = {
-  files: BackupStorage;
-  open: OpenDb;
-  /** Chemin du système de la copie du fichier choisi, ou null si l'encadrant annule. */
-  pick(): Promise<string | null>;
+/** Fichier choisi : chemin du système de sa copie, ou refus d'emblée (taille annoncée). */
+export type PickResult = { path: string } | { reason: 'TOO_LARGE' };
+
+/** Sélecteur de fichiers et copies qu'il dépose. */
+export type PickerAccess = {
+  /** null si l'encadrant annule. */
+  pick(): Promise<PickResult | null>;
   /** Efface une copie du sélecteur. */
   removePicked(path: string): Promise<void>;
-  /** Vide le dossier des copies du sélecteur. */
+  /** Vide les dossiers des copies du sélecteur. */
   clearPicked(): Promise<void>;
 };
 
+/** Ce dont la restauration a besoin : sélecteur et sa copie, dossier dédié, ouverture brute. */
+export type RestoreDeps = PickerAccess & { files: BackupStorage; open: OpenDb };
+
 const fileAt = (path: string) => new File(pathToUri(path));
 const pickerDir = () => new Directory(Paths.cache, PICKER_DIR);
+// iOS rend parfois le même chemin sous `/private/var` : comparé sans ce préfixe.
+const canonical = (path: string) =>
+  path.startsWith('/private/') ? path.slice('/private'.length) : path;
 
-/** `path` doit être un enfant direct du dossier `parent` ; sinon erreur, sans le chemin (ABS-04). */
-const checkChild = (parent: Directory, path: string) => {
-  const root = uriToPath(parent.uri);
-  const name = checkSystemPath(path).slice(root.length + 1);
-  if (!path.startsWith(`${root}/`) || name === '' || name.includes('/')) {
-    throw new Error('Chemin de fichier refusé');
-  }
+/** `path` doit être un enfant direct du dossier `root` ; sinon erreur, sans le chemin (ABS-04). */
+const checkChild = (root: string, path: string) => {
+  const parent = canonical(root);
+  const child = canonical(checkSystemPath(path));
+  const name = child.slice(parent.length + 1);
+  if (!child.startsWith(`${parent}/`) || name === '' || name.includes('/')) throw refused();
 };
 
 let created = 0;
@@ -97,7 +109,7 @@ export const expoStorage = (name: 'sauvegardes' | 'restauration'): BackupStorage
     },
     removeDir: async (path) => {
       // Seul un sous-dossier direct du dossier dédié peut être effacé.
-      checkChild(dedicated(), path);
+      checkChild(uriToPath(dedicated().uri), path);
       const dir = new Directory(pathToUri(path));
       if (dir.exists) dir.delete();
     },
@@ -108,35 +120,62 @@ export const expoStorage = (name: 'sauvegardes' | 'restauration'): BackupStorage
 export const shareBackup = (path: string): Promise<void> =>
   shareAsync(pathToUri(path), { mimeType: SHARE_MIME_TYPE });
 
+/** iOS : `tmp/<identifiant>-Inbox/` du conteneur, à côté de `Library/Caches/`. */
+const iosInbox = (): string => {
+  const caches = uriToPath(Paths.cache.uri);
+  if (!caches.endsWith(IOS_CACHES)) throw refused();
+  return `${caches.slice(0, -IOS_CACHES.length)}/tmp/${IOS_INBOX}`;
+};
+
 /**
- * Sélecteur de fichiers du système (EX-20) : le fichier choisi est copié dans
- * `cache/DocumentPicker/` ; rend le chemin de cette copie, ou null si l'encadrant annule.
+ * Sélecteur de fichiers du système (EX-20). Android : copie dans `cache/DocumentPicker/`
+ * (`copyToCacheDirectory`, l'URI d'origine est un `content://`). iOS : le sélecteur a déjà copié
+ * le fichier dans l'Inbox (`asCopy`) ; une seconde copie dans le cache laisserait celle-ci derrière
+ * nous, donc l'adaptateur la prend telle quelle (revue du 014e). Une copie à un endroit inattendu
+ * vide les dossiers du sélecteur avant l'erreur ; une taille annoncée au-delà de la limite est
+ * refusée tout de suite, copie effacée.
  */
-export const pickBackupFile = async (): Promise<string | null> => {
-  const result = await getDocumentAsync({
-    type: '*/*',
-    copyToCacheDirectory: true,
-    multiple: false,
-  });
-  if (result.canceled) return null;
-  const [asset] = result.assets;
-  if (asset === undefined) throw new Error('Aucun fichier choisi');
-  const path = uriToPath(asset.uri);
-  checkChild(pickerDir(), path);
-  return path;
-};
-
-/** Efface une copie du sélecteur ; rien hors de `cache/DocumentPicker/`. */
-export const removePickedFile = async (path: string): Promise<void> => {
-  checkChild(pickerDir(), path);
-  const file = fileAt(path);
-  if (file.exists) file.delete();
-};
-
-/** Vide `cache/DocumentPicker/` : copies restées d'un arrêt brutal. */
-export const clearPicked = async (): Promise<void> => {
-  const dir = pickerDir();
-  if (dir.exists) dir.delete();
+export const expoPicker = (os: string): PickerAccess => {
+  const ios = os === 'ios';
+  const pickedRoot = () => (ios ? iosInbox() : uriToPath(pickerDir().uri));
+  const deleteFile = (path: string) => {
+    const file = fileAt(path);
+    if (file.exists) file.delete();
+  };
+  const clearPicked = async () => {
+    const dirs = ios ? [pickerDir(), new Directory(pathToUri(iosInbox()))] : [pickerDir()];
+    for (const dir of dirs) if (dir.exists) dir.delete();
+  };
+  return {
+    pick: async () => {
+      const result = await getDocumentAsync({
+        type: '*/*',
+        copyToCacheDirectory: !ios,
+        multiple: false,
+      });
+      if (result.canceled) return null;
+      const [asset] = result.assets;
+      let path: string;
+      try {
+        if (asset === undefined) throw refused();
+        path = uriToPath(asset.uri);
+        checkChild(pickedRoot(), path);
+      } catch (error) {
+        await clearPicked();
+        throw error;
+      }
+      if (asset.size !== undefined && asset.size > MAX_BACKUP_BYTES) {
+        deleteFile(path);
+        return { reason: 'TOO_LARGE' };
+      }
+      return { path };
+    },
+    removePicked: async (path) => {
+      checkChild(pickedRoot(), path);
+      deleteFile(path);
+    },
+    clearPicked,
+  };
 };
 
 export const expoBackupDeps: BackupDeps = {
@@ -148,7 +187,5 @@ export const expoBackupDeps: BackupDeps = {
 export const expoRestoreDeps: RestoreDeps = {
   files: expoStorage('restauration'),
   open: openExpoCopy,
-  pick: pickBackupFile,
-  removePicked: removePickedFile,
-  clearPicked,
+  ...expoPicker(Platform.OS),
 };

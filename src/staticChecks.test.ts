@@ -255,6 +255,7 @@ describe('Le code du dépôt respecte les contrôles', () => {
       // backupRows.ts n'exporte que BACKUP_ALIAS et checkRows, qui ne renvoie que INVALID_DATA ou
       // null : il ne doit rien exporter d'autre (aucune donnée du brouillon n'en sort).
       'src/data/backupRows.ts',
+      'src/data/draftGroupName.ts', // 014e : nom du groupe seul, pour confirmer une restauration.
     ];
     const naming = walk(join(root, 'src'))
       .map((path) => relative(root, path))
@@ -263,16 +264,15 @@ describe('Le code du dépôt respecte les contrôles', () => {
     expect(naming.sort()).toEqual(allowed.sort());
   });
 
-  // EX-14 (revue de sécurité du 011) : une statistique qui lirait le brouillon ferait échouer ceci.
-  it('EX-14 seuls l’appel et l’accueil lisent le brouillon (draftsRepo, useDraft)', () => {
+  // EX-14 (revue de sécurité du 011) : l'appel et l'accueil seuls, par son dépôt ou son hook.
+  it('EX-14 seuls l’appel et l’accueil importent le dépôt ou le hook du brouillon', () => {
     const allowed = [
       'src/hooks/useRollCall.ts',
       'src/hooks/useRollCallTarget.ts',
       'src/app/appel.tsx',
       'src/ui/RollCallEntry.tsx',
-      // 012b : existence d'un appel en cours (Bienvenue) ; 014e : son groupe, avant de restaurer.
+      // Ticket 012b : seulement l'existence d'un appel en cours (pas de Bienvenue pendant un appel).
       'src/app/(tabs)/index.tsx',
-      'src/hooks/useRestore.ts',
     ];
     const reading = walk(join(root, 'src'))
       .map((path) => relative(root, path))

@@ -1,8 +1,9 @@
 // Restauration d'une sauvegarde (maquette « Restaurer ? », ticket 014e, EX-20, NF-04, SEC-10 ;
 // zone sensible). L'écran lance le sélecteur dès son ouverture ; le fichier est vérifié sur une
 // copie, résumé, puis remplace toutes les données après confirmation. Un refus dit pourquoi et
-// que rien n'a été modifié.
-import { useRouter } from 'expo-router';
+// que rien n'a été modifié. Pendant la restauration, l'écran ne peut pas être quitté (bouton, geste
+// ou retour du système) : un échec s'affiche toujours.
+import { usePreventRemove, useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
@@ -26,7 +27,7 @@ const REFUSED: Record<RejectReason, string> = {
   NEWER_VERSION: t.newerVersion,
 };
 
-type Shown = Extract<RestoreState, { step: 'confirm' | 'restoring' }>;
+type Shown = Extract<RestoreState, { step: 'confirm' | 'restoring' | 'done' }>;
 
 const Summary = ({ state }: { state: Shown }) => {
   const { summary, draft } = state;
@@ -63,29 +64,28 @@ export default function Restore() {
     back();
   };
   const restoring = state.step === 'restoring';
-  const shown = state.step === 'confirm' || restoring ? state : null;
+  // Retour du système et geste bloqués pendant la restauration (revue du 014e).
+  usePreventRemove(restoring);
+  const busy = restoring || state.step === 'done';
+  const verifying = state.step === 'verifying';
+  const shown = state.step === 'confirm' || busy ? state : null;
   const refused =
     state.step === 'rejected' ? REFUSED[state.reason] : state.step === 'failed' ? t.failed : null;
 
   return (
-    <Screen title={t.title} onBack={restoring ? undefined : leave}>
+    <Screen title={t.title} onBack={busy ? undefined : leave}>
+      {verifying && <Text style={styles.note}>{t.verifying}</Text>}
       {shown !== null && (
         <>
           <Summary state={shown} />
           <View style={styles.actions}>
-            <Button
-              label={t.cancel}
-              variant="secondary"
-              flex={1}
-              onPress={leave}
-              disabled={restoring}
-            />
+            <Button label={t.cancel} variant="secondary" flex={1} onPress={leave} disabled={busy} />
             <Button
               label={t.confirm}
               variant="destructive"
               flex={2}
               onPress={confirm}
-              disabled={restoring}
+              disabled={busy}
             />
           </View>
         </>

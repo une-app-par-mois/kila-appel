@@ -1,8 +1,8 @@
 // Écran Restauration par le vrai adaptateur src/data/expoFiles.ts et openExpoCopy (ticket 014e) :
-// seuls les modules natifs sont imités (src/__fixtures__/expoModules.ts), avec un cache dont le
-// chemin contient une espace. Sélecteur (copie dans cache/DocumentPicker/), URI file://, copie
-// vérifiée dans cache/restauration/, ouverture brute, effacement. La base de l'appli reste sur
-// node:sqlite.
+// seuls les modules natifs sont imités (src/__fixtures__/expoModules.ts), dans un conteneur iOS
+// dont le chemin contient une espace (jest-expo joue iOS ; Android : expoFilesRestore.test.ts).
+// Sélecteur (copie de l'Inbox), URI file://, copie vérifiée dans Caches/restauration/, ouverture
+// brute, effacement. La base de l'appli reste sur node:sqlite.
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
@@ -20,15 +20,17 @@ let mockChoice: string | null = null;
 const mockOpened = jest.fn();
 jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => mockDb }));
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
-jest.mock('expo-file-system', () => require('@/__fixtures__/expoModules').fakeFileSystem());
+jest.mock('expo-file-system', () => require('@/__fixtures__/expoModules').fakeFileSystem('ios'));
 jest.mock('expo-sharing', () => ({ shareAsync: jest.fn() }));
 jest.mock('expo-document-picker', () => {
   const { join: joinPath } = require('node:path');
   const fs = jest.requireMock('expo-file-system') as { Paths: { root: string } };
+  const app = joinPath(fs.Paths.root, 'app data');
   return require('@/__fixtures__/expoModules').fakeDocumentPicker(
-    () => joinPath(fs.Paths.root, 'cache dir'),
+    () => joinPath(app, 'Library', 'Caches'),
     () => mockChoice,
     () => undefined,
+    () => joinPath(app, 'tmp', 'com.jitavision.kila-Inbox'),
   );
 });
 jest.mock('expo-sqlite', () =>
@@ -37,7 +39,8 @@ jest.mock('expo-sqlite', () =>
   ),
 );
 const { Paths } = jest.requireMock('expo-file-system') as { Paths: { root: string } };
-const cache = join(Paths.root, 'cache dir');
+const app = join(Paths.root, 'app data');
+const cache = join(app, 'Library', 'Caches');
 const routes = { _layout: RootStack, ...tabRoutes, donnees: Backup, restauration: Restore };
 
 describe('EX-20 NF-04 restauration par le vrai adaptateur de fichiers', () => {
@@ -81,9 +84,10 @@ describe('EX-20 NF-04 restauration par le vrai adaptateur de fichiers', () => {
     expect(mockOpened).toHaveBeenCalledWith(
       'restauration.db',
       { useNewConnection: true },
-      expect.stringContaining('/cache dir/restauration/'),
+      expect.stringContaining('/app data/Library/Caches/restauration/'),
     );
-    expect(readdirSync(join(cache, 'DocumentPicker'))).toEqual([]);
+    expect(readdirSync(join(app, 'tmp', 'com.jitavision.kila-Inbox'))).toEqual([]);
+    expect(existsSync(join(cache, 'DocumentPicker'))).toBe(false);
     expect(readdirSync(join(cache, 'restauration'))).toEqual([]);
     expect(existsSync(join(cache, 'sauvegardes', 'export'))).toBe(true);
     expect(existsSync(backup)).toBe(true);

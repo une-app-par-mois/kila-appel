@@ -7,6 +7,7 @@ import { StyleSheet, Text } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
 import { expoBackupDeps } from '@/data/expoFiles';
+import { useFileLock } from '@/hooks/fileLock';
 import { toLastBackup, useBackupExport, useLastBackup } from '@/hooks/useBackupExport';
 import { useLocalNow } from '@/hooks/useLocalNow';
 import { Button } from '@/ui/Button';
@@ -20,6 +21,8 @@ export default function Backup() {
   const router = useRouter();
   const { exportNow, busy, failed } = useBackupExport(expoBackupDeps);
   const { lastBackup, loaded, loadFailed } = useLastBackup();
+  // Export et restauration ne tournent jamais en même temps (verrou commun, revue du 014e).
+  const locked = useFileLock() !== null;
   // Horloge partagée (ticket 012) : « aujourd'hui » devient « hier » après minuit, page ouverte.
   const now = useLocalNow();
   return (
@@ -36,7 +39,7 @@ export default function Backup() {
           {t.warningAfter}
         </Text>
       </Card>
-      <Button label={t.export} onPress={() => void exportNow()} disabled={busy} />
+      <Button label={t.export} onPress={() => void exportNow()} disabled={busy || locked} />
       {failed && <Text style={styles.error}>{t.exportFailed}</Text>}
       {loaded && <Text style={styles.note}>{t.last(toLastBackup(lastBackup, now.date))}</Text>}
       <Section title={r.section} />
@@ -50,7 +53,7 @@ export default function Backup() {
           label={r.choose}
           variant="secondary"
           onPress={() => router.push('/restauration')}
-          disabled={busy}
+          disabled={busy || locked}
         />
       </Card>
     </Screen>

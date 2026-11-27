@@ -2,8 +2,9 @@
 // fictif. Les fichiers passent par node:fs dans un dossier temporaire (ce que fait
 // expo-file-system dans le cache) ; le sélecteur du système est imité. Horloge au 27/11/2026.
 import { existsSync, readdirSync } from 'node:fs';
-import { fireEvent, renderRouter, screen, waitFor, within } from 'expo-router/testing-library';
-import { nodePicker, tempDir } from '@/__fixtures__/backupFiles';
+import { router as appRouter } from 'expo-router';
+import { act, fireEvent, renderRouter, screen, waitFor, within } from 'expo-router/testing-library';
+import { nodePicker, nodeStorage, tempDir } from '@/__fixtures__/backupFiles';
 import { backupFile, dump, refusedFiles } from '@/__fixtures__/restoreFiles';
 import { seed } from '@/__fixtures__/seed';
 import Backup from '@/app/donnees';
@@ -11,13 +12,16 @@ import Restore from '@/app/restauration';
 import { RootStack, tabRoutes } from '@/appTests/tabRoutes';
 import { labels } from '@/config/libelles';
 import type { Db } from '@/data/db';
+import type { BackupStorage } from '@/data/expoFiles';
 import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
+import { fileLock } from '@/hooks/fileLock';
 
 let mockDb: Db | null = null;
 let mockDir = '';
 let mockPicker: ReturnType<typeof nodePicker>;
-let mockPick: () => Promise<string | null>;
+let mockPick: () => Promise<{ path: string } | null>;
+let mockRestoreStorage: BackupStorage;
 jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => mockDb }));
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
 // Le vrai cycle sur node:fs et node:sqlite : seuls les fichiers et le sélecteur changent.
@@ -34,7 +38,7 @@ jest.mock('@/data/expoFiles', () => {
     },
     expoRestoreDeps: {
       get files() {
-        return fixtures.nodeStorage(join(mockDir, 'restauration'));
+        return mockRestoreStorage;
       },
       open: fixtures.openNode,
       pick: () => mockPick(),
@@ -68,6 +72,7 @@ describe('EX-20 écran Restauration', () => {
     mockDir = dir.path('');
     mockPicker = nodePicker(dir.path('DocumentPicker'));
     mockPick = () => mockPicker.pick();
+    mockRestoreStorage = nodeStorage(dir.path('restauration'));
     db = await prepareDatabase(openNodeDb());
     await seed(db);
     mockDb = db;
@@ -205,5 +210,62 @@ describe('EX-20 écran Restauration', () => {
     await openRestore();
     expect(await screen.findByText('La restauration n’a pas abouti')).toBeTruthy();
     expect(screen.getByText('Rien n’a été modifié. Choisissez un autre fichier.')).toBeTruthy();
+  });
+
+  it('« Vérification du fichier… » pendant la vérification', async () => {
+    let release: () => void = () => undefined;
+    const verifying = new Promise<void>((resolve) => (release = resolve));
+    const storage = mockRestoreStorage;
+    mockRestoreStorage = { ...storage, newDir: () => verifying.then(storage.newDir) };
+    mockPicker.next = await backupFile(dir.path('choisi.db'));
+    await openRestore();
+    expect(await screen.findByText('Vérification du fichier…')).toBeTruthy();
+    release();
+    expect(await screen.findByText('Sauvegarde du 22/10/2026')).toBeTruthy();
+    expect(screen.queryByText('Vérification du fichier…')).toBeNull();
+  });
+
+  it('retour du système bloqué pendant la restauration ; l’échec s’affiche', async () => {
+    mockPicker.next = await backupFile(dir.path('choisi.db'));
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    mockDb = {
+      ...db,
+      execute: (sql, params) =>
+        /^ATTACH/.test(sql)
+          ? gate.then(() => Promise.reject(new Error('fichier illisible')))
+          : db.execute(sql, params),
+    };
+    const before = await dump(db);
+    const router = await openRestore();
+    await fireEvent.press(await screen.findByRole('button', { name: 'Remplacer mes données' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Annuler' })).toBeDisabled());
+    await act(async () => appRouter.back());
+    expect(router.getPathname()).toBe('/restauration');
+    release();
+    expect(await screen.findByText('La restauration n’a pas abouti')).toBeTruthy();
+    expect(router.getPathname()).toBe('/restauration');
+    expect(await dump(db)).toEqual(before);
+    // Après l'échec, le retour fonctionne de nouveau.
+    await act(async () => appRouter.back());
+    await waitFor(() => expect(router.getPathname()).toBe('/donnees'));
+  });
+
+  it('Sauvegarde : Exporter et Choisir désactivés pendant l’autre opération', async () => {
+    await renderRouter(routes, { initialUrl: '/donnees' });
+    const exportButton = await screen.findByRole('button', { name: labels.backup.export });
+    expect(exportButton).not.toBeDisabled();
+    await act(async () => {
+      fileLock.acquire('restore');
+    });
+    expect(screen.getByRole('button', { name: labels.backup.export })).toBeDisabled();
+    expect(screen.getByRole('button', { name: t.choose })).toBeDisabled();
+    await act(async () => {
+      fileLock.release('restore');
+      fileLock.acquire('export');
+    });
+    expect(screen.getByRole('button', { name: t.choose })).toBeDisabled();
+    await act(async () => fileLock.release('export'));
+    expect(screen.getByRole('button', { name: t.choose })).not.toBeDisabled();
   });
 });

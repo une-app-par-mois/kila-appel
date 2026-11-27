@@ -1,20 +1,17 @@
 /**
  * @jest-environment node
  */
-// Adaptateur de la restauration dans src/data/expoFiles.ts (ticket 014e, EX-20) : sélecteur de
-// fichiers, copie du sélecteur, dossier dédié à part. Les modules natifs sont imités sur node:fs
-// (src/__fixtures__/expoModules.ts) : on teste le code de l'adaptateur, pas le module (ADR-008).
+// Adaptateur de la restauration dans src/data/expoFiles.ts (ticket 014e, EX-20), cas d'Android :
+// sélecteur de fichiers, copie du sélecteur, dossier dédié à part. Les modules natifs sont imités
+// sur node:fs (src/__fixtures__/expoModules.ts) : on teste l'adaptateur, pas le module (ADR-008).
+// Le cas d'iOS est dans expoFilesIos.test.ts.
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import {
-  clearPicked,
-  expoRestoreDeps,
-  expoStorage,
-  pickBackupFile,
-  removePickedFile,
-} from '@/data/expoFiles';
+import { MAX_BACKUP_BYTES } from '@/data/backupCheck';
+import { expoPicker, expoRestoreDeps, expoStorage } from '@/data/expoFiles';
 
 let mockChoice: () => string | null = () => null;
+let mockSize: number | undefined;
 const mockOptions = jest.fn();
 jest.mock('expo-sqlite', () => ({ openDatabaseAsync: jest.fn() }));
 jest.mock('expo-sharing', () => ({ shareAsync: jest.fn() }));
@@ -26,6 +23,8 @@ jest.mock('expo-document-picker', () => {
     () => joinPath(fs.Paths.root, 'cache dir'),
     () => mockChoice(),
     (o: object) => mockOptions(o),
+    undefined,
+    () => mockSize,
   );
 });
 
@@ -33,21 +32,24 @@ const fsMock = jest.requireMock('expo-file-system') as { Paths: { root: string }
 const cache = join(fsMock.Paths.root, 'cache dir');
 const picked = join(cache, 'DocumentPicker');
 const source = join(fsMock.Paths.root, 'telechargements', 'kila-sauvegarde-2026-10-22.db');
+const android = expoPicker('android');
+const pathOf = (result: Awaited<ReturnType<typeof android.pick>>) =>
+  result !== null && 'path' in result ? result.path : '';
 
-describe('EX-20 sélecteur de fichiers (expo-document-picker)', () => {
+describe('EX-20 sélecteur de fichiers sur Android (expo-document-picker)', () => {
   beforeEach(() => {
     mkdirSync(join(fsMock.Paths.root, 'telechargements'), { recursive: true });
     writeFileSync(source, 'SQLite format 3\u0000 sauvegarde fictive');
     mockOptions.mockClear();
+    mockSize = undefined;
   });
   afterEach(() => rmSync(cache, { recursive: true, force: true }));
 
   it('copie le fichier choisi dans le cache et rend son chemin du système', async () => {
     mockChoice = () => source;
-    const path = await pickBackupFile();
-    expect(path).not.toBeNull();
-    expect(path?.startsWith(`${picked}/`)).toBe(true);
-    expect(readFileSync(path ?? '', 'utf8')).toBe(readFileSync(source, 'utf8'));
+    const path = pathOf(await android.pick());
+    expect(path.startsWith(`${picked}/`)).toBe(true);
+    expect(readFileSync(path, 'utf8')).toBe(readFileSync(source, 'utf8'));
     expect(mockOptions).toHaveBeenCalledWith({
       type: '*/*',
       copyToCacheDirectory: true,
@@ -57,12 +59,23 @@ describe('EX-20 sélecteur de fichiers (expo-document-picker)', () => {
 
   it('rend null si l’encadrant annule', async () => {
     mockChoice = () => null;
-    expect(await pickBackupFile()).toBeNull();
+    expect(await android.pick()).toBeNull();
+  });
+
+  it('fichier annoncé trop gros : TOO_LARGE tout de suite, copie effacée', async () => {
+    mockChoice = () => source;
+    mockSize = MAX_BACKUP_BYTES + 1;
+    expect(await android.pick()).toEqual({ reason: 'TOO_LARGE' });
+    expect(readdirSync(picked)).toEqual([]);
+    mockSize = MAX_BACKUP_BYTES;
+    expect(pathOf(await android.pick())).not.toBe('');
   });
 
   it.each(['file:///autre/choisi.db', 'content://com.android.providers/document/1'])(
-    'refuse une copie hors de cache/DocumentPicker/ : %s',
+    'refuse une copie hors de cache/DocumentPicker/ et vide ce dossier : %s',
     async (uri) => {
+      mkdirSync(picked, { recursive: true });
+      writeFileSync(join(picked, 'copie-faite.db'), 'copie');
       const picker = jest.requireMock('expo-document-picker') as {
         getDocumentAsync: () => Promise<unknown>;
       };
@@ -70,7 +83,8 @@ describe('EX-20 sélecteur de fichiers (expo-document-picker)', () => {
         canceled: false,
         assets: [{ name: 'a.db', uri, lastModified: 0 }],
       });
-      await expect(pickBackupFile()).rejects.toThrow('Chemin de fichier refusé');
+      await expect(android.pick()).rejects.toThrow('Chemin de fichier refusé');
+      expect(existsSync(picked)).toBe(false);
     },
   );
 
@@ -78,30 +92,30 @@ describe('EX-20 sélecteur de fichiers (expo-document-picker)', () => {
     mockChoice = () => {
       throw new Error('sélecteur indisponible');
     };
-    await expect(pickBackupFile()).rejects.toThrow();
+    await expect(android.pick()).rejects.toThrow();
   });
 
   it('efface la copie du sélecteur, et rien hors de cache/DocumentPicker/', async () => {
     mockChoice = () => source;
-    const path = (await pickBackupFile()) ?? '';
+    const path = pathOf(await android.pick());
     writeFileSync(join(cache, 'autre.db'), 'gardé');
     for (const outside of [source, join(cache, 'autre.db'), picked, `${picked}/../autre.db`]) {
-      await expect(removePickedFile(outside)).rejects.toThrow('Chemin de fichier refusé');
+      await expect(android.removePicked(outside)).rejects.toThrow('Chemin de fichier refusé');
     }
     expect(existsSync(source)).toBe(true);
     expect(existsSync(join(cache, 'autre.db'))).toBe(true);
-    await removePickedFile(path);
+    await android.removePicked(path);
     expect(existsSync(path)).toBe(false);
     // Déjà effacée : rien à faire.
-    await removePickedFile(path);
+    await android.removePicked(path);
   });
 
   it('vide cache/DocumentPicker/ seul, même absent', async () => {
-    await clearPicked();
+    await android.clearPicked();
     mockChoice = () => source;
-    await pickBackupFile();
+    await android.pick();
     writeFileSync(join(cache, 'autre.db'), 'gardé');
-    await clearPicked();
+    await android.clearPicked();
     expect(existsSync(picked)).toBe(false);
     expect(existsSync(join(cache, 'autre.db'))).toBe(true);
     expect(existsSync(source)).toBe(true);
@@ -139,9 +153,9 @@ describe('EX-20 dossiers dédiés : sauvegardes et restauration séparés', () =
   it('rassemble les accès de la restauration', async () => {
     const verified = await expoRestoreDeps.files.newDir();
     expect(verified.startsWith(`${join(cache, 'restauration')}/`)).toBe(true);
-    expect(expoRestoreDeps.pick).toBe(pickBackupFile);
-    expect(expoRestoreDeps.removePicked).toBe(removePickedFile);
-    expect(expoRestoreDeps.clearPicked).toBe(clearPicked);
+    expect(typeof expoRestoreDeps.pick).toBe('function');
+    expect(typeof expoRestoreDeps.removePicked).toBe('function');
+    expect(typeof expoRestoreDeps.clearPicked).toBe('function');
     expect(typeof expoRestoreDeps.open).toBe('function');
   });
 });

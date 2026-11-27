@@ -6,7 +6,7 @@
 // 27/11/2026.
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { act, renderHook, waitFor } from '@testing-library/react-native';
+import { act, cleanup, renderHook, waitFor } from '@testing-library/react-native';
 import { nodePicker, nodeStorage, openNode, tempDir } from '@/__fixtures__/backupFiles';
 import { backupFile, dump, refusedFiles, rowCounts } from '@/__fixtures__/restoreFiles';
 import { seed } from '@/__fixtures__/seed';
@@ -15,6 +15,7 @@ import type { BackupStorage, RestoreDeps } from '@/data/expoFiles';
 import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
 import { onDataChanged } from '@/hooks/dataChanged';
+import { fileLock } from '@/hooks/fileLock';
 import { useRestore } from '@/hooks/useRestore';
 
 let mockDb: Db | null = null;
@@ -60,6 +61,9 @@ describe('EX-20 useRestore', () => {
     log.mockClear();
   });
   afterEach(async () => {
+    // Écrans fermés et restauration finie : le verrou du module est rendu avant le test suivant.
+    await cleanup();
+    await waitFor(() => expect(fileLock.holder()).toBeNull());
     jest.useRealTimers();
     mockDb = null;
     await db.close();

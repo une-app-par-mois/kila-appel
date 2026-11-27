@@ -45,13 +45,13 @@ export const nodePicker = (dir: string) => {
   let n = 0;
   const picker = {
     next: null as string | null,
-    pick: async (): Promise<string | null> => {
+    pick: async (): Promise<{ path: string } | null> => {
       if (picker.next === null) return null;
       mkdirSync(dir, { recursive: true });
       n += 1;
       const path = join(dir, `${n}-choisi.db`);
       copyFileSync(picker.next, path);
-      return path;
+      return { path };
     },
     removePicked: async (path: string) => rmSync(path, { recursive: true, force: true }),
     clearPicked: async () => rmSync(dir, { recursive: true, force: true }),
