@@ -1,6 +1,7 @@
 // Bienvenue (maquette, P1, ticket 012b) : les 4 étapes de la mise en route, faites ou non, et un
-// seul bouton, sur la première étape qui reste. Tout est recalculé à chaque ouverture : rien
-// n'est enregistré (décision du porteur du 2026-11-27).
+// seul bouton, sur la première étape qui reste. Affiché tant qu'une étape reste et qu'aucun appel
+// n'est fait dans la saison, jamais pendant un appel en cours ; rien n'est enregistré (décisions du
+// porteur du 2026-11-27).
 import { type Href, useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { labels } from '@/config/libelles';
@@ -15,16 +16,19 @@ const w = labels.welcome;
 type Step = { title: string; subtitle?: string; done: boolean; action: string; href: Href };
 
 /** Étapes de la mise en route, dans l'ordre de la maquette. */
-export const setupSteps = (p: SetupProgress, created: boolean): Step[] => [
+export const setupSteps = (p: SetupProgress, created: boolean, anySeason = true): Step[] => [
   {
     title: w.season,
+    // Une saison nommée à la main s'affiche telle quelle (« Saison 26-27 », pas « Saison Saison »).
     subtitle: p.season
       ? created
         ? w.seasonCreated(p.season.name)
-        : w.seasonActive(p.season.name)
-      : w.noActiveSeason,
+        : p.season.name
+      : anySeason
+        ? w.noActiveSeason
+        : w.noSeason,
     done: p.season !== null,
-    action: w.chooseSeason,
+    action: anySeason ? w.chooseSeason : w.createSeason,
     href: '/saisons',
   },
   {
@@ -38,16 +42,21 @@ export const setupSteps = (p: SetupProgress, created: boolean): Step[] => [
     title: w.members,
     done: p.members > 0,
     action: w.addMembers,
-    href: { pathname: '/membres/nouveau', params: { groupe: p.firstGroupId ?? '' } },
+    // L'inscription au groupe (maquette) : membres existants, ou « Nouveau membre » à un appui.
+    href: `/groupes/${p.firstGroupId ?? 0}/inscrire`,
   },
   { title: w.slots, done: p.slots > 0, action: w.addSlots, href: '/creneaux/nouveau' },
 ];
 
-export const isSetupDone = (p: SetupProgress) => setupSteps(p, false).every((s) => s.done);
+/** Après le premier appel de la saison, plus de Bienvenue, même s'il manque une étape. */
+export const isSetupDone = (p: SetupProgress) =>
+  p.sessions > 0 || setupSteps(p, false).every((s) => s.done);
 
-export const Welcome = ({ progress, created }: { progress: SetupProgress; created: boolean }) => {
+type Props = { progress: SetupProgress; created: boolean; anySeason: boolean };
+
+export const Welcome = ({ progress, created, anySeason }: Props) => {
   const router = useRouter();
-  const steps = setupSteps(progress, created);
+  const steps = setupSteps(progress, created, anySeason);
   const next = steps.findIndex((s) => !s.done);
   return (
     <>

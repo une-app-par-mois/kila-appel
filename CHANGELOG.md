@@ -6,7 +6,7 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Ajouté
 
-- Bienvenue : à la première ouverture, saison créée automatiquement (1er septembre au 31 août) ; quatre étapes et un seul bouton, sur la première qui reste, tant que la mise en route n'est pas finie — ticket 012b.
+- Bienvenue : à la première ouverture, saison créée automatiquement sur une base vide (1er septembre au 31 août, celle de la rentrée dès le 1er juillet) ; quatre étapes et un seul bouton, sur la première qui reste, tant que la mise en route n'est pas finie et qu'aucun appel n'est fait — ticket 012b.
 - Barre d'onglets (Accueil, « Nouvel appel » au centre, Paramètres) ; accueil : date du jour, recherche d'un contact d'urgence, appel en cours ou séance du moment avec « Faire l'appel », appels manquants (5 au plus, « et N autres ») — ticket 012.
 - Suppression d'un groupe ou d'un membre : la confirmation annonce l'appel en cours qu'elle touche ; supprimer le groupe de l'appel en cours efface ce brouillon — ticket 011b.
 - Brouillon d'appel : chaque changement (statut, commentaire) écrit aussitôt dès le premier ; appel retrouvé tel quel après une fermeture forcée ; carte « Appel en cours » sur l'accueil (commencé à, absents notés), « Abandonner » confirmé ou « Reprendre l'appel » ; « Nouvel appel » ouvre le brouillon ; un autre appel est bloqué tant qu'il existe ; brouillon effacé à l'enregistrement — ticket 011.

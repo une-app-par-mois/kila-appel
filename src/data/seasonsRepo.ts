@@ -65,6 +65,8 @@ export type SetupProgress = {
   /** Membres courants inscrits (inscription en cours ou à venir) à un groupe courant. */
   members: number;
   slots: number;
+  /** Séances enregistrées dans la saison : après le premier appel, plus de Bienvenue. */
+  sessions: number;
 };
 
 export const seasonsRepo = (db: Db) => ({
@@ -73,14 +75,16 @@ export const seasonsRepo = (db: Db) => ({
     (await db.query<SeasonRow>(`${SELECT} ORDER BY start_date DESC, id DESC`)).map(toSeason),
 
   /**
-   * P1 : crée la première saison, active, seulement s'il n'en existe aucune ; une seule
-   * instruction, donc pas de doublon si deux ouvertures se suivent. Vrai si elle a été créée.
+   * P1 : crée la première saison, active, seulement sur une base vide (ni saison ni membre) : à
+   * l'installation, pas après la suppression de la dernière saison (ABS-05, décision du
+   * 2026-11-27). Une seule instruction : pas de doublon. Vrai si elle a été créée.
    */
   createFirst: async (input: SeasonInput): Promise<boolean> => {
     const s = validateSeason(input);
     const result = await db.execute(
       `INSERT INTO seasons (name, start_date, end_date, is_active)
-       SELECT ?, ?, ?, 1 WHERE NOT EXISTS (SELECT 1 FROM seasons)`,
+       SELECT ?, ?, ?, 1
+       WHERE NOT EXISTS (SELECT 1 FROM seasons) AND NOT EXISTS (SELECT 1 FROM members)`,
       [s.name, s.startDate, s.endDate],
     );
     return result.changes > 0;
@@ -91,7 +95,8 @@ export const seasonsRepo = (db: Db) => ({
     const [season] = await db.query<{ id: number; name: string }>(
       'SELECT id, name FROM seasons WHERE is_active = 1',
     );
-    if (!season) return { season: null, firstGroupId: null, groups: 0, members: 0, slots: 0 };
+    if (!season)
+      return { season: null, firstGroupId: null, groups: 0, members: 0, slots: 0, sessions: 0 };
     const [row] = await db.query<Omit<SetupProgress, 'season'>>(
       `SELECT
         (SELECT MIN(id) FROM groups WHERE season_id = ?1 AND archived_at IS NULL) AS firstGroupId,
@@ -101,7 +106,11 @@ export const seasonsRepo = (db: Db) => ({
            JOIN members m ON m.id = e.member_id
          WHERE g.season_id = ?1 AND g.archived_at IS NULL AND m.archived_at IS NULL
            AND ${notEnded(2)}) AS members,
-        (SELECT COUNT(*) FROM slots WHERE season_id = ?1 AND weekday IS NOT NULL) AS slots`,
+        (SELECT COUNT(DISTINCT s.id) FROM slots s
+           JOIN slot_groups sg ON sg.slot_id = s.id
+           JOIN groups g ON g.id = sg.group_id
+         WHERE s.season_id = ?1 AND g.archived_at IS NULL) AS slots,
+        (SELECT COUNT(*) FROM sessions WHERE season_id = ?1 AND state = 'recorded') AS sessions`,
       [season.id, validateDate(today)],
     );
     return { season, ...(row as Omit<SetupProgress, 'season'>) };

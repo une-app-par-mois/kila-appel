@@ -76,27 +76,38 @@ export const useSeasons = () => {
 };
 
 /**
- * P1 (ticket 012b) : avancement de la mise en route. Sans aucune saison, la première est créée
- * d'abord (`createFirst` ne fait rien s'il en existe une) ; rien d'autre n'est enregistré.
+ * P1 (ticket 012b) : avancement de la mise en route. Sur une base vide, la première saison est
+ * créée d'abord (`createFirst`) ; rien d'autre n'est enregistré.
  */
 export const useSetupProgress = (today: string) => {
   const db = useDatabase();
-  // « créée automatiquement » (maquette) : seulement si elle l'a été pendant cette ouverture.
-  const createdNow = useRef(false);
+  // « créée automatiquement » (maquette) : seulement pour la saison créée pendant cette ouverture,
+  // et tant qu'elle garde son nom (renommée à la main, elle s'affiche telle quelle).
+  const createdName = useRef<string | null>(null);
   const load = useMemo(
     () =>
       db
-        ? async (): Promise<{ progress: SetupProgress }> => {
+        ? async (): Promise<{ progress: SetupProgress; anySeason: boolean }> => {
             const repo = seasonsRepo(db);
-            if (await repo.createFirst(firstSeason(today))) {
-              createdNow.current = true;
+            const first = firstSeason(today);
+            if (await repo.createFirst(first)) {
+              createdName.current = first.name;
               notifyDataChanged();
             }
-            return { progress: await repo.setupProgress(today) };
+            const progress = await repo.setupProgress(today);
+            const anySeason = progress.season !== null || (await repo.list()).length > 0;
+            return { progress, anySeason };
           }
         : null,
     [db, today],
   );
   const { value, loaded, loadFailed } = useLoaded(load, 'SETUP_PROGRESS_FAILED', {}, true);
-  return { progress: value?.progress ?? null, created: createdNow.current, loaded, loadFailed };
+  const progress = value?.progress ?? null;
+  return {
+    progress,
+    anySeason: value?.anySeason ?? true,
+    created: progress?.season !== null && progress?.season?.name === createdName.current,
+    loaded,
+    loadFailed,
+  };
 };
