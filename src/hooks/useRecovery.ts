@@ -4,12 +4,12 @@
 // abîmé n'est touché qu'après la confirmation : effacement, base neuve, recopie en une transaction
 // (replaceDamagedDatabase). Utilisé par le layout racine, qui ne se démonte pas : l'état survit au
 // passage de la variante abîmée à la variante « recopie en échec ». ABS-04 : codes seuls. B2
-// (ticket 028c) : après une restauration réussie, les relances affichées sont retirées.
+// (ticket 028c) : après une restauration réussie, les relances sont annulées et retirées.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BackHandler } from 'react-native';
 import { restoreBackup } from '@/data/backup';
 import type { RestoreDeps } from '@/data/expoFiles';
-import { dismissAllReminders } from '@/data/expoNotifications';
+import { cancelAllReminders, dismissAllReminders } from '@/data/expoNotifications';
 import { notifyDataChanged } from '@/hooks/dataChanged';
 import { fileLock } from '@/hooks/fileLock';
 import { type Outcome, type RestoreState, restoreOnce } from '@/hooks/restoreFlow';
@@ -103,6 +103,7 @@ export const useRecovery = (deps: RestoreDeps, status: RecoveryStatus) => {
     // Garde du double appui : le verrou commun, pris par le premier appel seul.
     if (!fileLock.acquire('restore')) return;
     let outcome: Outcome<RecoveryState>;
+    let filled = false;
     try {
       show({ step: 'picking' });
       outcome = await restoreOnce<RecoveryState>(depsRef.current, {
@@ -117,6 +118,7 @@ export const useRecovery = (deps: RestoreDeps, status: RecoveryStatus) => {
         draft: async () => null,
         apply: async (backup) => {
           const result = await replaceDamagedDatabase((db) => restoreBackup(db, backup));
+          filled = result === 'filled';
           // Effacement en échec (réponse 3 du porteur) ou base qui n'est plus abîmée : rien n'a
           // été modifié, carte « La restauration n'a pas abouti ».
           if (result === 'resetFailed' || result === 'ignored') return { step: 'failed' };
@@ -130,10 +132,13 @@ export const useRecovery = (deps: RestoreDeps, status: RecoveryStatus) => {
     show(outcome.kind === 'show' ? outcome.state : IDLE);
     // Copies effacées, verrou rendu, retour libéré : la base remplie peut être publiée. Les écrans
     // déjà abonnés (aucun en général, la pile se monte ensuite) rechargent leurs données.
-    if (publishRestoredDatabase()) {
+    // B2 : relances de l'ancienne base annulées et retirées avant la publication, pendant que
+    // l'écran de récupération abandonne encore tout appui (revue du 028c).
+    if (filled) {
+      await cancelAllReminders();
       await dismissAllReminders();
-      notifyDataChanged();
     }
+    if (publishRestoredDatabase()) notifyDataChanged();
   }, [blockBack]);
 
   return {

@@ -22,10 +22,13 @@ let mockDb: Db | null = null;
 jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => mockDb }));
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
 const { log } = jest.requireMock('@/data/log') as { log: jest.Mock };
-jest.mock('@/data/expoNotifications', () => ({ dismissAllReminders: jest.fn(async () => {}) }));
-const { dismissAllReminders: dismiss } = jest.requireMock('@/data/expoNotifications') as {
-  dismissAllReminders: jest.Mock;
-};
+jest.mock('@/data/expoNotifications', () => ({
+  cancelAllReminders: jest.fn(async () => true),
+  dismissAllReminders: jest.fn(async () => {}),
+}));
+const { cancelAllReminders: cancel, dismissAllReminders: dismiss } = jest.requireMock(
+  '@/data/expoNotifications',
+) as { cancelAllReminders: jest.Mock; dismissAllReminders: jest.Mock };
 
 describe('EX-20 useRestore', () => {
   let dir: ReturnType<typeof tempDir>;
@@ -64,6 +67,7 @@ describe('EX-20 useRestore', () => {
     nav.onDone.mockClear();
     log.mockClear();
     dismiss.mockClear();
+    cancel.mockClear();
   });
   afterEach(async () => {
     // Écrans fermés et restauration finie : le verrou du module est rendu avant le test suivant.
@@ -125,8 +129,10 @@ describe('EX-20 useRestore', () => {
     const expected = await dump(saved);
     await saved.close();
     picker.next = backup;
-    // B2 : relances retirées une fois, sous le verrou, avant que les écrans ne relisent.
+    // B2 : relances annulées puis retirées une fois, sous le verrou, avant que les écrans ne
+    // relisent.
     const order: string[] = [];
+    cancel.mockImplementation(async () => order.push(`annulation ${fileLock.holder()}`));
     dismiss.mockImplementation(async () => {
       order.push(`retrait ${fileLock.holder()}`);
     });
@@ -139,7 +145,7 @@ describe('EX-20 useRestore', () => {
     await waitFor(() => expect(nav.onDone).toHaveBeenCalledTimes(1));
     off();
     expect(await dump(db)).toEqual(expected);
-    expect(order).toEqual(['retrait restore', 'relecture']);
+    expect(order).toEqual(['annulation restore', 'retrait restore', 'relecture']);
     expect(nav.onCancel).not.toHaveBeenCalled();
     noCopyLeft();
   });
@@ -185,6 +191,7 @@ describe('EX-20 useRestore', () => {
     expect(await rowCounts(db)).toEqual(before);
     expect(nav.onDone).not.toHaveBeenCalled();
     expect(dismiss).not.toHaveBeenCalled();
+    expect(cancel).not.toHaveBeenCalled();
     noCopyLeft();
   });
 

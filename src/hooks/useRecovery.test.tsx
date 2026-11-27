@@ -19,10 +19,13 @@ import { resetStartupCleanupForTests } from '@/hooks/useStartupCleanup';
 jest.mock('@/data/expoDb', () => require('@/__fixtures__/recoveryEnv').fakeExpoDb());
 jest.mock('@/data/expoFiles', () => require('@/__fixtures__/recoveryEnv').fakeExpoFiles());
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
-jest.mock('@/data/expoNotifications', () => ({ dismissAllReminders: jest.fn(async () => {}) }));
-const { dismissAllReminders: dismiss } = jest.requireMock('@/data/expoNotifications') as {
-  dismissAllReminders: jest.Mock;
-};
+jest.mock('@/data/expoNotifications', () => ({
+  cancelAllReminders: jest.fn(async () => true),
+  dismissAllReminders: jest.fn(async () => {}),
+}));
+const { cancelAllReminders: cancel, dismissAllReminders: dismiss } = jest.requireMock(
+  '@/data/expoNotifications',
+) as { cancelAllReminders: jest.Mock; dismissAllReminders: jest.Mock };
 
 const deps = (): RestoreDeps => ({ ...jest.requireMock('@/data/expoFiles').expoRestoreDeps });
 const start = (status: RecoveryStatus, base = deps()) =>
@@ -40,6 +43,7 @@ describe('useRecovery (ticket 014f)', () => {
     resetDatabaseForTests();
     resetStartupCleanupForTests();
     dismiss.mockReset();
+    cancel.mockReset();
   });
   afterEach(async () => {
     await waitFor(() => expect(fileLock.holder()).toBeNull());
@@ -88,18 +92,22 @@ describe('useRecovery (ticket 014f)', () => {
     await waitFor(() => expect(result.current.state).toEqual({ step: 'failed' }));
     expect(env.deletes).toBe(0);
     expect(dismiss).not.toHaveBeenCalled();
+    expect(cancel).not.toHaveBeenCalled();
   });
 
-  it('B2 restauration réussie : relances affichées retirées, verrou rendu, avant la relecture', async () => {
+  it('B2 restauration réussie : relances annulées puis retirées, verrou rendu, base pas encore publiée', async () => {
     writeFileSync(env.file, 'Ceci est un fichier texte, pas une base de données. '.repeat(40));
     env.picker.next = await backupFile(join(dir, 'choisi.db'));
     const order: string[] = [];
+    let status = '';
+    cancel.mockImplementation(async () => order.push(`annulation ${fileLock.holder()} ${status}`));
     dismiss.mockImplementation(async () => {
-      order.push(`retrait ${fileLock.holder()}`);
+      order.push(`retrait ${fileLock.holder()} ${status}`);
     });
     const off = onDataChanged(() => order.push('relecture'));
     const { result } = await renderHook(() => {
       const database = useDatabaseState();
+      status = database.status;
       return { database, recovery: useRecovery(deps(), database.status) };
     });
     await waitFor(() => expect(result.current.database.status).toBe('failed'));
@@ -109,7 +117,10 @@ describe('useRecovery (ticket 014f)', () => {
     await waitFor(() => expect(result.current.recovery.state.step).toBe('confirm'));
     await act(async () => result.current.recovery.confirm());
     await waitFor(() => expect(result.current.database.status).toBe('ready'));
-    await waitFor(() => expect(order).toEqual(['retrait null', 'relecture']));
+    // Retrait pendant que l'écran de récupération est encore affiché : un appui y est abandonné.
+    await waitFor(() =>
+      expect(order).toEqual(['annulation null failed', 'retrait null failed', 'relecture']),
+    );
     off();
   });
 

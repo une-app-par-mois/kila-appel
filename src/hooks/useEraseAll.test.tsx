@@ -143,14 +143,19 @@ describe('useEraseAll : tout effacer (EX-23, SEC-11)', () => {
     expect(fileLock.holder()).toBeNull();
   });
 
-  it('SEC-11 relances retirées une seule fois, après l’effacement, sous le même verrou', async () => {
-    const seen: { holder: string | null; seasons: number }[] = [];
-    clearReminders.mockImplementation(async () => {
-      seen.push({ holder: fileLock.holder(), seasons: await count(db, 'seasons') });
-    });
+  it('SEC-11 relances retirées une seule fois, après l’effacement, avant les copies, sous le même verrou', async () => {
+    const seen: { what: string; holder: string | null; seasons: number }[] = [];
+    const record = (what: string) => async () => {
+      seen.push({ what, holder: fileLock.holder(), seasons: await count(db, 'seasons') });
+    };
+    clearReminders.mockImplementation(record('relances'));
+    clearCopies.mockImplementation(record('copies'));
     const { done } = await erase();
     expect(done).toBe(true);
-    expect(seen).toEqual([{ holder: 'erase', seasons: 0 }]);
+    expect(seen).toEqual([
+      { what: 'relances', holder: 'erase', seasons: 0 },
+      { what: 'copies', holder: 'erase', seasons: 0 },
+    ]);
   });
 
   it('SEC-11 échec du retrait des relances : ERASE_REMINDERS_FAILED, Bienvenue quand même', async () => {

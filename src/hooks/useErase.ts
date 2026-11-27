@@ -3,7 +3,7 @@
 // changer ne purge rien. Les candidates sont calculées au jour de l'horloge partagée ; la purge
 // prend le verrou commun (aucun export ni aucune restauration pendant, ni l'inverse) et revérifie
 // la liste au jour où elle part. Tout effacer (ticket 015f, EX-23, SEC-10) : même verrou, puis
-// vidage des copies du cache, puis des relances (ticket 028c). ABS-04 : le journal ne reçoit que
+// retrait des relances (ticket 028c), puis vidage des copies du cache. ABS-04 : le journal ne reçoit que
 // des codes.
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { eraseAll } from '@/data/eraseAll';
@@ -136,8 +136,8 @@ export const clearAllReminders = async (): Promise<void> => {
 /**
  * EX-23, SEC-11, ABS-05 : Tout effacer, sur la base ouverte (jamais la suppression du fichier,
  * réservée à une base abîmée). Sous le verrou commun ; seulement si l'effacement réussit, les
- * copies du cache sont vidées (SEC-10) puis les relances retirées (028c) sous le même verrou ; un
- * échec de l'un ou de l'autre est journalisé et ne bloque rien.
+ * relances sont annulées et retirées (028c), puis les copies du cache vidées (SEC-10), sous le même
+ * verrou ; un échec de l'un ou de l'autre est journalisé et ne bloque rien.
  */
 export const useEraseAll = (deps: EraseAllDeps) => {
   const db = useDatabase();
@@ -163,15 +163,17 @@ export const useEraseAll = (deps: EraseAllDeps) => {
         log('ERASE_ALL_FAILED');
         return false;
       }
-      try {
-        await depsRef.current.clearCopies();
-      } catch {
-        log('ERASE_COPIES_FAILED');
-      }
+      // Relances d'abord : une appli tuée pendant le vidage ne garde pas de relance des données
+      // effacées (revue de sécurité du 028c).
       try {
         await depsRef.current.clearReminders();
       } catch {
         log('ERASE_REMINDERS_FAILED');
+      }
+      try {
+        await depsRef.current.clearCopies();
+      } catch {
+        log('ERASE_COPIES_FAILED');
       }
     } finally {
       fileLock.release('erase');

@@ -5,8 +5,9 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { useLocalSearchParams } from 'expo-router';
+import { router as appRouter, useLocalSearchParams } from 'expo-router';
 import { act, fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
+import { useEffect } from 'react';
 import { Text } from 'react-native';
 import type { fakeNotifications } from '@/__fixtures__/expoModules';
 import { env, gate } from '@/__fixtures__/recoveryEnv';
@@ -28,9 +29,11 @@ const notifications = jest.requireMock('expo-notifications') as ReturnType<
 const { state } = notifications;
 const { log } = jest.requireMock('@/data/log') as { log: jest.Mock };
 
-/** Témoin de l'écran d'appel : ses paramètres, tels que reçus. */
+const mounts = jest.fn();
+/** Témoin de l'écran d'appel : ses paramètres, tels que reçus ; chaque montage est compté. */
 const RollCallProbe = () => {
   const { creneau, date } = useLocalSearchParams<{ creneau?: string; date?: string }>();
+  useEffect(() => mounts(), []);
   return <Text>{`appel ${creneau} ${date}`}</Text>;
 };
 const Stub = () => null;
@@ -45,14 +48,25 @@ const r = labels.recovery;
 const DAMAGED = 'Ceci est un fichier texte, pas une base de données. '.repeat(40);
 const TARGET = { slotId: 3, date: '2026-11-27' };
 
-const response = (data: Record<string, unknown>) => ({
-  notification: { date: 0, request: { identifier: 'relance-3-2026-11-27', content: { data } } },
+type Request = { identifier?: string; trigger?: object };
+/** Réponse du module ; identifiant d'une relance de l'appli par défaut (`relance-<id>-<date>`). */
+const response = (data: Record<string, unknown>, request: Request = {}) => ({
+  notification: {
+    date: 0,
+    request: {
+      identifier: `relance-${data.slotId}-${data.date}`,
+      trigger: { type: 'date' },
+      content: { data },
+      ...request,
+    },
+  },
 });
 /** Appui pendant que l'appli tourne : l'événement du module. */
-const tap = (data: Record<string, unknown>) =>
+const tap = (data: Record<string, unknown>, request: Request = {}) =>
   act(async () => {
-    for (const listener of [...state.listeners]) listener(response(data));
+    for (const listener of [...state.listeners]) listener(response(data, request));
   });
+const back = () => act(async () => appRouter.back());
 const open = () => renderRouter(routes, { initialUrl: '/' });
 const home = () => screen.findByRole('header', { name: labels.welcome.title });
 const rollCall = () => screen.queryByText(/^appel /);
@@ -77,6 +91,7 @@ describe('F-06 appui sur une relance (ticket 028c)', () => {
     state.listeners = [];
     state.fail.clear();
     lastResponse = jest.spyOn(notifications, 'getLastNotificationResponse');
+    mounts.mockClear();
     log.mockClear();
   });
   afterEach(async () => {
@@ -173,6 +188,67 @@ describe('F-06 appui sur une relance (ticket 028c)', () => {
     await startOver();
     await act(async () => undefined);
     expect(rollCall()).toBeNull();
+  });
+
+  it('appui pendant le nettoyage du démarrage : l’appel s’ouvre une fois la pile montée', async () => {
+    const cleaning = gate();
+    env.clearGate = cleaning.wait;
+    await open();
+    await waitFor(() => expect(fileLock.holder()).toBe('cleanup'));
+    await tap(TARGET);
+    expect(rollCall()).toBeNull();
+    await act(async () => cleaning.release());
+    expect(await screen.findByText('appel 3 2026-11-27')).toBeTruthy();
+  });
+
+  it.each([
+    ['déclencheur push (réponse forgée)', { trigger: { type: 'push' } }],
+    ['identifiant étranger', { identifier: 'autre' }],
+    ['identifiant d’une autre séance', { identifier: 'relance-4-2026-11-27' }],
+  ])('SEC-12 %s : rien ne s’ouvre, à froid comme appli ouverte', async (_, request) => {
+    state.lastResponse = response(TARGET, request);
+    await open();
+    await home();
+    await tap(TARGET, request);
+    await act(async () => undefined);
+    expect(rollCall()).toBeNull();
+  });
+
+  it('même relance déjà traitée (à froid puis appli ouverte) : un seul écran d’appel', async () => {
+    state.lastResponse = response(TARGET);
+    const router = await open();
+    await screen.findByText('appel 3 2026-11-27');
+    await tap(TARGET);
+    await tap(TARGET);
+    await back();
+    await home();
+    expect(router.getPathname()).toBe('/');
+  });
+
+  it('relance de l’appel déjà affiché (ouvert depuis l’appli) : l’écran reste, rien n’est empilé', async () => {
+    const router = await open();
+    await home();
+    await act(async () => appRouter.push('/appel?creneau=3&date=2026-11-27'));
+    await screen.findByText('appel 3 2026-11-27');
+    await tap(TARGET);
+    await act(async () => undefined);
+    expect(mounts).toHaveBeenCalledTimes(1);
+    await back();
+    await home();
+    expect(router.getPathname()).toBe('/');
+  });
+
+  it('autre relance pendant un appel : l’appel est remplacé, jamais empilé', async () => {
+    const router = await open();
+    await home();
+    await tap(TARGET);
+    await screen.findByText('appel 3 2026-11-27');
+    await tap({ slotId: 5, date: '2026-11-26' });
+    expect(await screen.findByText('appel 5 2026-11-26')).toBeTruthy();
+    expect(screen.queryByText('appel 3 2026-11-27')).toBeNull();
+    await back();
+    await home();
+    expect(router.getPathname()).toBe('/');
   });
 
   it('ABS-04 SEC-12 aucun journal ne reçoit de nom, seulement des codes', async () => {
