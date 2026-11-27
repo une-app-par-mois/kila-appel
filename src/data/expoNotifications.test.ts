@@ -3,8 +3,8 @@
  */
 // Adaptateur expo-notifications (ticket 028a, EX-28, ADR-007). Le module natif est imité en
 // mémoire (src/__fixtures__/expoModules.ts) : on teste le code de l'adaptateur, pas le module.
-// Heure de Paris : les passages à l'heure d'été (29 mars 2026) et d'hiver (25 octobre 2026).
-process.env.TZ = 'Europe/Paris';
+// Heure de Paris, fixée par jest.config.js avant les workers : passages à l'heure d'été
+// (29 mars 2026) et d'hiver (25 octobre 2026).
 
 import type { fakeNotifications } from '@/__fixtures__/expoModules';
 import {
@@ -15,7 +15,6 @@ import {
   firstOccurrence,
   lastReminderTarget,
   onReminderTarget,
-  REMINDER_CHANNEL,
   reminderPermission,
   scheduleReminders,
   toLocalDate,
@@ -27,6 +26,8 @@ jest.mock('expo-notifications', () => require('@/__fixtures__/expoModules').fake
 const fake = jest.requireMock('expo-notifications') as ReturnType<typeof fakeNotifications>;
 const { state } = fake;
 let logs: jest.SpyInstance;
+// Horloge relue avant chaque appel natif : fixée avant toutes les relances des tests.
+let clock: jest.SpyInstance;
 
 beforeEach(() => {
   state.scheduled = [];
@@ -37,8 +38,12 @@ beforeEach(() => {
   state.listeners = [];
   state.fail.clear();
   logs = jest.spyOn(console, 'log').mockImplementation(() => undefined);
+  clock = jest.spyOn(Date, 'now').mockReturnValue(Date.UTC(2026, 0, 1));
 });
-afterEach(() => logs.mockRestore());
+afterEach(() => {
+  logs.mockRestore();
+  clock.mockRestore();
+});
 
 const planned = (overrides: Partial<PlannedReminder> = {}): PlannedReminder => ({
   slotId: 3,
@@ -59,6 +64,11 @@ const target = (slotId: unknown, date: unknown, identifier = `relance-${slotId}-
 });
 
 describe('EX-28 conversion des dates et heures locales', () => {
+  it('les tests tournent à l’heure de Paris, quel que soit le fuseau du poste ou de la CI', () => {
+    expect(new Date('2026-01-15T12:00:00Z').getTimezoneOffset()).toBe(-60);
+    expect(new Date('2026-07-15T12:00:00Z').getTimezoneOffset()).toBe(-120);
+  });
+
   it('heure ordinaire : la Date locale correspondante', () => {
     expect(toLocalDate('2026-12-02', '18:00')?.toISOString()).toBe('2026-12-02T17:00:00.000Z');
   });
@@ -112,7 +122,6 @@ describe('EX-28 programmer les relances', () => {
         },
       },
     ]);
-    expect(REMINDER_CHANNEL).toBe('relances');
   });
 
   it('SEC-12 données de la notification : slotId et date seulement', async () => {
@@ -130,6 +139,17 @@ describe('EX-28 programmer les relances', () => {
     expect(await scheduleReminders(reminders, local(2026, 12, 2, 18, 0, 30))).toBe(1);
     expect(state.scheduled.map((x) => x.identifier)).toEqual(['relance-3-2026-12-02']);
     expect(await scheduleReminders([planned()], local(2026, 12, 2, 17, 59, 59))).toBe(1);
+  });
+
+  it('relit l’heure avant chaque appel : un déclencheur à moins de 5 s est écarté (iOS le refuse)', async () => {
+    clock.mockReturnValue(local(2026, 12, 2, 17, 59, 56).getTime());
+    expect(await scheduleReminders([planned()], now)).toBe(0);
+    clock.mockReturnValue(local(2026, 12, 2, 17, 59, 55).getTime());
+    expect(await scheduleReminders([planned()], now)).toBe(1);
+    // Passée entre le calcul et l'appel : écartée aussi.
+    state.scheduled = [];
+    clock.mockReturnValue(local(2026, 12, 2, 18, 0, 1).getTime());
+    expect(await scheduleReminders([planned()], now)).toBe(0);
   });
 
   it('heure d’été : une relance à 02:30 part à 03:00', async () => {

@@ -1,4 +1,10 @@
 // Tests Jest (docs/CONVENTIONS.md §5). Aucun test n'appelle le réseau (ABS-01).
+
+// Fuseau fixé avant le démarrage des workers, qui copient l'environnement : les tests de la
+// relance (ticket 028a) passent par les changements d'heure de Paris, et la CI tourne en UTC.
+// Posé dans un fichier de test, il n'aurait aucun effet.
+process.env.TZ = 'Europe/Paris';
+
 /** @type {import('jest').Config} */
 module.exports = {
   preset: 'jest-expo',

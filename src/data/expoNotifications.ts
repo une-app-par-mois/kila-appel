@@ -33,6 +33,8 @@ type Response = Parameters<Parameters<typeof addNotificationResponseReceivedList
 type Presented = Awaited<ReturnType<typeof getPresentedNotificationsAsync>>[number];
 
 const MINUTE_MS = 60_000;
+// iOS refuse un déclencheur déjà passé au moment de l'appel natif : marge de sécurité.
+const MIN_LEAD_MS = 5_000;
 // Au plus 3 h d'écart cherchées autour d'un changement d'heure (1 h en France).
 const SHIFT_MAX_MIN = 180;
 
@@ -75,7 +77,8 @@ export const toLocalDate = (date: string, time: string): Date | null => {
 /**
  * EX-28 : programme chaque relance à sa date fixe et rend le nombre programmé. Un déclencheur
  * passé ou à la minute courante est écarté : le calcul et la programmation n'ont pas lieu à la
- * même minute. Une relance en échec est journalisée et n'empêche pas les autres.
+ * même minute. L'horloge est relue juste avant chaque appel natif : un déclencheur à moins de 5 s
+ * est écarté aussi. Une relance en échec est journalisée et n'empêche pas les autres.
  */
 export const scheduleReminders = async (planned: PlannedReminder[], now: Date): Promise<number> => {
   const currentMinute = Math.floor(now.getTime() / MINUTE_MS) * MINUTE_MS;
@@ -87,7 +90,7 @@ export const scheduleReminders = async (planned: PlannedReminder[], now: Date): 
       log('REMINDER_DATE_INVALID', { slotId });
       continue;
     }
-    if (fire.getTime() <= currentMinute) continue;
+    if (fire.getTime() <= currentMinute || fire.getTime() - Date.now() < MIN_LEAD_MS) continue;
     try {
       await scheduleNotificationAsync({
         identifier: `relance-${slotId}-${date}`,

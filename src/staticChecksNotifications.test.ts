@@ -10,7 +10,14 @@
 import { readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import ts from 'typescript';
-import { literalText, moduleName } from '@/__fixtures__/expoAccess';
+import {
+  factoryMocks,
+  leavesSrc,
+  literalText,
+  loadedModule,
+  NODE_MODULES,
+  stringKey,
+} from '@/__fixtures__/expoAccess';
 import { scriptKind, TEST_FILE, walkSources } from '@/__fixtures__/sourceFiles';
 
 const OWNER = 'src/data/expoNotifications.ts';
@@ -64,11 +71,31 @@ const inList = (node: ts.Node): boolean => {
   return clause.namedBindings.elements.every((e) => ALLOWED.has((e.propertyName ?? e.name).text));
 };
 
-const check = (file: string, source: string): string[] => {
-  const tree = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, scriptKind(file));
+const parse = (file: string, source: string) =>
+  ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, scriptKind(file));
+
+/** Modules chargés par un fichier (test « seul importeur »). */
+const modulesOf = (file: string, source: string): string[] => {
+  const tree = parse(file, source);
+  const mocked = factoryMocks(tree);
   const found: string[] = [];
   const visit = (node: ts.Node) => {
-    const name = moduleName(node);
+    const name = loadedModule(node, mocked);
+    if (name !== undefined) found.push(name);
+    ts.forEachChild(node, visit);
+  };
+  visit(tree);
+  return found;
+};
+
+const check = (file: string, source: string): string[] => {
+  const tree = parse(file, source);
+  const mocked = factoryMocks(tree);
+  const found: string[] = [];
+  const visit = (node: ts.Node) => {
+    const name = loadedModule(node, mocked);
+    if (name !== undefined && NODE_MODULES.test(name)) found.push('ABS-01 node_modules');
+    if (name !== undefined && leavesSrc(file, name)) found.push('ABS-01 hors de src/');
     if (name === 'expo-application' || name?.startsWith('expo-application/'))
       found.push('ABS-01 expo-application');
     if (name?.startsWith(`${MODULE}/`)) found.push('ABS-01 sous-chemin');
@@ -81,7 +108,7 @@ const check = (file: string, source: string): string[] => {
       ? literalText(node.argumentExpression)
       : ts.isIdentifier(node)
         ? node.text
-        : undefined;
+        : stringKey(node);
     if (key !== undefined && REFUSED.has(key)) found.push('ABS-01 fonction refusée');
     ts.forEachChild(node, visit);
   };
@@ -169,6 +196,66 @@ describe('ABS-01 expo-notifications seulement dans l’adaptateur, en liste ferm
     ]);
   });
 
+  it.each([
+    "import { x } from '../../node_modules/expo-notifications/build/index';",
+    "const a = require('../node_modules/expo-application');",
+    "import { File } from '/home/x/node_modules/expo-file-system';",
+  ])('M1 a) refuse tout chemin vers node_modules/, partout : %s', (source) => {
+    expect(check(OWNER, source)).toContain('ABS-01 node_modules');
+  });
+
+  it('M1 b) import N = require(…) compte comme un import', () => {
+    expect(check('src/hooks/a.ts', "import N = require('expo-notifications');")).toEqual([
+      'ABS-01 import hors de expoNotifications.ts',
+    ]);
+    expect(check(OWNER, "import N = require('expo-notifications');")).toEqual([
+      'ABS-01 import hors liste',
+    ]);
+    expect(check(OWNER, "import A = require('expo-application');")).toEqual([
+      'ABS-01 expo-application',
+    ]);
+  });
+
+  it.each([
+    "const { 'getExpoPushTokenAsync': g } = N;",
+    "const { ['setBadgeCountAsync']: s } = N;",
+    "const o = { 'registerTaskAsync': f };",
+    "const o = { ['addPushTokenListener']: f };",
+  ])('M1 c) refuse une clé écrite en chaîne : %s', (source) => {
+    expect(check(OWNER, source)).toEqual(['ABS-01 fonction refusée']);
+  });
+
+  it.each([
+    ['src/data/a.ts', "import { x } from '../../plugins/evil';"],
+    ['src/a.ts', "const m = require('../scripts/x.js');"],
+    ['src/config/libelles/b.ts', "export * from '../../../x';"],
+  ])('M1 d) refuse un import relatif qui sort de src/ (%s) : %s', (file, source) => {
+    expect(check(file, source)).toEqual(['ABS-01 hors de src/']);
+  });
+
+  it('M1 d) laisse passer le JSON hors de src/ et les chemins relatifs internes', () => {
+    const source =
+      "import app from '../../app.json'; import { a } from './voisin'; import b from '../b';";
+    expect(check('src/config/x.ts', source)).toEqual([]);
+  });
+
+  it('jest.requireActual et jest.mock sans fabrique chargent le vrai module', () => {
+    for (const source of [
+      "const n = jest.requireActual('expo-notifications');",
+      "jest.mock('expo-notifications');",
+      "jest.mock('expo-sqlite', () => ({})); const n = jest.requireMock('expo-notifications');",
+    ])
+      expect(check('src/a.test.ts', source)).toEqual([
+        'ABS-01 import hors de expoNotifications.ts',
+      ]);
+  });
+
+  it('jest.requireMock d’un module simulé par une fabrique : la simulation, pas le module', () => {
+    const source =
+      "jest.mock('expo-notifications', () => ({})); const n = jest.requireMock('expo-notifications');";
+    expect(check('src/a.test.ts', source)).toEqual([]);
+  });
+
   it('laisse passer le texte d’une chaîne et les autres noms', () => {
     const source = "const m = 'setBadgeCountAsync'; const badge = 0; schedule(r);";
     expect(check(OWNER, source)).toEqual([]);
@@ -200,7 +287,7 @@ describe('Le code du dépôt respecte le contrôle des notifications', () => {
   it('seul src/data/expoNotifications.ts importe expo-notifications', () => {
     const importing = files
       .filter((file) => !TEST_FILE.test(file))
-      .filter((file) => /['"]expo-notifications/.test(read(file)));
+      .filter((file) => modulesOf(file, read(file)).includes(MODULE));
     expect(importing).toEqual([OWNER]);
   });
 });
