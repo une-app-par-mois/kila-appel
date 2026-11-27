@@ -56,8 +56,10 @@ L'empreinte affichée doit être identique à celle de `SHA256SUMS.txt`. Chaque 
 | Permission | Pourquoi |
 | --- | --- |
 | `com.jitavision.kila.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` | Ajoutée par AndroidX, de niveau signature : seule l'appli l'utilise, pour ses récepteurs internes. Aucune boîte de dialogue, aucun accès à vos données. |
+| `android.permission.POST_NOTIFICATIONS` | Afficher la relance avant une séance (F-06), une notification **locale** programmée sur le téléphone. Demandée seulement quand vous activez la relance (boîte de dialogue à partir d'Android 13). Refusée, l'appli marche comme avant, sans relance. |
+| `android.permission.RECEIVE_BOOT_COMPLETED` | Reprogrammer les relances après un redémarrage du téléphone, qui les efface. Aucune boîte de dialogue, aucun accès à vos données. |
 
-C'est la seule permission du binaire Android, relevée par `aapt2 dump permissions` et vérifiée à chaque build par `scripts/audit-apk.js` contre `config/permissions-attendues.txt`. **INTERNET est absente** (ABS-01), comme le stockage externe, la superposition aux autres applis et la vibration, ajoutés par défaut par Expo et bloqués. Sur iOS : aucune permission, aucun lien entrant.
+Ce sont les seules permissions du binaire Android, relevées par `aapt2 dump permissions` et vérifiées à chaque build par `scripts/audit-apk.js` contre `config/permissions-attendues.txt`. **INTERNET est absente** (ABS-01), comme le stockage externe, la superposition aux autres applis et la vibration, ajoutés par défaut par Expo et bloqués. Les notifications sont locales : la bibliothèque `expo-notifications` embarque Firebase Cloud Messaging, mais ses composants sont retirés du binaire (`plugins/withoutFirebase.js`, vérifié par l'audit) et ses permissions bloquées (état du réseau, maintien en éveil, réception de messages Google, référent d'installation, pastilles des lanceurs). Pas d'alarme exacte : Android peut retarder une relance, de quelques minutes à davantage quand le téléphone est en veille prolongée ou que l'appli est restreinte (économie de batterie). Sur iOS : aucune permission, aucun lien entrant.
 
 ## Sécurité
 

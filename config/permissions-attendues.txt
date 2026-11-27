@@ -5,3 +5,11 @@
 # Permission interne d'AndroidX, de niveau signature : seule l'appli elle-même
 # peut l'utiliser, pour ses récepteurs non exportés. Aucune boîte de dialogue.
 com.jitavision.kila.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+#
+# Relance (F-06, ticket 026, décision datée du porteur du 2026-11-27) :
+# afficher une notification locale. Demandée seulement quand l'encadrant active
+# la relance (boîte de dialogue à partir d'Android 13).
+android.permission.POST_NOTIFICATIONS
+# Reprogrammer les relances après un redémarrage de l'appareil (les alarmes
+# d'Android sont effacées au redémarrage). Aucune boîte de dialogue.
+android.permission.RECEIVE_BOOT_COMPLETED
