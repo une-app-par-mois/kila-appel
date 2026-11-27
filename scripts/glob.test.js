@@ -5,31 +5,19 @@
 // (GHSA-3g3m-2fjr-6pw4, annulation par AbortSignal contournée, >= 9.0.0 et < 14.0.2).
 // glob 7.x, hors de la plage et d'une autre interface (test-exclude@6), reste permis.
 // Lecture du fichier local, aucun réseau.
-const { readFileSync } = require('node:fs');
-const { join } = require('node:path');
+const { readLock, lowerThan, installed, withoutVersion, declaredFrom } = require('./lock-versions');
 
-const lock = JSON.parse(readFileSync(join(__dirname, '..', 'package-lock.json'), 'utf8'));
-
-function parts(version) {
-  return version.split('-')[0].split('.').map(Number);
-}
-
-function lowerThan(a, b) {
-  const [x, y] = [parts(a), parts(b)];
-  for (let i = 0; i < 3; i += 1) {
-    if (x[i] !== y[i]) return x[i] < y[i];
-  }
-  // À égalité sur les trois nombres, une préversion (avec un tiret) est plus petite.
-  return a.includes('-') && !b.includes('-');
-}
+const lock = readLock();
 
 function isVulnerable(version) {
   return !lowerThan(version, '9.0.0') && lowerThan(version, '14.0.2');
 }
 
-const globVersions = Object.entries(lock.packages)
-  .filter(([path]) => path.endsWith('node_modules/glob'))
-  .map(([path, info]) => ({ path, version: info.version }));
+function vulnerable(lockFile) {
+  return installed(lockFile, 'glob').filter(
+    ({ version }) => typeof version === 'string' && isVulnerable(version),
+  );
+}
 
 describe('018 glob hors de la plage vulnérable', () => {
   it('reconnaît la plage vulnérable', () => {
@@ -52,11 +40,47 @@ describe('018 glob hors de la plage vulnérable', () => {
     expect(isVulnerable('9.0.0-beta.1')).toBe(false);
   });
 
+  it('lit une version avec indication de build', () => {
+    expect(isVulnerable('14.0.1+meta')).toBe(true);
+    expect(isVulnerable('14.0.2+meta')).toBe(false);
+    expect(isVulnerable('14.0.2-rc.1+meta')).toBe(true);
+  });
+
+  it('signale par son chemin une entrée sans version, sans planter', () => {
+    const fake = { packages: { 'node_modules/x/node_modules/glob': { link: true } } };
+    expect(withoutVersion(fake, 'glob')).toEqual([
+      'node_modules/x/node_modules/glob : entrée sans version',
+    ]);
+    expect(vulnerable(fake)).toEqual([]);
+  });
+
+  it('repère une dépendance que l’override redescendrait', () => {
+    const fake = {
+      packages: {
+        'node_modules/a': { dependencies: { glob: '^15.0.0' } },
+        'node_modules/b': { dependencies: { glob: '^14.0.2' } },
+        'node_modules/c': { peerDependencies: { glob: '>=16 || ^15.1.0' } },
+      },
+    };
+    expect(declaredFrom(fake, 'glob', '15.0.0')).toEqual([
+      "node_modules/a déclare glob ^15.0.0 : ajuster l'override",
+      "node_modules/c déclare glob >=16 || ^15.1.0 : ajuster l'override",
+    ]);
+  });
+
   it('le verrou contient glob', () => {
-    expect(globVersions.length).toBeGreaterThan(0);
+    expect(installed(lock, 'glob').length).toBeGreaterThan(0);
+  });
+
+  it('chaque copie de glob a une version', () => {
+    expect(withoutVersion(lock, 'glob')).toEqual([]);
   });
 
   it("aucune version vulnérable n'est installée", () => {
-    expect(globVersions.filter(({ version }) => isVulnerable(version))).toEqual([]);
+    expect(vulnerable(lock)).toEqual([]);
+  });
+
+  it("aucun paquet ne demande glob 15 ou plus (sinon ajuster l'override)", () => {
+    expect(declaredFrom(lock, 'glob', '15.0.0')).toEqual([]);
   });
 });

@@ -45,6 +45,7 @@ Créé le 2026-11-27 à l'intégration du lot 014f-015f-014g-017, à la demande 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
 | Borne haute du garde-fou | `<= 14.0.1` · `< 14.0.2` | `< 14.0.2` : une préversion de 14.0.2 (`14.0.2-rc.1`) est classée vulnérable | Même règle que `scripts/minimatch.test.js` ; une préversion précède la version corrigée et peut ne pas contenir la correction | à relire |
+| Plage de l'override sans borne haute (`glob@>=9.0.0`, `minimatch@>=7.0.0`) : une future dépendance à glob 15 ou minimatch 12 serait redescendue en silence | sélecteur borné (`glob@>=9.0.0 <14.0.2`) · sélecteur ouvert gardé et garde-fou dans le verrou | Sélecteur ouvert gardé ; `declaredFrom` dans `scripts/lock-versions.js` fait échouer `glob.test.js` (resp. `minimatch.test.js`) si un paquet du verrou déclare glob avec une version minimale >= 15 (resp. minimatch >= 12), message « ajuster l'override » | La forme ouverte est celle validée au 017 ; une clé de plage avec un espace est moins sûre côté npm. Le garde-fou rend le cas visible au lieu de le borner | à relire (issue de `/code-review`) |
 
 ## Questions pour le porteur
 
@@ -53,6 +54,7 @@ Aucune.
 ## À reporter
 
 - CHANGELOG : « Outillage : glob forcé en 14.0.6 sur la plage vulnérable (>= 9.0.0) par `overrides`, faille GHSA-3g3m-2fjr-6pw4 levée ; garde-fou `scripts/glob.test.js` (018). »
+- Garde-fous (corrections de `/code-review`) : comparaison de versions commune dans `scripts/lock-versions.js`, utilisée par `glob.test.js` et `minimatch.test.js` ; une indication de build (`14.0.1+meta`) est lue correctement ; une entrée du verrou sans version (lien) est signalée par son chemin sans faire planter le fichier ; un paquet qui déclarerait glob >= 15 ou minimatch >= 12 fait échouer le test avec « ajuster l'override » (l'override, sans borne haute, le redescendrait). Chaque nouveau test vérifié en échec sur une mutation volontaire du code, puis code remis.
 - Architecture : rien. glob sert à l'outillage de test (jest, `test-exclude@7`) ; rien n'est embarqué dans l'appli.
 - Versions (2026-11-27) : avant, glob 13.0.7 (`@jest/reporters`, `jest-config`, racine) et 10.5.0 (sept copies de `test-exclude@7`, `jest-expo`, `jest-runner`, `jest-snapshot`) ; après, glob 14.0.6 partout, dédoublonné à la racine. glob 7.2.3 reste sous `test-exclude@6.0.0` (`babel-plugin-istanbul@6`, hors de la plage). Verrou : ajout de glob 14.0.6 et path-scurry 3.0.0 (nom déjà présent, BlueOak-1.0.0) ; retrait de glob 10.5.0 et 13.0.7, path-scurry 1.11.1 et 2.0.2, jackspeak, foreground-child, `@isaacs/cliui` et leurs dépendances. Aucun paquet nouveau par son nom.
 - `npm ls glob --all` : aucun `invalid` ni erreur. `npm audit` : 0 vulnérabilité.
