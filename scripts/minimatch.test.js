@@ -18,7 +18,8 @@ function lowerThan(a, b) {
   for (let i = 0; i < 3; i += 1) {
     if (x[i] !== y[i]) return x[i] < y[i];
   }
-  return false;
+  // À égalité sur les trois nombres, une préversion (avec un tiret) est plus petite.
+  return a.includes('-') && !b.includes('-');
 }
 
 function isVulnerable(version) {
@@ -43,6 +44,11 @@ describe('017 minimatch hors de la plage vulnérable', () => {
       true,
       true,
     ]);
+  });
+
+  it('classe vulnérable une préversion de 11.0.1', () => {
+    expect(isVulnerable('11.0.1-rc.1')).toBe(true);
+    expect(isVulnerable('7.0.0-beta.1')).toBe(false);
   });
 
   it('le verrou contient minimatch', () => {
