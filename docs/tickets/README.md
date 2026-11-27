@@ -51,14 +51,15 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 013 | [Historique et correction des appels](013-historique.md) | 1 | F-03 | non | fusionné dans le groupe |
 | 014 | [Sauvegarde et restauration : données](014-sauvegarde-restauration.md) | 1 | F-03 | oui | fusionné dans le groupe |
 | 014b | [Écran Sauvegarde : export](014b-ecrans-sauvegarde.md) | 1 | F-03 | oui | fusionné dans le groupe |
-| 014f | [Restaurer depuis l'écran de récupération](014f-restauration-recuperation.md) | 1 | F-03 | oui | à faire |
+| 014f | [Restaurer depuis l'écran de récupération](014f-restauration-recuperation.md) | 1 | F-03 | oui | fusionné dans le groupe |
 | 014e | [Écran Restauration](014e-ecran-restauration.md) | 1 | F-03 | oui | fusionné dans le groupe |
 | 014c | [Base illisible au démarrage](014c-base-illisible.md) | 1 | F-03 | oui | fusionné dans le groupe |
 | 014d | [Invitation et bandeau de sauvegarde](014d-rappels-sauvegarde.md) | 1 | F-03 | non | fusionné dans le groupe |
-| 014g | [Vidage du dossier d'export sous le verrou commun](014g-export-vidage-verrou.md) | 1 | F-03 | oui | à faire |
+| 014g | [Vidage du dossier d'export sous le verrou commun](014g-export-vidage-verrou.md) | 1 | F-03 | oui | fusionné dans le groupe |
 | 015 | [Tout effacer et purge : données](015-effacement-purge.md) | 1 | F-03 | oui | fusionné dans le groupe |
 | 015b | [Conservation et purge des anciennes saisons](015b-ecrans-effacement.md) | 1 | F-03 | oui | fusionné dans le groupe |
-| 015f | [Tout effacer](015f-tout-effacer.md) | 1 | F-03 | oui | à faire |
+| 015f | [Tout effacer](015f-tout-effacer.md) | 1 | F-03 | oui | fusionné dans le groupe |
 | 015c | [Mode de journal de la base fixé à l'ouverture](015c-mode-journal.md) | 1 | F-03 | oui | fusionné dans le groupe |
 | 016 | [Campagne Maestro du jalon 1](016-maestro-jalon-1.md) | 1 | F-01 à F-03 | non | à faire |
-| 017 | [minimatch 11 forcé (Dependabot n° 2)](017-minimatch-overrides.md) | 1 | — | non | à faire |
+| 017 | [minimatch 11 forcé (Dependabot n° 2)](017-minimatch-overrides.md) | 1 | — | non | fusionné dans le groupe |
+| 018 | [Faille modérée de glob (GHSA-3g3m-2fjr-6pw4) dans l'outillage](018-glob-ghsa-3g3m.md) | 1 | — | non | à faire |

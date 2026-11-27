@@ -12,22 +12,27 @@ Réévaluation (PLAN §6) : moins de 2 h de porteur pour 6 h prévues ; 1,5 h pa
 
 ## Prochaines étapes
 
-1. **Lot 4 (014c, 014d, 015b) fusionné dans le groupe** (PR #49 à #51 ; 1197 tests). Lots précédents : 013-014-015, 014b-015c, 014e (PR #37 à #46). Restauration vérifiée sur l'A55 (export, désinstallation, restauration identique) ; export vers Gmail et Drive vérifié ; mode de journal accepté (`DB_READY`).
-   - **Prochain lot** : 014f (restaurer depuis l'écran de récupération), 015f (Tout effacer), 014g (vidage du dossier d'export sous le verrou commun) ; leurs trois plans de zone sensible à valider à la séance de lancement.
-   - Puis 016 (Maestro) et la PR du jalon 1 vers `main`.
-   - File du porteur (`docs/QUESTIONS.md`) : deux accords du 015b (« ses 1 groupe », « Garder les 1 dernières saisons »), à poser à la séance de clôture.
-   - `docs/DECISIONS.md` : historique complet rétabli (les intégrations des lots 2 et 3 avaient remplacé les lignes au lieu d'ajouter en bas).
-   - **À vérifier sur l'A55** : base réellement abîmée (APK de debug, `run-as` ; non faite), écran « abîmée », confirmation, puis Bienvenue ; durée de `quick_check` au démarrage avec une grosse base fictive ; invitation après le premier appel et bandeau des 30 jours (014d).
-   - iPhone (avant toute publication iOS) : restauration réelle puis `tmp/` vide ; aucun lien dans `Caches/expo-sharing-tmp/` ; préfixe du cache identique entre expo-file-system et expo-modules-core.
+1. **Lot 5 (014g, 017, 015f, 014f) fusionné dans le groupe** (PR #54 à #57 ; 1284 tests). Lots précédents : 013-014-015, 014b-015c, 014e (PR #37 à #46), lot 4 014c-014d-015b (PR #49 à #51). Restauration depuis Paramètres vérifiée sur l'A55 (export, désinstallation, restauration identique) ; export vers Gmail et Drive vérifié ; mode de journal accepté (`DB_READY`).
+   - **Recette sur l'A55 des lots 4 et 5 non faite**, par décision du porteur du 2026-11-27 (« on poursuit malgré tout »). Jamais tourné sur un appareil :
+     - base réellement abîmée (APK de debug, `run-as`) : écran « abîmée », confirmation, Bienvenue ;
+     - restauration sur une base recréée (`deleteDatabaseAsync` puis réouverture du même nom, ATTACH et `restoreBackup` sur expo-sqlite natif), depuis Drive et Téléchargements ;
+     - Tout effacer (copies du cache vidées, Bienvenue, saison recréée) ;
+     - invitation après le premier appel et bandeau des 30 jours (014d) ;
+     - durée de `quick_check` au démarrage avec une grosse base fictive ;
+     - blocage du retour Android pendant l'effacement et la recopie (014f) et pendant Tout effacer (015f).
+   - **Prochain** : 018 (faille modérée de glob, GHSA-3g3m-2fjr-6pw4, outillage seul), puis 016 (Maestro), puis la PR du jalon 1 vers `main` (CI verte, accord du porteur), puis le bilan des décisions automatiques annulées (0 à ce jour).
+   - File du porteur (`docs/QUESTIONS.md`) : deux accords du 015b (« ses 1 groupe », « Garder les 1 dernières saisons »), à poser à la séance de clôture. Lot 5 : aucune question en attente.
+   - iPhone (avant toute publication iOS) : restauration réelle puis `tmp/` vide ; aucun lien dans `Caches/expo-sharing-tmp/` ; préfixe du cache identique entre expo-file-system et expo-modules-core ; Inbox `tmp/<identifiant>-Inbox/` vidée par Tout effacer et par le démarrage ; restauration depuis l'écran de récupération.
    - PR méthode n° 1 sur `une-app-par-mois/methode-vibe-coding` à relire par le porteur, app-template à suivre.
    - Branche locale `essai/lot-2-apk` (APK d'essai 014b + 015c), non poussée, gardée (pas de suppression de branche).
    - `@expo/devtools` est dans le bundle de production : client WebSocket d'expo-sqlite, appelé seulement si `__DEV__` (jamais en production) ; INTERNET absente du binaire. Pas une violation d'ABS-01.
 2. Fin du jalon 1 : bilan des décisions automatiques annulées : 0 à ce jour.
+
 ## Points d'attention
 
 - Hook pre-push : il lance `scripts/test.sh` sur la **copie de travail**, pas sur les commits envoyés ; la CI reste la vérification qui fait foi. `groupe/jalon-0-outillage` a été poussée sur `e9c39bc` (documents seuls, sans test.sh réel) depuis la copie verte du ticket 001, par décision du porteur du 2026-11-26.
 - `noFloatingPromises` est une règle expérimentale (nursery) de Biome 2.6.9 : à surveiller à chaque mise à jour de Biome.
-- `npm audit` : 22 vulnérabilités moyennes, aucune élevée, dans l'outillage de build d'Expo (`@expo/fingerprint`) ; CI à `--audit-level=high`.
+- `npm audit` : 19 vulnérabilités moyennes, aucune élevée, toutes dans l'outillage (glob, ticket 018 ; minimatch levée par le 017) ; CI à `--audit-level=high`.
 - **Lancer Claude Code depuis `kila-appel/`** : depuis le dossier parent, les interdictions de `.claude/settings.json` ne s'appliquent pas.
 - Calendrier sans marge (publication Android fin janvier 2027) : jalons 4 et 5 premiers candidats au report, décision du porteur à la fin du jalon 3.
 - iOS : aucun appareil Apple ni Mac ; publication iOS après un test sur un vrai iPhone (jalon 7).

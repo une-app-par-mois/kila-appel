@@ -1,6 +1,6 @@
 # 014f — Restaurer depuis l'écran de récupération
 
-Statut : en cours (branche poussée, à intégrer) · Jalon : 1 · Zone sensible : oui · Trivial : non
+Statut : fusionné dans le groupe (PR #57, 2026-11-27 ; jamais essayé sur l'A55 : base abîmée réelle, `deleteDatabaseAsync` puis réouverture, ATTACH natif) · Jalon : 1 · Zone sensible : oui · Trivial : non
 
 Dépend de : 014c, 014e · Fichiers touchés : `src/hooks/restoreFlow.ts` (nouveau), `src/hooks/useRestore.ts`, `src/hooks/useRecovery.ts` (nouveau), `src/ui/Recovery.tsx`, résumé partagé avec `src/app/restauration.tsx`, libellés, tests
 
@@ -17,9 +17,9 @@ Depuis l'écran « Base illisible », restaurer une sauvegarde alors que la base
 
 ## Critères d'acceptation
 
-- [ ] Refus ou Annuler : le fichier abîmé est intact
-- [ ] Réussite : données identiques à la sauvegarde, puis accueil
-- [ ] Échec de la recopie après la suppression : base neuve vide ouverte, message « La restauration n'a pas abouti », « Choisir un fichier… » et moyen de continuer avec une base vide ; dit dans la PR et dans SEC-11
+- [x] Refus ou Annuler : le fichier abîmé est intact — vérifié par les tests ; pas encore sur l'A55
+- [x] Réussite : données identiques à la sauvegarde, puis accueil — vérifié par les tests ; ATTACH et recopie sur expo-sqlite natif non essayés
+- [x] Échec de la recopie après la suppression : base neuve vide ouverte, message « La restauration n'a pas abouti », « Choisir un fichier… » et moyen de continuer avec une base vide ; dit dans la PR et dans SEC-11
 
 ## Questions prévues
 

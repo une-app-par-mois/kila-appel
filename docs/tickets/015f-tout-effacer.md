@@ -1,6 +1,6 @@
 # 015f — Tout effacer
 
-Statut : à faire · Jalon : 1 · Zone sensible : oui · Trivial : non
+Statut : fusionné dans le groupe (PR #56, 2026-11-27 ; pas encore essayé sur l'A55) · Jalon : 1 · Zone sensible : oui · Trivial : non
 
 Dépend de : 015, 015b, 014c · Fichiers touchés : `src/app/tout-effacer.tsx` (nouveau), `src/hooks/useErase.ts`, `src/app/donnees.tsx`, `src/app/(tabs)/parametres.tsx`, libellés, tests
 
@@ -17,9 +17,9 @@ Tout effacer après double confirmation, puis Bienvenue (EX-23, SEC-11).
 
 ## Critères d'acceptation
 
-- [ ] Tout effacer après double confirmation (bouton, puis mot), puis Bienvenue (EX-23)
-- [ ] Copies du cache vidées juste après ; un échec du vidage est journalisé sans empêcher le retour à Bienvenue
-- [ ] Bienvenue recrée la saison comme à une installation neuve ; conservation revenue à 3
+- [x] Tout effacer après double confirmation (bouton, puis mot), puis Bienvenue (EX-23)
+- [x] Copies du cache vidées juste après ; un échec du vidage est journalisé sans empêcher le retour à Bienvenue
+- [x] Bienvenue recrée la saison comme à une installation neuve ; conservation revenue à 3
 
 ## Questions prévues
 

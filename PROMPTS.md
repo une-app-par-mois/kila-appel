@@ -183,6 +183,28 @@ Avant de passer aux tickets suivants, je veux voir avec toi comment optimiser le
 **Leçons** :
 - Les intégrations des lots 2 et 3 avaient remplacé les lignes de `docs/DECISIONS.md` au lieu d'ajouter en bas : historique rétabli à ce lot.
 
+### Lot 5 (014g, 017, 015f, 014f) — 2026-11-27
+
+**Prompt clé** : séance de lancement en QCM (plans de zone sensible du 014g, du 015f et du 014f ; texte de Tout effacer ; mot « EFFACER » ; 014f gardé entier ; minimatch par `overrides`), puis agents de code en parallèle.
+
+**Ce que l'IA a fait** :
+- **Développement** : un agent par ticket, dans son worktree ; le 014g fusionné en premier, les autres ont récupéré la branche du jalon par une fusion.
+- **Intégration** : revue de code, contradicteur, revue de sécurité pour 014g, 015f et 014f ; corrections renvoyées aux agents ; fusions une par une (PR #54 à #57) ; 1284 tests ; 41 décisions ajoutées à `docs/DECISIONS.md`.
+- **Suites** : SEC-10 et SEC-11 complétées (vidage de l'export sous verrou, Tout effacer, limites des arrêts brutaux), nouveau ticket 018 (glob), relances à annuler par Tout effacer notées dans `docs/IDEES.md`, maquette régénérée.
+
+**Ce qui a été corrigé par les revues** :
+- « Rien n'a été effacé » s'affichait après un effacement réel quand la base neuve ne s'ouvrait pas : état `erased` et message propre (réponse 1 du porteur) ;
+- le résultat `'ignored'` (base qui n'est plus abîmée au moment de remplacer) était silencieux : carte « La restauration n'a pas abouti » ;
+- le double appui sur le bouton rouge de Tout effacer n'était pas testé : garde dans l'écran et test ;
+- la liste des dossiers du cache était écrite deux fois (démarrage et Tout effacer) : `clearCacheCopies()` commun ;
+- l'ancien accueil restait visible un instant après Tout effacer : compteur d'effacements lu par `useSetupProgress` ;
+- minimatch 11 forcé partout cassait `test-exclude@6` (suite pourtant verte) : override limité à la plage vulnérable.
+
+**Ce que j'ai corrigé ou refusé** : quatre réponses après les revues du 014f (état `erased`, titre et message de `restoreFailed`, effacement en échec pendant une restauration, deux phrases de la carte gardées) ; ticket à part pour glob ; **recette sur l'A55 des lots 4 et 5 non faite, décision du 2026-11-27 : « on poursuit malgré tout »** (liste dans `ETAT.md`).
+
+**Leçons** :
+- Une suite verte ne prouve pas qu'une dépendance forcée marche : le 017 l'a vu en chargeant `test-exclude@6` à la main ; critère repris dans le 018.
+
 ### [Étape] — [AAAA-MM-JJ]
 
 **Prompt**
