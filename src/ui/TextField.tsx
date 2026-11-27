@@ -25,6 +25,8 @@ type Props = {
   multiline?: boolean;
   /** Faux pendant et après un enregistrement (rien ne change plus). */
   editable?: boolean;
+  /** Mot à taper (« EFFACER », ticket 015f) : clavier en majuscules, sans correction automatique. */
+  capitals?: boolean;
 };
 
 export const TextField = ({
@@ -41,6 +43,7 @@ export const TextField = ({
   autoFocus = false,
   multiline = false,
   editable = true,
+  capitals = false,
 }: Props) => (
   <View style={styles.field}>
     {!labelHidden && <FieldLabel label={label} hint={hint} />}
@@ -53,6 +56,12 @@ export const TextField = ({
       autoFocus={autoFocus}
       multiline={multiline}
       editable={editable}
+      {...(capitals && {
+        autoCapitalize: 'characters' as const,
+        autoCorrect: false,
+        spellCheck: false,
+        autoComplete: 'off' as const,
+      })}
       placeholder={placeholder}
       placeholderTextColor={theme.colors.texteSecondaire}
       style={[

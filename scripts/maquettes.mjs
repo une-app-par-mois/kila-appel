@@ -353,7 +353,9 @@ ${titre('Tout effacer ?', 'donnees')}
 ${carte(`<p>Toutes les données de cet appareil seront effacées <b>définitivement</b> : membres, contacts d'urgence, groupes, créneaux, séances, présences et réglages.</p><p class="l-sous">Sans sauvegarde, elles ne pourront pas être retrouvées.</p>`, 'bandeau')}
 <label>Pour confirmer, tapez EFFACER</label><div class="champ mono vide">EFFACER</div>
 <div class="duo">${go('donnees', 'Garder', 'btn-s tiers')}${go('bienvenue', 'Tout effacer', 'btn-p deuxtiers fond-marge')}</div>
-<p class="note">Double confirmation : le bouton, puis le mot à taper.</p>`);
+<p class="note">Double confirmation : le bouton, puis le mot à taper.</p>
+<p class="note">Réponses du porteur du 2026-11-27 (ticket 015f) : avertissement tel quel ; « EFFACER » accepté sans tenir compte des majuscules ni des espaces autour, clavier en majuscules sans correction automatique ; première confirmation = « Tout effacer… » de Sauvegarde (ou la ligne de Paramètres, qui ouvre directement cet écran), seconde = le mot puis le bouton rouge, sans boîte en plus ; tout est effacé sur la base ouverte, puis les copies du cache sont vidées ; ensuite Bienvenue, qui recrée la saison comme à une installation neuve (conservation revenue à 3 saisons) ; pendant l'effacement, boutons désactivés et retour bloqué ; en cas d'échec : « L'effacement n'a pas abouti. Rien n'a été effacé. »</p>
+<p class="note">Décisions automatiques, à relire (ticket 015f) : « Tout effacer » reste désactivé tant que le mot ne correspond pas, et pendant un export, une restauration ou une purge ; Entrée au clavier n'efface rien ; « Garder » et le retour ramènent à l'écran précédent ; un échec du vidage des copies est écrit au journal sans empêcher Bienvenue ; le champ montre « EFFACER » en gris tant qu'il est vide, comme la maquette.</p>`);
 
 ecran('confidentialite', 1, 'Page légale (confidentialité, conditions)', 'EX-40, EX-41', 'parametres', `
 ${titre('Confidentialité', 'parametres')}

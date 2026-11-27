@@ -2,8 +2,8 @@
 // complet au-dessus du bouton (SEC-09, ABS-06 : jamais réduit), export par le partage du système,
 // date de la dernière sauvegarde ; section Restaurer, qui ouvre l'écran Restauration (ticket 014e,
 // EX-20). Section Conservation (ticket 015b, EX-24, SEC-11) : « Garder les [3 ▾] dernières
-// saisons », saisons au-delà, purge après une confirmation chiffrée, sous le verrou commun. Tout
-// effacer : ticket 015f.
+// saisons », saisons au-delà, purge après une confirmation chiffrée, sous le verrou commun. Section
+// Tout effacer (ticket 015f, EX-23) : première confirmation, qui ouvre l'écran Tout effacer.
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -26,6 +26,7 @@ const t = labels.backup;
 const r = labels.restore;
 const k = labels.retention;
 const p = labels.purge;
+const e = labels.eraseAll;
 const RETENTION_CHOICES = [1, 2, 3].map((n) => ({ value: n, label: k.choice(n) }));
 
 /** Confirmation ouverte : saisons visées, et ce que la purge effacera. */
@@ -162,6 +163,16 @@ export default function Backup() {
       </Card>
       <Section title={k.section} />
       <Retention locked={busy || locked} />
+      <Section title={e.section} />
+      <Card>
+        <Text style={styles.intro}>{e.intro}</Text>
+        <Button
+          label={e.open}
+          variant="destructiveSecondary"
+          onPress={() => router.push('/tout-effacer')}
+          disabled={busy || locked}
+        />
+      </Card>
     </Screen>
   );
 }

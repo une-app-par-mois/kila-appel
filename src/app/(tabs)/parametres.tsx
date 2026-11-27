@@ -1,6 +1,6 @@
 // Paramètres (maquette Paramètres, onglet, ticket 012) : seules les lignes qui mènent à un écran
 // existant (décision du porteur du 2026-11-26). Relance, alertes : jalons suivants ; conservation :
-// ticket 015b ; tout effacer : ticket 015f.
+// ticket 015b ; Tout effacer (ticket 015f) ouvre directement l'écran Tout effacer.
 import { useRouter } from 'expo-router';
 import { labels } from '@/config/libelles';
 import { toIsoDate } from '@/domain/formats';
@@ -97,6 +97,7 @@ export default function Settings() {
           subtitle={retention === null ? undefined : labels.retention.settingsRow(retention)}
           onPress={() => router.push('/donnees')}
         />
+        <ListRow title={labels.eraseAll.section} onPress={() => router.push('/tout-effacer')} />
       </Card>
       <Section title={t.about} />
       <Card>

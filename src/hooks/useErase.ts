@@ -2,8 +2,10 @@
 // ABS-05 ; zone sensible). La conservation est un réglage (1 à 3 saisons, 3 par défaut) : la
 // changer ne purge rien. Les candidates sont calculées au jour de l'horloge partagée ; la purge
 // prend le verrou commun (aucun export ni aucune restauration pendant, ni l'inverse) et revérifie
-// la liste au jour où elle part. ABS-04 : le journal ne reçoit que des codes.
+// la liste au jour où elle part. Tout effacer (ticket 015f, EX-23, SEC-10) : même verrou, puis
+// vidage des copies du cache. ABS-04 : le journal ne reçoit que des codes.
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { eraseAll } from '@/data/eraseAll';
 import { DataError } from '@/data/errors';
 import { log } from '@/data/log';
 import { type PurgeImpact, purge, purgeCandidates, purgeImpact } from '@/data/purge';
@@ -108,4 +110,48 @@ export const useRetention = () => {
   const load = useMemo(() => (db ? () => settingsRepo(db).retentionSeasons() : null), [db]);
   const { value, loadFailed } = useLoaded(load, 'RETENTION_LOAD_FAILED');
   return { retention: value, loadFailed };
+};
+
+/** Ce dont Tout effacer a besoin hors de la base : vider les copies du cache (SEC-10). */
+export type EraseAllDeps = { clearCopies: () => Promise<void> };
+
+/**
+ * EX-23, SEC-11, ABS-05 : Tout effacer, sur la base ouverte (jamais la suppression du fichier,
+ * réservée à une base abîmée). Sous le verrou commun ; seulement si l'effacement réussit, les
+ * copies du cache sont vidées sous le même verrou (SEC-10) ; un échec du vidage ne bloque rien.
+ */
+export const useEraseAll = (deps: EraseAllDeps) => {
+  const db = useDatabase();
+  const [erasing, setErasing] = useState(false);
+  const depsRef = useRef(deps);
+  depsRef.current = deps;
+
+  /** Vrai si tout est effacé ; faux si rien ne l'a été (verrou pris, base absente, échec). */
+  const eraseNow = useCallback(async (): Promise<boolean> => {
+    if (!db || !fileLock.acquire('erase')) {
+      log('ERASE_ALL_FAILED');
+      return false;
+    }
+    setErasing(true);
+    try {
+      try {
+        await eraseAll(db);
+      } catch {
+        log('ERASE_ALL_FAILED');
+        return false;
+      }
+      try {
+        await depsRef.current.clearCopies();
+      } catch {
+        log('ERASE_COPIES_FAILED');
+      }
+    } finally {
+      fileLock.release('erase');
+      setErasing(false);
+    }
+    notifyDataChanged();
+    return true;
+  }, [db]);
+
+  return { erasing, eraseNow };
 };
