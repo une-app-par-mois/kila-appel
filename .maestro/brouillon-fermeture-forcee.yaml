@@ -1,0 +1,42 @@
+# Brouillon retrouvé après une fermeture forcée (ticket 016, EX-14) : l'appli est arrêtée juste
+# après le dernier appui, puis relancée sans effacer ses données ; l'appel est repris tel quel.
+appId: com.jitavision.kila
+---
+- runFlow: sous-parcours/groupe-20-membres.yaml
+- tapOn: 'Nouvel appel'
+- extendedWaitUntil:
+    visible: 'Groupe E2E'
+    timeout: 5000
+- tapOn: 'Groupe E2E'
+- extendedWaitUntil:
+    visible: 'Membre 01, Présent'
+    timeout: 5000
+- tapOn: 'Membre 02, Présent'
+- tapOn: 'Membre 05, Présent'
+- tapOn: 'Membre 05, Absent'
+- scrollUntilVisible:
+    element: 'Membre 19, Présent'
+- tapOn: 'Membre 19, Présent'
+- tapOn: 'Membre 19, Absent'
+- tapOn: 'Membre 19, Retard'
+# Fermeture forcée juste après le dernier appui, sans attendre.
+- stopApp
+- launchApp:
+    clearState: false
+    stopApp: false
+# L'accueil propose l'appel en cours (maquette Accueil avec un appel interrompu).
+- extendedWaitUntil:
+    visible: 'Appel en cours'
+    timeout: 15000
+- assertVisible: 'Groupe E2E · commencé à .* · 1 absent noté'
+- tapOn: 'Reprendre l’appel'
+- extendedWaitUntil:
+    visible: 'Membre 02, Absent'
+    timeout: 5000
+- assertVisible: 'Membre 05, Retard'
+- assertVisible: 'Membre 01, Présent'
+- assertVisible: '18 présents dont 1 retard'
+- scrollUntilVisible:
+    element: 'Membre 19, Excusé'
+- scrollUntilVisible:
+    element: 'Membre 20, Présent'

@@ -1,0 +1,50 @@
+# Appel de 20 membres chronométré (ticket 016, NF-01, EX-39) : appel sans créneau, à la date du
+# jour, dans la saison créée par Bienvenue. Durée mesurée de l'ouverture de l'appel jusqu'à
+# « Appel enregistré », affichée, en échec au-delà de 30 s. Sur l'émulateur, c'est un garde-fou :
+# Maestro est bien plus lent qu'un doigt ; la mesure de NF-01 se fait sur le téléphone.
+appId: com.jitavision.kila
+---
+- runFlow: sous-parcours/groupe-20-membres.yaml
+- tapOn: 'Nouvel appel'
+- extendedWaitUntil:
+    visible: 'Groupe E2E'
+    timeout: 5000
+# Ouverture de l'appel : le chronomètre part juste avant l'appui sur le groupe. La durée comprend
+# le temps propre de Maestro (environ 2,2 s par appui et jusqu'à 5 s par défilement sur
+# l'émulateur local) : l'appel ne compte que les appuis d'un appel ordinaire.
+- evalScript: ${output.start = Date.now()}
+- tapOn: 'Groupe E2E'
+- extendedWaitUntil:
+    visible: 'Membre 01, Présent'
+    timeout: 5000
+# Un appel ordinaire : trois absents et un retard ; les autres restent présents.
+- tapOn: 'Membre 03, Présent'
+- tapOn: 'Membre 08, Présent'
+- scrollUntilVisible:
+    element: 'Membre 11, Présent'
+    centerElement: true
+- tapOn: 'Membre 11, Présent'
+- tapOn: 'Membre 11, Absent'
+- scrollUntilVisible:
+    element: 'Membre 20, Présent'
+    centerElement: true
+- tapOn: 'Membre 20, Présent'
+- scrollUntilVisible:
+    element: 'Enregistrer l’appel'
+- tapOn: 'Enregistrer l’appel'
+- extendedWaitUntil:
+    visible: 'Appel enregistré'
+    timeout: 5000
+- evalScript: ${output.seconds = (Date.now() - output.start) / 1000}
+- evalScript: "${console.log('Durée de l’appel de 20 membres : ' + output.seconds + ' s')}"
+- assertTrue:
+    condition: ${output.seconds <= 30}
+    label: NF-01 appel de 20 membres en 30 s au plus
+# Retour à l'Historique, où la séance apparaît (ticket 013), puis l'invitation à sauvegarder.
+- extendedWaitUntil:
+    visible: 'Premier appel enregistré'
+    timeout: 5000
+- back
+- extendedWaitUntil:
+    visible: 'Groupe E2E, .* 17/20 présents'
+    timeout: 5000

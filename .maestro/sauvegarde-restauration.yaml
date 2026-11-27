@@ -1,0 +1,106 @@
+# Sauvegarde, tout effacer, restauration (ticket 016, EX-19, EX-20, EX-23, SEC-09) : réponse du
+# porteur du 2026-11-27. L'export va jusqu'à la feuille de partage, avertissement « en clair »
+# visible ; la restauration lit la sauvegarde fictive que scripts/e2e.sh a déposée dans
+# Téléchargements (src/__fixtures__/e2eBackup.ts), par le sélecteur du système ; les données
+# restaurées sont vérifiées à l'écran. L'aller-retour réel se fait à la main sur un téléphone.
+appId: com.jitavision.kila
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: 'Bienvenue'
+    timeout: 15000
+
+# Sauvegarde : avertissement complet au-dessus du bouton (SEC-09, ABS-06), puis feuille de partage.
+- tapOn: 'Paramètres'
+- scrollUntilVisible:
+    element: 'Sauvegarde et restauration, .*'
+- tapOn: 'Sauvegarde et restauration, .*'
+- extendedWaitUntil:
+    visible: 'Ce fichier n’est pas protégé'
+    timeout: 5000
+- assertVisible: '.*toutes leurs présences, en clair\. Toute personne qui l’obtient peut les lire\..*'
+- tapOn: 'Exporter une sauvegarde'
+# Feuille de partage du système : le fichier de la sauvegarde du jour y est prêt, puis on la ferme
+# sans rien partager. Repérée par le nom du fichier seul (l'identifiant de la feuille change selon
+# la version d'Android).
+- extendedWaitUntil:
+    visible: 'kila-sauvegarde-\d{4}-\d{2}-\d{2}\.db'
+    timeout: 10000
+- back
+- extendedWaitUntil:
+    visible: 'Ce fichier n’est pas protégé'
+    timeout: 5000
+
+# Tout effacer : le mot EFFACER, puis Bienvenue.
+- back
+- scrollUntilVisible:
+    element: 'Tout effacer'
+- tapOn: 'Tout effacer'
+- extendedWaitUntil:
+    visible: 'Tout effacer \?'
+    timeout: 5000
+- tapOn: 'Pour confirmer, tapez EFFACER'
+- inputText: 'EFFACER'
+- hideKeyboard
+- tapOn: 'Tout effacer'
+- extendedWaitUntil:
+    visible: 'Bienvenue'
+    timeout: 10000
+
+# Restauration de la sauvegarde fictive, par le sélecteur du système.
+- tapOn: 'Paramètres'
+- scrollUntilVisible:
+    element: 'Sauvegarde et restauration, .*'
+- tapOn: 'Sauvegarde et restauration, .*'
+- scrollUntilVisible:
+    element: 'Choisir un fichier…'
+- tapOn: 'Choisir un fichier…'
+- runFlow: sous-parcours/selecteur-telechargements.yaml
+- extendedWaitUntil:
+    visible: 'Restaurer \?'
+    timeout: 10000
+- assertVisible: '5 membres · 2 groupes · 3 séances'
+- tapOn: 'Remplacer mes données'
+
+# Données restaurées, à l'écran : l'accueil (plus de Bienvenue), l'Historique, les groupes, les
+# membres.
+- extendedWaitUntil:
+    notVisible: 'Restaurer \?'
+    timeout: 10000
+- assertNotVisible: 'Bienvenue'
+- tapOn: 'Historique'
+- extendedWaitUntil:
+    visible: 'Poussins mercredi, .* 3/3 présents'
+    timeout: 5000
+- assertVisible: 'Benjamins samedi, .* 1/2 présent'
+- assertVisible: 'Poussins mercredi, .* 1/3 présent'
+# Trois appels, pas un de plus.
+- assertVisible:
+    id: 'history-row'
+    index: 2
+- assertNotVisible:
+    id: 'history-row'
+    index: 3
+- tapOn: 'Paramètres'
+# Paramètres garde sa position : la liste est encore en bas, vers Sauvegarde.
+- scrollUntilVisible:
+    element: 'Groupes, .*'
+    direction: UP
+- tapOn: 'Groupes, .*'
+- extendedWaitUntil:
+    visible: 'Poussins mercredi.*'
+    timeout: 5000
+- assertVisible: 'Benjamins samedi.*'
+- back
+- scrollUntilVisible:
+    element: 'Membres, .*'
+    direction: UP
+- tapOn: 'Membres, .*'
+- extendedWaitUntil:
+    visible: 'Alix Exemple.*'
+    timeout: 5000
+- assertVisible: 'Sam Fictif.*'
+- assertVisible: 'Lou Modèle.*'
+- assertVisible: 'Noa Essai.*'
+- assertVisible: 'Eden Témoin.*'
