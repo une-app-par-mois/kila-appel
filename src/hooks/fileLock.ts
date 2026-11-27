@@ -5,7 +5,8 @@
 // désactiver leurs boutons pendant l'autre opération.
 import { useSyncExternalStore } from 'react';
 
-export type FileTask = 'export' | 'restore' | 'erase';
+// 'cleanup' : nettoyage des dossiers temporaires au démarrage (ticket 014c).
+export type FileTask = 'export' | 'restore' | 'cleanup' | 'erase';
 
 let holder: FileTask | null = null;
 const listeners = new Set<() => void>();

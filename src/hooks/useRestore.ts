@@ -30,17 +30,15 @@ export type RestoreState =
 /** Navigation de l'écran : retour (sélecteur annulé) et accueil (après une réussite). */
 export type RestoreNav = { onCancel(): void; onDone(): void };
 
-// Vidage des dossiers au montage : le sélecteur attend qu'il soit fini.
-let clearing: Promise<void> = Promise.resolve();
-
-/** Copies restées d'un arrêt brutal ; rien pendant une restauration ou un export en cours. */
-const clearDirs = (deps: RestoreDeps) => {
-  if (fileLock.holder() !== null) return;
-  clearing = clearing
-    .then(() => Promise.all([deps.files.clear(), deps.clearPicked()]))
-    .then(() => undefined)
-    .catch(() => log('RESTORE_CLEANUP_FAILED'));
-};
+/**
+ * Copies restées d'un arrêt brutal, vidées sous le verrou de la restauration, avant le sélecteur
+ * (revue de sécurité du 014c ; le nettoyage au démarrage le fait aussi, ticket 014c).
+ */
+const clearDirs = (deps: RestoreDeps) =>
+  Promise.all([deps.files.clear(), deps.clearPicked()]).then(
+    () => undefined,
+    () => log('RESTORE_CLEANUP_FAILED'),
+  );
 
 type Ui = { show(state: RestoreState): void; decide(): Promise<boolean> };
 /**
@@ -58,7 +56,7 @@ const removePicked = (deps: RestoreDeps, path: string) =>
  * `-wal`, `-shm`, `-journal`) dans tous les cas, refus, Annuler et écran fermé compris.
  */
 const restoreOnce = async (db: Db, deps: RestoreDeps, ui: Ui): Promise<Outcome> => {
-  await clearing;
+  await clearDirs(deps);
   let picked: string | null = null;
   try {
     const result = await deps.pick();
@@ -134,7 +132,6 @@ export const useRestore = (deps: RestoreDeps, nav: RestoreNav) => {
 
   useEffect(() => {
     mounted.current = true;
-    clearDirs(depsRef.current);
     return () => {
       mounted.current = false;
       reply(false);

@@ -9,6 +9,7 @@ import { effacement } from './effacement';
 import { historique } from './historique';
 import { membres } from './membres';
 import { organisation } from './organisation';
+import { recuperation } from './recuperation';
 
 export type { LastBackup } from './donnees';
 export type { PurgeCounts } from './effacement';
@@ -24,5 +25,6 @@ export const labels = {
   ...accueil,
   ...historique,
   ...donnees,
+  ...recuperation,
   ...effacement,
 } as const;

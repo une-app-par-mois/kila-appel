@@ -117,7 +117,9 @@ describe('Migration 1 (ADR-003)', () => {
     const noForeignKeys: Db = {
       ...db,
       execute: async () => ({ changes: 0, lastInsertRowId: 0 }),
-      query: async <T>() => [{ foreign_keys: 0 }] as T[],
+      // Lecture d'essai du fichier (EX-22, ticket 014c) laissée à la vraie base.
+      query: async <T>(sql: string, params: (string | number | null)[] = []) =>
+        sql === 'PRAGMA foreign_keys' ? ([{ foreign_keys: 0 }] as T[]) : db.query<T>(sql, params),
     };
     await expect(prepareDatabase(noForeignKeys)).rejects.toThrow(FOREIGN_KEYS_OFF);
   });

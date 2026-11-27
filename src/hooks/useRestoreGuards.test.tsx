@@ -75,6 +75,40 @@ describe('EX-20 useRestore : gardes', () => {
     dir.remove();
   });
 
+  // Revue de sécurité du 014c : le vidage des dossiers se fait sous le verrou de la restauration.
+  it('vide les dossiers en tenant le verrou de la restauration, jamais sans lui', async () => {
+    const holders: (string | null)[] = [];
+    deps.files = {
+      ...storage,
+      clear: async () => {
+        holders.push(fileLock.holder());
+        await storage.clear();
+      },
+    };
+    deps.clearPicked = async () => {
+      holders.push(fileLock.holder());
+      await picker.clearPicked();
+    };
+    // Base pas encore prête au montage : le vidage attend le verrou, il ne part pas seul.
+    mockDb = null;
+    const restore = await start();
+    await act(async () => undefined);
+    mockDb = db;
+    await restore.rerender({});
+    await waitFor(() => expect(restore.result.current.state.step).toBe('confirm'));
+    expect(holders).toEqual(['restore', 'restore']);
+  });
+
+  it('verrou pris par le nettoyage au démarrage : rien n’est vidé, l’écran se ferme', async () => {
+    const clear = jest.fn(storage.clear);
+    deps.files = { ...storage, clear };
+    expect(fileLock.acquire('cleanup')).toBe(true);
+    await start();
+    await waitFor(() => expect(nav.onCancel).toHaveBeenCalledTimes(1));
+    expect(clear).not.toHaveBeenCalled();
+    fileLock.release('cleanup');
+  });
+
   it('pendant une restauration, l’export ne part pas', async () => {
     const restore = await start();
     await waitFor(() => expect(restore.result.current.state.step).toBe('confirm'));
