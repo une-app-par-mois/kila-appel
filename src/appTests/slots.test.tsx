@@ -3,6 +3,7 @@ import { fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-li
 import { count, type Seeded, seed } from '@/__fixtures__/seed';
 import SlotForm from '@/app/creneaux/[id]';
 import Slots from '@/app/creneaux/index';
+import Groups from '@/app/groupes/index';
 import Settings from '@/app/index';
 import { labels } from '@/config/libelles';
 import type { Db } from '@/data/db';
@@ -14,7 +15,12 @@ let mockDb: Db | null = null;
 jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => mockDb }));
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
 
-const routes = { index: Settings, 'creneaux/index': Slots, 'creneaux/[id]': SlotForm };
+const routes = {
+  index: Settings,
+  'creneaux/index': Slots,
+  'creneaux/[id]': SlotForm,
+  'groupes/index': Groups,
+};
 const open = (initialUrl: string) => renderRouter(routes, { initialUrl });
 const t = labels;
 const f = labels.slotForm;
@@ -34,7 +40,7 @@ describe('Écrans des créneaux (EX-07)', () => {
     await db.close();
   });
 
-  it('Paramètres → Créneaux : « Mercredi 17:30 – 19:00 », groupe · lieu', async () => {
+  it('EX-07 Paramètres → Créneaux : « Mercredi 17:30 – 19:00 », groupe · lieu', async () => {
     const router = await open('/');
     await fireEvent.press(await button(t.rowAccessibility(t.settings.slots, t.slots.count(1))));
     expect(router.getPathname()).toBe('/creneaux');
@@ -58,7 +64,7 @@ describe('Écrans des créneaux (EX-07)', () => {
     expect(screen.getByRole('button', { name: 'Lundi' }).props.accessibilityState).toMatchObject({
       selected: true,
     });
-    await fireEvent.changeText(screen.getByLabelText(f.start), '18:00');
+    await fireEvent.changeText(screen.getByLabelText(f.start), '18h00');
     await fireEvent.changeText(screen.getByLabelText(f.duration), '1h30');
     await fireEvent.press(
       screen.getByRole('button', { name: t.rowAccessibility(f.group, f.noGroup) }),
@@ -107,7 +113,7 @@ describe('Écrans des créneaux (EX-07)', () => {
     expect(await count(db, 'roll_call_drafts')).toBe(0);
   });
 
-  it('supprimer sans appel interrompu : message court ; « Garder » ne touche à rien', async () => {
+  it('EX-07 supprimer sans appel interrompu : message court ; « Garder » ne touche à rien', async () => {
     await db.execute('DELETE FROM roll_call_drafts');
     await open(`/creneaux/${s.slotId}`);
     await fireEvent.press(await button(f.delete));
@@ -116,27 +122,27 @@ describe('Écrans des créneaux (EX-07)', () => {
     expect(await count(db, 'slots')).toBe(1);
   });
 
-  it('sans saison active : un message, pas de « Nouveau créneau »', async () => {
+  it('EX-07 sans saison active : un message, pas de « Nouveau créneau »', async () => {
     await db.execute('UPDATE seasons SET is_active = 0');
     await open('/creneaux');
     expect(await screen.findByText(t.slots.noActiveSeason)).toBeTruthy();
     expect(screen.queryByRole('button', { name: t.slots.create })).toBeNull();
   });
 
-  it('sans saison active : pas de formulaire de création', async () => {
+  it('EX-07 sans saison active : pas de formulaire de création', async () => {
     await db.execute('UPDATE seasons SET is_active = 0');
     await open('/creneaux/nouveau');
     expect(await screen.findByText(t.slots.noActiveSeason)).toBeTruthy();
     expect(screen.queryByRole('button', { name: f.create })).toBeNull();
   });
 
-  it('créneau introuvable : le dit, sans formulaire', async () => {
+  it('EX-07 créneau introuvable : le dit, sans formulaire', async () => {
     await open('/creneaux/999');
     expect(await screen.findByText(t.errors.NOT_FOUND)).toBeTruthy();
     expect(screen.queryByRole('button', { name: t.common.save })).toBeNull();
   });
 
-  it('groupe du créneau archivé depuis : toujours affiché et gardé', async () => {
+  it('EX-07 groupe du créneau archivé depuis : toujours affiché et gardé', async () => {
     await db.execute('UPDATE groups SET archived_at = ? WHERE id = ?', [TODAY, s.groupId]);
     const router = await open(`/creneaux/${s.slotId}`);
     expect(await button(t.rowAccessibility(f.group, 'Poussins'))).toBeTruthy();
@@ -144,5 +150,20 @@ describe('Écrans des créneaux (EX-07)', () => {
     await fireEvent.press(screen.getByRole('button', { name: t.common.save }));
     await waitFor(() => expect(router.getPathname()).toBe('/creneaux'));
     expect(await count(db, 'slot_groups', 'group_id = ?', [s.groupId])).toBe(1);
+  });
+
+  it('EX-07 saison sans groupe : le formulaire envoie vers les groupes au lieu de bloquer', async () => {
+    await db.execute('UPDATE groups SET archived_at = ? WHERE season_id = ?', [TODAY, s.seasonId]);
+    const router = await open('/creneaux/nouveau');
+    expect(await screen.findByText(t.slots.noGroup)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: f.create })).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: t.slots.toGroups }));
+    expect(router.getPathname()).toBe('/groupes');
+  });
+
+  it('EX-07 créneau de 24 h : la liste montre la durée, pas « 14:00 – 14:00 »', async () => {
+    await db.execute('UPDATE slots SET duration_min = 1440 WHERE id = ?', [s.slotId]);
+    await open('/creneaux');
+    expect(await screen.findByText('Mercredi 17:30 · 24 h')).toBeTruthy();
   });
 });

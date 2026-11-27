@@ -1,5 +1,5 @@
 import { labels } from '@/config/libelles';
-import { endTime, parseDuration } from '@/domain/slots';
+import { endTime, normalizeTime, parseDuration } from '@/domain/slots';
 
 describe('EX-07 durée et horaire d’un créneau', () => {
   it.each([
@@ -29,6 +29,17 @@ describe('EX-07 durée et horaire d’un créneau', () => {
     [65, '1 h 05'],
   ])('EX-07 affiche %p min : %j', (minutes, text) => {
     expect(labels.duration(minutes)).toBe(text);
+  });
+
+  it.each([
+    ['9:00', '09:00'],
+    ['9h00', '09:00'],
+    [' 18 h 30 ', '18:30'],
+    ['14:00', '14:00'],
+    ['24:00', '24:00'],
+    ['9h', '9h'],
+  ])('EX-07 écrit l’heure %j comme %j (sinon telle quelle)', (text, time) => {
+    expect(normalizeTime(text)).toBe(time);
   });
 
   it('EX-07 heure de fin, après minuit comprise', () => {

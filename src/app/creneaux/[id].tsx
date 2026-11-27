@@ -7,7 +7,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
 import { toIsoDate } from '@/domain/formats';
-import { parseDuration } from '@/domain/slots';
+import { normalizeTime, parseDuration } from '@/domain/slots';
 import { InputError, validateSlot } from '@/domain/validation';
 import { useGroups } from '@/hooks/useGroups';
 import { useSeasons } from '@/hooks/useSeasons';
@@ -95,7 +95,7 @@ export default function SlotScreen() {
   const save = () => {
     const input = {
       weekday: weekday ?? 0,
-      startTime: start.trim(),
+      startTime: normalizeTime(start),
       durationMin: parseDuration(duration) ?? Number.NaN,
       place,
       name,
@@ -135,6 +135,8 @@ export default function SlotScreen() {
   // Le groupe du créneau reste proposé s'il a été archivé depuis.
   const kept = slot?.groups.filter((g) => !groups?.some((x) => x.id === g.id)) ?? [];
   const options = [...(groups ?? []), ...kept].map((g) => ({ value: g.id, label: g.name }));
+  // Aucun groupe à proposer : le formulaire ne pourrait pas être enregistré.
+  const noGroup = groups !== null && options.length === 0;
   const title = slot
     ? t.editTitle(labels.weekdays[slot.weekday - 1] ?? '', slot.startTime)
     : t.createTitle;
@@ -142,7 +144,13 @@ export default function SlotScreen() {
   return (
     <Screen title={title} onBack={back} error={error}>
       {noSeason && <Text style={styles.text}>{labels.slots.noActiveSeason}</Text>}
-      {((isNew && active) || slot) && (
+      {noGroup && (
+        <>
+          <Text style={styles.text}>{labels.slots.noGroup}</Text>
+          <Button label={labels.slots.toGroups} onPress={() => router.push('/groupes')} />
+        </>
+      )}
+      {((isNew && active) || slot) && !noGroup && (
         <>
           <View style={styles.field}>
             <FieldLabel label={t.weekday} />
@@ -199,8 +207,8 @@ export default function SlotScreen() {
               setGroupId(v);
               clear('groupId');
             }}
+            error={errors.groupId}
           />
-          {errors.groupId !== undefined && <FieldError error={errors.groupId} />}
           <TextField
             label={t.place}
             hint={t.optional}

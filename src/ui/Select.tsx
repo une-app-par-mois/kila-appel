@@ -8,7 +8,7 @@ import { theme } from '@/config/theme';
 import { Card } from '@/ui/Card';
 import { Icon } from '@/ui/Icon';
 import { Screen } from '@/ui/Screen';
-import { FieldLabel } from '@/ui/TextField';
+import { FieldError, FieldLabel } from '@/ui/TextField';
 
 export type Choice<T> = { value: T; label: string };
 
@@ -71,9 +71,19 @@ type Props<T> = {
   onChange: (value: T) => void;
   /** Indication après l'étiquette (« facultatif »). */
   hint?: string;
+  /** Erreur sous le champ, bordure Marge, comme un champ de saisie. */
+  error?: string;
 };
 
-export const Select = <T,>({ label, value, options, placeholder, onChange, hint }: Props<T>) => {
+export const Select = <T,>({
+  label,
+  value,
+  options,
+  placeholder,
+  onChange,
+  hint,
+  error,
+}: Props<T>) => {
   const [open, setOpen] = useState(false);
   const shown = options.find((o) => o.value === value)?.label ?? placeholder;
   return (
@@ -83,11 +93,12 @@ export const Select = <T,>({ label, value, options, placeholder, onChange, hint 
         accessibilityRole="button"
         accessibilityLabel={labels.rowAccessibility(label, shown)}
         onPress={() => setOpen(true)}
-        style={styles.input}
+        style={[styles.input, error !== undefined && styles.invalid]}
       >
         <Text style={[styles.value, value === null && styles.placeholder]}>{shown}</Text>
         <Icon name="choices" />
       </Pressable>
+      {error !== undefined && <FieldError error={error} />}
       <ChoiceList
         visible={open}
         title={label}
@@ -114,6 +125,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.quadrillage,
     borderRadius: theme.radii.champ,
   },
+  invalid: { borderColor: theme.colors.marge },
   value: { fontFamily: theme.fonts.text, fontSize: 16, color: theme.colors.texte },
   placeholder: { color: theme.colors.texteSecondaire },
   choice: {

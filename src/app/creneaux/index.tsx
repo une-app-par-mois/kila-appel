@@ -37,11 +37,19 @@ export default function Slots() {
           {slots.map((slot) => (
             <ListRow
               key={slot.id}
-              title={t.row(
-                labels.weekdays[slot.weekday - 1] ?? '',
-                slot.startTime,
-                endTime(slot.startTime, slot.durationMin),
-              )}
+              title={
+                slot.durationMin === 1440
+                  ? t.rowFullDay(
+                      labels.weekdays[slot.weekday - 1] ?? '',
+                      slot.startTime,
+                      labels.duration(slot.durationMin),
+                    )
+                  : t.row(
+                      labels.weekdays[slot.weekday - 1] ?? '',
+                      slot.startTime,
+                      endTime(slot.startTime, slot.durationMin),
+                    )
+              }
               subtitle={t.details(
                 [...slot.groups.map((g) => g.name), slot.place ?? ''].filter((p) => p !== ''),
               )}

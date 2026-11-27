@@ -12,8 +12,13 @@ export const creneaux = {
     noActiveSeason:
       'Aucune saison active. Activez ou créez une saison pour y déclarer vos créneaux.',
     toSeasons: 'Voir les saisons',
+    noGroup:
+      'Aucun groupe dans cette saison : créez d’abord le groupe qui se réunit sur ce créneau.',
+    toGroups: 'Voir les groupes',
     /** « Mercredi 14:00 – 15:30 ». */
     row: (day: string, start: string, end: string) => `${day} ${start} – ${end}`,
+    /** Créneau de 24 h : la durée, une heure de fin égale au début ne dirait rien. */
+    rowFullDay: (day: string, start: string, duration: string) => `${day} ${start} · ${duration}`,
     /** « Poussins mercredi · Gymnase Jean-Moulin ». */
     details: (parts: string[]) => parts.join(' · '),
     count: (n: number) => (n === 0 ? 'Aucun créneau' : plural(n, 'créneau', 'créneaux')),
