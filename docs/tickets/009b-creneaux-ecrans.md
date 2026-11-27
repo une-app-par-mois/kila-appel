@@ -1,6 +1,6 @@
 # 009b — Créneaux récurrents : écrans
 
-Statut : à faire · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : en cours · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Découpé le 2026-11-27 (décision du porteur) depuis le ticket 009.
 
@@ -16,6 +16,7 @@ Découpé le 2026-11-27 (décision du porteur) depuis le ticket 009.
 - Modification : mêmes champs, **lieu et nom compris** (décision du porteur du 2026-11-27, maquette mise à jour)
 - « Supprimer le créneau » : confirmation courte « Les séances déjà enregistrées sont conservées. » (décision du porteur du 2026-11-27, maquette mise à jour)
 - Ligne « Créneaux · N créneaux » dans Paramètres
+- La confirmation de suppression dit aussi « L'appel interrompu sur ce créneau sera effacé. » quand il y en a un (décision du porteur du 2026-11-27)
 
 ## Critères d'acceptation
 
