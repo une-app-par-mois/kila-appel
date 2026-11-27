@@ -1,7 +1,8 @@
 // Paramètres (maquette) : écran d'accueil provisoire jusqu'au ticket 012 (barre d'onglets).
 // Seules les lignes qui mènent à un écran existant (décision du porteur du 2026-11-26). En tête,
 // l'entrée de la recherche d'un contact d'urgence, à sa place dans l'accueil du 012 (EX-06), et
-// « Nouvel appel » vers la séance proposée (EX-09) ; sans séance, grisé avec la raison.
+// « Nouvel appel » vers la séance proposée (EX-09) ; sans séance à faire, vers l'appel sans créneau
+// (EX-39, décision du porteur du 2026-11-27).
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
@@ -75,7 +76,7 @@ export default function Settings() {
                   ? labels.rollCall.noSession
                   : undefined
             }
-            chevron={false}
+            onPress={() => router.push('/appel-libre')}
           />
         )}
       </Card>

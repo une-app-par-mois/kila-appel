@@ -1,12 +1,20 @@
 // Nouveau membre (maquette, EX-03) : nom et prénom obligatoires, date de naissance et groupe
 // facultatifs (et dits tels) ; inscrit au groupe choisi à partir d'aujourd'hui. Puis sa fiche.
 // Depuis l'ajout à un groupe : ce groupe et la date choisie là-bas, puis retour (2026-11-26).
+// Depuis l'appel (`appel=1`, maquette, EX-12) : le groupe de l'appel, sans choix, inscrit à la date
+// de la séance (décision du porteur du 2026-11-27), puis retour à l'appel.
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
-import { isIsoDate, parseDisplayDate, startInSeason, toIsoDate } from '@/domain/formats';
+import {
+  isIsoDate,
+  parseDisplayDate,
+  startInSeason,
+  toDisplayDate,
+  toIsoDate,
+} from '@/domain/formats';
 import { useGroups } from '@/hooks/useGroups';
 import { useMemberCreation } from '@/hooks/useMembers';
 import { useSeasons } from '@/hooks/useSeasons';
@@ -31,7 +39,13 @@ const checkInput = (firstName: string, lastName: string, birth: string) => {
 
 export default function NewMember() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ groupe?: string; debut?: string; retour?: string }>();
+  const params = useLocalSearchParams<{
+    groupe?: string;
+    debut?: string;
+    retour?: string;
+    appel?: string;
+  }>();
+  const fromRollCall = params.appel === '1';
   const presetGroup = params.groupe && /^\d+$/.test(params.groupe) ? Number(params.groupe) : null;
   const today = toIsoDate(new Date());
   const { seasons } = useSeasons();
@@ -106,19 +120,34 @@ export default function NewMember() {
         onChangeText={edit('birthDate', setBirth)}
         error={errors.birthDate}
       />
-      <Select
-        label={t.group}
-        hint={t.optionalMasculine}
-        value={groupId}
-        placeholder={t.noGroup}
-        options={[
-          { value: null, label: t.noGroup },
-          ...(groups ?? []).map((g) => ({ value: g.id as number | null, label: g.name })),
-        ]}
-        onChange={setGroupId}
+      {fromRollCall ? (
+        groupId !== null && (
+          <Text style={styles.note}>
+            {t.rollCallNote(
+              groups?.find((g) => g.id === groupId)?.name ?? '',
+              startDate === today ? null : toDisplayDate(startDate),
+            )}
+          </Text>
+        )
+      ) : (
+        <Select
+          label={t.group}
+          hint={t.optionalMasculine}
+          value={groupId}
+          placeholder={t.noGroup}
+          options={[
+            { value: null, label: t.noGroup },
+            ...(groups ?? []).map((g) => ({ value: g.id as number | null, label: g.name })),
+          ]}
+          onChange={setGroupId}
+        />
+      )}
+      <Button
+        label={fromRollCall ? t.rollCallCreate : t.create}
+        disabled={busy || (fromRollCall && groupId === null)}
+        onPress={() => void save()}
       />
-      <Button label={t.create} disabled={busy} onPress={() => void save()} />
-      <Text style={styles.note}>{t.contactsLater}</Text>
+      {!fromRollCall && <Text style={styles.note}>{t.contactsLater}</Text>}
     </Screen>
   );
 }

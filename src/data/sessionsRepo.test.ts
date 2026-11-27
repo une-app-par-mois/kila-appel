@@ -164,4 +164,13 @@ describe('Dépôt des séances (EX-15, RM-03, RM-05)', () => {
     await repo.record(call());
     expect(await count(db, 'sessions')).toBe(3);
   });
+
+  it('EX-39 appel sans créneau : date future refusée (décision du 2026-11-27)', async () => {
+    const repo = sessionsRepo(db, TODAY);
+    await expect(
+      repo.record(call({ slotId: null, date: '2026-12-03', startTime: '10:05' })),
+    ).rejects.toMatchObject({ code: 'DATE_IN_FUTURE' });
+    await repo.record(call({ slotId: null, date: TODAY, startTime: '10:05' }));
+    expect(await count(db, 'sessions', 'slot_id IS NULL')).toBe(1);
+  });
 });

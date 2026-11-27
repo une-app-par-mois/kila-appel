@@ -34,6 +34,8 @@ export const sessionsRepo = (db: Db, today: string) => ({
       if (!group) throw new DataError('NOT_FOUND');
       if (call.date < group.start_date || call.date > group.end_date)
         throw new InputError('DATE_OUTSIDE_SEASON');
+      // EX-39 : un appel sans créneau n'est jamais futur non plus (décision du 2026-11-27).
+      if (call.slotId === null && call.date > today) throw new InputError('DATE_IN_FUTURE');
       if (call.slotId !== null) {
         const [slot] = await tx.query<{
           weekday: WeeklySlot['weekday'];

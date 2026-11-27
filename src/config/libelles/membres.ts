@@ -34,6 +34,10 @@ export const membres = {
     noGroup: 'Aucun groupe',
     create: 'Créer le membre',
     contactsLater: 'Les contacts d’urgence s’ajoutent ensuite depuis sa fiche.',
+    /** Ajout pendant l'appel (EX-12) : inscrit à la date de la séance, `null` = aujourd'hui. */
+    rollCallNote: (group: string, date: string | null) =>
+      `Il sera inscrit à « ${group} » à partir ${date === null ? 'd’aujourd’hui' : `du ${date}`}.`,
+    rollCallCreate: 'Ajouter et revenir à l’appel',
     fullName: (firstName: string, lastName: string) => `${firstName} ${lastName}`,
     archive: 'Archiver',
     unarchive: 'Désarchiver',

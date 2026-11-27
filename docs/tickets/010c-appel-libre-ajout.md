@@ -22,8 +22,8 @@ Découpé le 2026-11-27 (décision du porteur) depuis le ticket 010.
 
 ## Critères d'acceptation
 
-- [ ] Appel sans créneau (EX-39)
-- [ ] Ajout d'un membre sans quitter l'appel (EX-12)
+- [x] Appel sans créneau (EX-39)
+- [x] Ajout d'un membre sans quitter l'appel (EX-12)
 
 ## Tests attendus
 
