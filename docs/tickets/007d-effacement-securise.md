@@ -1,6 +1,6 @@
 # 007d — Effacement des données supprimées dans le fichier
 
-Statut : fusionné dans le groupe · Jalon : 1 · Zone sensible : oui (effacement) · Trivial : non
+Statut : fait (PR #63 vers `main`) · Jalon : 1 · Zone sensible : oui (effacement) · Trivial : non
 
 Ajouté le 2026-11-26 (décision du porteur), après la revue de sécurité du ticket 007.
 

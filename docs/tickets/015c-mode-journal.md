@@ -1,6 +1,6 @@
 # 015c — Mode de journal de la base fixé à l'ouverture
 
-Statut : fusionné dans le groupe (PR #42, relu et accepté par le porteur le 2026-11-27 ; DB_READY sur l'A55) · Jalon : 1 · Zone sensible : oui (plan validé par le porteur le 2026-11-27) · Trivial : non
+Statut : fait (PR #63 vers `main` ; PR #42, relu et accepté par le porteur le 2026-11-27 ; DB_READY sur l'A55) · Jalon : 1 · Zone sensible : oui (plan validé par le porteur le 2026-11-27) · Trivial : non
 
 Dépend de : aucun ticket à faire · Fichiers touchés : `src/data/open.ts` et son test
 

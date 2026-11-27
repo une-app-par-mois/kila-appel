@@ -1,6 +1,6 @@
 # 011 — Brouillon d'appel
 
-Statut : fusionné dans le groupe (PR #28, après relecture du porteur) · Jalon : 1 · Zone sensible : oui · Trivial : non
+Statut : fait (PR #63 vers `main` ; PR #28, après relecture du porteur) · Jalon : 1 · Zone sensible : oui · Trivial : non
 
 ## Contexte
 

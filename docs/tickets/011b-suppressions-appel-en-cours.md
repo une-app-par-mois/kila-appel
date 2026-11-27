@@ -1,6 +1,6 @@
 # 011b — Suppressions et appel en cours
 
-Statut : fusionné dans le groupe (PR #29, après relecture du porteur) · Jalon : 1 · Zone sensible : oui · Trivial : non
+Statut : fait (PR #63 vers `main` ; PR #29, après relecture du porteur) · Jalon : 1 · Zone sensible : oui · Trivial : non
 
 Découpé le 2026-11-27 (décision du porteur) depuis le ticket 011.
 

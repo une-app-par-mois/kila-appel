@@ -1,6 +1,6 @@
 # 018 — Faille modérée de glob (GHSA-3g3m-2fjr-6pw4) dans l'outillage
 
-Statut : fusionné dans le groupe (PR #60, 2026-11-27) · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : fait (PR #63 vers `main` ; PR #60, 2026-11-27) · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Dépend de : 017 · Fichiers touchés : `package.json` (`overrides`), `package-lock.json`, `scripts/glob.test.js` (nouveau)
 

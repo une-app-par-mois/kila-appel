@@ -1,6 +1,6 @@
 # 006e — Licences embarquées
 
-Statut : fusionné dans le groupe · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : fait (PR #63 vers `main`) · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Ajouté le 2026-11-26 (décision du porteur) : EX-42 n'était prévu par aucun ticket.
 

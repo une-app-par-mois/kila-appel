@@ -1,6 +1,6 @@
 # 016 — Campagne Maestro du jalon 1
 
-Statut : fusionné dans le groupe (PR #61, 2026-11-27) · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : fait (PR #63 vers `main` ; PR #61, 2026-11-27) · Jalon : 1 · Zone sensible : non · Trivial : non
 
 ## Contexte
 

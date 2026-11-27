@@ -1,6 +1,6 @@
 # 008b — Contacts d'urgence : écrans
 
-Statut : fusionné dans le groupe · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : fait (PR #63 vers `main`) · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Découpé du ticket 008 le 2026-11-26 (décision du porteur).
 

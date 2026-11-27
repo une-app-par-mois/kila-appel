@@ -1,6 +1,6 @@
 # 014f — Restaurer depuis l'écran de récupération
 
-Statut : fusionné dans le groupe (PR #57, 2026-11-27 ; jamais essayé sur l'A55 : base abîmée réelle, `deleteDatabaseAsync` puis réouverture, ATTACH natif) · Jalon : 1 · Zone sensible : oui · Trivial : non
+Statut : fait (PR #63 vers `main` ; PR #57, 2026-11-27 ; jamais essayé sur l'A55 : base abîmée réelle, `deleteDatabaseAsync` puis réouverture, ATTACH natif) · Jalon : 1 · Zone sensible : oui · Trivial : non
 
 Dépend de : 014c, 014e · Fichiers touchés : `src/hooks/restoreFlow.ts` (nouveau), `src/hooks/useRestore.ts`, `src/hooks/useRecovery.ts` (nouveau), `src/ui/Recovery.tsx`, résumé partagé avec `src/app/restauration.tsx`, libellés, tests
 

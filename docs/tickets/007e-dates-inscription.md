@@ -1,6 +1,6 @@
 # 007e — Inscription dans les dates de la saison
 
-Statut : fusionné dans le groupe · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : fait (PR #63 vers `main`) · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Relevé par la revue de sécurité du 007c ; décision du porteur du 2026-11-26.
 

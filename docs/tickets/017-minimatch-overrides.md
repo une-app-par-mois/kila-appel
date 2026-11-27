@@ -1,6 +1,6 @@
 # 017 — minimatch 11 forcé (alerte Dependabot n° 2)
 
-Statut : fusionné dans le groupe (PR #55, 2026-11-27) · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : fait (PR #63 vers `main` ; PR #55, 2026-11-27) · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Dépend de : — · Fichiers touchés : `package.json` (`overrides`), `package-lock.json`, `scripts/minimatch.test.js`
 
