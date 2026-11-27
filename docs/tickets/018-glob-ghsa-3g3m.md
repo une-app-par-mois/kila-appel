@@ -38,6 +38,7 @@ Créé le 2026-11-27 à l'intégration du lot 014f-015f-014g-017, à la demande 
 
 - Nouvelle version d'un paquet déjà présent : pas une dépendance nouvelle. Toute dépendance nouvelle apportée par la version corrigée (comme `@isaacs/nonrecursive-glob-match` au 017) est à proposer au porteur avec sa licence (cas « Arrête-toi et demande »).
 - Si aucune version corrigée ne fonctionne avec `test-exclude@7` : laisser l'alerte ouverte, la classer avec motif, ou attendre une version de jest ; à poser au porteur.
+- Séance de lancement du lot 018-016 (2026-11-27), réponses du porteur : aucune question. Pré-analyse : glob 14.0.2 et suivantes corrigent la faille, l'interface utilisée par jest et `test-exclude@7` est inchangée, aucun paquet nouveau par son nom (path-scurry 3 et lru-cache 11 déjà présents, BlueOak-1.0.0). Override prévu `"glob@>=9.0.0": "^14.0.2"` (glob 7.2.3 sous `test-exclude@6` laissé) ; garde-fou `scripts/glob.test.js` ; chargement vérifié hors de la suite pour chaque copie de `test-exclude@7` et pour jest.
 
 ## Décisions
 
