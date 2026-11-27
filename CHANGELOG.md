@@ -6,6 +6,7 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Ajouté
 
+- Onglet Historique : séances enregistrées et appels manquants, la plus récente en haut, filtres par groupe et par période (30 derniers jours, saison active, toutes les saisons) ; détail d'une séance pour corriger les statuts et le commentaire, ou la supprimer après confirmation (EX-16 à EX-18). Après l'enregistrement d'un appel, retour à l'Historique ; le compteur compte les retards parmi les présents (« 19 présents dont 2 retards ») ; barre d'onglets à cinq places, le rond « Nouvel appel » au centre — ticket 013.
 - Données : sauvegarde de la base (copie datée), vérification d'un fichier avant tout remplacement (cause précise, dont « version plus récente »), restauration en une seule transaction ; réglages de l'appli (EX-19, EX-20, NF-04) — ticket 014.
 - Données : tout effacer (une transaction) et purge des anciennes saisons, membres qui ne figurent plus dans aucune saison gardée compris (EX-23, EX-24, SEC-11) — ticket 015.
 - États vides de la maquette : recherche sans résultat (saisie rappelée et conseil) dans les membres, le contact d'urgence et l'appel ; carte « Aucun membre » avec « Nouveau membre » ; appel d'un groupe vide — ticket 012c.

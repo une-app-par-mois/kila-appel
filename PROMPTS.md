@@ -141,6 +141,26 @@ Avant de passer aux tickets suivants, je veux voir avec toi comment optimiser le
 
 **Ce que j'ai corrigé ou refusé** : rien. Choix du porteur : dès maintenant ; cas réservés repoussés à la séance suivante, avec le ticket mis de côté ; 3 agents au plus.
 
+### Premier lot en parallèle (013, 014, 015) — 2026-11-27
+
+**Prompt** : « Vas-y » (après la mise en place du travail par lot).
+
+**Ce que l'IA a fait** :
+- **Séance de lancement** : trois pré-analyses, puis 11 questions posées en une fois. Résultat : découpage de 014 et 015, restauration par recopie, expo-file-system accepté, purge des membres.
+- **Développement** : trois agents de code dans des worktrees.
+- **Intégration** :
+  - revue de code, contradicteur, et revue de sécurité pour 014 et 015 ;
+  - corrections renvoyées aux agents (5 décisions changées) ;
+  - fusions une par une, avec la branche du jalon fusionnée dans chaque branche suivante.
+- **Séance de clôture** : 6 questions (barre d'onglets à 5 places, « dont N retards », mode de journal, saisons commencées, écarts du 014).
+
+**Ce que j'ai corrigé ou refusé** : rien. Les questions venaient des contradicteurs et des revues, pas d'erreurs de l'IA.
+
+**Leçons** :
+- Les pré-analyses trouvent la plupart des questions avant le code.
+- Deux agents ont créé le même code d'erreur sous deux types : conflit résolu à l'intégration.
+- Un agent a élargi un contrôle « si besoin » : le contradicteur l'a fait remonter au porteur.
+
 ### [Étape] — [AAAA-MM-JJ]
 
 **Prompt**
