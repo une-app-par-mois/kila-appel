@@ -1,6 +1,6 @@
 # 029 — Relance : réglage et demande de permission
 
-Statut : à faire · Jalon : 2 · Zone sensible : **oui** (demande de permission du système, EX-29, ABS-07) · Trivial : non
+Statut : fusionné dans le groupe (PR #82) · Jalon : 2 · Zone sensible : **oui** (demande de permission du système, EX-29, ABS-07) · Trivial : non
 
 Dépend de : 028a (adaptateur `src/data/expoNotifications.ts`, `reminderPermission` ; pas le 028b, décision du porteur du 2026-11-27) · Fichiers touchés : `src/app/relance.tsx` (nouveau), `src/app/permission-notifications.tsx` (nouveau), `src/hooks/useReminderSettings.ts` (nouveau), `src/app/(tabs)/parametres.tsx`, `src/config/libelles/relance.ts`, `src/appTests/reminderSettings.test.tsx` (nouveau), `src/appTests/notificationPermission.test.tsx` (nouveau), `src/data/expoNotifications.ts` (fonction de demande juste après `reminderPermission`), `src/__fixtures__/expoModules.ts` (faux module, même placement), `src/data/expoNotificationsPermission.test.ts` (nouveau : le test actuel de l'adaptateur fait 300 lignes), `src/config/libelles/commun.ts` et `src/config/libelles/alertes.ts` (`alerts.settingsSection` déplacé vers `labels.settings`, avec sa référence dans `src/appTests/alerts.test.tsx`) — environ 12 fichiers, gardé entier (décision du porteur du 2026-11-27)
 
@@ -29,12 +29,13 @@ EX-29 : la permission n'est demandée qu'à l'activation de la relance, et le r�
 
 ## Critères d'acceptation
 
-- [ ] EX-29 : aucune demande de permission avant l'activation de l'interrupteur (test : l'adaptateur simulé n'est jamais appelé à l'ouverture de l'appli ni de Paramètres).
-- [ ] EX-29 : l'interrupteur montre l'état effectif : préférence active et permission refusée → bandeau, interrupteur tel que la maquette le montre.
-- [ ] Retour des réglages du téléphone avec la permission accordée : le bandeau disparaît sans relancer l'écran.
-- [ ] Délai modifié : reprogrammation (028) ; ligne de Paramètres à jour.
-- [ ] NF-06 : interrupteur et liste lisibles par le lecteur d'écran (rôle, état) ; zones d'appui de 44 pt.
-- [ ] CONV-03, CONV-16 ; écarts avec la maquette listés dans la PR.
+- [x] EX-29 : aucune demande de permission avant l'activation de l'interrupteur (test : l'adaptateur simulé n'est jamais appelé à l'ouverture de l'appli ni de Paramètres).
+- [x] EX-29 : l'interrupteur montre l'état effectif : préférence active et permission refusée → bandeau, interrupteur tel que la maquette le montre.
+- [x] Retour des réglages du téléphone avec la permission accordée : le bandeau disparaît sans relancer l'écran (testé par `AppState` simulé ; non vérifié sur l'appareil).
+- [x] Délai modifié : reprogrammation (028) ; ligne de Paramètres à jour (`notifyDataChanged` émis ; reprogrammation testée au 028b).
+- [x] NF-06 : interrupteur et liste lisibles par le lecteur d'écran (rôle, état) ; zones d'appui de 44 pt (rôle et état testés dans Jest ; TalkBack et zones d'appui non vérifiés sur l'appareil).
+- [x] CONV-03, CONV-16 ; écarts avec la maquette listés dans la PR.
+- Non vérifié sur l'appareil (prétest du jalon sur l'A55) : dialogue de permission d'Android 13 sans canal créé, dialogue fermé sans réponse (`canAskAgain`), retour des réglages du téléphone, retour Android bloqué pendant la demande ; iOS.
 
 ## Tests attendus
 
@@ -102,6 +103,7 @@ Séance de lancement du lot J2-4 (2026-11-27), réponses du porteur :
 ## Questions pour le porteur
 
 - Effet de bord à l'import d'expo-notifications : traité par la revue de sécurité du 029 (favorable), voir « À reporter » (SEC-03 / SEC-01).
+- **Décision du porteur du 2026-11-27** : fusionné dans le groupe après sa relecture (PR #82).
 
 ## À reporter
 
