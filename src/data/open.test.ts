@@ -9,7 +9,7 @@ import type { Db } from '@/data/db';
 import { membersRepo } from '@/data/membersRepo';
 import { LATEST_VERSION } from '@/data/migrations';
 import { openNodeDb } from '@/data/nodeDb';
-import { openAppDatabase, prepareDatabase, SECURE_DELETE_OFF } from '@/data/open';
+import { JOURNAL_MODE_OFF, openAppDatabase, prepareDatabase, SECURE_DELETE_OFF } from '@/data/open';
 
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
 const { log } = jest.requireMock('@/data/log') as { log: jest.Mock };
@@ -73,5 +73,84 @@ describe('ABS-05 effacement dans le fichier (ticket 007d)', () => {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+});
+
+// SEC-11 (ticket 015c) : en WAL, d'anciennes trames resteraient dans le fichier `-wal`.
+describe('SEC-11 mode de journal fixé à delete à chaque ouverture (ticket 015c)', () => {
+  const journalMode = async (db: Db) =>
+    (await db.query<{ journal_mode: string }>('PRAGMA main.journal_mode'))[0]?.journal_mode;
+
+  /** Base dont la relecture du mode de journal rend `mode`, le reste passant à la vraie base. */
+  const answering = (db: Db, mode: string): Db => ({
+    ...db,
+    query: async <T>(sql: string, params: (string | number | null)[] = []) =>
+      sql === 'PRAGMA main.journal_mode'
+        ? ([{ journal_mode: mode }] as T[])
+        : db.query<T>(sql, params),
+  });
+
+  let dir: string;
+  let file: string;
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'kila-journal-'));
+    file = join(dir, 'kila.db');
+  });
+  afterEach(() => rmSync(dir, { recursive: true, force: true }));
+
+  it('base sur fichier : mode delete lu après ouverture', async () => {
+    const db = await prepareDatabase(openNodeDb(file));
+    expect(await journalMode(db)).toBe('delete');
+    await db.close();
+  });
+
+  it('base en mémoire (sans fichier) : mode memory accepté', async () => {
+    const db = await prepareDatabase(openNodeDb());
+    expect(await journalMode(db)).toBe('memory');
+    await db.close();
+  });
+
+  it('base en WAL ramenée à delete, ligne gardée, mode gardé à la réouverture', async () => {
+    const before = openNodeDb(file);
+    expect(await before.query('PRAGMA journal_mode = WAL')).toEqual([{ journal_mode: 'wal' }]);
+    await before.execute('CREATE TABLE fictive (id INTEGER PRIMARY KEY, label TEXT)');
+    await before.execute('INSERT INTO fictive (label) VALUES (?)', ['Zzfictifzz']);
+    await before.close();
+
+    const db = await prepareDatabase(openNodeDb(file));
+    expect(await journalMode(db)).toBe('delete');
+    expect(await db.query('SELECT label FROM fictive')).toEqual([{ label: 'Zzfictifzz' }]);
+    await db.close();
+
+    const again = openNodeDb(file);
+    expect(await journalMode(again)).toBe('delete');
+    await again.close();
+  });
+
+  it('base sur fichier dont la relecture rend memory : refusée', async () => {
+    const db = openNodeDb(file);
+    await expect(prepareDatabase(answering(db, 'memory'))).rejects.toThrow(JOURNAL_MODE_OFF);
+    await db.close();
+  });
+
+  it('base dont la relecture rend wal : refusée', async () => {
+    const db = openNodeDb();
+    await expect(prepareDatabase(answering(db, 'wal'))).rejects.toThrow(JOURNAL_MODE_OFF);
+    await db.close();
+  });
+
+  it('erreur SQLite pendant le pragma : JOURNAL_MODE_OFF, sans le message de SQLite', async () => {
+    const db = openNodeDb(file);
+    const locked: Db = {
+      ...db,
+      execute: async (sql, params = []) => {
+        if (sql === 'PRAGMA main.journal_mode = DELETE') throw new Error('database is locked');
+        return db.execute(sql, params);
+      },
+    };
+    const error = await prepareDatabase(locked).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toBe(JOURNAL_MODE_OFF);
+    await db.close();
   });
 });
