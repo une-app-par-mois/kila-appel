@@ -17,7 +17,7 @@ jest.mock(
   () => require('react-native-safe-area-context/jest/mock').default,
 );
 
-// Données fictives (SEC-13). Les textes viennent normalement de libelles.ts (CONV-03).
+// Données fictives (SEC-13). Les textes viennent normalement de src/config/libelles/ (CONV-03).
 const flat = (style: unknown) => Object.assign({}, ...[style].flat(Infinity).filter(Boolean));
 
 describe('Button (charte §7)', () => {
