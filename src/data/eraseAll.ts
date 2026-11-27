@@ -3,14 +3,13 @@ import type { Db } from '@/data/db';
 import { log } from '@/data/log';
 
 /**
- * Les 16 tables de la migration 1, des tables filles aux tables mères : chaque suppression respecte
- * les clés étrangères. Requêtes fixes, jamais un nom lu dans la base. Une table ajoutée par une
- * migration doit venir ici : un test compare cette liste aux tables du schéma.
+ * Les tables de la migration 1, des tables filles aux tables mères : chaque suppression respecte
+ * les clés étrangères. Requêtes fixes, jamais un nom lu dans la base. L'appel en cours (trois
+ * tables) est vidé par la cascade depuis `seasons` : ce fichier ne nomme pas ses tables (contrôle
+ * EX-14). Une table ajoutée par une migration doit venir ici : un test vérifie que chaque table du
+ * schéma est vide après.
  */
-export const ERASE_STATEMENTS = [
-  'DELETE FROM roll_call_draft_statuses',
-  'DELETE FROM roll_call_draft_groups',
-  'DELETE FROM roll_call_drafts',
+const ERASE_STATEMENTS = [
   'DELETE FROM attendances',
   'DELETE FROM session_groups',
   'DELETE FROM sessions',

@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { count, seed } from '@/__fixtures__/seed';
 import type { Db } from '@/data/db';
-import { ERASE_STATEMENTS, eraseAll } from '@/data/eraseAll';
+import { eraseAll } from '@/data/eraseAll';
 import { LATEST_VERSION } from '@/data/migrations';
 import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
@@ -23,9 +23,6 @@ const tableNames = async (db: Db) =>
     )
   ).map((row) => row.name);
 
-const erasedTables = () =>
-  ERASE_STATEMENTS.map((sql) => /^DELETE FROM ([a-z_]+)$/.exec(sql)?.[1] ?? sql);
-
 describe('Tout effacer : données (EX-23, SEC-11, ABS-05)', () => {
   let db: Db;
   beforeEach(async () => {
@@ -38,14 +35,18 @@ describe('Tout effacer : données (EX-23, SEC-11, ABS-05)', () => {
     await db.close();
   });
 
-  it('EX-23 la liste fixe couvre exactement les tables de la migration, une fois chacune', async () => {
-    const tables = erasedTables();
-    expect(new Set(tables).size).toBe(tables.length);
-    expect([...tables].sort()).toEqual(await tableNames(db));
-  });
-
   it('EX-23 SEC-11 vide chaque table (réglages et appel en cours compris), garde schéma et version', async () => {
+    // Toutes les tables du schéma, lues ici seulement : une table ajoutée sans être vidée échoue.
     const tables = await tableNames(db);
+    expect(tables).toHaveLength(16);
+    // L'appel en cours est vidé par la cascade depuis `seasons` (contrôle EX-14 inchangé).
+    expect(tables).toEqual(
+      expect.arrayContaining([
+        'roll_call_drafts',
+        'roll_call_draft_groups',
+        'roll_call_draft_statuses',
+      ]),
+    );
     for (const table of tables) {
       // Le jeu fictif remplit toutes les tables : le test prouve bien un effacement.
       expect(await count(db, table)).toBeGreaterThan(0);

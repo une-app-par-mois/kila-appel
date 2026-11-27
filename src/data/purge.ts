@@ -54,43 +54,53 @@ export const purgeCandidates = async (db: Db, retention: number): Promise<Season
   return (await seasonsRepo(db).list()).slice(kept).filter((season) => !season.isActive);
 };
 
-/** EX-24 : somme des cascades de chaque saison (EX-01), plus les membres effacés. */
+/**
+ * EX-24 : somme des cascades de chaque saison (EX-01), plus les membres effacés. Tout est lu dans
+ * une seule transaction : les comptes décrivent le même état de la base.
+ */
 export const purgeImpact = async (db: Db, ids: readonly number[]): Promise<PurgeImpact> => {
   const seasonIds = toIdList(ids);
-  const impact: PurgeImpact = {
-    seasons: seasonIds.length,
-    groups: 0,
-    enrollments: 0,
-    slots: 0,
-    sessions: 0,
-    attendances: 0,
-    rollCallDraft: false,
-    members: (await membersToErase(db, seasonIds)).length,
-  };
-  for (const id of seasonIds) {
-    const one = await seasonsRepo(db).deletionImpact(id);
-    impact.groups += one.groups;
-    impact.enrollments += one.enrollments;
-    impact.slots += one.slots;
-    impact.sessions += one.sessions;
-    impact.attendances += one.attendances;
-    impact.rollCallDraft ||= one.rollCallDraft;
-  }
-  return impact;
+  return db.transaction(async (tx) => {
+    const impact: PurgeImpact = {
+      seasons: seasonIds.length,
+      groups: 0,
+      enrollments: 0,
+      slots: 0,
+      sessions: 0,
+      attendances: 0,
+      rollCallDraft: false,
+      members: (await membersToErase(tx, seasonIds)).length,
+    };
+    for (const id of seasonIds) {
+      const one = await seasonsRepo(tx).deletionImpact(id);
+      impact.groups += one.groups;
+      impact.enrollments += one.enrollments;
+      impact.slots += one.slots;
+      impact.sessions += one.sessions;
+      impact.attendances += one.attendances;
+      impact.rollCallDraft ||= one.rollCallDraft;
+    }
+    return impact;
+  });
 };
 
 /**
  * EX-24, ABS-05 : efface les saisons (cascades de EX-01) et leurs seuls membres, en une
- * transaction. La saison active est revérifiée dedans : si elle est visée, rien n'est effacé.
+ * transaction. Dedans, les saisons visées sont revérifiées : la saison active est refusée
+ * (`ACTIVE_SEASON`), comme toute saison qui n'est plus candidate pour cette durée de conservation
+ * (`NOT_PURGEABLE`) ; alors rien n'est effacé.
  */
-export const purge = async (db: Db, ids: readonly number[]): Promise<void> => {
+export const purge = async (db: Db, ids: readonly number[], retention: number): Promise<void> => {
   const seasonIds = toIdList(ids);
+  validateRetention(retention);
   const memberCount = await db.transaction(async (tx) => {
     const [active] = await tx.query<{ n: number }>(
       `SELECT COUNT(*) AS n FROM seasons WHERE is_active = 1 AND id IN ${PURGED}`,
       [JSON.stringify(seasonIds)],
     );
     if ((active?.n ?? 0) > 0) throw new DataError('ACTIVE_SEASON');
+    const candidates = new Set((await purgeCandidates(tx, retention)).map((season) => season.id));
+    if (!seasonIds.every((id) => candidates.has(id))) throw new DataError('NOT_PURGEABLE');
     // Lus avant : les inscriptions et présences disparaissent avec les saisons.
     const memberIds = await membersToErase(tx, seasonIds);
     for (const id of seasonIds) await seasonsRepo(tx).remove(id);

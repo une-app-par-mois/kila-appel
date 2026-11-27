@@ -173,7 +173,7 @@ describe('Purge des anciennes saisons : données (EX-24, SEC-11, ABS-05)', () =>
   it('EX-24 SEC-11 efface la saison, ses cascades et ses seuls membres ; garde le reste', async () => {
     const old = await oldSeason(db, s);
     const before = await counts(db);
-    await purge(db, [old.seasonId]);
+    await purge(db, [old.seasonId], 2);
     const after = await counts(db);
     const removed: Partial<Record<Table, number>> = {
       seasons: 1,
@@ -203,20 +203,42 @@ describe('Purge des anciennes saisons : données (EX-24, SEC-11, ABS-05)', () =>
   it('EX-24 refuse de purger la saison active : erreur avec code, rien d’effacé', async () => {
     const old = await oldSeason(db, s);
     const before = await counts(db);
-    await expect(purge(db, [old.seasonId, s.seasonId])).rejects.toThrow(
+    await expect(purge(db, [old.seasonId, s.seasonId], 1)).rejects.toThrow(
       new DataError('ACTIVE_SEASON'),
     );
     expect(await counts(db)).toEqual(before);
   });
 
-  it('EX-24 une saison introuvable annule toute la purge', async () => {
+  it('EX-24 une saison introuvable ou gardée annule toute la purge', async () => {
     const old = await oldSeason(db, s);
     const before = await counts(db);
-    await expect(purge(db, [old.seasonId, 9999])).rejects.toThrow(new DataError('NOT_FOUND'));
+    const refused = new DataError('NOT_PURGEABLE');
+    await expect(purge(db, [old.seasonId, 9999], 2)).rejects.toThrow(refused);
+    // 2025-2026 est parmi les deux plus récentes : gardée.
+    await expect(purge(db, [old.seasonId, s.otherSeasonId], 2)).rejects.toThrow(refused);
     expect(await counts(db)).toEqual(before);
-    await expect(purge(db, [old.seasonId, 0])).rejects.toThrow(new DataError('NOT_FOUND'));
+    await expect(purge(db, [old.seasonId, 0], 2)).rejects.toThrow(new DataError('NOT_FOUND'));
     await expect(purgeImpact(db, [1.5])).rejects.toThrow(new DataError('NOT_FOUND'));
     expect(await counts(db)).toEqual(before);
+  });
+  it('EX-24 revérifie dans la transaction : une saison qui n’est plus au-delà de la durée est refusée', async () => {
+    const old = await oldSeason(db, s);
+    expect((await purgeCandidates(db, 2)).map((x) => x.id)).toEqual([old.seasonId]);
+    // Entre la confirmation et la purge, une saison plus récente disparaît : l'ancienne est gardée.
+    await db.execute('DELETE FROM seasons WHERE id = ?', [s.otherSeasonId]);
+    const before = await counts(db);
+    await expect(purge(db, [old.seasonId], 2)).rejects.toThrow(new DataError('NOT_PURGEABLE'));
+    expect(await counts(db)).toEqual(before);
+    await expect(purge(db, [old.seasonId], 4)).rejects.toThrow(new DataError('RETENTION_INVALID'));
+  });
+
+  it('EX-24 les comptes de l’impact sont lus dans une seule transaction', async () => {
+    const old = await oldSeason(db, s);
+    const transaction = jest.spyOn(db, 'transaction');
+    const query = jest.spyOn(db, 'query');
+    await purgeImpact(db, [old.seasonId, s.otherSeasonId]);
+    expect(transaction).toHaveBeenCalledTimes(1);
+    expect(query).not.toHaveBeenCalled();
   });
 });
 
@@ -227,7 +249,7 @@ describe('ABS-05 purge dans le fichier', () => {
     try {
       const db = await prepareDatabase(openNodeDb(file));
       const old = await oldSeason(db, await seed(db));
-      await purge(db, [old.seasonId]);
+      await purge(db, [old.seasonId], 2);
       await db.close();
       // Octets décodés en UTF-8 : une valeur ASCII se lirait telle quelle si elle restait.
       const bytes = new TextDecoder().decode(readFileSync(file));
