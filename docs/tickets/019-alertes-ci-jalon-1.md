@@ -12,8 +12,9 @@ La CI de la PR du jalon 1 vers `main` (#63) signale deux alertes bloquantes. Tou
 ## Ce qui change
 
 - `purge.test.tsx` : les expressions régulières sont écrites en dur dans la table du test.
-- `licences.js` : `authorOf` ne garde que ce qui précède le premier « < » ou « ( ».
-- `licences.test.js` : un cas avec des chevrons imbriqués, vu en échec d'abord.
+- `licences.js` : `authorOf` retire les groupes `<…>` et `(…)` caractère par caractère, imbrications comprises. Aucun chevron ne reste, et un auteur qui commence par « (c) » ou contient une parenthèse au milieu garde son nom. La première version coupait au premier « < » ou « ( », ce que la revue a refusé.
+- `licences.test.js` : chevrons imbriqués, « (c) Acme Corp » et une parenthèse au milieu, chacun vu en échec d'abord.
+- `purge.test.tsx` : le test vérifie que la regex écrite en dur contient bien le libellé affiché.
 
 Aucune règle n'est désactivée, aucun contrôle n'est affaibli.
 
@@ -28,6 +29,7 @@ Aucune règle n'est désactivée, aucun contrôle n'est affaibli.
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
 | Corriger ou classer les alertes ? | corriger le code ; classer comme faux positif | corriger | La correction est petite, et CodeQL avait raison sur un reste de chevron. Classer une alerte dans GitHub est un réglage extérieur, réservé au porteur. | à relire |
+| Ligne du README des tickets écrite dans la branche | à l'intégration ; dans la branche | dans la branche | Ticket isolé, écrit par l'IA principale elle-même, sans autre ticket en parallèle : aucun risque de conflit. | à relire |
 
 ## À reporter
 

@@ -117,12 +117,28 @@ const repositoryOf = (json) => {
 };
 
 /**
- * Nom seul : le champ « author » de npm s'écrit « Nom <adresse> (site) », et rien après le premier
- * « < » ou « ( » n'est repris (aucun reste de chevron, alerte CodeQL, ticket 019).
+ * Retire les groupes « <…> » et « (…) », imbrications comprises, caractère par caractère : aucun
+ * chevron ne reste, même dans un texte mal formé (alerte CodeQL, ticket 019).
  */
-const authorOf = (json) =>
-  (typeof json.author === 'string' ? json.author : json.author?.name)?.split(/[<(]/)[0].trim() ||
-  undefined;
+const withoutGroups = (text) => {
+  let kept = '';
+  let angle = 0;
+  let paren = 0;
+  for (const char of text) {
+    if (char === '<') angle += 1;
+    else if (char === '>') angle = Math.max(0, angle - 1);
+    else if (char === '(') paren += 1;
+    else if (char === ')') paren = Math.max(0, paren - 1);
+    else if (angle === 0 && paren === 0) kept += char;
+  }
+  return kept.replace(/\s+/g, ' ').trim();
+};
+
+/** Nom seul : l'adresse et le site du champ « author » de npm (« Nom <adresse> (site) ») sont retirés. */
+const authorOf = (json) => {
+  const author = typeof json.author === 'string' ? json.author : json.author?.name;
+  return (typeof author === 'string' && withoutGroups(author)) || undefined;
+};
 
 /** Entrées triées par nom (sans tenir compte de la casse), dédoublonnées, et refus. */
 const buildRegistry = (root, dirs, extra = []) => {

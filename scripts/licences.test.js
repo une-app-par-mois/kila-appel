@@ -211,11 +211,24 @@ describe('Registre', () => {
       license: 'MIT',
       author: 'Alix Exemple <a<b>c> (https://exemple.invalid)',
     });
-    const { entries } = buildRegistry(root, ['node_modules/m', 'node_modules/n', 'node_modules/o']);
+    // Texte entre parenthèses au début ou au milieu : seul le groupe est retiré.
+    pkg('node_modules/p', { name: 'p', version: '1.0.0', license: 'MIT', author: '(c) Acme Corp' });
+    pkg('node_modules/q', {
+      name: 'q',
+      version: '1.0.0',
+      license: 'MIT',
+      author: 'Sam Exemple (Acme) Ltd <s@exemple.invalid>',
+    });
+    const { entries } = buildRegistry(
+      root,
+      ['m', 'n', 'o', 'p', 'q'].map((name) => `node_modules/${name}`),
+    );
     expect(entries).toEqual([
       { name: 'm', version: '1.0.0', license: 'MIT', text: null, author: 'Meta Platforms' },
       { name: 'n', version: '1.0.0', license: 'MIT', text: null, author: 'Expo' },
       { name: 'o', version: '1.0.0', license: 'MIT', text: null, author: 'Alix Exemple' },
+      { name: 'p', version: '1.0.0', license: 'MIT', text: null, author: 'Acme Corp' },
+      { name: 'q', version: '1.0.0', license: 'MIT', text: null, author: 'Sam Exemple Ltd' },
     ]);
   });
 });
