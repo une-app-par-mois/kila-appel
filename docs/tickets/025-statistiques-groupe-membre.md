@@ -90,6 +90,11 @@ Reports de l'intégration du lot J2-2 (2026-11-27) :
 | Aide de route partagée | dupliquer dans les deux écrans ; fichier commun | `src/ui/statsPeriodParams.ts` (nouveau, 20 lignes) : `periodParams` et `choiceFromParams`, utilisés par l'onglet et les deux écrans ; 9 fichiers au lieu de 8 | Une seule règle de lecture de la période ; un fichier de route Expo n'exporte que son écran | à relire |
 | Fonction locale `periodParams` de l'onglet | — | Renommée `periodScreenParams` (elle masquait l'aide importée et envoyait `du`/`au` à l'écran du groupe ; vu par le test) | Nom sans ambiguïté | à relire |
 | Coquille de la fiche | — | « 12 séances » se lit 13 (13 séances des Poussins dans le jeu du 023 et dans la maquette) | Pré-analyse | à relire |
+| « Archivé » sur l'écran d'un membre | rien (maquette) ; comme l'écran du groupe | « Archivé » sous le titre pour un membre archivé, et sous le sous-titre pour un groupe archivé | Cohérence avec l'écran du groupe et l'onglet (revue) | changée après contradiction |
+| Taux : taille et couleur | Texte 16 et 26 ; Encre 18 et 26 | Plex Mono en Encre : 18 dans les listes (membres du groupe, groupes de l'onglet), 26 pour le chiffre clé (écran membre, cartes de l'onglet) | Charte ligne 32 (« chiffres » en Encre) ; maquette `.taux{18px}`, `.chiffre{26px}` | changée après contradiction |
+| Lecture d'une ligne de groupe de l'onglet | libellé assemblé par le système ; libellé explicite | Libellé explicite « Nom, Archivé, taux, parts » (ou « Aucune séance sur la période. ») ; barre `accessible={false}` dans la ligne, `barLabel` exporté par `AttendanceBar` (10e fichier) | TalkBack ne lit pas un descendant focusable (revue) | à relire |
+| Appui sur un groupe pendant la relecture d'une nouvelle période | période affichée ; période choisie | Période choisie (`choiceParams(choice)`), la période affichée seulement sans choix (défaut) | L'écran ouvert suit le choix de l'encadrant (revue) | à relire |
+| « ‹ » sans historique sur l'écran membre | onglet ; écran du groupe | Écran du groupe avec les mêmes paramètres de période ; l'onglet si le groupe de l'adresse est invalide | Retour logique de la navigation (revue) | à relire |
 
 ## Questions pour le porteur
 
@@ -100,3 +105,5 @@ Aucune.
 - CHANGELOG : Stats : taux de présence de chaque membre d'un groupe, séance par séance (F-05, EX-27).
 - Architecture : écrans `stats/groupes/[id].tsx`, `stats/membres/[id].tsx` (période en paramètres `periode=saison|mois`, ou `du` et `au`, lus et écrits par `src/ui/statsPeriodParams.ts`), composant `SessionSquares` (case vide : hors inscription ou sans statut).
 - PR : critère « avec `du` et `au` » ajusté (paramètre `periode` pour Saison et Ce mois, décision du porteur du 2026-11-27) ; écarts de maquette : podium masqué, « Archivé », états vides, pas de légende sur l'écran membre, comptes accordés.
+- Nettoyage : `idFrom` existe maintenant en 5 copies (`membres/[id]`, `alertes/[id]`, `urgence.tsx`, et les 4e et 5e : `stats/groupes/[id]`, `stats/membres/[id]`) ; à factoriser avec la ligne de nettoyage déjà notée (`docs/IDEES.md`, à l'intégration).
+- 030 ou nettoyage : vérifier si TalkBack et VoiceOver prononcent « — » (« tiret cadratin ») ; un libellé d'accessibilité « pas de taux » serait peut-être à prévoir, à poser au porteur.

@@ -8,6 +8,7 @@ import StatsGroup from '@/app/stats/groupes/[id]';
 import StatsMember from '@/app/stats/membres/[id]';
 import { RootStack, tabRoutes } from '@/appTests/tabRoutes';
 import { labels } from '@/config/libelles';
+import { theme } from '@/config/theme';
 import type { Db } from '@/data/db';
 import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
@@ -80,6 +81,12 @@ describe('Statistiques d’un groupe (ticket 025, EX-27, RM-01)', () => {
     expect(jules.getByText(t.archived)).toBeTruthy();
     expect((await memberRow('Léa Michel')).getByText(pct(100))).toBeTruthy();
     expect((await memberRow('Hugo Moreau')).getByText(pct(64))).toBeTruthy();
+    // Taux des listes : Plex Mono 18, Encre (charte, maquette `.taux`).
+    expect((await memberRow('Hugo Moreau')).getByText(pct(64))).toHaveStyle({
+      fontFamily: theme.fonts.digits,
+      fontSize: 18,
+      color: theme.colors.encre,
+    });
     expect(screen.getByText('Triés par nom ; 5 membres.')).toBeTruthy();
     // Podium masqué jusqu'au jalon 5 (F-14) ; Max Bernard, archivé sans présence, jamais listé.
     expect(screen.queryByText(/Podium/)).toBeNull();
@@ -171,6 +178,52 @@ describe('Statistiques d’un groupe (ticket 025, EX-27, RM-01)', () => {
     expect(
       await screen.findByRole('button', { name: `Jules Lefebvre, ${t.archived}, ${pct(100)}` }),
     ).toBeTruthy();
+  });
+
+  it('EX-27 appui pendant la relecture d’une nouvelle période : le groupe s’ouvre sur la période choisie', async () => {
+    const router = await open();
+    expect(within(await tabRow('Poussins')).getByText(pct(88))).toBeTruthy();
+    let release = () => {};
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    const query = db.query.bind(db);
+    const spy = jest.spyOn(db, 'query').mockImplementation(async (...args) => {
+      await gate;
+      return query(...args);
+    });
+    await fireEvent.press(await screen.findByRole('button', { name: t.periods.month }));
+    // Chiffres de la saison encore affichés : l'appui suit pourtant « Ce mois ».
+    expect(within(await tabRow('Poussins')).getByText(pct(88))).toBeTruthy();
+    await fireEvent.press(await tabRow('Poussins'));
+    expect(router.getSearchParams()).toEqual({
+      id: String(seeded.groups.poussins),
+      periode: 'mois',
+    });
+    spy.mockRestore();
+    release();
+    expect(await screen.findByText(g.subtitle('Du 01/11/2026 au 27/11/2026', 4))).toBeTruthy();
+  });
+
+  it('NF-06 ligne de groupe de l’onglet : lue d’un bloc (nom, Archivé, taux, parts), taux en Encre 18', async () => {
+    await open();
+    const veterans = await tabRow('Vétérans');
+    expect((veterans as { props: { accessibilityLabel: string } }).props.accessibilityLabel).toBe(
+      `Vétérans, ${t.archived}, ${pct(100)}, ${pct(100)} retard`,
+    );
+    expect(within(veterans).getByTestId('attendance-bar').props.accessible).toBe(false);
+    expect(
+      ((await tabRow('Adultes')) as { props: { accessibilityLabel: string } }).props
+        .accessibilityLabel,
+    ).toBe(`Adultes, —, ${t.noSession}`);
+    expect(within(veterans).getByText(pct(100))).toHaveStyle({
+      fontFamily: theme.fonts.digits,
+      fontSize: 18,
+      color: theme.colors.encre,
+    });
+    expect(within(await screen.findByTestId('stats-rate')).getByText(pct(87))).toHaveStyle({
+      fontFamily: theme.fonts.digits,
+      fontSize: 26,
+      color: theme.colors.encre,
+    });
   });
 
   it('EX-27 groupe introuvable : message, retour « ‹ » vers l’onglet', async () => {

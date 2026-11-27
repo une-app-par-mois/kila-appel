@@ -126,5 +126,5 @@ const styles = StyleSheet.create({
   name: { flex: 1 },
   text: { fontFamily: theme.fonts.text, fontSize: 16, color: theme.colors.texte },
   subtitle: { fontFamily: theme.fonts.text, fontSize: 14, color: theme.colors.texteSecondaire },
-  rate: { fontFamily: theme.fonts.digits, fontSize: 16, color: theme.colors.texte },
+  rate: { fontFamily: theme.fonts.digits, fontSize: 18, color: theme.colors.encre },
 });

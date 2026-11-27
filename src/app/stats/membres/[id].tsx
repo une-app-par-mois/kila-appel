@@ -4,7 +4,7 @@
 // hors inscription ou sans statut. Affiche ce que calcule le ticket 023, sans rien recalculer.
 // Paramètres : `groupe`, puis `periode` (saison, mois) ou `du` et `au`.
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
 import { attendanceRate, formatRate } from '@/domain/attendanceRate';
@@ -16,6 +16,7 @@ import { Screen, Section } from '@/ui/Screen';
 import { SessionSquares } from '@/ui/SessionSquares';
 import { choiceFromParams, type StatsPeriodParams } from '@/ui/statsPeriodParams';
 
+const t = labels.stats;
 const m = labels.stats.memberScreen;
 
 /** Identifiant de l'adresse : chiffres seulement, sinon 0 (aucun), comme la fiche membre. */
@@ -32,13 +33,19 @@ export default function StatsMemberScreen() {
   const { id, groupe, ...params } = useLocalSearchParams<
     StatsPeriodParams & { id: string; groupe?: string }
   >();
+  const groupId = idFrom(groupe);
   const { stats, loaded, loadFailed, inputError } = useMemberStats(
     idFrom(id),
-    idFrom(groupe),
+    groupId,
     choiceFromParams(params),
   );
   const member = stats?.member ?? null;
-  const back = () => (router.canGoBack() ? router.back() : router.replace('/stats'));
+  /** Sans historique : l'écran du groupe sur la même période, sinon l'onglet. */
+  const back = () => {
+    if (router.canGoBack()) router.back();
+    else if (groupId === 0) router.replace('/stats');
+    else router.replace({ pathname: '/stats/groupes/[id]', params: { id: groupId, ...params } });
+  };
   const error = loadFailed
     ? labels.common.loadFailed
     : inputError !== null
@@ -49,15 +56,24 @@ export default function StatsMemberScreen() {
 
   return (
     <Screen
-      title={
-        member ? labels.memberForm.fullName(member.firstName, member.lastName) : labels.stats.title
-      }
+      title={member ? labels.memberForm.fullName(member.firstName, member.lastName) : t.title}
       subtitle={
         stats &&
         member && (
-          <Text style={[styles.subtitle, styles.header]}>
-            {m.subtitle(member.groupName, periodName(stats))}
-          </Text>
+          // « Archivé » sous le nom, et pour le groupe, comme sur l'écran du groupe.
+          <View style={styles.header}>
+            {member.archived && (
+              <Text testID="member-archived" style={styles.subtitle}>
+                {t.archived}
+              </Text>
+            )}
+            <Text style={styles.subtitle}>{m.subtitle(member.groupName, periodName(stats))}</Text>
+            {member.groupArchived && (
+              <Text testID="group-archived" style={styles.subtitle}>
+                {t.archived}
+              </Text>
+            )}
+          </View>
         )
       }
       onBack={back}
@@ -91,7 +107,7 @@ export default function StatsMemberScreen() {
 
 const styles = StyleSheet.create({
   header: { marginBottom: theme.spacing * 2 },
-  number: { fontFamily: theme.fonts.digits, fontSize: 26, color: theme.colors.texte },
+  number: { fontFamily: theme.fonts.digits, fontSize: 26, color: theme.colors.encre },
   subtitle: { fontFamily: theme.fonts.text, fontSize: 14, color: theme.colors.texteSecondaire },
   // Comptes en Plex Mono (maquette : « l-sous mono »).
   counts: { fontFamily: theme.fonts.digits, marginTop: theme.spacing * 2 },

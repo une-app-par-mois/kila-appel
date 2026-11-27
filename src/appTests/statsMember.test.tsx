@@ -7,6 +7,7 @@ import StatsGroup from '@/app/stats/groupes/[id]';
 import StatsMember from '@/app/stats/membres/[id]';
 import { RootStack, tabRoutes } from '@/appTests/tabRoutes';
 import { labels } from '@/config/libelles';
+import { theme } from '@/config/theme';
 import type { Db } from '@/data/db';
 import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
@@ -56,6 +57,13 @@ describe('Statistiques d’un membre (ticket 025, EX-27, RM-01, RM-03)', () => {
     expect(await screen.findByRole('header', { name: 'Hugo Moreau' })).toBeTruthy();
     expect(screen.getByText('Poussins · saison 2026-2027')).toBeTruthy();
     expect(screen.getByTestId('member-rate').props.children).toBe(pct(64));
+    // Chiffre clé : Plex Mono 26, Encre (charte, maquette `.chiffre`).
+    expect(screen.getByTestId('member-rate')).toHaveStyle({
+      fontFamily: theme.fonts.digits,
+      fontSize: 26,
+      color: theme.colors.encre,
+    });
+    expect(screen.queryByText(t.archived)).toBeNull();
     expect(screen.getByTestId('attendance-bar')).toBeTruthy();
     expect(screen.getByText('6 présents · 1 retard · 1 excusé · 4 absents')).toBeTruthy();
     expect(screen.getByText(m.bySession)).toBeTruthy();
@@ -135,11 +143,37 @@ describe('Statistiques d’un membre (ticket 025, EX-27, RM-01, RM-03)', () => {
     ]);
   });
 
-  it('EX-27 membre introuvable ou hors de la liste du groupe : message, retour « ‹ »', async () => {
-    const router = await open(url(seeded.members.max, seeded.groups.poussins));
+  it('EX-27 membre introuvable ou hors de la liste du groupe : message, retour « ‹ » vers le groupe', async () => {
+    const router = await open(url(seeded.members.max, seeded.groups.poussins, 'periode=mois'));
+    expect(await screen.findByText(labels.errors.NOT_FOUND)).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: labels.common.back }));
+    // Sans historique : l'écran du groupe, même période.
+    expect(router.getPathname()).toBe(`/stats/groupes/${seeded.groups.poussins}`);
+    expect(router.getSearchParams()).toEqual({
+      id: String(seeded.groups.poussins),
+      periode: 'mois',
+    });
+  });
+
+  it('EX-27 « ‹ » sans historique ni groupe valide : retour à l’onglet', async () => {
+    const router = await open(`/stats/membres/${seeded.members.hugo}?groupe=x`);
     expect(await screen.findByText(labels.errors.NOT_FOUND)).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: labels.common.back }));
     expect(router.getPathname()).toBe('/stats');
+  });
+
+  it('EX-27 « Archivé » : sous le nom d’un membre archivé, et pour un groupe archivé', async () => {
+    await open(url(seeded.members.jules, seeded.groups.poussins));
+    expect(await screen.findByRole('header', { name: 'Jules Lefebvre' })).toBeTruthy();
+    expect(screen.getByTestId('member-archived').props.children).toBe(t.archived);
+    expect(screen.queryByTestId('group-archived')).toBeNull();
+  });
+
+  it('EX-27 « Archivé » : groupe archivé (Vétérans), membre actif', async () => {
+    await open(url(seeded.members.paul, seeded.groups.veterans));
+    expect(await screen.findByRole('header', { name: 'Paul Roux' })).toBeTruthy();
+    expect(screen.getByTestId('group-archived').props.children).toBe(t.archived);
+    expect(screen.queryByTestId('member-archived')).toBeNull();
   });
 
   it('EX-27 membre inexistant : message', async () => {
