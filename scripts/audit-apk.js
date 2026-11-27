@@ -2,7 +2,8 @@
 // Audit du binaire Android construit, pas du manifeste source (SEC-02, ABS-01, ABS-07).
 // Usage : node scripts/audit-apk.js <fichier.apk>
 // Compare `aapt2 dump permissions` à config/permissions-attendues.txt et vérifie le manifeste
-// compilé (allowBackup=false, aucun lien profond). Échoue (code 1) au moindre écart.
+// compilé (allowBackup=false, aucun lien profond, aucun composant Firebase ni datatransport).
+// Échoue (code 1) au moindre écart.
 const { execFileSync } = require('node:child_process');
 const { existsSync, readdirSync, readFileSync } = require('node:fs');
 const { join } = require('node:path');
@@ -30,6 +31,37 @@ const auditPermissions = (dump, expected) => {
   ];
 };
 
+// ABS-01 : composants refusés dans le binaire (décision datée du porteur du 2026-11-27,
+// ticket 026). Firebase et datatransport sont retirés par plugins/withoutFirebase.js.
+const COMPONENT_TAGS = new Set(['activity', 'activity-alias', 'service', 'receiver', 'provider']);
+const FORBIDDEN_PREFIXES = ['com.google.firebase.', 'com.google.android.datatransport.'];
+const GMS_PREFIX = 'com.google.android.gms.';
+const MESSAGING_ACTIONS = new Set([
+  'com.google.firebase.MESSAGING_EVENT',
+  'com.google.android.c2dm.intent.RECEIVE',
+]);
+
+/** Valeur d'un attribut android: sur une ligne `A:` : littérale ("…") ou référence (@0x7f…). */
+const attribute = (line, name) => {
+  const match = line.match(
+    new RegExp(`^\\s*A: ${ANDROID_NS}:${name}\\(0x[0-9a-f]+\\)=(?:"([^"]*)"|(\\S+))`),
+  );
+  return match ? (match[1] ?? match[2]) : undefined;
+};
+
+/** Écarts des composants déclarés : préfixes refusés, Google Play services exporté. */
+const componentProblems = (components) =>
+  components.flatMap(({ componentName, exported }) => {
+    if (componentName === undefined) return [];
+    if (FORBIDDEN_PREFIXES.some((prefix) => componentName.startsWith(prefix))) {
+      return [`Composant Firebase ou datatransport : ${componentName}`];
+    }
+    if (componentName.startsWith(GMS_PREFIX) && exported === 'true') {
+      return [`Composant Google Play services exporté : ${componentName}`];
+    }
+    return [];
+  });
+
 /** Écarts du manifeste compilé (`aapt2 dump xmltree --file AndroidManifest.xml`). */
 const auditManifest = (xmltree) => {
   const problems = [];
@@ -39,23 +71,32 @@ const auditManifest = (xmltree) => {
   // Un lien profond entrant est un android:scheme sous un intent-filter. Celui d'un bloc
   // <queries> sert seulement à voir les navigateurs installés : il n'ouvre aucune entrée.
   const stack = [];
+  const components = [];
   for (const line of xmltree.split('\n')) {
     const depth = line.length - line.trimStart().length;
     const element = line.match(/^\s*E: ([\w-]+)/);
     if (element) {
       while (stack.length > 0 && stack[stack.length - 1].depth >= depth) stack.pop();
-      stack.push({ depth, name: element[1] });
+      const entry = { depth, name: element[1] };
+      stack.push(entry);
+      if (COMPONENT_TAGS.has(entry.name)) components.push(entry);
       continue;
     }
-    // Valeur littérale ("kila") ou référence à une ressource (@0x7f…) : toutes deux comptent.
-    const scheme = line.match(
-      new RegExp(`${ANDROID_NS}:scheme\\(0x[0-9a-f]+\\)=(?:"([^"]*)"|(\\S+))`),
-    );
-    if (scheme && stack.some((e) => e.name === 'intent-filter')) {
-      problems.push(`Lien profond déclaré : ${scheme[1] ?? scheme[2]}`);
+    // Un attribut appartient au dernier élément ouvert.
+    const top = stack[stack.length - 1];
+    const inIntentFilter = stack.some((e) => e.name === 'intent-filter');
+    const scheme = attribute(line, 'scheme');
+    if (scheme !== undefined && inIntentFilter) problems.push(`Lien profond déclaré : ${scheme}`);
+    const name = attribute(line, 'name');
+    if (top && COMPONENT_TAGS.has(top.name)) {
+      top.componentName = name ?? top.componentName;
+      top.exported = attribute(line, 'exported') ?? top.exported;
+    }
+    if (top?.name === 'action' && inIntentFilter && MESSAGING_ACTIONS.has(name)) {
+      problems.push(`Intent-filter de messagerie : ${name}`);
     }
   }
-  return problems;
+  return [...problems, ...componentProblems(components)];
 };
 
 /** Plus haute version stable (x.y.z), en ordre numérique ; les rc et autres dossiers sont ignorés. */

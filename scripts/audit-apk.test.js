@@ -119,3 +119,70 @@ describe('latestVersion : choix des build-tools', () => {
     expect(latestVersion(['tmp'])).toBeUndefined();
   });
 });
+
+describe('ABS-01 composants Firebase et datatransport refusés dans le binaire', () => {
+  const ANDROID = 'http://schemas.android.com/apk/res/android';
+  const component = (tag, name, { exported, action } = {}) => [
+    `      E: ${tag} (line=30)`,
+    `        A: ${ANDROID}:name(0x01010003)="${name}" (Raw: "${name}")`,
+    ...(exported === undefined ? [] : [`        A: ${ANDROID}:exported(0x01010010)=${exported}`]),
+    ...(action
+      ? [
+          '        E: intent-filter (line=31)',
+          '          E: action (line=32)',
+          `            A: ${ANDROID}:name(0x01010003)="${action}" (Raw: "${action}")`,
+        ]
+      : []),
+  ];
+  const tree = (...components) =>
+    [
+      '  E: manifest (line=2)',
+      '    E: application (line=14)',
+      `      A: ${ANDROID}:allowBackup(0x01010280)=false`,
+      ...components.flat(),
+    ].join('\n');
+
+  it.each(['activity', 'activity-alias', 'service', 'receiver', 'provider'])(
+    'refuse un %s dont le nom commence par com.google.firebase.',
+    (tag) => {
+      expect(auditManifest(tree(component(tag, 'com.google.firebase.X')))).toEqual([
+        'Composant Firebase ou datatransport : com.google.firebase.X',
+      ]);
+    },
+  );
+
+  it('refuse un composant com.google.android.datatransport.', () => {
+    const name = 'com.google.android.datatransport.runtime.backends.TransportBackendDiscovery';
+    expect(auditManifest(tree(component('service', name)))).toEqual([
+      `Composant Firebase ou datatransport : ${name}`,
+    ]);
+  });
+
+  it('refuse un composant com.google.android.gms. exporté', () => {
+    const name = 'com.google.android.gms.Y';
+    expect(auditManifest(tree(component('receiver', name, { exported: true })))).toEqual([
+      `Composant Google Play services exporté : ${name}`,
+    ]);
+  });
+
+  it('accepte GoogleApiActivity non exportée', () => {
+    const name = 'com.google.android.gms.common.api.GoogleApiActivity';
+    expect(auditManifest(tree(component('activity', name, { exported: false })))).toEqual([]);
+  });
+
+  it.each(['com.google.firebase.MESSAGING_EVENT', 'com.google.android.c2dm.intent.RECEIVE'])(
+    'refuse un intent-filter qui déclare %s',
+    (action) => {
+      const service = component('service', 'expo.modules.Z', { exported: false, action });
+      expect(auditManifest(tree(service))).toEqual([`Intent-filter de messagerie : ${action}`]);
+    },
+  );
+
+  it('accepte les composants de l’appli et leurs intent-filter ordinaires', () => {
+    const name = 'expo.modules.notifications.service.NotificationsService';
+    const action = 'android.intent.action.BOOT_COMPLETED';
+    expect(auditManifest(tree(component('receiver', name, { exported: false, action })))).toEqual(
+      [],
+    );
+  });
+});

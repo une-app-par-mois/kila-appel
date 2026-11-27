@@ -78,11 +78,25 @@ Séance de découpage du jalon 2 (2026-11-27), réponses du porteur :
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
+| `withoutFirebase` : composant déjà déclaré dans le manifeste source | ajouter une seconde déclaration ; marquer l'existante `tools:node="remove"` | marquer l'existante | deux déclarations du même nom font échouer la fusion du manifeste ; le résultat est le même appliqué deux fois | à relire |
+| Autorité du fournisseur `FirebaseInitProvider` retiré | `${applicationId}.firebaseinitprovider` ; nom du paquet en dur | `${applicationId}.firebaseinitprovider` | même valeur que le manifeste de firebase-common, suit un changement de nom de paquet | à relire |
+| Ordre des extensions dans `app.json` | expo-notifications avant les extensions du dépôt ; après | `expo-notifications` après `expo-font`, `withoutFirebase` en dernier | nos retraits s'appliquent après ce qu'ajoutent les extensions d'Expo | à relire |
+| Audit : portée du contrôle des `intent-filter` de messagerie | composants Google seulement ; tout composant | tout composant | le service d'expo-notifications (`expo.modules…`) déclare `MESSAGING_EVENT` : c'est lui qu'il faut attraper | à relire |
+| Audit : lecture des attributs | motif n'importe où dans la ligne ; ligne `A:` seulement | ligne `A:` seulement (une fonction pour `scheme`, `name`, `exported`) | un attribut appartient au dernier élément ouvert ; tests existants inchangés et verts | à relire |
+| ShortcutBadger : liste des 16 permissions | relevée dans la fiche ; dans le manifeste fusionné | relevée sur le manifeste fusionné du build (aucune ne reste dans l'APK) | la fiche ne donnait pas la liste | à relire |
 
 ## Questions pour le porteur
+
+Aucune. Licences relevées sur le binaire : toutes dans la liste du §7 de CONFORMITE ou parmi les 8 exceptions.
 
 ## À reporter
 
 - CHANGELOG : Permissions : notifications (demandées seulement à l'activation de la relance) et redémarrage de l'appareil (relances reprogrammées) ; aucune connexion réseau, INTERNET toujours absente (F-06, ABS-01, ABS-07).
 - Architecture : §2 expo-notifications installé (version exacte) ; §6 `blockedPermissions` étendue, extension `plugins/withoutFirebase.js`, `config/permissions-attendues.txt` à trois lignes.
-- SECURITE : SEC-02, l'audit refuse aussi tout composant Firebase ou datatransport.
+- SECURITE : SEC-02, l'audit refuse aussi tout composant (`activity`, `activity-alias`, `service`, `receiver`, `provider`) `com.google.firebase.*` ou `com.google.android.datatransport.*`, tout composant `com.google.android.gms.*` exporté, et tout `intent-filter` `com.google.firebase.MESSAGING_EVENT` ou `com.google.android.c2dm.intent.RECEIVE`.
+- Pour le 028 (décision du porteur du 2026-11-27) : le contrôle statique refuse `setBadgeCountAsync`, `getExactAlarmPermissionsAsync`/`requestExactAlarmPermissionsAsync` et tout import d'`expo-application` ; régénérer `src/config/licences.json` quand le paquet entre dans le bundle.
+- Relevé du 2026-11-27, APK de production construit en local (`expo prebuild --clean`, `gradlew assembleRelease`), `aapt2` 37.0.0 :
+  - `node scripts/audit-apk.js` : « Audit du binaire : conforme (SEC-02) ».
+  - `aapt2 dump permissions` : `RECEIVE_BOOT_COMPLETED`, `POST_NOTIFICATIONS`, `com.jitavision.kila.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` (déclarée et utilisée). INTERNET absente.
+  - Composants du manifeste compilé (`aapt2 dump xmltree`) : activité `com.jitavision.kila.MainActivity` (exportée, lanceur) ; fournisseurs `expo.modules.filesystem.FileSystemFileProvider`, `expo.modules.sharing.SharingFileProvider`, `androidx.startup.InitializationProvider` (non exportés) ; récepteur `expo.modules.notifications.service.NotificationsService` (non exporté : `NOTIFICATION_EVENT`, `BOOT_COMPLETED`, `REBOOT`, `QUICKBOOT_POWERON`, `MY_PACKAGE_REPLACED`) ; activités `expo.modules.notifications.service.NotificationForwarderActivity` et `com.google.android.gms.common.api.GoogleApiActivity` (non exportées) ; récepteur `androidx.profileinstaller.ProfileInstallReceiver` (exporté, déjà présent avant). Aucun composant Firebase ni datatransport.
+  - Émulateur `emulator-5554` : installé, lancé, `DB_READY` (version 1) dans `adb logcat`, aucun plantage, aucune ligne Firebase, FCM ou datatransport dans le journal du processus.

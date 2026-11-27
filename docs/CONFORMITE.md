@@ -44,7 +44,8 @@ Les mineurs n'utilisent pas l'appli : la règle du consentement parental en dess
 | Politique de confidentialité | Obligatoire même sans collecte, sur la fiche **et dans l'appli** ; URL publique en https, page web (pas un PDF) | GitHub Pages + écran EX-40, même texte |
 | Suppression de compte | Ne vise que les applis qui permettent de créer un compte | Sans objet ; « Tout effacer » existe quand même (EX-23) |
 | Public cible | Déclaré par tranches d'âge ; la politique Familles s'applique dès qu'une tranche inclut des enfants ; Google peut contrôler la cohérence avec la fiche | **16 ans et plus** (tranches 16-17 et 18+, décision du 2026-11-26, pour inclure de jeunes animateurs) ; fiche et visuels sans élément qui attire les enfants. À vérifier dans la console : que la tranche 16-17 ne déclenche pas la politique Familles |
-| Permissions | Au strict nécessaire | Audit sur le binaire (SEC-02) |
+| Permissions | Au strict nécessaire | Audit sur le binaire (SEC-02). Relance (F-06, ticket 026, décision du porteur du 2026-11-27) : `POST_NOTIFICATIONS` (demandée à l'activation de la relance) et `RECEIVE_BOOT_COMPLETED` (reprogrammation après redémarrage), sans alarme exacte ; notifications **locales** seulement, aucune donnée ne quitte l'appareil : « aucune donnée collectée » inchangé. La politique de confidentialité mentionnera les notifications locales (jalon 6, ABS-08) |
+| Index des SDK de Play | Play repère les SDK connus dans le binaire et peut les rapprocher du formulaire « Sécurité des données » | **Risque noté** (décision du 2026-11-27) : Firebase Messaging est présent dans le binaire (tiré par expo-notifications), non initialisé (aucun `google-services.json`) et ses composants retirés du manifeste ; Play peut quand même le signaler. Réponse prévue : aucune donnée collectée, aucun composant actif (audit SEC-02) |
 
 ## 4. App Store
 
@@ -76,6 +77,7 @@ Apple et Google demandent de déclarer si l'éditeur est un **commerçant** (*tr
 - **Licences acceptées pour une dépendance** : MIT, ISC, BSD, Apache-2.0, et (décision du porteur du 2026-11-26) 0BSD, BlueOak-1.0.0, CC0-1.0, Unlicense ; une double licence est acceptée si l'une des deux l'est ; **polices** : SIL OFL 1.1. **Refusées sans décision du porteur** : GPL, LGPL, AGPL, SSPL et toute licence copyleft.
 - **Registre** : la liste des licences embarquées est générée depuis les dépendances réellement présentes dans le build et affichée dans l'appli (EX-42) ; elle est mise à jour dans le même ticket que toute nouvelle dépendance, police ou ressource.
 - Polices IBM Plex : fichier de licence OFL livré à côté des `.ttf` (ADR-001).
+- **Android Software Development Kit License** (décision datée du porteur du 2026-11-27, ticket 026) : acceptée pour ces 8 bibliothèques natives **et elles seulement**, tirées par expo-notifications et expo-application : `play-services-base`, `play-services-basement`, `play-services-tasks`, `play-services-stats`, `play-services-cloud-messaging`, `firebase-iid-interop`, `firebase-measurement-connector`, `installreferrer`. Toute autre bibliothèque sous cette licence demande une nouvelle décision. Inventaire nominatif au §8.
 - **Périmètre du registre** (décision du porteur du 2026-11-26) : paquets du bundle JavaScript exporté et polices, par `scripts/licences.js` ; les bibliothèques natives (Gradle, CocoaPods) font l'objet d'un inventaire à part (§8).
 
 ## 8. Actions avant le lancement
@@ -92,6 +94,24 @@ Apple et Google demandent de déclarer si l'éditeur est un **commerçant** (*tr
 | Générer le registre des licences | IA | Chaque version |
 | Inventorier les licences des bibliothèques natives (Gradle, CocoaPods : AndroidX, Kotlin, OkHttp, Hermes…) et les ajouter au registre affiché (EX-42), décision du porteur du 2026-11-26 | IA | Avant la première soumission |
 | Préparer un jeu de données fictif pour la revue des stores (une appli vide est souvent refusée) | IA | Avant la première soumission |
+
+### Inventaire natif d'expo-notifications et d'expo-application (ticket 026)
+
+Relevé le 2026-11-27 sur le binaire Android construit (`gradlew :app:dependencies`, configuration `releaseRuntimeClasspath`, licences lues dans les POM). Tirées par expo-notifications 58.1.10 et expo-application 58.1.2 ; aucune n'a de rôle actif : sans `google-services.json`, Firebase ne s'initialise pas, et ses composants sont retirés du manifeste (`plugins/withoutFirebase.js`, vérifié par `scripts/audit-apk.js`).
+
+| Bibliothèque | Version | Licence | Rôle et état dans Ki&La |
+| --- | --- | --- | --- |
+| `com.google.firebase:firebase-messaging` | 25.0.1 | Apache-2.0 | Firebase Cloud Messaging : non initialisé, services et récepteur retirés |
+| `firebase-common`, `firebase-components`, `firebase-annotations` | 22.0.1, 19.0.0, 17.0.0 | Apache-2.0 | Socle Firebase : `FirebaseInitProvider` et `ComponentDiscoveryService` retirés |
+| `firebase-installations`, `firebase-installations-interop` | 18.0.0, 17.1.1 | Apache-2.0 | Identifiant d'installation Firebase : jamais créé (Firebase non initialisé) |
+| `firebase-datatransport`, `firebase-encoders`, `-json`, `-proto` | 18.2.0, 17.0.0, 18.0.0, 16.0.0 | Apache-2.0 | Envoi de mesures : inactif |
+| `com.google.android.datatransport:transport-api`, `transport-runtime`, `transport-backend-cct` | 3.1.0, 3.1.9, 3.1.9 | Apache-2.0 | Datatransport : services et récepteur retirés ; INTERNET absente |
+| `firebase-iid-interop`, `firebase-measurement-connector` | 17.1.0, 19.0.0 | Android SDK License (§7) | Interfaces internes de Firebase |
+| `com.google.android.gms:play-services-base`, `-basement`, `-tasks`, `-stats`, `-cloud-messaging` | 18.1.0, 18.3.0, 18.1.0, 17.0.2, 17.2.0 | Android SDK License (§7) | Google Play services : seule `GoogleApiActivity` reste, non exportée |
+| `com.android.installreferrer:installreferrer` | 2.2 | Android SDK License (§7) | Référent d'installation (expo-application) : permission bloquée, jamais appelé |
+| `me.leolin:ShortcutBadger` | 1.1.22 | Apache-2.0 | Pastilles des lanceurs : ses 16 permissions bloquées, pastille jamais posée |
+
+Autres bibliothèques tirées (AndroidX, Kotlin, kotlinx-coroutines, Okio, `javax.inject`, `error_prone_annotations`, `org.jetbrains:annotations`) : Apache-2.0 ; `datastore-preferences-external-protobuf` : BSD-3-Clause ; `io.github.expo.pika:pika-api` : MIT. Toutes dans la liste du §7. À reprendre dans l'inventaire complet des bibliothèques natives (action ci-dessus).
 
 ## 9. Sources (consultées le 2026-11-26)
 
