@@ -81,11 +81,25 @@ B1 (cible lue au démarrage à froid), B2 (restauration), B3 (SharedPreferences,
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
+| Fenêtre des « séances encore dues » | 7 derniers jours ; toute la saison jusqu'à aujourd'hui | `dueSessions` : occurrences de la saison active, depuis la date d'effet de l'horaire, jusqu'à aujourd'hui inclus | même fenêtre que les appels manquants de l'accueil (`missingRollCalls`, EX-17) : une relance affichée reste tant que l'appel manque à l'accueil ; calcul léger | à relire |
+| Relances affichées quand la relance est désactivée ou la permission refusée | toutes les retirer ; même règle (séances encore dues) | même règle : seules celles dont la séance n'est plus due sont retirées | la décision du porteur porte sur la séance, pas sur le réglage ; les programmées, elles, sont toutes annulées | en attente du porteur |
+| Lecture des données en échec | tout annuler ; ne rien toucher | rien n'est annulé ni retiré, `REMINDERS_SCHEDULE_FAILED`, la demande suivante réessaie | ne pas effacer des relances valides sur une panne de lecture ; sans bloquer l'appli | à relire |
+| Délai invalide (`plannedReminders` lève) | ne rien faire ; annuler et ne rien programmer | tout est annulé, les affichées périmées retirées, rien n'est programmé, `REMINDERS_SCHEDULE_FAILED` | le réglage est déjà normalisé par `settingsRepo` : cas théorique, choix sûr | à relire |
+| Annulation en échec | s'arrêter ; continuer | continuer (l'identifiant `relance-<slotId>-<date>` remplace au lieu de doubler) | une panne d'annulation ne doit pas priver des relances dues | à relire |
+| Verrou pris pendant un passage | finir ; repasser | vérifié après la lecture : si pris, rien n'est écrit et le passage est refait à la libération | un effacement ou une restauration peut commencer pendant la lecture | à relire |
+| Canal sans relance à programmer | le créer quand même ; ne pas le créer | ni permission lue ni canal créé quand la liste est vide | moins d'appels natifs ; le canal est créé au premier passage qui programme | à relire |
+| Où poser `setNotificationHandler` | haut du module `_layout.tsx` ; effet de `useReminders` | `showRemindersInForeground` (adaptateur), appelé une fois au montage de `useReminders`, sans attendre la base | `_layout.tsx` reste à un seul petit ajout (028c) ; l'affichage ne dépend pas des données | à relire |
+| Faux module : relevé du gestionnaire | champ dans `state` ; `jest.spyOn` | `setNotificationHandler` du faux module ne fait que `guard`, le test l'observe par `jest.spyOn` | `state` n'est pas touché : moins de conflits avec le 029 | à relire |
+| Tests de `dueSessions` | dans `reminders.test.ts` ; nouveau fichier | nouveau `src/domain/remindersDue.test.ts` | `reminders.test.ts` fait 251 lignes (limite 300) | à relire |
+| Exemple refusé du contrôle | — | `setNotificationHandler` remplacé par `setNotificationCategoryAsync` ; contrôle vu en échec sans l'ajout à la liste | demandé par la fiche | à relire |
 
 ## Questions pour le porteur
 
 ## À reporter
 
 - CHANGELOG : Relance : notifications locales programmées pour les 7 jours à venir, annulées dès que l'appel est enregistré (F-06, EX-28, ABS-04).
-- Architecture : `src/hooks/useReminders.ts` (reprogrammation une par une, reportée sous le verrou des fichiers) ; « séances encore dues » dans `src/domain/reminders.ts` ; `setNotificationHandler` dans la liste fermée de l'adaptateur.
-- SECURITE : SEC-03, liste fermée élargie à `setNotificationHandler`.
+- Architecture : `src/hooks/useReminders.ts`, monté par `src/app/_layout.tsx` (annule puis reprogramme à l'ouverture, au retour au premier plan et à chaque `notifyDataChanged` ; une par une, la dernière demande gagne ; reportée sous le verrou des fichiers ; rien tant que la base n'est pas prête ; code `REMINDERS_SCHEDULE_FAILED`) ; `dueSessions` (« séances encore dues ») dans `src/domain/reminders.ts`, donnée à `dismissStaleReminders` ; `showRemindersInForeground` (`setNotificationHandler`) dans l'adaptateur, code `REMINDER_HANDLER_FAILED` ; libellé du canal `labels.reminder.channel`.
+- SECURITE : SEC-03, liste fermée élargie à `setNotificationHandler` (contrôle vu en échec sans l'ajout ; exemple refusé remplacé par `setNotificationCategoryAsync`).
+- Licences : `src/config/licences.json` régénéré, gagne `abort-controller` 3.0.0 et `event-target-shim` 5.0.1 (MIT) ; `badgin` n'entre pas dans le bundle.
+- Relevé du 2026-11-27 (028b), APK de production construit dans le worktree (`expo prebuild --platform android --no-install --clean`, `gradlew assembleRelease`, `TMPDIR` local) : `node scripts/audit-apk.js` « conforme (SEC-02) », permissions `RECEIVE_BOOT_COMPLETED`, `POST_NOTIFICATIONS`, `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`, INTERNET absente ; l'adaptateur est dans le bundle (`REMINDERS_SCHEDULE_FAILED` présent) ; émulateur `emulator-5554` : installé par-dessus, lancé, `DB_READY` (version 1), aucun plantage, aucune ligne Firebase, FCM ni datatransport (`logcat --pid` et journal complet). Non vérifié : relance activée sur l'appareil (l'écran de réglage vient au 029), mode avion, téléphone réel, iOS.
+- Taille : 11 fichiers avec la fiche (prévu environ 12).
