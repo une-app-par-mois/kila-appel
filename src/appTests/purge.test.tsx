@@ -43,8 +43,13 @@ describe('EX-24 écran Sauvegarde : conservation et purge', () => {
   it('EX-24 « Garder les 3 dernières saisons » par défaut, aucune saison au-delà', async () => {
     await open();
     expect(await screen.findByText('Aucune saison ne dépasse cette durée.')).toBeTruthy();
-    expect(screen.getByText('Garder les')).toBeTruthy();
-    expect(screen.getByText('dernières saisons')).toBeTruthy();
+    // Ticket 020 : les morceaux de la phrase sont cachés au lecteur d'écran, le bouton la lit en
+    // entier (pas de double lecture).
+    const hidden = { includeHiddenElements: true };
+    expect(screen.getByText('Garder les', hidden)).toBeTruthy();
+    expect(screen.getByText('dernières saisons', hidden)).toBeTruthy();
+    expect(screen.queryByText('Garder les')).toBeNull();
+    expect(screen.queryByText('dernières saisons')).toBeNull();
     expect(button('Garder les 3 dernières saisons')).toBeTruthy();
     expect(screen.queryByRole('button', { name: /^Purger/ })).toBeNull();
   });
@@ -64,6 +69,11 @@ describe('EX-24 écran Sauvegarde : conservation et purge', () => {
     ).toBeTruthy();
     expect(button('Purger 2 saisons…')).toBeTruthy();
     expect(await settingsRepo(db).retentionSeasons()).toBe(1);
+    // Ticket 020 : pour 1, « Garder la [1 ▾] dernière saison », lu sans le chiffre.
+    expect(screen.getByText('Garder la', { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.getByText('dernière saison', { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.queryByText('dernière saison')).toBeNull();
+    expect(button('Garder la dernière saison')).toBeTruthy();
     expect({ ...(await counts(db)), settings: 0 }).toEqual({ ...before, settings: 0 });
   });
 
@@ -76,7 +86,7 @@ describe('EX-24 écran Sauvegarde : conservation et purge', () => {
     expect(await screen.findByRole('header', { name: 'Purger 2023-2024 ?' })).toBeTruthy();
     expect(
       screen.getByText(
-        'Seront effacés définitivement : la saison 2023-2024, ses 1 groupe, 1 créneau, 1 séance et 3 présences.',
+        'Seront effacés définitivement : la saison 2023-2024, son groupe, son créneau, sa séance et ses 3 présences.',
       ),
     ).toBeTruthy();
     expect(screen.getByText('définitivement')).toHaveStyle({ fontFamily: 'IBMPlexSans-Bold' });

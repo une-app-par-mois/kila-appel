@@ -14,16 +14,41 @@ export type PurgeCounts = {
 
 const seasonCount = (n: number) => plural(n, 'saison', 'saisons');
 
+/**
+ * Éléments de la confirmation de purge, accordés (ticket 020, réponses du porteur du 2026-11-27) :
+ * un compte de 1 s'écrit sans chiffre avec son possessif (« son groupe », « sa séance », ou « leur »
+ * pour plusieurs saisons) ; une suite d'éléments au pluriel n'a qu'un « ses » (« leurs ») en tête.
+ * Les comptes nuls ne sont pas cités.
+ */
+const purgeItems = (c: PurgeCounts, several: boolean): string[] => {
+  const items = [
+    { n: c.groups, one: 'groupe', many: 'groupes', own: 'son' },
+    { n: c.slots, one: 'créneau', many: 'créneaux', own: 'son' },
+    { n: c.sessions, one: 'séance', many: 'séances', own: 'sa' },
+    { n: c.attendances, one: 'présence', many: 'présences', own: 'sa' },
+  ].filter((item) => item.n > 0);
+  return items.map((item, i) => {
+    if (item.n === 1) return `${several ? 'leur' : item.own} ${item.one}`;
+    const runStart = i === 0 || items[i - 1]?.n === 1;
+    return `${runStart ? (several ? 'leurs ' : 'ses ') : ''}${plural(item.n, item.one, item.many)}`;
+  });
+};
+
 export const effacement = {
   retention: {
     section: 'Conservation',
-    /** « Garder les [3 ▾] dernières saisons » (maquette). */
-    keepBefore: 'Garder les',
-    keepAfter: 'dernières saisons',
+    /**
+     * « Garder les [3 ▾] dernières saisons » (maquette) ; pour 1, « Garder la [1 ▾] dernière
+     * saison » (ticket 020, réponse du porteur du 2026-11-27).
+     */
+    keepBefore: (n: number) => (n === 1 ? 'Garder la' : 'Garder les'),
+    keepAfter: (n: number) => (n === 1 ? 'dernière saison' : 'dernières saisons'),
     /** Liste plein écran du choix, et ligne lue par le lecteur d'écran. */
     choiceTitle: 'Saisons gardées',
     choice: seasonCount,
-    accessibility: (n: number) => `Garder les ${n} dernières saisons`,
+    /** Lu sans le chiffre pour 1 : « Garder la dernière saison ». */
+    accessibility: (n: number) =>
+      n === 1 ? 'Garder la dernière saison' : `Garder les ${n} dernières saisons`,
     none: 'Aucune saison ne dépasse cette durée.',
     over: (names: string[]) =>
       names.length === 1
@@ -40,7 +65,7 @@ export const effacement = {
       names.length === 1 ? `Purger ${names[0]} ?` : `Purger ${names.length} saisons ?`,
     /**
      * Réponse du porteur du 2026-11-27 : « Seront effacés définitivement : la saison 2023-2024,
-     * ses 3 groupes, 2 créneaux, 31 séances et 412 présences. » Un compte nul n'est pas cité.
+     * ses 3 groupes, 2 créneaux, 31 séances et 412 présences. » Accords : `purgeItems`.
      * « définitivement » est en gras (maquette) : le message se lit d'un bloc.
      */
     messageBefore: 'Seront effacés ',
@@ -48,13 +73,8 @@ export const effacement = {
     messageAfter: (names: string[], c: PurgeCounts) => {
       const one = names.length === 1;
       const seasons = one ? `la saison ${names[0]}` : `les saisons ${joinFr(names)}`;
-      const parts = [
-        c.groups > 0 && plural(c.groups, 'groupe', 'groupes'),
-        c.slots > 0 && plural(c.slots, 'créneau', 'créneaux'),
-        c.sessions > 0 && plural(c.sessions, 'séance', 'séances'),
-        c.attendances > 0 && plural(c.attendances, 'présence', 'présences'),
-      ].filter((part): part is string => typeof part === 'string');
-      const content = parts.length === 0 ? '' : `, ${one ? 'ses' : 'leurs'} ${joinFr(parts)}`;
+      const parts = purgeItems(c, !one);
+      const content = parts.length === 0 ? '' : `, ${joinFr(parts)}`;
       return ` : ${seasons}${content}.`;
     },
     /** Membres effacés avec les saisons (décision du porteur du 2026-11-27), et l'appel en cours. */
