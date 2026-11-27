@@ -1,9 +1,10 @@
 // Paramètres (maquette Paramètres, onglet, ticket 012) : seules les lignes qui mènent à un écran
-// existant (décision du porteur du 2026-11-26). Relance, alertes : jalons suivants ; conservation :
-// ticket 015b ; Tout effacer (ticket 015f) ouvre directement l'écran Tout effacer.
+// existant (décision du porteur du 2026-11-26). Réglages : alertes d'assiduité (ticket 022), la
+// relance arrive au ticket 029 ; conservation : ticket 015b ; Tout effacer (ticket 015f) ouvre directement l'écran Tout effacer.
 import { useRouter } from 'expo-router';
 import { labels } from '@/config/libelles';
 import { toIsoDate } from '@/domain/formats';
+import { useAlertThreshold } from '@/hooks/useAlerts';
 import { toLastBackup, useLastBackup } from '@/hooks/useBackupExport';
 import { useRetention } from '@/hooks/useErase';
 import { useGroups } from '@/hooks/useGroups';
@@ -26,6 +27,7 @@ export default function Settings() {
   const { slots, loadFailed: slotsFailed } = useSlots(active?.id ?? null);
   const { lastBackup, loaded: backupLoaded, loadFailed: backupFailed } = useLastBackup();
   const { retention, loadFailed: retentionFailed } = useRetention();
+  const { threshold, loadFailed: thresholdFailed } = useAlertThreshold();
   // Horloge partagée (ticket 012) : « aujourd'hui » devient « hier » après minuit, page ouverte.
   const now = useLocalNow();
   return (
@@ -37,7 +39,8 @@ export default function Settings() {
         membersFailed ||
         slotsFailed ||
         backupFailed ||
-        retentionFailed
+        retentionFailed ||
+        thresholdFailed
           ? labels.common.loadFailed
           : undefined
       }
@@ -81,6 +84,14 @@ export default function Settings() {
                   : labels.slots.count(slots.length)
           }
           onPress={() => router.push('/creneaux')}
+        />
+      </Card>
+      <Section title={labels.alerts.settingsSection} />
+      <Card>
+        <ListRow
+          title={labels.alerts.settingTitle}
+          subtitle={threshold === null ? undefined : labels.alerts.settingsRow(threshold)}
+          onPress={() => router.push('/assiduite')}
         />
       </Card>
       <Section title={t.data} />
