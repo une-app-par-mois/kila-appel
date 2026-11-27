@@ -244,6 +244,24 @@ describe('Le code du dépôt respecte les contrôles', () => {
     expect(violations).toEqual([]);
   });
 
+  // EX-14 (ticket 011) : aucune requête de statistiques ou d'historique ne lit le brouillon. Seuls
+  // ces fichiers de l'appli nomment ses tables : schéma, dépôt du brouillon, effacement à
+  // l'enregistrement, et ce que supprimer une saison ou un créneau emporte.
+  it('EX-14 seuls les fichiers autorisés nomment les tables du brouillon', () => {
+    const allowed = [
+      'src/data/migrations.ts',
+      'src/data/draftsRepo.ts',
+      'src/data/sessionsRepo.ts',
+      'src/data/seasonsRepo.ts',
+      'src/data/slotsRepo.ts',
+    ];
+    const naming = walk(join(root, 'src'))
+      .map((path) => relative(root, path))
+      .filter((file) => !/\.test\.tsx?$/.test(file) && !file.startsWith('src/__fixtures__/'))
+      .filter((file) => /roll_call_draft/.test(readFileSync(join(root, file), 'utf8')));
+    expect(naming.sort()).toEqual(allowed.sort());
+  });
+
   // ABS-01 (décision du porteur du 2026-11-26) : react-native-worklets, imposé par Expo, embarque
   // fetch et XMLHttpRequest, actifs seulement en « Bundle Mode ». Ce mode s'active par la
   // configuration Babel ou Metro : aucune configuration du dépôt ne doit le demander.

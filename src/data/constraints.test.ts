@@ -76,7 +76,7 @@ describe('Contraintes du schéma', () => {
   it('EX-14 un seul brouillon d’appel à la fois', async () => {
     await expect(
       db.execute(
-        'INSERT INTO roll_call_drafts (id, season_id, slot_id, date, updated_at) VALUES (2, ?, NULL, ?, ?)',
+        "INSERT INTO roll_call_drafts (id, season_id, slot_id, date, started_at, updated_at) VALUES (2, ?, NULL, ?, '10:00', ?)",
         [s.seasonId, '2026-12-03', '2026-12-03T10:00:00'],
       ),
     ).rejects.toThrow();

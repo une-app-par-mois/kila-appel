@@ -20,7 +20,7 @@ Statut : en cours · Jalon : 1 · Zone sensible : oui · Trivial : non
 ## Décisions du porteur (2026-11-27)
 
 - Découpé : 011 (brouillon) et 011b (messages de suppression d'un groupe et d'un membre qui nomment l'appel en cours)
-- Migration 2 : `roll_call_drafts.started_at` (HH:MM, aucune donnée personnelle) pour « commencé à » et l'heure d'un appel sans créneau repris
+- `roll_call_drafts.started_at` (HH:MM, aucune donnée personnelle) pour « commencé à » et l'heure d'un appel sans créneau repris : ajouté à la migration 1, corrigeable avant publication (ADR-003 ; d'abord « migration 2 », corrigé par le porteur le même jour). L'APK de test déjà installé doit être désinstallé avant le suivant
 - Un brouillon d'un autre appel existe : l'écran d'appel bloque et propose « Reprendre l'appel »
 - Le brouillon naît au premier changement (statut ou commentaire), pas à l'ouverture
 - Accueil : carte « Appel en cours » (Abandonner confirmé, Reprendre l'appel) ; « Nouvel appel » ouvre le brouillon ; ligne « Brouillon enregistré à chaque appui » sur l'appel
@@ -28,10 +28,10 @@ Statut : en cours · Jalon : 1 · Zone sensible : oui · Trivial : non
 
 ## Critères d'acceptation
 
-- [ ] Chaque changement est écrit aussitôt dans le brouillon (`roll_call_draft_statuses`)
-- [ ] Après fermeture forcée, l'appel est retrouvé tel quel (accueil « Appel en cours »)
-- [ ] Le brouillon disparaît à l'enregistrement ou à l'abandon confirmé
-- [ ] Aucune requête de statistiques ou d'historique ne lit le brouillon
+- [x] Chaque changement est écrit aussitôt dans le brouillon (`roll_call_draft_statuses`)
+- [x] Après fermeture forcée, l'appel est retrouvé tel quel (accueil « Appel en cours »)
+- [x] Le brouillon disparaît à l'enregistrement ou à l'abandon confirmé
+- [x] Aucune requête de statistiques ou d'historique ne lit le brouillon
 
 ## Tests attendus
 

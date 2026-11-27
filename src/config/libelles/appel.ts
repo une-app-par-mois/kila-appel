@@ -36,6 +36,29 @@ export const appel = {
     save: 'Enregistrer l’appel',
     saved: 'Appel enregistré',
   },
+  /** Brouillon d'appel (maquettes Accueil avec un appel interrompu, Abandon, EX-14, ticket 011). */
+  draft: {
+    title: 'Appel en cours',
+    summary: (group: string, startedAt: string, absents: string) =>
+      `${group} · commencé à ${startedAt} · ${absents}`,
+    absents: (n: number) =>
+      n === 0 ? 'aucun absent noté' : n === 1 ? '1 absent noté' : `${n} absents notés`,
+    /** Groupe supprimé depuis : le brouillon peut seulement être abandonné. */
+    removedGroup: 'groupe supprimé',
+    entry: (group: string) => `Appel en cours : ${group}`,
+    resume: 'Reprendre l’appel',
+    abandon: 'Abandonner',
+    abandonTitle: 'Abandonner l’appel en cours ?',
+    abandonMessage: (group: string) =>
+      `Les statuts déjà notés pour ${group} seront perdus. Aucune séance ne sera enregistrée.`,
+    keep: 'Revenir',
+    abandonConfirm: 'Abandonner',
+    savedOnEachTap: 'Brouillon enregistré à chaque appui',
+    writeFailed:
+      'Le brouillon n’a pas pu être enregistré : l’appel continue, enregistrez-le avant de quitter.',
+    inProgress: (group: string, date: string) =>
+      `Un appel est en cours : ${group}, ${date}. Reprenez-le ou abandonnez-le depuis l’accueil.`,
+  },
   /** Appel sans créneau (maquette, EX-39, ticket 010c). */
   freeRollCall: {
     title: 'Nouvel appel',

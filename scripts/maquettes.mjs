@@ -250,7 +250,7 @@ const confirmer = (t, retour, corps, oui, ouiVers, non = 'Garder') => `${titre(t
 ecran('accueil-brouillon', 1, 'Accueil avec un appel interrompu', 'EX-14', 'accueil', `
 ${titre('Mercredi 26 nov.')}
 ${carte(`<div class="l-titre">Appel en cours</div><div class="l-sous">Poussins mercredi · commencé à 14:03 · 3 absents notés</div><div class="duo">${go('abandon-brouillon', 'Abandonner', 'btn-s tiers')}${go('appel', "Reprendre l'appel", 'btn-p deuxtiers')}</div>`, 'bandeau')}
-<p class="note">S'affiche à la réouverture si un brouillon d'appel existe (fermeture forcée, redémarrage). L'appel s'ouvre aussi directement sur le brouillon depuis « Nouvel appel ».</p>`);
+<p class="note">S'affiche à la réouverture si un brouillon d'appel existe (fermeture forcée, redémarrage). L'appel s'ouvre aussi directement sur le brouillon depuis « Nouvel appel » (« Appel en cours : Poussins mercredi »). Le brouillon naît au premier changement ; tant qu'il existe, un autre appel affiche « Un appel est en cours : … Reprenez-le ou abandonnez-le depuis l'accueil. » avec « Reprendre l'appel » (décisions du 2026-11-27).</p>`);
 
 ecran('abandon-brouillon', 1, "Abandon d'un brouillon d'appel", 'EX-14', 'accueil', confirmer("Abandonner l'appel en cours ?", 'accueil-brouillon',
   `<p>Les statuts déjà notés pour <b>Poussins mercredi</b> seront perdus. Aucune séance ne sera enregistrée.</p>`, 'Abandonner', 'accueil', 'Revenir'));

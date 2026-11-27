@@ -1,7 +1,8 @@
 // Appel (maquette Appel, EX-09 à EX-15, EX-39) : `?creneau=<id>&date=<AAAA-MM-JJ>`, ou `?groupe=`
 // pour un appel sans créneau (`useRollCallTarget`). Tous les inscrits à
 // la date démarrent à Présent ; un appui fait passer au statut suivant. Le brouillon arrive au
-// ticket 011 : d'ici là, quitter sans enregistrer perd l'appel (décision du porteur du 2026-11-27).
+// Brouillon (EX-14, ticket 011) : chaque changement est écrit aussitôt ; l'appel est repris tel
+// quel à la réouverture ; un brouillon d'un autre appel bloque celui-ci (décision du 2026-11-27).
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
@@ -11,7 +12,8 @@ import { countStatuses, matchesName, nextStatus, SEARCH_FROM } from '@/domain/at
 import { toDisplayDate } from '@/domain/formats';
 import { weekdayOfDate } from '@/domain/occurrences';
 import type { AttendanceStatus } from '@/domain/validation';
-import { useRollCall, useRoster } from '@/hooks/useRollCall';
+import { notifyDataChanged } from '@/hooks/dataChanged';
+import { draftRoute, useDraft, useRollCall, useRoster } from '@/hooks/useRollCall';
 import { useRollCallTarget } from '@/hooks/useRollCallTarget';
 import { AttendanceCounter, StatusPill } from '@/ui/Attendance';
 import { Button } from '@/ui/Button';
@@ -27,12 +29,13 @@ const SAVED_DELAY_MS = 1200;
 export default function RollCallScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ creneau?: string; groupe?: string; date?: string }>();
-  const { target, groupName, problem, loadFailed } = useRollCallTarget(params);
+  const { target, groupName, problem, blockingDraft, loadFailed } = useRollCallTarget(params);
   const { roster, loadFailed: rosterFailed } = useRoster(
     target?.group.id ?? null,
     target?.date ?? '',
   );
   const { record } = useRollCall();
+  const draft = useDraft();
 
   const [statuses, setStatuses] = useState<Record<number, AttendanceStatus>>({});
   const [query, setQuery] = useState('');
@@ -42,6 +45,35 @@ export default function RollCallScreen() {
   const [saved, setSaved] = useState(false);
   const saving = useRef(false);
   const [busy, setBusy] = useState(false);
+
+  // EX-14 : un brouillon de cet appel est repris tel quel, une seule fois par appel.
+  const resumed = useRef<string | null>(null);
+  const targetKey = target && `${target.slotId}|${target.group.id}|${target.date}`;
+  const ownDraft = target?.draft ?? null;
+  useEffect(() => {
+    if (targetKey === null || resumed.current === targetKey) return;
+    resumed.current = targetKey;
+    if (!ownDraft) return;
+    setStatuses(ownDraft.statuses);
+    setComment(ownDraft.comment ?? '');
+  }, [targetKey, ownDraft]);
+
+  // Les écritures du brouillon ne rechargent pas les autres écrans : l'accueil le fait ici.
+  useEffect(() => () => notifyDataChanged(), []);
+
+  const draftTarget = target && {
+    slotId: target.slotId,
+    groupId: target.group.id,
+    date: target.date,
+    startedAt: target.startedAt,
+  };
+  /** Une écriture du brouillon qui échoue est dite ; l'appel continue à l'écran. */
+  const writeDraft = (write: () => Promise<void>) =>
+    write().catch((e) => {
+      if ((e as { code?: string } | null)?.code === 'COMMENT_TOO_LONG')
+        setCommentError(errorMessage(e));
+      else setFormError(labels.draft.writeFailed);
+    });
 
   // « Appel enregistré », puis retour à l'accueil (décision du porteur du 2026-11-27).
   useEffect(() => {
@@ -86,9 +118,14 @@ export default function RollCallScreen() {
   const error =
     loadFailed || rosterFailed
       ? labels.common.loadFailed
-      : problem
-        ? labels.errors[problem]
-        : formError;
+      : blockingDraft
+        ? labels.draft.inProgress(
+            blockingDraft.groupName ?? labels.draft.removedGroup,
+            toDisplayDate(blockingDraft.date),
+          )
+        : problem
+          ? labels.errors[problem]
+          : formError;
   const ready = target && roster;
   const subtitle = target
     ? t.subtitle(
@@ -116,11 +153,18 @@ export default function RollCallScreen() {
       onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))}
       error={error}
     >
+      {blockingDraft && blockingDraft.groupId !== null && (
+        <Button
+          label={labels.draft.resume}
+          onPress={() => router.replace(draftRoute(blockingDraft))}
+        />
+      )}
       {ready && (
         <>
           <Card>
             <AttendanceCounter counts={counts} />
           </Card>
+          <Text style={styles.draftLine}>{labels.draft.savedOnEachTap}</Text>
           {searchable && (
             <TextField
               label={t.search}
@@ -141,7 +185,12 @@ export default function RollCallScreen() {
                   accessibilityLabel={t.row(name, labels.statuses[status])}
                   accessibilityHint={t.rowHint}
                   disabled={busy || saved}
-                  onPress={() => setStatuses((s) => ({ ...s, [m.memberId]: nextStatus(status) }))}
+                  onPress={() => {
+                    const next = nextStatus(status);
+                    setStatuses((s) => ({ ...s, [m.memberId]: next }));
+                    if (draftTarget)
+                      void writeDraft(() => draft.setStatus(draftTarget, m.memberId, next));
+                  }}
                   style={({ pressed }) => [styles.row, pressed && styles.pressed]}
                 >
                   <Text testID="roll-call-name" style={styles.name}>
@@ -167,6 +216,7 @@ export default function RollCallScreen() {
             onChangeText={(v) => {
               setComment(v);
               setCommentError(undefined);
+              if (draftTarget) void writeDraft(() => draft.setComment(draftTarget, v));
             }}
             error={commentError}
           />
@@ -185,6 +235,12 @@ export default function RollCallScreen() {
 
 const styles = StyleSheet.create({
   subtitle: { fontFamily: theme.fonts.digits, fontSize: 14, color: theme.colors.texteSecondaire },
+  draftLine: {
+    fontFamily: theme.fonts.text,
+    fontSize: 13,
+    color: theme.colors.texteSecondaire,
+    marginTop: theme.spacing,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

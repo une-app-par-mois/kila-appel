@@ -1,5 +1,6 @@
 // Dépôt des séances enregistrées (EX-15, ADR-004 : une ligne n'existe qu'une fois l'appel fait).
-// Requêtes paramétrées seulement. Le brouillon (ticket 011) n'est jamais lu ici.
+// Requêtes paramétrées seulement. Le brouillon (ticket 011) n'est jamais lu ici : seulement
+// effacé quand son appel est enregistré.
 import type { Db } from '@/data/db';
 import { current } from '@/data/enrollmentsRepo';
 import { DataError } from '@/data/errors';
@@ -95,6 +96,12 @@ export const sessionsRepo = (db: Db, today: string) => ({
           [id, memberId, status],
         );
       }
+      // EX-14 : le brouillon de cet appel disparaît dans la même écriture (jamais un autre).
+      await tx.execute(
+        `DELETE FROM roll_call_drafts WHERE id = 1 AND slot_id IS ? AND date = ?
+           AND EXISTS (SELECT 1 FROM roll_call_draft_groups WHERE draft_id = 1 AND group_id = ?)`,
+        [call.slotId, call.date, call.groupId],
+      );
       return id;
     });
   },

@@ -7,6 +7,7 @@ export type DataErrorCode =
   | 'ALREADY_RECORDED'
   | 'NOT_ENROLLED'
   | 'NOT_A_SLOT_SESSION'
+  | 'DRAFT_IN_PROGRESS'
   | 'DB_NOT_READY';
 
 export class DataError extends Error {
