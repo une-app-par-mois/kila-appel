@@ -22,7 +22,11 @@ export type DraftTarget = {
   startedAt: string;
 };
 
-/** `groupId` nul : groupe supprimé depuis (le brouillon reste, pour pouvoir l'abandonner). */
+/**
+ * `groupId` nul : groupe supprimé depuis (le brouillon reste, pour pouvoir l'abandonner).
+ * `resumable` faux : groupe supprimé ou archivé, retiré du créneau, ou saison plus active ; le
+ * brouillon ne peut plus qu'être abandonné (revues du ticket 011).
+ */
 export type RollCallDraft = {
   slotId: number | null;
   groupId: number | null;
@@ -31,6 +35,7 @@ export type RollCallDraft = {
   startedAt: string;
   comment: string | null;
   statuses: Record<number, AttendanceStatus>;
+  resumable: boolean;
 };
 
 type DraftRow = {
@@ -40,6 +45,7 @@ type DraftRow = {
   comment: string | null;
   group_id: number | null;
   group_name: string | null;
+  resumable: number;
 };
 
 /** Même appel : même créneau (ou aucun), même date, même groupe. */
@@ -52,7 +58,12 @@ export const sameCall = (
 export const draftsRepo = (db: Db) => {
   const read = async (tx: Db): Promise<RollCallDraft | null> => {
     const [row] = await tx.query<DraftRow>(
-      `SELECT d.slot_id, d.date, d.started_at, d.comment, g.id AS group_id, g.name AS group_name
+      `SELECT d.slot_id, d.date, d.started_at, d.comment, g.id AS group_id, g.name AS group_name,
+         (g.id IS NOT NULL AND g.archived_at IS NULL
+          AND EXISTS (SELECT 1 FROM seasons se WHERE se.id = d.season_id AND se.is_active = 1)
+          AND (d.slot_id IS NULL OR EXISTS (
+            SELECT 1 FROM slot_groups sg WHERE sg.slot_id = d.slot_id AND sg.group_id = g.id
+          ))) AS resumable
        FROM roll_call_drafts d
        LEFT JOIN roll_call_draft_groups dg ON dg.draft_id = d.id
        LEFT JOIN groups g ON g.id = dg.group_id
@@ -73,6 +84,7 @@ export const draftsRepo = (db: Db) => {
       startedAt: row.started_at,
       comment: row.comment,
       statuses,
+      resumable: row.resumable === 1,
     };
   };
 
@@ -128,6 +140,8 @@ export const draftsRepo = (db: Db) => {
     setComment: async (target: DraftTarget, text: string, now: string): Promise<void> => {
       const comment = validateComment(text);
       await db.transaction(async (tx) => {
+        // Un commentaire vide ne fait pas naître de brouillon (revue du ticket 011).
+        if (comment === null && !(await read(tx))) return;
         await ensure(tx, target, now);
         await tx.execute('UPDATE roll_call_drafts SET comment = ? WHERE id = 1', [comment]);
       });

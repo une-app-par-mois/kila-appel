@@ -1,7 +1,6 @@
 // Appel (maquette Appel, EX-09 à EX-15, EX-39) : `?creneau=<id>&date=<AAAA-MM-JJ>`, ou `?groupe=`
 // pour un appel sans créneau (`useRollCallTarget`). Tous les inscrits à
-// la date démarrent à Présent ; un appui fait passer au statut suivant. Le brouillon arrive au
-// Brouillon (EX-14, ticket 011) : chaque changement est écrit aussitôt ; l'appel est repris tel
+// la date démarrent à Présent ; un appui fait passer au statut suivant. Brouillon (EX-14, ticket 011) : chaque changement est écrit aussitôt ; l'appel est repris tel
 // quel à la réouverture ; un brouillon d'un autre appel bloque celui-ci (décision du 2026-11-27).
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -68,12 +67,18 @@ export default function RollCallScreen() {
     startedAt: target.startedAt,
   };
   /** Une écriture du brouillon qui échoue est dite ; l'appel continue à l'écran. */
-  const writeDraft = (write: () => Promise<void>) =>
-    write().catch((e) => {
-      if ((e as { code?: string } | null)?.code === 'COMMENT_TOO_LONG')
-        setCommentError(errorMessage(e));
-      else setFormError(labels.draft.writeFailed);
-    });
+  const writeDraft = (write: () => Promise<void>) => {
+    // Rien après « Enregistrer » : l'enregistrement efface le brouillon, il ne doit pas renaître.
+    if (saving.current) return;
+    write().then(
+      () => setFormError((f) => (f === labels.draft.writeFailed ? undefined : f)),
+      (e) => {
+        if ((e as { code?: string } | null)?.code === 'COMMENT_TOO_LONG')
+          setCommentError(errorMessage(e));
+        else setFormError(labels.draft.writeFailed);
+      },
+    );
+  };
 
   // « Appel enregistré », puis retour à l'accueil (décision du porteur du 2026-11-27).
   useEffect(() => {
@@ -153,7 +158,7 @@ export default function RollCallScreen() {
       onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))}
       error={error}
     >
-      {blockingDraft && blockingDraft.groupId !== null && (
+      {blockingDraft?.resumable && (
         <Button
           label={labels.draft.resume}
           onPress={() => router.replace(draftRoute(blockingDraft))}
@@ -189,7 +194,7 @@ export default function RollCallScreen() {
                     const next = nextStatus(status);
                     setStatuses((s) => ({ ...s, [m.memberId]: next }));
                     if (draftTarget)
-                      void writeDraft(() => draft.setStatus(draftTarget, m.memberId, next));
+                      writeDraft(() => draft.setStatus(draftTarget, m.memberId, next));
                   }}
                   style={({ pressed }) => [styles.row, pressed && styles.pressed]}
                 >
@@ -216,7 +221,7 @@ export default function RollCallScreen() {
             onChangeText={(v) => {
               setComment(v);
               setCommentError(undefined);
-              if (draftTarget) void writeDraft(() => draft.setComment(draftTarget, v));
+              if (draftTarget) writeDraft(() => draft.setComment(draftTarget, v));
             }}
             error={commentError}
           />

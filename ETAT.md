@@ -12,7 +12,7 @@ Réévaluation (PLAN §6) : moins de 2 h de porteur pour 6 h prévues ; 1,5 h pa
 
 ## Prochaines étapes
 
-1. **Ticket 011** (brouillon d'appel, zone sensible : `/security-review` et relecture du porteur avant fusion) sur `ticket/011-brouillon-appel`, puis 011b. 010c fusionné dans le groupe (PR #27). 006f fusionné dans le groupe (PR #22) après relecture du porteur. APK local de 008b audité conforme (SHA-256 `976feabc…`, aucune permission nouvelle) ; **à installer sur l'A55** : glisser la poignée ≡, « Appeler », et secure_delete à vérifier.
+1. **Ticket 011** (brouillon d'appel, zone sensible) : revues faites et corrigées, PR ouverte, **en attente de la relecture du porteur avant fusion** ; puis 011b. **Désinstaller l'APK de test avant le suivant** (migration 1 corrigée : `started_at`). 010c fusionné dans le groupe (PR #27). 006f fusionné dans le groupe (PR #22) après relecture du porteur. APK local de 008b audité conforme (SHA-256 `976feabc…`, aucune permission nouvelle) ; **à installer sur l'A55** : glisser la poignée ≡, « Appeler », et secure_delete à vérifier.
    - `@expo/devtools` est dans le bundle de production : client WebSocket d'expo-sqlite, appelé seulement si `__DEV__` (jamais en production) ; INTERNET absente du binaire. Pas une violation d'ABS-01.
 2. Tickets 010 à 016 du jalon 1, puis PR du jalon vers `main`.
 

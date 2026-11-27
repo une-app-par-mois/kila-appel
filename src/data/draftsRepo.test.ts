@@ -37,6 +37,7 @@ describe('Dépôt du brouillon d’appel (EX-14)', () => {
       startedAt: '17:32',
       comment: null,
       statuses: { [s.memberId]: 'absent' },
+      resumable: true,
     });
     expect(await db.query('SELECT season_id, updated_at FROM roll_call_drafts')).toEqual([
       { season_id: s.seasonId, updated_at: NOW },
@@ -133,6 +134,25 @@ describe('Dépôt du brouillon d’appel (EX-14)', () => {
     const repo = draftsRepo(db);
     await repo.setStatus(target, s.memberId, 'absent', NOW);
     await db.execute('DELETE FROM groups WHERE id = ?', [s.groupId]);
-    expect(await repo.get()).toMatchObject({ groupId: null, groupName: null });
+    expect(await repo.get()).toMatchObject({ groupId: null, groupName: null, resumable: false });
+  });
+
+  it.each([
+    ['groupe archivé', "UPDATE groups SET archived_at = '2026-11-19'"],
+    ['groupe retiré du créneau', 'DELETE FROM slot_groups'],
+    ['saison plus active', 'UPDATE seasons SET is_active = 0'],
+  ])(
+    'EX-14 brouillon qui ne peut plus être repris (%s) : seulement abandonné',
+    async (_cas, sql) => {
+      const repo = draftsRepo(db);
+      await repo.setStatus(target, s.memberId, 'absent', NOW);
+      await db.execute(sql);
+      expect(await repo.get()).toMatchObject({ groupName: 'Poussins', resumable: false });
+    },
+  );
+
+  it('EX-14 un commentaire vide ne crée pas de brouillon', async () => {
+    await draftsRepo(db).setComment(target, '   ', NOW);
+    expect(await count(db, 'roll_call_drafts')).toBe(0);
   });
 });

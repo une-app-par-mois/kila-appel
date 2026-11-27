@@ -38,6 +38,14 @@ Statut : en cours · Jalon : 1 · Zone sensible : oui · Trivial : non
 - Tests de données ; test d'écran de la reprise
 - À la main : fermeture forcée en plein appel sur le téléphone
 
+## Revues du ticket 011 (2026-11-27)
+
+- Brouillon qui ne peut plus être repris (groupe supprimé ou archivé, retiré du créneau, saison plus active) : `resumable` faux, l'accueil le dit et ne propose qu'« Abandonner » ; l'appel bloqué n'offre plus « Reprendre » (évite la boucle).
+- Créneau à plusieurs groupes : l'appel reprend le groupe du brouillon s'il y est encore actif.
+- Aucune écriture du brouillon après « Enregistrer » ; un commentaire vide ne crée pas de brouillon ; le message d'échec d'écriture disparaît à l'écriture suivante réussie.
+- `staticChecks` : seuls l'appel et l'accueil importent `draftsRepo`, `useDraft`, `draftRoute`.
+- Non retenu : écrire le commentaire après une pause plutôt qu'à chaque frappe (écriture locale courte ; à revoir si le téléphone rame, mesure NF-01).
+
 ## Hors périmètre
 
 - Rien de plus que les critères ci-dessus.

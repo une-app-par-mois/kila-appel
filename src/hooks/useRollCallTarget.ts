@@ -52,8 +52,13 @@ export const useRollCallTarget = (params: { creneau?: string; groupe?: string; d
   const [checkFailed, setCheckFailed] = useState(false);
 
   // Groupe actif : celui du créneau (un groupe archivé refuserait l'enregistrement) ou le choisi.
+  // Créneau à plusieurs groupes : celui du brouillon de cette séance s'il y est encore actif.
   const active = (gid: number) => groups?.find((g) => g.id === gid);
-  const group = slot ? slot.groups.find((g) => active(g.id)) : active(groupId);
+  const draftGroup =
+    slot && draft?.slotId === slot.id && draft.date === date && draft.groupId !== null
+      ? slot.groups.find((g) => g.id === draft.groupId && active(g.id))
+      : undefined;
+  const group = slot ? (draftGroup ?? slot.groups.find((g) => active(g.id))) : active(groupId);
 
   const call = group && { slotId: slot ? slot.id : null, groupId: group.id, date };
   const ownDraft = draft && call && sameCall(draft, call) ? draft : null;

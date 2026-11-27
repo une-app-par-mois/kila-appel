@@ -155,6 +155,38 @@ describe('Brouillon d’appel (EX-14)', () => {
     expect(await row('Alix Exemple', st.absent)).toBeTruthy();
   });
 
+  it('EX-14 brouillon d’un groupe archivé : seulement « Abandonner », nulle part « Reprendre »', async () => {
+    await insertDraft(s.slotId, DATE, '18:00', null, [[s.memberId, 'absent']]);
+    await db.execute("UPDATE groups SET archived_at = '2026-11-18' WHERE id = ?", [s.groupId]);
+    await open('/');
+    expect(await screen.findByText(d.unresumable)).toBeTruthy();
+    expect(await button(d.abandon)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: d.resume })).toBeNull();
+  });
+
+  it('EX-14 créneau à deux groupes : le brouillon reprend son groupe, sans se bloquer lui-même', async () => {
+    const { lastInsertRowId: other } = await db.execute(
+      "INSERT INTO groups (season_id, name) VALUES (?, 'Vétérans')",
+      [s.seasonId],
+    );
+    await db.execute('INSERT INTO slot_groups (slot_id, group_id) VALUES (?, ?)', [
+      s.slotId,
+      other,
+    ]);
+    await db.execute(
+      "INSERT INTO roll_call_drafts (id, season_id, slot_id, date, started_at, updated_at) VALUES (1, ?, ?, ?, '18:00', '2026-11-18T18:01')",
+      [s.seasonId, s.slotId, DATE],
+    );
+    await db.execute('INSERT INTO roll_call_draft_groups (draft_id, group_id) VALUES (1, ?)', [
+      other,
+    ]);
+    await open('/');
+    await fireEvent.press(await button(d.resume));
+    expect(await screen.findByText('Vétérans')).toBeTruthy();
+    expect(screen.queryByText(d.inProgress('Vétérans', '18/11/2026'))).toBeNull();
+    expect(await screen.findByText(d.savedOnEachTap)).toBeTruthy();
+  });
+
   it('EX-14 EX-39 appel sans créneau repris plus tard : garde l’heure de son ouverture', async () => {
     // Ouvert à 18:00, fermé de force, repris à 19:30.
     await insertDraft(null, '2026-11-17', '18:00', null, [[s.otherMemberId, 'absent']]);

@@ -45,6 +45,8 @@ export const appel = {
       n === 0 ? 'aucun absent noté' : n === 1 ? '1 absent noté' : `${n} absents notés`,
     /** Groupe supprimé depuis : le brouillon peut seulement être abandonné. */
     removedGroup: 'groupe supprimé',
+    unresumable:
+      'Ce groupe n’est plus actif : cet appel ne peut plus être repris, seulement abandonné.',
     entry: (group: string) => `Appel en cours : ${group}`,
     resume: 'Reprendre l’appel',
     abandon: 'Abandonner',

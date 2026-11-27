@@ -262,6 +262,24 @@ describe('Le code du dépôt respecte les contrôles', () => {
     expect(naming.sort()).toEqual(allowed.sort());
   });
 
+  // EX-14 (revue de sécurité du ticket 011) : seuls l'appel et l'accueil lisent le brouillon par
+  // son dépôt ou son hook ; une statistique qui l'importerait ferait échouer ce test.
+  it('EX-14 seuls l’appel et l’accueil lisent le brouillon (draftsRepo, useDraft)', () => {
+    const allowed = [
+      'src/hooks/useRollCall.ts',
+      'src/hooks/useRollCallTarget.ts',
+      'src/app/appel.tsx',
+      'src/ui/RollCallEntry.tsx',
+    ];
+    const reading = walk(join(root, 'src'))
+      .map((path) => relative(root, path))
+      .filter((file) => !/\.test\.tsx?$/.test(file) && file !== 'src/data/draftsRepo.ts')
+      .filter((file) =>
+        /draftsRepo|useDraft|draftRoute/.test(readFileSync(join(root, file), 'utf8')),
+      );
+    expect(reading.sort()).toEqual(allowed.sort());
+  });
+
   // ABS-01 (décision du porteur du 2026-11-26) : react-native-worklets, imposé par Expo, embarque
   // fetch et XMLHttpRequest, actifs seulement en « Bundle Mode ». Ce mode s'active par la
   // configuration Babel ou Metro : aucune configuration du dépôt ne doit le demander.

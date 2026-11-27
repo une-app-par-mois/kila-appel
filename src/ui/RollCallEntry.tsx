@@ -44,8 +44,9 @@ export const RollCallEntry = ({ onError }: { onError: (message: string | undefin
   const ready = proposed.loaded && draftLoaded && !failed;
   const group = draft?.groupName ?? d.removedGroup;
   const absents = Object.values(draft?.statuses ?? {}).filter((s) => s === 'absent').length;
-  // Un brouillon dont le groupe a été supprimé ne peut qu'être abandonné.
-  const resume = draft && draft.groupId !== null ? () => router.push(draftRoute(draft)) : undefined;
+  // Un brouillon qui ne peut plus être repris (groupe supprimé ou archivé, saison changée…) ne
+  // peut qu'être abandonné.
+  const resume = draft?.resumable ? () => router.push(draftRoute(draft)) : undefined;
 
   const entry = draft ? (
     <ListRow title={labels.rollCall.entry} subtitle={d.entry(group)} onPress={resume} />
@@ -80,6 +81,7 @@ export const RollCallEntry = ({ onError }: { onError: (message: string | undefin
           <Text style={styles.summary}>
             {d.summary(group, draft.startedAt, d.absents(absents))}
           </Text>
+          {!resume && <Text style={styles.summary}>{d.unresumable}</Text>}
           <View style={styles.actions}>
             <Button
               label={d.abandon}
