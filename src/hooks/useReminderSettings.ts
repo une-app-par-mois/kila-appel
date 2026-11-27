@@ -23,10 +23,11 @@ export type ReminderStatus = 'enabled' | 'disabled' | 'denied';
 /**
  * EX-29, parcours décidé par le porteur le 2026-11-27 : l'interrupteur montre l'état effectif.
  * Permission jamais demandée : éteint, sans bandeau. Refusée : allumé (préférence active) avec le
- * bandeau. Lecture en échec : l'interrupteur suit la préférence, sans bandeau.
+ * bandeau. Lecture en échec : comme jamais demandée, car rien n'est alors programmé (028b ;
+ * changée après contradiction, revue du 029).
  */
 export const effectiveReminder = ({ enabled, permission }: ReminderView) => ({
-  switchOn: enabled && permission !== 'undetermined',
+  switchOn: enabled && permission !== 'undetermined' && permission !== 'unknown',
   denied: enabled && (permission === 'denied' || permission === 'blocked'),
 });
 
@@ -58,10 +59,16 @@ export const useReminderActions = () => {
     await setEnabled(true);
     return 'enabled';
   }, [setEnabled]);
-  /** « Continuer » : demande du système ; accordée ou non, la préférence passe à active. */
-  const confirmPermission = useCallback(async (): Promise<void> => {
-    await requestReminderPermission();
+  /**
+   * « Continuer » : demande du système. Accordée ou refusée, la préférence passe à active (refus :
+   * bandeau). Demande en échec (« failed ») ou dialogue fermé sans réponse (toujours jamais
+   * demandée) : préférence inchangée (revue du 029).
+   */
+  const confirmPermission = useCallback(async (): Promise<'enabled' | 'failed' | 'dismissed'> => {
+    if ((await requestReminderPermission()) === 'failed') return 'failed';
+    if ((await reminderPermissionState()) === 'undetermined') return 'dismissed';
     await setEnabled(true);
+    return 'enabled';
   }, [setEnabled]);
   const turnOff = useCallback(() => setEnabled(false), [setEnabled]);
   const setDelay = useCallback(

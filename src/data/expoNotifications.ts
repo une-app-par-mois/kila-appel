@@ -198,20 +198,23 @@ export const reminderPermissionState = async (): Promise<PermissionState> => {
   }
 };
 
+/** Réponse à la demande : un échec (exception) se distingue d'un refus (revue du 029). */
+export type PermissionRequest = 'granted' | 'denied' | 'failed';
+
 /**
  * EX-29 : demande du système, seulement à l'activation de la relance (après l'écran « Autoriser
  * les notifications ? »). iOS : alerte et son, sans pastille. Ne lève jamais d'erreur : un échec
- * vaut « non accordée » (journalisé).
+ * rend « failed » (journalisé), jamais « accordée ».
  */
-export const requestReminderPermission = async (): Promise<boolean> => {
+export const requestReminderPermission = async (): Promise<PermissionRequest> => {
   try {
     const { granted } = await requestPermissionsAsync({
       ios: { allowAlert: true, allowSound: true, allowBadge: false },
     });
-    return granted;
+    return granted ? 'granted' : 'denied';
   } catch {
     log('REMINDER_PERMISSION_REQUEST_FAILED');
-    return false;
+    return 'failed';
   }
 };
 

@@ -18,7 +18,22 @@ jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => mockDb }));
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
 jest.mock('expo-notifications', () => require('@/__fixtures__/expoModules').fakeNotifications());
 
-const { state } = jest.requireMock('expo-notifications') as ReturnType<typeof fakeNotifications>;
+const fake = jest.requireMock('expo-notifications') as ReturnType<typeof fakeNotifications>;
+const { state } = fake;
+type Answer = typeof state.answer;
+/** Demande du système en attente : `answer` y répond. */
+const pendingRequest = () => {
+  let answer: (a: Answer) => void = () => undefined;
+  jest.spyOn(fake, 'requestPermissionsAsync').mockImplementation(async (options: object) => {
+    state.requests.push(options);
+    const result = await new Promise<Answer>((resolve) => {
+      answer = resolve;
+    });
+    state.permission = result;
+    return result;
+  });
+  return (a: Answer) => answer(a);
+};
 const routes = {
   _layout: RootStack,
   ...tabRoutes,
@@ -51,6 +66,7 @@ describe('Relance : demande de permission (ticket 029)', () => {
     state.fail.clear();
   });
   afterEach(async () => {
+    jest.restoreAllMocks();
     mockDb = null;
     await db.close();
   });
@@ -114,5 +130,81 @@ describe('Relance : demande de permission (ticket 029)', () => {
     expect(await isOn()).toBe(false);
     expect(await enabled()).toBe(false);
     expect(state.requests).toEqual([]);
+  });
+
+  it('CONV-15 demande du système en échec : relance non activée, message d’échec', async () => {
+    state.fail.add('requestPermissionsAsync');
+    const router = await renderRouter(routes, { initialUrl: '/relance' });
+    await turnOn();
+    await fireEvent.press(await screen.findByRole('button', { name: p.continue }));
+    expect(await screen.findByText(labels.errors.unknown)).toBeTruthy();
+    expect(router.getPathname()).toBe('/permission-notifications');
+    expect(await enabled()).toBe(false);
+  });
+
+  it('EX-29 dialogue fermé sans réponse (toujours `undetermined`) : retour, non activée', async () => {
+    state.answer = { granted: false, canAskAgain: true, status: 'undetermined' };
+    const router = await renderRouter(routes, { initialUrl: '/relance' });
+    await turnOn();
+    await fireEvent.press(await screen.findByRole('button', { name: p.continue }));
+    expect(await screen.findByRole('switch', { name: r.toggle })).toBeTruthy();
+    expect(router.getPathname()).toBe('/relance');
+    expect(screen.queryByText(labels.errors.unknown)).toBeNull();
+    expect(await isOn()).toBe(false);
+    expect(await enabled()).toBe(false);
+  });
+
+  it('EX-29 double appui sur « Continuer » : une seule demande', async () => {
+    await renderRouter(routes, { initialUrl: '/relance' });
+    await turnOn();
+    const button = await screen.findByRole('button', { name: p.continue });
+    await act(async () => {
+      fireEvent.press(button);
+      fireEvent.press(button);
+    });
+    expect(await screen.findByRole('switch', { name: r.toggle })).toBeTruthy();
+    expect(state.requests.length).toBe(1);
+  });
+
+  it('EX-29 demande en cours : pas de retour possible, puis un seul retour au réglage', async () => {
+    const answer = pendingRequest();
+    const router = await renderRouter(routes, { initialUrl: '/relance' });
+    await turnOn();
+    await fireEvent.press(await screen.findByRole('button', { name: p.continue }));
+    expect(screen.queryByRole('button', { name: labels.common.back })).toBeNull();
+    await act(async () => answer({ granted: true, canAskAgain: true, status: 'granted' }));
+    expect(await screen.findByRole('switch', { name: r.toggle })).toBeTruthy();
+    expect(router.getPathname()).toBe('/relance');
+    expect(await isOn()).toBe(true);
+  });
+
+  it('EX-29 double bascule de l’interrupteur : un seul écran de permission poussé', async () => {
+    const router = await renderRouter(routes, { initialUrl: '/relance' });
+    const sw = await toggle();
+    await act(async () => {
+      fireEvent(sw, 'valueChange', true);
+      fireEvent(sw, 'valueChange', true);
+    });
+    await fireEvent.press(await screen.findByRole('button', { name: p.notNow }));
+    expect(await screen.findByRole('switch', { name: r.toggle })).toBeTruthy();
+    expect(router.getPathname()).toBe('/relance');
+  });
+
+  it('EX-29 activation en cours : interrupteur désactivé', async () => {
+    let read: () => void = () => undefined;
+    jest.spyOn(fake, 'getPermissionsAsync').mockImplementation(async () => {
+      await new Promise<void>((resolve) => {
+        read = resolve;
+      });
+      return state.permission;
+    });
+    await renderRouter(routes, { initialUrl: '/relance' });
+    await act(async () => read());
+    const sw = await toggle();
+    await act(async () => {
+      fireEvent(sw, 'valueChange', true);
+    });
+    expect((await toggle()).props.disabled).toBe(true);
+    await act(async () => read());
   });
 });

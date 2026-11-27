@@ -4,7 +4,7 @@
 // demande rien. Préférence active et permission refusée : bandeau et « Ouvrir les réglages du
 // téléphone » (Linking.openSettings, sans réseau). Délai de 10 à 60 min, liste de choix commune.
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Linking, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
@@ -34,11 +34,20 @@ export default function ReminderSetting() {
       setError(errorMessage(e));
     }
   };
-  const toggle = (on: boolean) =>
-    run(async () => {
+  // Une seule bascule à la fois : l'écran de permission n'est jamais poussé deux fois.
+  const switching = useRef(false);
+  const [busy, setBusy] = useState(false);
+  const toggle = async (on: boolean) => {
+    if (switching.current) return;
+    switching.current = true;
+    setBusy(true);
+    await run(async () => {
       if (!on) await turnOff();
       else if ((await turnOn()) === 'askFirst') router.push('/permission-notifications');
     });
+    switching.current = false;
+    setBusy(false);
+  };
   const openSettings = () => {
     Linking.openSettings().catch(() => {
       log('OPEN_SETTINGS_FAILED');
@@ -50,7 +59,7 @@ export default function ReminderSetting() {
     <Screen
       title={r.title}
       onBack={() => (router.canGoBack() ? router.back() : router.replace('/parametres'))}
-      error={loadFailed ? labels.common.loadFailed : error}
+      error={error ?? (loadFailed ? labels.common.loadFailed : undefined)}
     >
       {view !== null && effective !== null && (
         <>
@@ -65,6 +74,7 @@ export default function ReminderSetting() {
                 accessibilityLabel={r.toggle}
                 accessibilityState={{ checked: effective.switchOn }}
                 value={effective.switchOn}
+                disabled={busy}
                 onValueChange={(on) => void toggle(on)}
                 trackColor={{ false: theme.colors.quadrillage, true: theme.colors.encre }}
                 thumbColor={theme.colors.blanc}

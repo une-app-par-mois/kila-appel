@@ -158,14 +158,12 @@ describe('Relance : réglage (ticket 029)', () => {
     expect(state.requests).toEqual([]);
   });
 
-  it('EX-29 lecture de la permission en échec : l’interrupteur suit la préférence, sans bandeau', async () => {
+  it('EX-29 lecture de la permission en échec : éteint, sans bandeau, « Désactivée »', async () => {
     await setting('reminder_enabled', '1');
     state.fail.add('getPermissionsAsync');
     await open('/parametres');
-    await fireEvent.press(
-      await screen.findByRole('button', { name: settingsRow(r.rowEnabled(30)) }),
-    );
-    expect((await toggle()).props.accessibilityState).toMatchObject({ checked: true });
+    await fireEvent.press(await screen.findByRole('button', { name: settingsRow(r.rowDisabled) }));
+    expect((await toggle()).props.accessibilityState).toMatchObject({ checked: false });
     expect(screen.queryByText(r.deniedTitle)).toBeNull();
   });
 });

@@ -5,7 +5,10 @@
 // imité en mémoire (src/__fixtures__/expoModules.ts). Lire la permission ne la demande jamais ;
 // la demande n'a lieu qu'à l'activation, et ne lève jamais d'erreur.
 
+import { readFileSync } from 'node:fs';
+import { join, relative } from 'node:path';
 import type { fakeNotifications } from '@/__fixtures__/expoModules';
+import { TEST_FILE, walkSources } from '@/__fixtures__/sourceFiles';
 import { reminderPermissionState, requestReminderPermission } from '@/data/expoNotifications';
 
 jest.mock('expo-notifications', () => require('@/__fixtures__/expoModules').fakeNotifications());
@@ -46,21 +49,45 @@ describe('EX-29 état de la permission (ticket 029)', () => {
 
 describe('EX-29 demande de la permission (ticket 029)', () => {
   it('EX-29 iOS : alerte et son, sans pastille ; la réponse du système est rendue', async () => {
-    expect(await requestReminderPermission()).toBe(true);
+    expect(await requestReminderPermission()).toBe('granted');
     expect(state.requests).toEqual([
       { ios: { allowAlert: true, allowSound: true, allowBadge: false } },
     ]);
     expect(state.permission.granted).toBe(true);
   });
 
-  it('EX-29 refus au dialogue : non accordée', async () => {
+  it('EX-29 refus au dialogue : « denied », distinct d’un échec', async () => {
     state.answer = { granted: false, canAskAgain: false, status: 'denied' };
-    expect(await requestReminderPermission()).toBe(false);
+    expect(await requestReminderPermission()).toBe('denied');
   });
 
-  it('EX-29 demande en échec : non accordée, sans erreur levée, journalisée par un code', async () => {
+  it('EX-29 demande en échec : « failed », sans erreur levée, journalisée par un code', async () => {
     state.fail.add('requestPermissionsAsync');
-    await expect(requestReminderPermission()).resolves.toBe(false);
+    await expect(requestReminderPermission()).resolves.toBe('failed');
     expect(loggedCodes()).toEqual(['REMINDER_PERMISSION_REQUEST_FAILED']);
+  });
+});
+
+describe('EX-29 un seul chemin vers la demande de permission (ticket 029, SEC-03)', () => {
+  const ROOT = join(__dirname, '..', '..');
+  const filesNaming = (name: string) =>
+    walkSources(join(ROOT, 'src'))
+      .filter((file) => !TEST_FILE.test(file))
+      .filter((file) => new RegExp(`\\b${name}\\b`).test(readFileSync(file, 'utf8')))
+      .map((file) => relative(ROOT, file))
+      .sort();
+
+  it('EX-29 `requestReminderPermission` : défini par l’adaptateur, appelé par le hook seul', () => {
+    expect(filesNaming('requestReminderPermission')).toEqual([
+      'src/data/expoNotifications.ts',
+      'src/hooks/useReminderSettings.ts',
+    ]);
+  });
+
+  it('EX-29 `confirmPermission` : défini par le hook, appelé par l’écran de permission seul', () => {
+    expect(filesNaming('confirmPermission')).toEqual([
+      'src/app/permission-notifications.tsx',
+      'src/hooks/useReminderSettings.ts',
+    ]);
   });
 });
