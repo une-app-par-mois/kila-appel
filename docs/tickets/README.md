@@ -14,7 +14,7 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | --- | --- | --- | --- | --- |
 | 0 | Outillage et risques techniques | Voir `docs/PLAN.md` §2 | `groupe/jalon-0-outillage` | fait (PR #7) |
 | 1 | Organiser, appeler, retrouver | Voir `docs/PLAN.md` §2 | `groupe/jalon-1-organiser-appeler-retrouver` | fait (PR #63) |
-| 2 | Suivre l'assiduité (F-04, F-05, F-06) | Voir `docs/PLAN.md` §2 | `groupe/jalon-2-suivre-assiduite` | à découper (tickets à détailler au début du jalon, PLAN §2) |
+| 2 | Suivre l'assiduité (F-04, F-05, F-06) | Voir `docs/PLAN.md` §2 | `groupe/jalon-2-suivre-assiduite` | découpé (tickets 020 à 030, 2026-11-27) |
 | 3 à 7 | Détaillés au début du jalon précédent | `docs/PLAN.md` §2 | — | à faire |
 
 ## Tickets
@@ -66,3 +66,13 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 018 | [Faille modérée de glob (GHSA-3g3m-2fjr-6pw4) dans l'outillage](018-glob-ghsa-3g3m.md) | 1 | — | non | fait |
 | 019 | [Alertes Semgrep et CodeQL de la PR du jalon 1](019-alertes-ci-jalon-1.md) | 1 | SEC | non | fait |
 | 020 | [Accords au singulier : purge et conservation](020-accords-singulier.md) | 2 | F-03 | non | à faire |
+| 021 | [Alertes d'assiduité : calcul et données](021-alertes-calcul.md) | 2 | F-04 | oui | à faire |
+| 022 | [Alertes d'assiduité : écrans](022-alertes-ecrans.md) | 2 | F-04 | non | à faire |
+| 023 | [Statistiques : calcul et données](023-statistiques-calcul.md) | 2 | F-05 | oui | à faire |
+| 024 | [Statistiques : onglet et période](024-statistiques-onglet.md) | 2 | F-05 | non | à faire |
+| 025 | [Statistiques d'un groupe et d'un membre](025-statistiques-groupe-membre.md) | 2 | F-05 | non | à faire |
+| 026 | [Relance : expo-notifications et garde-fous du binaire](026-relance-dependance.md) | 2 | F-06 | oui | à faire |
+| 027 | [Relance : calcul des relances et réglages](027-relance-calcul.md) | 2 | F-06 | oui | à faire |
+| 028 | [Relance : programmation sur l'appareil](028-relance-programmation.md) | 2 | F-06 | oui | à faire |
+| 029 | [Relance : réglage et demande de permission](029-relance-reglage.md) | 2 | F-06 | oui | à faire |
+| 030 | [Campagne Maestro du jalon 2](030-maestro-jalon-2.md) | 2 | F-04 à F-06 | non | à faire |
