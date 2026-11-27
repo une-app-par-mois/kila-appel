@@ -27,8 +27,7 @@ export const alertes = {
     choiceTitle: 'Nombre d’absences de suite',
     choice: (n: number) => `${n} absences`,
     choiceAccessibility: (n: number) => `Alerter après ${n} absences de suite. Modifier`,
-    /** Paramètres : section « Réglages » (la ligne Relance arrive au ticket 029). */
-    settingsSection: 'Réglages',
+    /** Ligne de Paramètres, section « Réglages » (`labels.settings.preferences`). */
     settingsRow: (n: number) => `Après ${n} absences`,
   },
 } as const;

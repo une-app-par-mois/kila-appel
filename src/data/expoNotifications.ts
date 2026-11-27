@@ -1,7 +1,7 @@
 // Adaptateur expo-notifications de la relance (ticket 028a, EX-28, ADR-007). Seul fichier qui
 // importe ce module, en imports nommés d'une liste fermée (src/staticChecksNotifications.test.ts) :
 // aucune fonction de jeton push, de sujet, de tâche de fond, de pastille ni d'alarme exacte (ABS-01,
-// SEC-03). Notifications locales seulement, à date fixe. La demande de permission vient au 029.
+// SEC-03). Notifications locales seulement, à date fixe. Permission demandée à l'activation (029).
 // ABS-04, SEC-12 : le titre nomme le groupe (maquette), les données se limitent à `slotId` et
 // `date`, et une erreur n'est journalisée que par un code et un identifiant.
 import {
@@ -12,6 +12,7 @@ import {
   getLastNotificationResponse,
   getPermissionsAsync,
   getPresentedNotificationsAsync,
+  requestPermissionsAsync,
   SchedulableTriggerInputTypes,
   scheduleNotificationAsync,
   setNotificationChannelAsync,
@@ -175,6 +176,42 @@ export const reminderPermission = async (): Promise<ReminderPermission> => {
   } catch {
     log('REMINDER_PERMISSION_FAILED');
     return { granted: false, canAskAgain: false };
+  }
+};
+
+/**
+ * EX-29 (ticket 029) : état affiché par le réglage. « blocked » : refusée sans nouvelle demande
+ * possible ; « unknown » : lecture en échec (journalisée), le réglage suit alors la préférence.
+ */
+export type PermissionState = 'granted' | 'undetermined' | 'denied' | 'blocked' | 'unknown';
+
+/** EX-29 : permission lue, jamais demandée ici. */
+export const reminderPermissionState = async (): Promise<PermissionState> => {
+  try {
+    const { granted, canAskAgain, status } = await getPermissionsAsync();
+    if (granted) return 'granted';
+    if (status === 'undetermined') return 'undetermined';
+    return canAskAgain ? 'denied' : 'blocked';
+  } catch {
+    log('REMINDER_PERMISSION_FAILED');
+    return 'unknown';
+  }
+};
+
+/**
+ * EX-29 : demande du système, seulement à l'activation de la relance (après l'écran « Autoriser
+ * les notifications ? »). iOS : alerte et son, sans pastille. Ne lève jamais d'erreur : un échec
+ * vaut « non accordée » (journalisé).
+ */
+export const requestReminderPermission = async (): Promise<boolean> => {
+  try {
+    const { granted } = await requestPermissionsAsync({
+      ios: { allowAlert: true, allowSound: true, allowBadge: false },
+    });
+    return granted;
+  } catch {
+    log('REMINDER_PERMISSION_REQUEST_FAILED');
+    return false;
   }
 };
 

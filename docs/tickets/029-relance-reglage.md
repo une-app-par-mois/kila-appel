@@ -80,10 +80,30 @@ Séance de lancement du lot J2-4 (2026-11-27), réponses du porteur :
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
+| Distinguer « jamais demandée », « refusée », « refusée sans redemande » et « lecture en échec » | modifier `reminderPermission` (utilisé par le 028b) ; nouvelle fonction de lecture à côté | nouvelle fonction `reminderPermissionState` (`granted`, `undetermined`, `denied`, `blocked`, `unknown`), juste après `reminderPermission` | `reminderPermission` ne distingue ni `undetermined` ni l'échec ; ne pas toucher au contrat utilisé par le 028b en parallèle | à relire |
+| Interrupteur activé alors que la lecture de la permission échoue | activer sans demander ; passer par l'écran de permission | écran « Autoriser les notifications ? » puis demande | on ne sait pas si elle est accordée : la demande tranche, et le parcours reste celui de la maquette | à relire |
+| Préférence active, permission refusée mais encore redemandable (Android, `denied` avec `canAskAgain`) | bandeau ; pas de bandeau | interrupteur allumé et bandeau, comme `blocked` ; le réactiver repasse par l'écran de permission | même état effectif que le refus décidé par le porteur : la relance ne peut pas s'afficher | à relire |
+| Ligne de Paramètres quand la préférence est active mais la permission jamais demandée, ou illisible | suivre la préférence ; suivre l'interrupteur | suit l'interrupteur : « Désactivée » si jamais demandée, « Activée · N min » si illisible | la ligne et l'écran disent la même chose | à relire |
+| Demande du système en échec (exception, pas un refus) | préférence active (comme un refus) ; préférence inchangée | préférence active ; la permission restant `undetermined`, l'interrupteur s'affiche éteint, sans bandeau | « un échec vaut non accordée » (consigne) et le refus active la préférence (décision du porteur) ; facile à défaire (un réglage, sans migration) | en attente du porteur |
+| Nom de la clé déplacée `alerts.settingsSection` | `labels.settings.settingsSection` ; `labels.settings.preferences` | `labels.settings.preferences` (« Réglages ») | les autres sections de `labels.settings` portent un nom court (`organisation`, `data`, `about`) | à relire |
+| Délai réglable quand la relance est désactivée | toujours ; seulement activée | toujours | la maquette montre la ligne du délai sans condition | à relire |
+| Échec de `Linking.openSettings` | rien ; message | code `OPEN_SETTINGS_FAILED` au journal et « L’opération a échoué. Réessayez. » | CONV-15, ABS-04 : un code seul | à relire |
+| Relire la permission au retour au premier plan | exposer un rechargement dans `useLoaded` ; compteur de retours en dépendance de la lecture | compteur `AppState` dans `useReminderSettings`, lecture gardée pendant la relecture (`keepPrevious`), `biome-ignore` ciblé comme `useRecovery.ts` | pas de changement du hook partagé ; le bandeau disparaît sans vider l'écran ; la ligne de Paramètres suit aussi | à relire |
+
+Écarts avec la maquette (à lister dans la PR) :
+
+- mention « Le nom du groupe s’affiche sur l’écran verrouillé. » sous « Notification sur cet appareil, jamais envoyée ailleurs » (acceptée par le porteur le 2026-11-27) ;
+- apostrophes typographiques (’) au lieu de l'apostrophe droite, comme tous les libellés du projet ;
+- titre de la liste des délais, « Délai après le début du créneau », absent de la maquette (même principe que « Nombre d’absences de suite » au 022) ;
+- interrupteur natif (`Switch` de React Native, couleurs Encre et Quadrillage, pouce blanc) : son dessin suit le système ;
+- message d'échec de l'ouverture des réglages du téléphone, non maquetté.
 
 ## Questions pour le porteur
+
+- **Sécurité, à confirmer à la revue (non bloquant pour ce ticket, préexistant au 028a)** : importer `expo-notifications` exécute son module `DevicePushTokenAutoRegistration.fx` (écouteur de jeton push, qui n'envoie rien tant qu'aucun enregistrement serveur n'est activé, ce que l'appli ne fait jamais). Avec le 029, Paramètres importe l'adaptateur : le module est chargé dès l'ouverture de l'appli. Options : (1, recommandé) garder, avec la permission INTERNET absente du binaire (ABS-01) et aucune fonction push importée (contrôle `staticChecksNotifications`), et le noter à `/security-review` ; (2) charger l'adaptateur seulement à l'ouverture de l'écran Relance, mais la ligne de Paramètres ne pourrait plus afficher « Refusée par le téléphone ».
 
 ## À reporter
 
 - CHANGELOG : Paramètres : réglage de la relance (activation, délai), demande de permission seulement à l'activation, état réel affiché (F-06, EX-28, EX-29).
-- Architecture : écrans `relance.tsx`, `permission-notifications.tsx` ; `src/hooks/useReminderSettings.ts`.
+- Architecture : écrans `relance.tsx`, `permission-notifications.tsx` ; `src/hooks/useReminderSettings.ts` (préférence et état de la permission, relue au retour au premier plan) ; adaptateur : `reminderPermissionState` et `requestReminderPermission` (seule demande de permission, iOS sans pastille) ; `labels.settings.preferences` remplace `alerts.settingsSection`.
+- Tests : dans Jest, les tests d'écran qui ouvrent Paramètres sans imiter `expo-notifications` passent par la lecture en échec (`REMINDER_PERMISSION_FAILED`, journal imité) : ligne « Désactivée », sans effet sur leurs assertions.
