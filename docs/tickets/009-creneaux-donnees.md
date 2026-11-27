@@ -23,8 +23,8 @@ Déclarer quand les groupes se réunissent (EX-07).
 
 ## Critères d'acceptation
 
-- [ ] Jour, heure, durée, lieu et nom facultatifs, groupe (EX-07)
-- [ ] Modifier ou supprimer un créneau ne modifie aucune séance enregistrée (EX-07)
+- [x] Jour, heure, durée, lieu et nom facultatifs, groupe (EX-07)
+- [x] Modifier ou supprimer un créneau ne modifie aucune séance enregistrée (EX-07)
 
 ## Tests attendus
 

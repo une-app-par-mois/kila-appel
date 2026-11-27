@@ -9,7 +9,10 @@ export type InputErrorCode =
   | 'DATE_IN_FUTURE'
   | 'END_BEFORE_START'
   | 'DATE_OUTSIDE_SEASON'
-  | 'PHONE_INVALID';
+  | 'PHONE_INVALID'
+  | 'WEEKDAY_INVALID'
+  | 'TIME_INVALID'
+  | 'DURATION_INVALID';
 
 export class InputError extends Error {
   constructor(readonly code: InputErrorCode) {
@@ -64,4 +67,32 @@ export const validateContact = (input: ContactInput): ContactInput => {
   const phone = parsePhone(input.phone);
   if (phone === null) throw new InputError('PHONE_INVALID');
   return { label, phone };
+};
+
+/** EX-07 : créneau hebdomadaire ; un groupe (lot 1) ; lieu et nom facultatifs. */
+export type SlotInput = {
+  weekday: number; // 1 = lundi … 7 = dimanche
+  startTime: string; // HH:MM
+  durationMin: number;
+  place: string | null;
+  name: string | null;
+  groupId: number;
+};
+
+const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+const optional = (text: string | null) =>
+  text === null || text.trim() === '' ? null : text.trim();
+
+/** EX-07 : jour 1 à 7, heure HH:MM, durée de 1 min à 24 h ; lieu et nom vides → aucun. */
+export const validateSlot = (input: SlotInput): SlotInput => {
+  if (!Number.isInteger(input.weekday) || input.weekday < 1 || input.weekday > 7)
+    throw new InputError('WEEKDAY_INVALID');
+  if (!HHMM.test(input.startTime)) throw new InputError('TIME_INVALID');
+  if (!Number.isInteger(input.durationMin) || input.durationMin < 1 || input.durationMin > 1440)
+    throw new InputError('DURATION_INVALID');
+  return {
+    ...input,
+    place: optional(input.place),
+    name: optional(input.name),
+  };
 };
