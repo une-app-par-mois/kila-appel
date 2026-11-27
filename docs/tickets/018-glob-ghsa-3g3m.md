@@ -1,6 +1,6 @@
 # 018 — Faille modérée de glob (GHSA-3g3m-2fjr-6pw4) dans l'outillage
 
-Statut : à faire · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : fusionné dans le groupe (PR #60, 2026-11-27) · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Dépend de : 017 · Fichiers touchés : `package.json` (`overrides`), `package-lock.json`, `scripts/glob.test.js` (nouveau)
 
@@ -19,11 +19,11 @@ Créé le 2026-11-27 à l'intégration du lot 014f-015f-014g-017, à la demande 
 
 ## Critères d'acceptation
 
-- [ ] Aucune version de glob dans la plage vulnérable (>= 9.0.0, <= 14.0.1)
-- [ ] `./scripts/test.sh` vert ; `npm audit` sans l'alerte glob
-- [ ] Chaque paquet qui reçoit la nouvelle version de glob la charge sans erreur (`test-exclude@7`, `@jest/reporters`, `jest-config`), pas seulement la suite de tests (leçon du 017 : la suite restait verte avec un `test-exclude` cassé)
-- [ ] APK de production construit et audité (`scripts/audit-apk.js`) sans changement de permissions
-- [ ] Si une dépendance casse avec la nouvelle version : ne rien forcer, revenir en arrière et le dire (pas de contournement)
+- [x] Aucune version de glob dans la plage vulnérable (>= 9.0.0, <= 14.0.1) ; glob 14.0.6 partout, glob 7.2.3 (hors de la plage) reste sous `test-exclude@6`
+- [x] `./scripts/test.sh` vert ; `npm audit` sans l'alerte glob (0 vulnérabilité)
+- [x] Chaque paquet qui reçoit la nouvelle version de glob la charge sans erreur (`test-exclude@7`, `@jest/reporters`, `jest-config`), pas seulement la suite de tests (leçon du 017 : la suite restait verte avec un `test-exclude` cassé)
+- [x] APK de production construit et audité (`scripts/audit-apk.js`) sans changement de permissions
+- [x] Si une dépendance casse avec la nouvelle version : ne rien forcer, revenir en arrière et le dire (pas de contournement) — aucune n'a cassé
 
 ## Tests attendus
 
