@@ -33,25 +33,32 @@ export default function HistoryScreen() {
   const [groupId, setGroupId] = useState<number | null>(null);
   const [period, setPeriod] = useState<HistoryPeriod>('last30Days');
   const [choosing, setChoosing] = useState<'group' | 'period' | null>(null);
-  const { history, loadFailed } = useHistory(now, { groupId, period });
+  const { history, rows, loadFailed } = useHistory(now, { groupId, period });
   // « Faire l'appel » de l'état vide mène où mène l'onglet « Nouvel appel ».
   const newRollCall = useNewRollCallRoute(now);
 
-  // Un groupe choisi qui n'est plus proposé (autre période, groupe supprimé) : retour à tous.
+  // Un groupe choisi qui n'est plus proposé (groupe supprimé ailleurs) : retour à tous.
   const groupGone =
-    history !== null && groupId !== null && !history.groups.some((g) => g.id === groupId);
+    history !== null && groupId !== null && !history.groups[period].some((g) => g.id === groupId);
   useEffect(() => {
     if (groupGone) setGroupId(null);
   }, [groupGone]);
 
   const groupChoices = [
     { value: null as number | null, label: h.allGroups },
-    ...(history?.groups ?? []).map((g) => ({
+    ...(history?.groups[period] ?? []).map((g) => ({
       value: g.id as number | null,
       label: g.activeSeason ? g.name : h.groupOfSeason(g.name, g.seasonName),
     })),
   ];
   const groupLabel = groupChoices.find((c) => c.value === groupId)?.label ?? h.allGroups;
+
+  // Autre période : un groupe qui n'y est pas proposé redevient « Tous les groupes » dans le même
+  // rendu (ni lecture de trop, ni « Aucun appel pour ces filtres » de passage).
+  const choosePeriod = (next: HistoryPeriod) => {
+    setPeriod(next);
+    if (groupId !== null && !history?.groups[next].some((g) => g.id === groupId)) setGroupId(null);
+  };
 
   const open = (row: HistoryRow) =>
     row.kind === 'missing'
@@ -81,27 +88,29 @@ export default function HistoryScreen() {
               onPress={() => setChoosing('period')}
             />
           </View>
-          <Card>
-            {history.rows.map((row) => (
-              <ListRow
-                key={row.kind === 'missing' ? `m${row.slotId}|${row.date}` : `s${row.id}`}
-                testID="history-row"
-                dot={row.kind === 'missing'}
-                title={
-                  row.kind === 'missing'
-                    ? h.missingRow(row.groupName)
-                    : (row.groupName ?? h.removedGroup)
-                }
-                subtitle={
-                  row.kind === 'missing'
-                    ? h.missingWhen(dayOf(row.date), row.startTime)
-                    : h.sessionWhen(dayOf(row.date), row.present, row.total)
-                }
-                onPress={() => open(row)}
-              />
-            ))}
-            {history.rows.length === 0 && <Text style={styles.text}>{h.noMatch}</Text>}
-          </Card>
+          {rows !== null && (
+            <Card>
+              {rows.map((row) => (
+                <ListRow
+                  key={row.kind === 'missing' ? `m${row.slotId}|${row.date}` : `s${row.id}`}
+                  testID="history-row"
+                  dot={row.kind === 'missing'}
+                  title={
+                    row.kind === 'missing'
+                      ? h.missingRow(row.groupName)
+                      : (row.groupName ?? h.removedGroup)
+                  }
+                  subtitle={
+                    row.kind === 'missing'
+                      ? h.missingWhen(dayOf(row.date), row.startTime)
+                      : h.sessionWhen(dayOf(row.date), row.present, row.total)
+                  }
+                  onPress={() => open(row)}
+                />
+              ))}
+              {rows.length === 0 && <Text style={styles.text}>{h.noMatch}</Text>}
+            </Card>
+          )}
         </>
       )}
       <ChoiceList
@@ -117,7 +126,7 @@ export default function HistoryScreen() {
         title={h.periodFilter}
         value={period}
         options={PERIODS.map((p) => ({ value: p, label: h.periods[p] }))}
-        onChange={setPeriod}
+        onChange={choosePeriod}
         onClose={() => setChoosing(null)}
       />
     </Screen>

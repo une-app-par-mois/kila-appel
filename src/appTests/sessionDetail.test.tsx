@@ -163,4 +163,20 @@ describe('Détail d’une séance (EX-18)', () => {
     expect(await screen.findByText(labels.errors.NOT_FOUND)).toBeTruthy();
     expect(screen.queryByRole('button', { name: t.delete })).toBeNull();
   });
+  it('EX-18 séance du jour, créneau pas encore fini : la date reviendra comme appel manquant', async () => {
+    // Mercredi 02/12 18:10, pendant le créneau 17:30-19:00 ; appel enregistré à 18:05.
+    jest.setSystemTime(new Date(2026, 11, 2, 18, 10));
+    const { lastInsertRowId: id } = await db.execute(
+      "INSERT INTO sessions (season_id, slot_id, date, start_time, state) VALUES (?, ?, '2026-12-02', '17:30', 'recorded')",
+      [s.seasonId, s.slotId],
+    );
+    await db.execute('INSERT INTO session_groups (session_id, group_id) VALUES (?, ?)', [
+      id,
+      s.groupId,
+    ]);
+    await openDetail(id);
+    await fireEvent.press(await button(t.delete));
+    expect(await screen.findByText(t.deleteMessage('Poussins', '02/12/2026', 0))).toBeTruthy();
+    expect(screen.getByText(t.reappears)).toBeTruthy();
+  });
 });

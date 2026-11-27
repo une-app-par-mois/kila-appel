@@ -1,6 +1,6 @@
 # 013 — Historique et correction des appels
 
-Statut : en cours · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : en attente du porteur · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Dépend de : aucun ticket à faire · Fichiers touchés : `src/app/(tabs)/historique.tsx`, `src/app/seances/[id].tsx`, `src/data/sessionsRepo.ts`, onglets, `src/app/appel.tsx` (retour après l'enregistrement), libellés
 
@@ -47,7 +47,7 @@ Séance de lancement du 2026-11-27 (réponses du porteur) :
 | Ordre et format des lignes | — | Date puis heure décroissantes (EX-16) ; « Lun. 24/11 · 18:00 » et « Mer. 19/11 · 19/22 présents » comme la maquette | Maquette ; pré-analyse | à relire |
 | Séance dont le groupe a été supprimé | Masquée ; « Groupe supprimé » | « Groupe supprimé », seulement avec « Tous les groupes » | Les présences restent (EX-02) ; pré-analyse | à relire |
 | Appel sans créneau (EX-39) | — | Affiché comme les autres ; supprimé, aucune date ne revient comme manquante | Pré-analyse | à relire |
-| Phrase « La date réapparaîtra comme appel manquant. » | Toujours ; seulement si c'est vrai | Seulement si la séance est d'un créneau qui existe encore avec un groupe actif, en saison active, et que la date redeviendrait réellement manquante (calcul `missingRollCalls`) | Ne rien promettre de faux ; pré-analyse | à relire |
+| Phrase « La date réapparaîtra comme appel manquant. » | Toujours ; seulement si c'est vrai | Seulement si la séance est d'un créneau qui existe encore avec un groupe actif, en saison active, et que sa date est une occurrence du créneau, aujourd'hui ou avant, sans regarder l'heure de fin : la date d'un créneau du jour pas encore fini reviendra à sa fin (corrigé après la revue de code) | Ne rien promettre de faux, ni taire ce qui arrivera ; pré-analyse | à relire |
 | Message de suppression selon le nombre de présences | — | 0 : « L'appel de X du JJ/MM/AAAA sera effacé définitivement. » ; 1 : « … et sa présence seront effacés… » ; groupe supprimé : « L'appel du JJ/MM/AAAA… » | Accord correct dans tous les cas ; texte de la maquette pour n > 1 | à relire |
 | Correction | — | Un appui fait défiler les statuts comme à l'appel (EX-10) ; seuls les membres de la séance, archivés compris, sans ajout ; permise même saison inactive ou groupe archivé | Pré-analyse | à relire |
 | « Enregistrer les corrections » | Toujours actif ; actif après un changement | Désactivé tant que rien n'a changé (revenir au statut d'origine le désactive à nouveau) ; aucune confirmation en revenant sans enregistrer | Pré-analyse | à relire |
@@ -57,15 +57,25 @@ Séance de lancement du 2026-11-27 (réponses du porteur) :
 | Après l'enregistrement d'un appel | Accueil ; Historique | Retour à l'Historique (`useSavedReturn`, sorti de `appel.tsx`, 283 lignes) | Note de la maquette Appel ; pré-analyse | à relire |
 | État vide | — | Carte de la maquette (« Aucun appel enregistré… », « Faire l'appel », même destination que l'onglet « Nouvel appel ») sans séance ni appel manquant, filtres masqués ; avec des filtres et rien qui correspond : « Aucun appel pour ces filtres. » | Pré-analyse ; rien à filtrer quand rien n'existe | à relire |
 | Période par défaut | 30 derniers jours ; saison active | « 30 derniers jours » | Libellé affiché par la maquette | à relire |
-| Portée de « 30 derniers jours » | Toutes saisons ; saison active | Dans la saison active, comme « Saison active » ; « Toutes les saisons » lève la restriction | Un même jeu de groupes pour les deux premières périodes ; à la bascule de saison, les 30 jours de l'ancienne saison restent sous « Toutes les saisons » | à relire |
-| Groupes proposés au filtre | Groupes actifs ; tous les groupes de la période | Groupes de la saison active, archivés compris ; avec « Toutes les saisons », tous, suivis de leur saison (« Benjamins · Saison 2025-2026 ») hors saison active ; un groupe qui n'est plus proposé remet « Tous les groupes » | Un groupe archivé a des séances ; même comportement que l'écran Membres | à relire |
+| Portée de « 30 derniers jours » | Toutes saisons ; saison active | Toutes les saisons ; les appels manquants restent ceux de la saison active | Au changement de saison, les appels de juin ou d'août ont moins de 30 jours ; sans saison active, le filtre par défaut n'afficherait rien (contradicteur) | changée après contradiction |
+| Groupes proposés au filtre | Groupes actifs ; tous les groupes de la période | « 30 derniers jours » : groupes qui ont une séance dans la période ou un appel manquant, toutes saisons ; « Saison active » : groupes de la saison, archivés compris ; « Toutes les saisons » : tous. Hors saison active, suivis de leur saison (« Benjamins · Saison 2025-2026 »). Un groupe absent de la nouvelle période redevient « Tous les groupes » dans le même rendu, sans lecture de trop ; après un changement de filtre, aucune ligne de l'ancien n'est affichée, même si la lecture échoue | Un groupe archivé a des séances ; suit la portée de « 30 derniers jours » changée après contradiction ; revue de code | changée après contradiction |
 | Puces « sélectionnées » | — | Puce Groupe toujours sélectionnée (maquette, écran Membres) ; puce Période sélectionnée hors de « 30 derniers jours » | Maquette : « Tous les groupes » allumé, « 30 derniers jours » éteint | à relire |
 | Emplacement du code | — | `sessionsRepo` (`history`, `hasRecorded`, `get`, `correct`, `remove`, 271 lignes) ; `groupsRepo.listForHistory` (requête sur les groupes) ; `domain/history.ts` (période, ordre) ; `hooks/useHistory.ts` ; onglet `(tabs)/historique.tsx`, détail `/seances/[id]`, icône `list` de lucide (déjà installé) ; pas d'onglet Stats | Pré-analyse ; `validateStatuses` sorti de `validateRollCall` pour la correction | à relire |
 | Ticket non découpé (plus de 10 fichiers) | Découper ; garder | Gardé en un ticket | Les fichiers étaient prévus par la fiche et le lot ; une session | à relire |
 
 ## Questions pour le porteur
 
-Aucune.
+- **Nombre de présents** — état : en attente du porteur (remarque du contradicteur). La ligne de l'Historique compte Présent + Retard (« 19/22 présents »), le détail les sépare (« 17 présents · 2 retards »), alors que la maquette montre le même chiffre aux deux endroits. Options :
+  - (a) « 19 présents dont 2 retards » dans le détail, ce qui change le compteur de la maquette Appel ;
+  - (b) Présent seul dans la ligne de l'Historique ;
+  - (c) garder tel quel.
+
+  Appliqué en attendant : (c).
+- **Barre d'onglets** — état : ticket en attente (contradiction avec la maquette et le ticket 012). Avec quatre éléments, le rond « Nouvel appel » n'est plus centré. Options, recommandation en premier :
+  - (a) cinq places, une place vide là où viendra Stats (Accueil, vide, rond, Historique, Paramètres) : le rond reste au centre et ne bougera plus au jalon 2 ;
+  - (b) garder l'ordre actuel, décentré.
+
+  Rien n'est appliqué : l'ordre actuel (b) reste en place jusqu'à la réponse.
 
 ## À reporter
 

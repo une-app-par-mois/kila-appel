@@ -138,15 +138,28 @@ describe('Historique des séances (EX-16 à EX-18)', () => {
       "INSERT INTO groups (season_id, name, archived_at) VALUES (?, 'Adultes', '2026-10-01')",
       [s.seasonId],
     );
-    expect(await groupsRepo(db).listForHistory(s.seasonId)).toEqual([
+    expect(await groupsRepo(db).listForHistory({ seasonId: s.seasonId, from: null })).toEqual([
       { id: archived, name: 'Adultes', seasonName: 'Saison 2026-2027', activeSeason: true },
       { id: s.groupId, name: 'Poussins', seasonName: 'Saison 2026-2027', activeSeason: true },
     ]);
-    expect((await groupsRepo(db).listForHistory(null)).map((g) => g.id)).toEqual([
-      archived,
-      s.groupId,
-      otherGroupId,
-    ]);
+    expect(
+      (await groupsRepo(db).listForHistory({ seasonId: null, from: null })).map((g) => g.id),
+    ).toEqual([archived, s.groupId, otherGroupId]);
+  });
+
+  it('EX-16 groupes des « 30 derniers jours » : ceux qui ont une séance dans la période, toutes saisons, plus ceux demandés (appels manquants)', async () => {
+    const { lastInsertRowId: adultes } = await db.execute(
+      "INSERT INTO groups (season_id, name) VALUES (?, 'Adultes')",
+      [s.seasonId],
+    );
+    await addSession(s.otherSeasonId, otherGroupId, '2026-11-10', '18:00', []);
+    await addSession(s.otherSeasonId, otherGroupId, '2026-11-10', '19:00', [], 'cancelled');
+    const ids = async (from: string, include?: number[]) =>
+      (await groupsRepo(db).listForHistory({ seasonId: null, from, include })).map((g) => g.id);
+    expect(await ids('2026-11-01')).toEqual([s.groupId, otherGroupId]);
+    expect(await ids('2026-11-20')).toEqual([s.groupId]);
+    expect(await ids('2026-11-26')).toEqual([]);
+    expect(await ids('2026-11-26', [adultes])).toEqual([adultes]);
   });
 
   it('EX-18 détail : groupe, date, heure, commentaire, présences triées par nom, membres archivés compris', async () => {

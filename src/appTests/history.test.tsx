@@ -112,6 +112,9 @@ describe('Historique (EX-16, EX-17)', () => {
   it('EX-16 aucune ligne pour ces filtres : « Aucun appel pour ces filtres. »', async () => {
     await db.execute("INSERT INTO groups (season_id, name) VALUES (?, 'Adultes')", [s.seasonId]);
     await open();
+    // Sans séance, Adultes n'est proposé qu'avec la saison entière.
+    await fireEvent.press(await screen.findByRole('button', { name: h.periods.last30Days }));
+    await fireEvent.press(await screen.findByRole('button', { name: h.periods.season }));
     await fireEvent.press(await screen.findByRole('button', { name: h.allGroups }));
     await fireEvent.press(await screen.findByRole('button', { name: 'Adultes' }));
     expect(await screen.findByText(h.noMatch)).toBeTruthy();
@@ -162,5 +165,53 @@ describe('Historique (EX-16, EX-17)', () => {
       within(screen.getByTestId('history-empty')).getByRole('button', { name: h.start }),
     );
     expect(router.getPathname()).toBe('/appel-libre');
+  });
+  it('EX-16 « 30 derniers jours » couvre toutes les saisons (changement de saison, aucune saison active)', async () => {
+    jest.setSystemTime(new Date(2026, 7, 15, 10, 0));
+    await db.execute('UPDATE seasons SET is_active = 0');
+    // La séance du 25/11 du jeu fictif serait future à cette date.
+    await db.execute('DELETE FROM sessions');
+    const [old] = await db.query<{ id: number }>('SELECT id FROM groups WHERE season_id = ?', [
+      s.otherSeasonId,
+    ]);
+    await addSession(s.otherSeasonId, old?.id ?? 0, '2026-07-29', '18:00');
+    await addSession(s.otherSeasonId, old?.id ?? 0, '2026-07-01', '18:00');
+    await open();
+    expect(await rows()).toEqual([session('Benjamins', 'Mer. 29/07', 0, 0)]);
+    await fireEvent.press(screen.getByRole('button', { name: h.allGroups }));
+    expect(
+      await screen.findByRole('button', { name: h.groupOfSeason('Benjamins', 'Saison 2025-2026') }),
+    ).toBeTruthy();
+    // Seuls les groupes qui ont une séance dans la période sont proposés.
+    expect(screen.queryByRole('button', { name: /^Poussins/ })).toBeNull();
+  });
+
+  it('EX-16 changement de période : un groupe qui n’y existe pas redevient « Tous les groupes » aussitôt', async () => {
+    await db.execute(
+      "INSERT INTO groups (season_id, name, archived_at) VALUES (?, 'Adultes', '2026-10-01')",
+      [s.seasonId],
+    );
+    await open();
+    await fireEvent.press(await screen.findByRole('button', { name: h.periods.last30Days }));
+    await fireEvent.press(await screen.findByRole('button', { name: h.periods.season }));
+    await fireEvent.press(await screen.findByRole('button', { name: h.allGroups }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Adultes' }));
+    expect(await screen.findByText(h.noMatch)).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: h.periods.season }));
+    await fireEvent.press(await screen.findByRole('button', { name: h.periods.last30Days }));
+    // Aussitôt : « Tous les groupes », sans « Aucun appel pour ces filtres » de passage.
+    expect(screen.getByRole('button', { name: h.allGroups })).toBeTruthy();
+    expect(screen.queryByText(h.noMatch)).toBeNull();
+    expect(await rows()).toHaveLength(4);
+  });
+
+  it('EX-16 changement de filtre dont la lecture échoue : aucune ligne de l’ancien filtre ne reste', async () => {
+    await open();
+    expect(await rows()).toHaveLength(4);
+    await db.execute('ALTER TABLE sessions RENAME TO sessions_hidden');
+    await fireEvent.press(screen.getByRole('button', { name: h.periods.last30Days }));
+    await fireEvent.press(await screen.findByRole('button', { name: h.periods.season }));
+    expect(await screen.findByText(labels.common.loadFailed)).toBeTruthy();
+    expect(screen.queryAllByTestId('history-row')).toHaveLength(0);
   });
 });
