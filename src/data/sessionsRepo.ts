@@ -3,16 +3,71 @@
 // effacé quand son appel est enregistré.
 import type { Db } from '@/data/db';
 import { current } from '@/data/enrollmentsRepo';
-import { DataError } from '@/data/errors';
+import { DataError, expectChanged } from '@/data/errors';
 import { slotDates, type WeeklySlot } from '@/domain/occurrences';
 import {
+  type AttendanceStatus,
   InputError,
+  isId,
+  type MemberStatus,
   type RollCallInput,
+  validateComment,
   validateDate,
   validateRollCall,
+  validateStatuses,
 } from '@/domain/validation';
 
 export type RollCall = RollCallInput;
+
+/** EX-16 : filtres ; `null` = sans filtre (toutes les saisons, tous les groupes, toute date). */
+export type HistoryFilter = {
+  seasonId: number | null;
+  groupId: number | null;
+  from: string | null;
+};
+
+/** EX-16 : ligne de l'historique ; groupe `null` s'il a été supprimé depuis (EX-02). */
+export type HistorySession = {
+  id: number;
+  date: string;
+  startTime: string;
+  groupId: number | null;
+  groupName: string | null;
+  /** RM-01 : Présent + Retard. */
+  present: number;
+  /** Toutes les présences, Excusé compris (décision du 2026-11-27). */
+  total: number;
+};
+
+export type SessionAttendance = {
+  memberId: number;
+  firstName: string;
+  lastName: string;
+  status: AttendanceStatus;
+};
+
+/** EX-18 : séance enregistrée et ses présences, membres archivés compris. */
+export type SessionDetail = {
+  id: number;
+  seasonId: number;
+  slotId: number | null;
+  date: string;
+  startTime: string;
+  groupName: string | null;
+  comment: string | null;
+  attendances: SessionAttendance[];
+};
+
+/** EX-18 : statuts corrigés (membres de la séance seulement) et commentaire. */
+export type Correction = { statuses: MemberStatus[]; comment: string | null };
+
+// Lot 1 : un groupe par séance ; plusieurs (F-11) : le plus ancien donne le nom.
+const GROUP_OF_SESSION =
+  'LEFT JOIN groups g ON g.id = (SELECT MIN(sg.group_id) FROM session_groups sg WHERE sg.session_id = s.id)';
+const collator = new Intl.Collator('fr', { sensitivity: 'base' });
+const checkId = (id: number | null) => {
+  if (id !== null && !isId(id)) throw new DataError('NOT_FOUND');
+};
 
 /** `today` : jour de l'appareil ; une séance de créneau n'est jamais future (décision du 2026-11-27). */
 export const sessionsRepo = (db: Db, today: string) => ({
@@ -131,4 +186,87 @@ export const sessionsRepo = (db: Db, today: string) => ({
       'SELECT slot_id AS slotId, date FROM sessions WHERE season_id = ? AND slot_id IS NOT NULL ORDER BY date',
       [seasonId],
     ),
+
+  /** EX-16 : séances enregistrées (seulement), la plus récente en haut (date puis heure). */
+  history: async ({ seasonId, groupId, from }: HistoryFilter): Promise<HistorySession[]> => {
+    checkId(seasonId);
+    checkId(groupId);
+    if (from !== null) validateDate(from);
+    return db.query<HistorySession>(
+      `SELECT s.id, s.date, s.start_time AS startTime, g.id AS groupId, g.name AS groupName,
+         (SELECT COUNT(*) FROM attendances a
+          WHERE a.session_id = s.id AND a.status IN ('present', 'late')) AS present,
+         (SELECT COUNT(*) FROM attendances a WHERE a.session_id = s.id) AS total
+       FROM sessions s ${GROUP_OF_SESSION}
+       WHERE s.state = 'recorded' AND (?1 IS NULL OR s.season_id = ?1)
+         AND (?3 IS NULL OR s.date >= ?3)
+         AND (?2 IS NULL OR EXISTS (SELECT 1 FROM session_groups sg
+                                    WHERE sg.session_id = s.id AND sg.group_id = ?2))
+       ORDER BY s.date DESC, s.start_time DESC, s.id DESC`,
+      [seasonId, groupId, from],
+    );
+  },
+
+  /** État vide de l'Historique (P1) : aucun appel enregistré, toutes saisons confondues. */
+  hasRecorded: async (): Promise<boolean> =>
+    (await db.query<{ id: number }>("SELECT id FROM sessions WHERE state = 'recorded' LIMIT 1"))
+      .length > 0,
+
+  /** EX-18 : détail d'une séance enregistrée ; `null` si elle n'existe pas (ou plus). */
+  get: async (id: number): Promise<SessionDetail | null> => {
+    // Identifiant venu de l'adresse (`/seances/[id]`) : validé avant la requête.
+    if (!isId(id)) return null;
+    const [row] = await db.query<Omit<SessionDetail, 'attendances'>>(
+      `SELECT s.id, s.season_id AS seasonId, s.slot_id AS slotId, s.date,
+         s.start_time AS startTime, g.name AS groupName, s.comment
+       FROM sessions s ${GROUP_OF_SESSION}
+       WHERE s.id = ? AND s.state = 'recorded'`,
+      [id],
+    );
+    if (!row) return null;
+    const attendances = await db.query<SessionAttendance>(
+      `SELECT a.member_id AS memberId, m.first_name AS firstName, m.last_name AS lastName,
+         a.status
+       FROM attendances a JOIN members m ON m.id = a.member_id
+       WHERE a.session_id = ? ORDER BY a.member_id`,
+      [id],
+    );
+    attendances.sort(
+      (a, b) =>
+        collator.compare(a.lastName, b.lastName) || collator.compare(a.firstName, b.firstName),
+    );
+    return { ...row, attendances };
+  },
+
+  /**
+   * EX-18 : corrige statuts et commentaire, d'un bloc. Seuls les membres de la séance (sans ajout) ;
+   * permis même saison inactive ou groupe archivé (décision du 2026-11-27).
+   */
+  correct: async (id: number, input: Correction): Promise<void> => {
+    const statuses = validateStatuses(input.statuses);
+    const comment = validateComment(input.comment);
+    await db.transaction(async (tx) => {
+      expectChanged(
+        await tx.execute("UPDATE sessions SET comment = ? WHERE id = ? AND state = 'recorded'", [
+          comment,
+          id,
+        ]),
+      );
+      for (const { memberId, status } of statuses) {
+        expectChanged(
+          await tx.execute(
+            'UPDATE attendances SET status = ? WHERE session_id = ? AND member_id = ?',
+            [status, id, memberId],
+          ),
+        );
+      }
+    });
+  },
+
+  /** EX-18, ABS-05, SEC-11 : suppression réelle ; groupe figé et présences partent en cascade. */
+  remove: async (id: number): Promise<void> => {
+    expectChanged(
+      await db.execute("DELETE FROM sessions WHERE id = ? AND state = 'recorded'", [id]),
+    );
+  },
 });

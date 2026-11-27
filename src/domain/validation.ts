@@ -127,13 +127,26 @@ export const validateComment = (text: string | null): string | null => {
   return comment;
 };
 
+export type MemberStatus = { memberId: number; status: AttendanceStatus };
+
+/** EX-10 : statuts connus, sans membre en double (appel EX-15, correction EX-18). */
+export const validateStatuses = (statuses: MemberStatus[]): MemberStatus[] => {
+  const seen = new Set<number>();
+  for (const { memberId, status } of statuses) {
+    if (!isId(memberId) || !STATUSES.includes(status) || seen.has(memberId))
+      throw new InputError('STATUS_INVALID');
+    seen.add(memberId);
+  }
+  return statuses.map(({ memberId, status }) => ({ memberId, status }));
+};
+
 /** EX-15 : un appel à enregistrer ; `slotId` nul : appel sans créneau (EX-39). */
 export type RollCallInput = {
   slotId: number | null;
   groupId: number;
   date: string;
   startTime: string;
-  statuses: { memberId: number; status: AttendanceStatus }[];
+  statuses: MemberStatus[];
   comment: string | null;
 };
 
@@ -143,19 +156,14 @@ export const validateRollCall = (input: RollCallInput): RollCallInput => {
   if (!HHMM.test(input.startTime)) throw new InputError('TIME_INVALID');
   if (!isId(input.groupId)) throw new InputError('GROUP_REQUIRED');
   if (input.slotId !== null && !isId(input.slotId)) throw new InputError('SLOT_INVALID');
-  const seen = new Set<number>();
-  for (const { memberId, status } of input.statuses) {
-    if (!isId(memberId) || !STATUSES.includes(status) || seen.has(memberId))
-      throw new InputError('STATUS_INVALID');
-    seen.add(memberId);
-  }
+  const statuses = validateStatuses(input.statuses);
   const comment = validateComment(input.comment);
   return {
     slotId: input.slotId,
     groupId: input.groupId,
     date: input.date,
     startTime: input.startTime,
-    statuses: input.statuses.map(({ memberId, status }) => ({ memberId, status })),
+    statuses,
     comment,
   };
 };
