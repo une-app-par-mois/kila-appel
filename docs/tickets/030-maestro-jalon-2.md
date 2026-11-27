@@ -43,6 +43,11 @@ Parcours de bout en bout de fin de jalon (`docs/CONVENTIONS.md` §5.2), sur l'AP
 
 - Aucune : mêmes réponses du porteur que le 016 (émulateur, sauvegarde fictive générée, A55 « non vérifié » s'il n'est pas disponible).
 
+Reports de l'intégration du lot J2-1 (2026-11-27) :
+
+- taux affiché avec l'espace insécable `NBSP` (U+00A0, constante exportée par `src/domain/attendanceRate.ts`) avant « % » : l'utiliser dans `getByText` (`64\u00a0%` ou `` `64${NBSP}%` ``) et dans les parcours Maestro ; un « 64 % » tapé avec une espace simple ne correspond pas (023).
+- mesurer NF-08 sur l'appareil avec `volumeSeed` de `src/__fixtures__/statsSeed.ts` (variante `twoGroups` comprise) et le jeu de volume des alertes (`src/__fixtures__/alertsSeed.ts`) ; durées `node:sqlite` de référence dans la fiche du 023 (023, 021).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

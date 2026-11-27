@@ -1,6 +1,6 @@
 # 023 — Statistiques : calcul et données
 
-Statut : à faire · Jalon : 2 · Zone sensible : **oui** (calcul affiché : taux de présence, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
+Statut : fusionné dans le groupe (PR #70) · Jalon : 2 · Zone sensible : **oui** (calcul affiché : taux de présence, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
 
 Dépend de : aucun · Fichiers touchés : `src/domain/attendanceRate.ts` et son test (nouveaux), `src/domain/statsPeriod.ts` et son test (nouveaux), `src/data/statsRepo.ts` et son test (nouveaux), `src/hooks/useStats.ts` et son test (nouveaux) — 8 fichiers
 
@@ -40,12 +40,12 @@ F-05 : taux de présence par groupe et par membre sur une période choisie, avec
 
 ## Critères d'acceptation
 
-- [ ] RM-01 : 6 P, 1 R, 1 E, 4 A → 7/11 = « 64 % » ; que des excusés → « — » ; aucune séance → « — », jamais « 0 % » (tests nommés `RM-01`).
-- [ ] RM-03 : un membre passé de « Poussins » à « Benjamins » en cours de période compte pour chacun selon la date de la séance.
-- [ ] EX-27 : synthèse, par groupe et par membre sur la saison, le mois, des dates libres ; détail par statut (comptes exacts).
-- [ ] **Jeu fictif vérifié à la main** : un fichier de `src/__fixtures__/` (nouveau ou `seed.ts`) donne des taux attendus écrits en clair dans le test, recalculés à la main dans la PR (tableau), réutilisé par la campagne Maestro (030).
-- [ ] Bornes de période : séance le premier et le dernier jour comprise ; `from` > `to` refusé.
-- [ ] Requêtes paramétrées (SEC-05) ; NF-08 : 500 membres et 3 saisons, chaque écran en une requête, durée mesurée dans le test.
+- [x] RM-01 : 6 P, 1 R, 1 E, 4 A → 7/11 = « 64 % » ; que des excusés → « — » ; aucune séance → « — », jamais « 0 % » (tests nommés `RM-01`).
+- [x] RM-03 : un membre passé de « Poussins » à « Benjamins » en cours de période compte pour chacun selon la date de la séance.
+- [x] EX-27 : synthèse, par groupe et par membre sur la saison, le mois, des dates libres ; détail par statut (comptes exacts).
+- [x] **Jeu fictif vérifié à la main** : un fichier de `src/__fixtures__/` (nouveau ou `seed.ts`) donne des taux attendus écrits en clair dans le test, recalculés à la main dans la PR (tableau), réutilisé par la campagne Maestro (030) — `src/__fixtures__/statsSeed.ts`, tableau dans « À reporter » et dans la PR #70 ; réutilisation par Maestro à faire au 030.
+- [x] Bornes de période : séance le premier et le dernier jour comprise ; `from` > `to` refusé.
+- [x] Requêtes paramétrées (SEC-05) ; NF-08 : 500 membres et 3 saisons, chaque écran en une requête, durée mesurée dans le test — valeurs liées par `?n`, morceaux SQL constants (revue) ; durées mesurées en `node:sqlite` sur le poste ; non vérifié avec expo-sqlite (`+e.group_id`, plan de requête) ni sur le téléphone (030).
 
 ## Tests attendus
 

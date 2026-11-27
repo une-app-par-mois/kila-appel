@@ -1,6 +1,6 @@
 # 021 — Alertes d'assiduité : calcul et données
 
-Statut : à faire · Jalon : 2 · Zone sensible : **oui** (calcul affiché : séries d'absences et alertes, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
+Statut : fusionné dans le groupe (PR #68) · Jalon : 2 · Zone sensible : **oui** (calcul affiché : séries d'absences et alertes, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
 
 Dépend de : aucun · Fichiers touchés : `src/domain/absenceStreak.ts` et son test (nouveaux), `src/data/alertsRepo.ts` et son test (nouveaux), `src/data/settingsRepo.ts`, `src/data/settingsRepo.test.ts`, `src/hooks/useAlerts.ts` et son test (nouveaux), `src/data/errors.ts`, `src/data/backupRows.ts` — 13 fichiers avec les tests et les jeux de test (ticket gardé entier, décision du porteur du 2026-11-27)
 
@@ -35,15 +35,15 @@ F-04 : un membre dont la série d'absences atteint le seuil apparaît sur l'accu
 
 ## Critères d'acceptation
 
-- [ ] RM-02 : A A E A → 3 ; A A P A → 1 ; E E E → 0 ; aucune séance → 0 ; R remet à zéro (tests du domaine, noms avec `RM-02`).
-- [ ] EX-25 : un membre à 3 absences de suite (seuil par défaut) est dans la liste ; à 2, il n'y est pas ; seuil réglé à 5 : il n'y est plus.
-- [ ] EX-26 : traitée à 3, l'alerte disparaît ; une 4e absence la fait réapparaître ; un Présent puis 3 nouvelles absences la font réapparaître aussi.
-- [ ] Membre archivé, membre sans inscription courante, groupe archivé : aucune alerte (point 2 du plan).
-- [ ] Séances `prepared`, `cancelled`, `unscheduled` ignorées (préparées pour F-13, déjà possibles dans le schéma).
-- [ ] Supprimer le membre efface ses alertes traitées (cascade existante, SEC-11) : vérifié par un test.
-- [ ] `alert_threshold` : valeurs 2 à 10 acceptées, toute autre refusée (`ALERT_THRESHOLD_INVALID`) ; une sauvegarde qui contient la clé passe `isValidSetting`.
-- [ ] Requêtes paramétrées (SEC-05), test avec un nom contenant `'` et `;` ; aucun nom dans un journal (ABS-04).
-- [ ] NF-08 : 500 membres, 3 saisons, liste des alertes calculée sans boucle de requêtes par membre (une requête, test sur le jeu de volume).
+- [x] RM-02 : A A E A → 3 ; A A P A → 1 ; E E E → 0 ; aucune séance → 0 ; R remet à zéro (tests du domaine, noms avec `RM-02`).
+- [x] EX-25 : un membre à 3 absences de suite (seuil par défaut) est dans la liste ; à 2, il n'y est pas ; seuil réglé à 5 : il n'y est plus — vérifié sur `node:sqlite` (ADR-008) ; non vérifié avec expo-sqlite ni sur le téléphone.
+- [x] EX-26 : traitée à 3, l'alerte disparaît ; une 4e absence la fait réapparaître ; un Présent puis 3 nouvelles absences la font réapparaître aussi.
+- [x] Membre archivé, membre sans inscription courante, groupe archivé : aucune alerte (point 2 du plan).
+- [x] Séances `prepared`, `cancelled`, `unscheduled` ignorées (préparées pour F-13, déjà possibles dans le schéma).
+- [x] Supprimer le membre efface ses alertes traitées (cascade existante, SEC-11) : vérifié par un test.
+- [x] `alert_threshold` : valeurs 2 à 10 acceptées, toute autre refusée (`ALERT_THRESHOLD_INVALID`) ; une sauvegarde qui contient la clé passe `isValidSetting`.
+- [x] Requêtes paramétrées (SEC-05), test avec un nom contenant `'` et `;` ; aucun nom dans un journal (ABS-04).
+- [ ] NF-08 : 500 membres, 3 saisons, liste des alertes calculée sans boucle de requêtes par membre (une requête, test sur le jeu de volume) — environ 55 ms en `node:sqlite` sur le poste ; durée sur le téléphone non mesurée (030), `ROW_NUMBER` jamais exécuté par expo-sqlite sur un appareil.
 
 ## Tests attendus
 

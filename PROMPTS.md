@@ -247,6 +247,33 @@ Avant de passer aux tickets suivants, je veux voir avec toi comment optimiser le
 - Corriger une alerte de sécurité plutôt que la classer : CodeQL avait raison sur un reste de chevron, et classer une alerte est un réglage extérieur réservé au porteur.
 - La file du porteur a bien fonctionné : deux questions de texte n'ont rien bloqué, et la correction part sur un ticket.
 
+### Lot J2-1 (021, 026, 023) — 2026-11-27
+
+**Prompt clé** : séance de découpage du jalon 2 (dix tickets, 021 à 030 ; expo-notifications accepté par une décision datée du porteur), puis séance de lancement du lot J2-1 (plans des trois zones sensibles validés, QCM des questions de la pré-analyse), puis trois agents de code en parallèle.
+
+**Ce que l'IA a fait** :
+- **Développement** : 021 (séries d'absences en une requête SQL puis RM-02 dans le domaine, traitement des alertes, seuil de 2 à 10) ; 026 (expo-notifications 58.1.10 installé et verrouillé : `plugins/withoutFirebase.js`, `blockedPermissions` étendue, audit de l'APK durci, APK construit et audité en local, démarrage vérifié sur l'émulateur) ; 023 (taux RM-01, arrondi exact, parts de la barre, périodes, agrégats SQL d'une requête par écran, jeu fictif vérifié à la main).
+- **Intégration** : revue de code, contradicteur, revue de sécurité (trois zones sensibles) ; corrections renvoyées aux agents ; fusions une par une (PR #68, #69, #70) ; 1449 tests ; 59 décisions ajoutées à `docs/DECISIONS.md`, 3 en attente du porteur mises en file.
+
+**Ce qui a été corrigé par les revues** :
+- **masquage des alertes** : un traitement ne couvrait la série que depuis sa première absence ; une correction qui coupait la série traitée, puis de nouvelles absences, la laissaient masquée : comparaison avec la **dernière** absence (scénarios a, b, c) ;
+- **restauration vérifiée** : `alert_acks.streak_length` n'était pas contrôlé dans une sauvegarde ; entier ≥ 1, sinon le fichier est refusé ;
+- **barre trompeuse** : un statut rare arrondi à 0 disparaissait de la barre ; tout statut non nul garde au moins 1 point (changée après contradiction) ;
+- **filtre Saison** : deux saisons qui se chevauchent mélangeaient leurs séances ; « Saison » filtre par `sessions.season_id` en plus des dates ;
+- **audit durci** : un `activity-alias`, une référence de ressource ou un composant gms non exporté passaient l'audit ; alias et cible contrôlés, références refusées (échec fermé), liste figée `config/composants-google-attendus.txt` ;
+- **découverts en pré-analyse** (avant le code) : 8 bibliothèques natives sous **licence Google** (Android Software Development Kit License), hors de la liste du §7, et **ShortcutBadger** avec 16 permissions de lanceurs, tirés par expo-notifications et expo-application.
+
+**Décisions du porteur** (2026-11-27) :
+- expo-notifications accepté selon l'option A (Firebase retiré du manifeste, jamais initialisé), avec `POST_NOTIFICATIONS` et `RECEIVE_BOOT_COMPLETED` seules, sans alarme exacte ; iOS sans pastille ni habilitation ; « aucune donnée collectée » gardé, risque de l'index des SDK de Play noté ;
+- licence Google acceptée pour ces 8 bibliothèques seulement ; ShortcutBadger accepté, ses permissions bloquées ;
+- 026 fusionné dans le jalon avant le 028 (ABS-07 tenue au niveau du jalon) ;
+- 021 : retraiter met à jour la date sur place (`ON CONFLICT … DO UPDATE SET acked_at = MAX(…)`) ; masquage à partir de la dernière absence ; restauration vérifiée ; ticket de 13 fichiers gardé entier ; ligne ABS-08 au journal de CONFORMITE ;
+- 023 : membres comptés listés dans leur groupe ; maquette corrigée (« 13 séances », 64 %) ; filtre Saison par `season_id` ; suppression d'un groupe d'une séance commune documentée, à figer au jalon 4 (F-11).
+
+**Leçons** :
+- Lire les manifestes et les POM de chaque bibliothèque native avant d'accepter une dépendance : la licence et les permissions ne se voient pas dans `package.json`.
+- Un audit par motifs se contourne par un alias ou une référence : l'échec fermé et une liste figée versionnée rendent tout ajout visible au diff.
+
 ### [Étape] — [AAAA-MM-JJ]
 
 **Prompt**

@@ -138,6 +138,8 @@ Non lus (pages vides ou en erreur) : considérant 18 du RGPD (EUR-Lex), deux pag
 
 - 2026-11-26 (ticket 005) : date d'effet de l'horaire des créneaux ajoutée (donnée d'organisation, non personnelle, stockée sur l'appareil) ; rien ne change pour les déclarations des stores (« aucune donnée collectée ») ; la politique de confidentialité (EX-40) la range avec les créneaux (ABS-08).
 - 2026-11-26 : comptes Jita Vision, nom Ki&La, GitHub Pages ; Jita Vision **commerçant** au sens du DSA ; modèle de mention d'information pour les familles sur la page web ; export non déclaré comme partage (action initiée par l'utilisateur) ; public cible Play **16 ans et plus**.
+- 2026-11-27 (ticket 021, ABS-08) : Alertes traitées (membre, longueur, date) : stockées sur l'appareil, sauvegardées, effacées avec le membre ; déclarations des stores inchangées (aucune donnée collectée) ; reprises dans la politique (jalon 6).
+- 2026-11-27 (ticket 026, ABS-01, ABS-07, ABS-08) : expo-notifications 58.1.10 accepté avec expo-application, badgin, abort-controller (et event-target-shim, tirée), verrouillé (Firebase retiré du manifeste, audit SEC-02) ; permissions `POST_NOTIFICATIONS` et `RECEIVE_BOOT_COMPLETED` seules (§3) ; Android SDK License pour 8 bibliothèques nommées (§7) ; ShortcutBadger accepté, ses 16 permissions bloquées (§8) ; « aucune donnée collectée » gardé ; risque de l'index des SDK de Play noté (§3) ; notifications locales reprises dans la politique (jalon 6).
 
 ## Questions ouvertes
 
