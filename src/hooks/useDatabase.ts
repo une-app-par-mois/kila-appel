@@ -2,7 +2,8 @@
 // l'appli (ADR-002, ADR-008). Tous les appels partagent la même ouverture : deux connexions
 // casseraient la file commune des transactions (src/data/db.ts).
 // EX-22 (ticket 014c) : l'état de l'ouverture est partagé ; un échec mène à l'écran de
-// récupération (layout racine), qui rouvre (retryDatabase) ou repart de zéro (resetDatabase).
+// récupération (layout racine), qui rouvre (retryDatabase), repart de zéro (resetDatabase) ou
+// restaure une sauvegarde (replaceDamagedDatabase, ticket 014f).
 // Les écrans n'accèdent aux données que par les hooks (CONV-10).
 import { useEffect, useRef, useSyncExternalStore } from 'react';
 import type { Db } from '@/data/db';
@@ -17,7 +18,15 @@ import { classifyOpenError, type OpenFailure, openAppDatabase } from '@/data/ope
 export type DatabaseState =
   | { status: 'opening' }
   | { status: 'ready'; db: Db }
-  | { status: 'failed'; cause: OpenFailure; pending: boolean; resetFailed: boolean };
+  | { status: 'failed'; cause: OpenFailure; pending: boolean; resetFailed: boolean }
+  /**
+   * Ticket 014f : la recopie d'une sauvegarde a échoué après l'effacement de la base abîmée. La
+   * base neuve, vide, est ouverte mais pas publiée (`pending` : nouvelle recopie en cours).
+   */
+  | { status: 'restoreFailed'; db: Db; pending: boolean };
+
+/** Issue de `replaceDamagedDatabase` ; `ignored` : rien n'a été fait (garde). */
+export type ReplaceResult = 'ready' | 'restoreFailed' | 'resetFailed' | 'openFailed' | 'ignored';
 
 // ABS-04 : le journal ne reçoit qu'un code par cause.
 const FAILURE_CODES: Record<OpenFailure, string> = {
@@ -46,14 +55,19 @@ const subscribe = (listener: () => void) => {
 
 const getState = () => state;
 
-/** Ouvre la base avec l'ouverture retenue ; l'échec est classé et écrit, sans détail. */
+/** Échec d'ouverture : classé et écrit, sans détail. */
+const failWith = (error: unknown) => {
+  const cause = classifyOpenError(error);
+  log(FAILURE_CODES[cause]);
+  setState({ status: 'failed', cause, pending: false, resetFailed: false });
+};
+
+/** Ouvre la base avec l'ouverture retenue. */
 const openNow = async (): Promise<void> => {
   try {
     setState({ status: 'ready', db: await openAppDatabase(opener ?? openExpoDb) });
   } catch (error) {
-    const cause = classifyOpenError(error);
-    log(FAILURE_CODES[cause]);
-    setState({ status: 'failed', cause, pending: false, resetFailed: false });
+    failWith(error);
   }
 };
 
@@ -94,6 +108,66 @@ export const resetDatabase = async (): Promise<void> => {
   }
   log('DB_RESET_DONE');
   await openNow();
+};
+
+/**
+ * Remplit la base neuve et ne la publie qu'une fois remplie. Un échec la garde ouverte, vide
+ * (`restoreFailed`) : `fill` est une seule transaction (restoreBackup), annulée en entier.
+ */
+const fillThenPublish = async (db: Db, fill: (db: Db) => Promise<void>): Promise<ReplaceResult> => {
+  if (state.status === 'restoreFailed') setState({ status: 'restoreFailed', db, pending: true });
+  try {
+    await fill(db);
+  } catch {
+    // ABS-04 : un code seul, jamais le message de l'erreur.
+    log('RECOVERY_RESTORE_FAILED');
+    setState({ status: 'restoreFailed', db, pending: false });
+    return 'restoreFailed';
+  }
+  log('RECOVERY_RESTORE_DONE');
+  setState({ status: 'ready', db });
+  return 'ready';
+};
+
+/**
+ * EX-22, EX-20 (ticket 014f) : « Restaurer une sauvegarde » depuis l'écran de récupération, une
+ * fois la sauvegarde vérifiée et la confirmation donnée. Base abîmée seulement (même garde que
+ * resetDatabase) : supprime le fichier, ouvre une base neuve sans la publier, la remplit par
+ * `fill`, puis la publie. Une suppression en échec ne touche à rien d'autre (`resetFailed`).
+ * Après une recopie en échec (`restoreFailed`), une nouvelle recopie remplit la même base vide,
+ * sans nouvel effacement. Rien n'est fait pendant une séquence en cours. Ne rejette jamais.
+ */
+export const replaceDamagedDatabase = async (
+  fill: (db: Db) => Promise<void>,
+): Promise<ReplaceResult> => {
+  if (state.status === 'restoreFailed') {
+    return state.pending ? 'ignored' : fillThenPublish(state.db, fill);
+  }
+  const failed = idleFailure();
+  if (failed === null || failed.cause !== 'damaged') return 'ignored';
+  setState({ ...failed, pending: true, resetFailed: false });
+  try {
+    await deleteAppDatabase();
+  } catch {
+    log('DB_RESET_FAILED');
+    setState({ ...failed, pending: false, resetFailed: true });
+    return 'resetFailed';
+  }
+  log('DB_RESET_DONE');
+  let db: Db;
+  try {
+    db = await openAppDatabase(opener ?? openExpoDb);
+  } catch (error) {
+    failWith(error);
+    return 'openFailed';
+  }
+  return fillThenPublish(db, fill);
+};
+
+/** « Repartir de zéro » après une recopie en échec (ticket 014f) : publie la base vide. */
+export const acceptEmptyDatabase = (): void => {
+  if (state.status !== 'restoreFailed' || state.pending) return;
+  setState({ status: 'ready', db: state.db });
 };
 
 /** Tests seulement : oublie l'ouverture partagée. */
