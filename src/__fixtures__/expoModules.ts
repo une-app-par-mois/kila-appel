@@ -201,5 +201,9 @@ export const fakeNotifications = () => {
         },
       };
     },
+    // Ticket 028b : comportement au premier plan, relevé par jest.spyOn dans les tests.
+    setNotificationHandler: (_handler: object | null) => {
+      guard('setNotificationHandler');
+    },
   };
 };

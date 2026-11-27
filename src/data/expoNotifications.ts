@@ -15,6 +15,7 @@ import {
   SchedulableTriggerInputTypes,
   scheduleNotificationAsync,
   setNotificationChannelAsync,
+  setNotificationHandler,
 } from 'expo-notifications';
 import { labels } from '@/config/libelles';
 import { log } from '@/data/log';
@@ -222,5 +223,25 @@ export const onReminderTarget = (
   } catch {
     log('REMINDER_LISTEN_FAILED');
     return () => undefined;
+  }
+};
+
+/**
+ * Appli au premier plan (ticket 028b, décision du porteur du 2026-11-27) : une relance s'affiche
+ * en bannière, dans la liste et avec le son, sans pastille. La notification reçue n'est ni lue ni
+ * journalisée (ABS-04) ; un échec est journalisé par un code.
+ */
+export const showRemindersInForeground = (): void => {
+  try {
+    setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+      }),
+    });
+  } catch {
+    log('REMINDER_HANDLER_FAILED');
   }
 };
