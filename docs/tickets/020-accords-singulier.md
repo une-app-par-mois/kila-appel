@@ -57,3 +57,22 @@ Seuls les textes changent : ni les données, ni la purge, ni le verrou.
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
+| Possessif dans la confirmation de purge | (a) possessif à chaque compte de 1, sans chiffre ; (b) un seul possessif en tête | (a) : « son groupe, son créneau, sa séance et ses 3 présences » (« son » pour groupe et créneau, « sa » pour séance et présence) ; une suite au pluriel garde un seul « ses » en tête (« ses 3 groupes, 2 créneaux, 31 séances et 412 présences » inchangé) ; plusieurs saisons : « leur » au compte de 1, « leurs » devant une suite au pluriel (« leurs 5 groupes et leur présence ») ; comptes nuls omis, sans contenu « la saison 2023-2024. » | Réponse du porteur | décidée par le porteur le 2026-11-27 |
+| Conservation pour 1 saison | (a) « Garder la [1 ▾] dernière saison », lu « Garder la dernière saison » ; (b) sans le champ | (a) ; 2 et 3 inchangés (« Garder les 2 dernières saisons ») | Réponse du porteur | décidée par le porteur le 2026-11-27 |
+| Forme des libellés de conservation | (a) `keepBefore`, `keepAfter`, `accessibility` fonctions de la durée ; (b) nouveaux libellés à part | (a), aucun autre texte ne change | Un seul endroit par morceau de phrase | à relire |
+| Où placer les accords | (a) `effacement.ts` (fonction locale `purgeItems`) ; (b) aide générique dans `outils.ts` | (a), `outils.ts` intact | Règle propre à cette phrase | à relire |
+| Tests existants touchés | — | Le test d'écran de `purge.test.tsx` attend « son groupe, son créneau, sa séance et ses 3 présences » au lieu de « ses 1 groupe… » ; le test 015b « plusieurs saisons » de `purgeTexts.test.ts` attend « leurs 5 groupes et leur présence » (exemple du porteur) au lieu de « … et 1 présence » | Suivent les réponses du porteur | à relire |
+| Couverture des accords | — | Chaque combinaison de comptes 0, 1 et 2 (81), avec une et deux saisons : ni virgule, ni « et », ni possessif orphelin, aucun « 1 groupe », nombre de possessifs = comptes de 1 + suites au pluriel | Garde-fou contre les cas limites | à relire |
+| Mixte pluriel, singulier, pluriel | (a) « ses » en tête de chaque suite au pluriel ; (b) un seul « ses » pour toute la phrase | (a) : « ses 2 groupes, son créneau, ses 3 séances et 4 présences » | Suit la règle du porteur (une suite au pluriel garde un « ses » en tête) ; la suite reprend après un singulier | à relire |
+| Double lecture de la phrase de conservation (revue) | (a) cacher au lecteur d'écran les deux morceaux de texte autour du bouton, qui lit la phrase entière ; (b) les laisser | (a) : `importantForAccessibility="no"` et `accessibilityElementsHidden` sur « Garder la/les » et « dernière(s) saison(s) » ; testé dans `purge.test.tsx` (textes absents sans `includeHiddenElements`) | La phrase n'est lue qu'une fois, par le bouton | à relire |
+| Notes des maquettes | — | `scripts/maquettes.mjs` (Sauvegarde et Purge) : « En attente du porteur » devient « Réponse du porteur du 2026-11-27 (ticket 020) » ; `design/maquettes/index.html` régénéré. Fichiers touchés : 6 au lieu de 4 | Maquettes à jour | à relire |
+
+## Questions pour le porteur
+
+Aucune.
+
+## À reporter
+
+- CHANGELOG : « Effacement : accords au singulier dans la confirmation de purge (« son groupe », « leur présence ») et « Garder la dernière saison » pour une saison (ticket 020). »
+- `docs/IDEES.md` : « Seront effacés définitivement : » ne s'accorde pas quand il ne reste que « la saison 2023-2024. » (aucun groupe, créneau, séance ni présence). Texte validé au 015b : à poser au porteur plus tard.
+- Architecture : aucune ligne (textes seulement, `effacement.ts` garde les accords).
