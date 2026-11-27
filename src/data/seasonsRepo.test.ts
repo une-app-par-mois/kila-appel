@@ -128,6 +128,10 @@ describe('Dépôt des saisons (EX-01)', () => {
     ).rejects.toThrow('SESSIONS_OUTSIDE_SEASON');
     await repo.update(s.seasonId, input('2026-2027', '2026-09-01', '2026-11-25'));
     expect((await repo.list()).find((x) => x.id === s.seasonId)?.endDate).toBe('2026-11-25');
+    // Sans inscription : une saison d'un jour, celui de la séance (bornes comprises).
+    await db.execute('DELETE FROM enrollments');
+    await repo.update(s.seasonId, input('2026-2027', '2026-11-25', '2026-11-25'));
+    expect((await repo.list()).find((x) => x.id === s.seasonId)?.startDate).toBe('2026-11-25');
   });
 
   it('EX-01 EX-04 refuse des dates qui laisseraient une inscription commencer hors de la saison', async () => {
@@ -151,6 +155,8 @@ describe('Dépôt des saisons (EX-01)', () => {
       });
     }
     expect((await repo.list()).find((x) => x.id === s.seasonId)?.endDate).toBe('2027-07-31');
+    // Une inscription qui commence le dernier jour reste dans la saison.
+    await repo.update(s.seasonId, input('2026-2027', '2026-09-01', '2027-06-01'));
     // Membre et groupe archivés : leurs inscriptions comptent aussi.
     await db.execute("UPDATE members SET archived_at = '2026-11-01'");
     await db.execute("UPDATE groups SET archived_at = '2026-11-01'");
@@ -163,5 +169,17 @@ describe('Dépôt des saisons (EX-01)', () => {
     );
     await repo.update(s.seasonId, input('2026-2027', '2026-09-01', '2027-05-31'));
     expect((await repo.list()).find((x) => x.id === s.seasonId)?.endDate).toBe('2027-05-31');
+  });
+
+  it('renommer sans changer les dates : jamais bloqué par des données déjà hors de la saison', async () => {
+    const s = await seed(db);
+    await db.execute(
+      "INSERT INTO enrollments (member_id, group_id, start_date) SELECT id, ?, '2026-08-25' FROM members WHERE first_name = 'Sam'",
+      [s.groupId],
+    );
+    await seasonsRepo(db).update(s.seasonId, input('Saison 26-27', '2026-09-01', '2027-07-31'));
+    expect((await seasonsRepo(db).list()).find((x) => x.id === s.seasonId)?.name).toBe(
+      'Saison 26-27',
+    );
   });
 });
