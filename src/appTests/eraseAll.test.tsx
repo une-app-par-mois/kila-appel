@@ -215,7 +215,7 @@ describe('EX-23 écran Tout effacer', () => {
     expect(button('Tout effacer')).not.toBeDisabled();
   });
 
-  it.each(['export', 'restore', 'erase'] as FileTask[])(
+  it.each(['export', 'restore', 'cleanup', 'erase'] as FileTask[])(
     'SEC-11 boutons désactivés sous le verrou (%s)',
     async (task) => {
       await openFromBackup();

@@ -6,10 +6,10 @@
 // quitté (bouton, geste ou retour du système), comme l'écran Restauration.
 import { usePreventRemove, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
-import { expoPicker, expoStorage } from '@/data/expoFiles';
+import { clearCacheCopies } from '@/hooks/cacheCopies';
 import { useFileLock } from '@/hooks/fileLock';
 import { type EraseAllDeps, useEraseAll } from '@/hooks/useErase';
 import { Button } from '@/ui/Button';
@@ -19,18 +19,10 @@ import { TextField } from '@/ui/TextField';
 
 const t = labels.eraseAll;
 
-/** Lance `clear` ; une erreur immédiate devient un refus, comme une erreur plus tardive. */
-const attempt = (clear: () => Promise<void>) => Promise.resolve().then(clear);
-
 /** SEC-10 : les trois dossiers du cache, vidés ensemble ; refusé si l'un d'eux a échoué. */
 const deps: EraseAllDeps = {
   clearCopies: async () => {
-    const results = await Promise.allSettled([
-      attempt(() => expoStorage('sauvegardes').clear()),
-      attempt(() => expoStorage('restauration').clear()),
-      attempt(() => expoPicker(Platform.OS).clearPicked()),
-    ]);
-    if (results.some((result) => result.status === 'rejected')) throw new Error('copies');
+    if (!(await clearCacheCopies())) throw new Error('copies');
   },
 };
 

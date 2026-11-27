@@ -12,7 +12,7 @@ import {
 } from '@/data/seasonsRepo';
 import { firstSeason } from '@/domain/seasons';
 import type { SeasonInput } from '@/domain/validation';
-import { notifyDataChanged, onDataChanged } from '@/hooks/dataChanged';
+import { erasedCount, notifyDataChanged, onDataChanged, useErasedCount } from '@/hooks/dataChanged';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useLoaded } from '@/hooks/useLoaded';
 
@@ -77,7 +77,8 @@ export const useSeasons = () => {
 
 /**
  * P1 (ticket 012b) : avancement de la mise en route. Sur une base vide, la première saison est
- * créée d'abord (`createFirst`) ; rien d'autre n'est enregistré.
+ * créée d'abord (`createFirst`) ; rien d'autre n'est enregistré. Un avancement lu avant Tout
+ * effacer (ticket 015f) est ignoré : l'accueil n'affiche rien jusqu'à la relecture.
  */
 export const useSetupProgress = (today: string) => {
   const db = useDatabase();
@@ -87,7 +88,8 @@ export const useSetupProgress = (today: string) => {
   const load = useMemo(
     () =>
       db
-        ? async (): Promise<{ progress: SetupProgress; anySeason: boolean }> => {
+        ? async (): Promise<{ progress: SetupProgress; anySeason: boolean; erased: number }> => {
+            const erased = erasedCount();
             const repo = seasonsRepo(db);
             const first = firstSeason(today);
             if (await repo.createFirst(first)) {
@@ -96,12 +98,14 @@ export const useSetupProgress = (today: string) => {
             }
             const progress = await repo.setupProgress(today);
             const anySeason = progress.season !== null || (await repo.list()).length > 0;
-            return { progress, anySeason };
+            return { progress, anySeason, erased };
           }
         : null,
     [db, today],
   );
-  const { value, loaded, loadFailed } = useLoaded(load, 'SETUP_PROGRESS_FAILED', {}, true);
+  const { value: read, loaded, loadFailed } = useLoaded(load, 'SETUP_PROGRESS_FAILED', {}, true);
+  const erased = useErasedCount();
+  const value = read !== null && read.erased === erased ? read : null;
   const progress = value?.progress ?? null;
   return {
     progress,

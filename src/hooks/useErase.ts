@@ -10,7 +10,7 @@ import { DataError } from '@/data/errors';
 import { log } from '@/data/log';
 import { type PurgeImpact, purge, purgeCandidates, purgeImpact } from '@/data/purge';
 import { settingsRepo } from '@/data/settingsRepo';
-import { notifyDataChanged } from '@/hooks/dataChanged';
+import { notifyDataChanged, notifyDataErased } from '@/hooks/dataChanged';
 import { fileLock } from '@/hooks/fileLock';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useLoaded } from '@/hooks/useLoaded';
@@ -126,10 +126,14 @@ export const useEraseAll = (deps: EraseAllDeps) => {
   const depsRef = useRef(deps);
   depsRef.current = deps;
 
-  /** Vrai si tout est effacé ; faux si rien ne l'a été (verrou pris, base absente, échec). */
+  /**
+   * Vrai si tout est effacé ; faux si rien ne l'a été : refusé (verrou pris, base absente,
+   * `ERASE_ALL_REFUSED`) ou en échec (`ERASE_ALL_FAILED`). Le vidage n'a pas de limite de temps :
+   * un appel système bloqué garderait l'écran figé (risque faible, `delete()` est synchrone).
+   */
   const eraseNow = useCallback(async (): Promise<boolean> => {
     if (!db || !fileLock.acquire('erase')) {
-      log('ERASE_ALL_FAILED');
+      log('ERASE_ALL_REFUSED');
       return false;
     }
     setErasing(true);
@@ -149,7 +153,8 @@ export const useEraseAll = (deps: EraseAllDeps) => {
       fileLock.release('erase');
       setErasing(false);
     }
-    notifyDataChanged();
+    // Valeurs lues avant l'effacement périmées (accueil qui garde sa valeur), puis rechargement.
+    notifyDataErased();
     return true;
   }, [db]);
 

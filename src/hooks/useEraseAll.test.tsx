@@ -11,7 +11,7 @@ import type { Db } from '@/data/db';
 import { LATEST_VERSION } from '@/data/migrations';
 import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
-import { onDataChanged } from '@/hooks/dataChanged';
+import { erasedCount, onDataChanged } from '@/hooks/dataChanged';
 import { type FileTask, fileLock } from '@/hooks/fileLock';
 import { useEraseAll } from '@/hooks/useErase';
 
@@ -56,6 +56,7 @@ describe('useEraseAll : tout effacer (EX-23, SEC-11)', () => {
 
   it('EX-23 SEC-11 toutes les tables vides, schéma et version gardés, écrans prévenus', async () => {
     const before = await schema(db);
+    const erasedBefore = erasedCount();
     const changed = jest.fn();
     const off = onDataChanged(changed);
     const { done, result } = await erase();
@@ -65,6 +66,8 @@ describe('useEraseAll : tout effacer (EX-23, SEC-11)', () => {
     expect(await schema(db)).toEqual(before);
     expect(await db.query('PRAGMA user_version')).toEqual([{ user_version: LATEST_VERSION }]);
     expect(changed).toHaveBeenCalled();
+    // Les valeurs lues avant l'effacement deviennent périmées (accueil, revue du 015f).
+    expect(erasedCount()).toBe(erasedBefore + 1);
     expect(result.current.erasing).toBe(false);
     expect(fileLock.holder()).toBeNull();
   });
@@ -86,14 +89,14 @@ describe('useEraseAll : tout effacer (EX-23, SEC-11)', () => {
   });
 
   it.each(['export', 'restore', 'cleanup', 'erase'] as FileTask[])(
-    'SEC-11 verrou déjà pris (%s) : rien d’effacé ni vidé, ERASE_ALL_FAILED',
+    'SEC-11 verrou déjà pris (%s) : rien d’effacé ni vidé, ERASE_ALL_REFUSED',
     async (task) => {
       fileLock.acquire(task);
       const { done } = await erase();
       expect(done).toBe(false);
       expect(await count(db, 'members')).toBe(2);
       expect(clearCopies).not.toHaveBeenCalled();
-      expect(log).toHaveBeenCalledWith('ERASE_ALL_FAILED');
+      expect(log.mock.calls).toEqual([['ERASE_ALL_REFUSED']]);
       expect(fileLock.holder()).toBe(task);
     },
   );
@@ -107,18 +110,18 @@ describe('useEraseAll : tout effacer (EX-23, SEC-11)', () => {
     expect(done).toBe(false);
     expect(await count(db, 'members')).toBe(2);
     expect(clearCopies).not.toHaveBeenCalled();
-    expect(log).toHaveBeenCalledWith('ERASE_ALL_FAILED');
+    expect(log.mock.calls).toEqual([['ERASE_ALL_FAILED']]);
     expect(fileLock.holder()).toBeNull();
     expect(result.current.erasing).toBe(false);
     expect(changed).not.toHaveBeenCalled();
   });
 
-  it('EX-23 base pas encore ouverte : rien d’effacé, ERASE_ALL_FAILED', async () => {
+  it('EX-23 base pas encore ouverte : rien d’effacé, ERASE_ALL_REFUSED', async () => {
     mockDb = null;
     const { done } = await erase();
     expect(done).toBe(false);
     expect(clearCopies).not.toHaveBeenCalled();
-    expect(log).toHaveBeenCalledWith('ERASE_ALL_FAILED');
+    expect(log.mock.calls).toEqual([['ERASE_ALL_REFUSED']]);
     expect(fileLock.holder()).toBeNull();
   });
 

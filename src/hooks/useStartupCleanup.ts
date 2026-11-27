@@ -4,26 +4,17 @@
 // iOS, dans `tmp/<identifiant>-Inbox/`. Une fois par processus, sous le verrou commun : jamais
 // pendant une opération en cours, qui efface elle-même ses copies.
 import { useEffect, useState } from 'react';
-import { Platform } from 'react-native';
-import { expoPicker, expoStorage } from '@/data/expoFiles';
 import { log } from '@/data/log';
+import { clearCacheCopies } from '@/hooks/cacheCopies';
 import { fileLock } from '@/hooks/fileLock';
 
 let running: Promise<void> | null = null;
-
-/** Lance `clear` ; une erreur immédiate devient un refus, comme une erreur plus tardive. */
-const attempt = (clear: () => Promise<void>) => Promise.resolve().then(clear);
 
 /** Vide les dossiers temporaires ; un échec est écrit (code seul) et ne bloque rien. */
 const cleanupOnce = async (): Promise<void> => {
   if (!fileLock.acquire('cleanup')) return;
   try {
-    const results = await Promise.allSettled([
-      attempt(() => expoStorage('sauvegardes').clear()),
-      attempt(() => expoStorage('restauration').clear()),
-      attempt(() => expoPicker(Platform.OS).clearPicked()),
-    ]);
-    if (results.some((result) => result.status === 'rejected')) log('STARTUP_CLEANUP_FAILED');
+    if (!(await clearCacheCopies())) log('STARTUP_CLEANUP_FAILED');
   } finally {
     fileLock.release('cleanup');
   }
