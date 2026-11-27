@@ -45,7 +45,7 @@ ${go('groupe-nouveau', 'Créer un groupe')}
 <div class="etape"><span class="num">3</span><div><div class="l-titre">Ajouter les membres</div></div></div>
 <div class="etape"><span class="num">4</span><div><div class="l-titre">Déclarer les créneaux</div></div></div>
 `)}
-<p class="note">Un seul bouton à l'écran, sur la première étape qui reste.</p>`);
+<p class="note">Un seul bouton à l'écran, sur la première étape qui reste. Décisions du porteur du 2026-11-27 : affiché à la place de l'accueil tant qu'une étape reste et qu'aucun appel n'est enregistré dans la saison, jamais pendant un appel en cours ; saison créée sur une base vide seulement, du 1er septembre au 31 août (dès le 1er juillet, celle de la rentrée).</p>`);
 
 // 02 — Accueil
 ecran('accueil', 1, 'Accueil', 'EX-09, EX-17, EX-21, EX-06', 'accueil', `

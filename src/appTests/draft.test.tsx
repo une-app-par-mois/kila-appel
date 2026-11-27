@@ -160,6 +160,8 @@ describe('Brouillon d’appel (EX-14)', () => {
     await db.execute("UPDATE groups SET archived_at = '2026-11-18' WHERE id = ?", [s.groupId]);
     await open('/');
     expect(await screen.findByText(d.unresumable)).toBeTruthy();
+    // Pas de Bienvenue pendant un appel en cours (décision du porteur du 2026-11-27, 012b).
+    expect(screen.queryByRole('header', { name: labels.welcome.title })).toBeNull();
     expect(await button(d.abandon)).toBeTruthy();
     expect(screen.queryByRole('button', { name: d.resume })).toBeNull();
   });

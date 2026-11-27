@@ -4,10 +4,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DataError } from '@/data/errors';
 import { log } from '@/data/log';
-import { type Season, type SeasonDeletionImpact, seasonsRepo } from '@/data/seasonsRepo';
+import {
+  type Season,
+  type SeasonDeletionImpact,
+  type SetupProgress,
+  seasonsRepo,
+} from '@/data/seasonsRepo';
+import { firstSeason } from '@/domain/seasons';
 import type { SeasonInput } from '@/domain/validation';
 import { notifyDataChanged, onDataChanged } from '@/hooks/dataChanged';
 import { useDatabase } from '@/hooks/useDatabase';
+import { useLoaded } from '@/hooks/useLoaded';
 
 type Repo = ReturnType<typeof seasonsRepo>;
 
@@ -66,4 +73,41 @@ export const useSeasons = () => {
   );
 
   return { seasons, loadFailed, create, update, activate, remove, deletionImpact };
+};
+
+/**
+ * P1 (ticket 012b) : avancement de la mise en route. Sur une base vide, la première saison est
+ * créée d'abord (`createFirst`) ; rien d'autre n'est enregistré.
+ */
+export const useSetupProgress = (today: string) => {
+  const db = useDatabase();
+  // « créée automatiquement » (maquette) : seulement pour la saison créée pendant cette ouverture,
+  // et tant qu'elle garde son nom (renommée à la main, elle s'affiche telle quelle).
+  const createdName = useRef<string | null>(null);
+  const load = useMemo(
+    () =>
+      db
+        ? async (): Promise<{ progress: SetupProgress; anySeason: boolean }> => {
+            const repo = seasonsRepo(db);
+            const first = firstSeason(today);
+            if (await repo.createFirst(first)) {
+              createdName.current = first.name;
+              notifyDataChanged();
+            }
+            const progress = await repo.setupProgress(today);
+            const anySeason = progress.season !== null || (await repo.list()).length > 0;
+            return { progress, anySeason };
+          }
+        : null,
+    [db, today],
+  );
+  const { value, loaded, loadFailed } = useLoaded(load, 'SETUP_PROGRESS_FAILED', {}, true);
+  const progress = value?.progress ?? null;
+  return {
+    progress,
+    anySeason: value?.anySeason ?? true,
+    created: progress?.season !== null && progress?.season?.name === createdName.current,
+    loaded,
+    loadFailed,
+  };
 };

@@ -182,4 +182,73 @@ describe('Dépôt des saisons (EX-01)', () => {
       'Saison 26-27',
     );
   });
+
+  it('P1 première ouverture : la saison est créée et active, une seule fois', async () => {
+    const repo = seasonsRepo(db);
+    const first = { name: '2026-2027', startDate: '2026-09-01', endDate: '2027-08-31' };
+    expect(await repo.createFirst(first)).toBe(true);
+    expect(await repo.createFirst(first)).toBe(false);
+    expect(await repo.list()).toMatchObject([{ name: '2026-2027', isActive: true }]);
+  });
+
+  it('P1 ABS-05 aucune saison mais des membres (dernière saison supprimée) : rien n’est recréé', async () => {
+    await db.execute("INSERT INTO members (last_name, first_name) VALUES ('Exemple', 'Alix')");
+    expect(
+      await seasonsRepo(db).createFirst({
+        name: '2026-2027',
+        startDate: '2026-09-01',
+        endDate: '2027-08-31',
+      }),
+    ).toBe(false);
+    expect(await count(db, 'seasons')).toBe(0);
+  });
+
+  it('P1 une saison existe déjà (même inactive) : rien n’est créé', async () => {
+    await db.execute(
+      "INSERT INTO seasons (name, start_date, end_date, is_active) VALUES ('Ancienne', '2025-09-01', '2026-08-31', 0)",
+    );
+    expect(
+      await seasonsRepo(db).createFirst({
+        name: '2026-2027',
+        startDate: '2026-09-01',
+        endDate: '2027-08-31',
+      }),
+    ).toBe(false);
+    expect(await count(db, 'seasons')).toBe(1);
+  });
+
+  it('P1 avancement de la mise en route : saison active, groupes, membres inscrits, créneaux', async () => {
+    const repo = seasonsRepo(db);
+    expect(await repo.setupProgress('2026-11-27')).toEqual({
+      season: null,
+      firstGroupId: null,
+      groups: 0,
+      members: 0,
+      slots: 0,
+      sessions: 0,
+    });
+    const s = await seed(db);
+    expect(await repo.setupProgress('2026-11-27')).toEqual({
+      season: { id: s.seasonId, name: 'Saison 2026-2027' },
+      firstGroupId: s.groupId,
+      groups: 1,
+      members: 2,
+      slots: 1,
+      sessions: 1,
+    });
+    // Créneau ponctuel (sans jour de semaine) d'un groupe courant : compte ; celui d'un groupe
+    // archivé, non (aucune séance ne serait proposée).
+    await db.execute('DELETE FROM slots');
+    const { lastInsertRowId: oneOff } = await db.execute(
+      "INSERT INTO slots (season_id, weekday, start_time, duration_min, schedule_from) VALUES (?, NULL, '10:00', 60, '2026-09-01')",
+      [s.seasonId],
+    );
+    await db.execute('INSERT INTO slot_groups (slot_id, group_id) VALUES (?, ?)', [
+      oneOff,
+      s.groupId,
+    ]);
+    expect((await repo.setupProgress('2026-11-27')).slots).toBe(1);
+    await db.execute("UPDATE groups SET archived_at = '2026-11-27'");
+    expect((await repo.setupProgress('2026-11-27')).slots).toBe(0);
+  });
 });

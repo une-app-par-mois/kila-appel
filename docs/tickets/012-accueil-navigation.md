@@ -1,6 +1,6 @@
 # 012 — Onglets et accueil
 
-Statut : en cours · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : fusionné dans le groupe (PR #30) · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Découpé le 2026-11-27 (décision du porteur) : Bienvenue au 012b, états vides au 012c.
 

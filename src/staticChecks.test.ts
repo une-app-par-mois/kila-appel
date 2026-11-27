@@ -273,6 +273,8 @@ describe('Le code du dépôt respecte les contrôles', () => {
       'src/hooks/useRollCallTarget.ts',
       'src/app/appel.tsx',
       'src/ui/RollCallEntry.tsx',
+      // Ticket 012b : seulement l'existence d'un appel en cours (pas de Bienvenue pendant un appel).
+      'src/app/(tabs)/index.tsx',
     ];
     const reading = walk(join(root, 'src'))
       .map((path) => relative(root, path))

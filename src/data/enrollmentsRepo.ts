@@ -57,7 +57,8 @@ export const current = (n: number) =>
 const NOT_EMPTY = '(e.end_date IS NULL OR e.end_date > e.start_date)';
 
 /** Inscription qui n'est pas finie à la date `?n` (en cours ou à venir). */
-const notEnded = (n: number) => `((e.end_date IS NULL OR e.end_date > ?${n}) AND ${NOT_EMPTY})`;
+export const notEnded = (n: number) =>
+  `((e.end_date IS NULL OR e.end_date > ?${n}) AND ${NOT_EMPTY})`;
 
 /**
  * Groupe où l'on peut inscrire (non archivé, saison active) et membre courant ; sinon NOT_FOUND.

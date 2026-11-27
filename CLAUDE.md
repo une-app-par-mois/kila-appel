@@ -79,6 +79,14 @@ Pose chaque décision sous forme de choix (options, avec ta recommandation en pr
 
 Décision du porteur du 2026-11-27 (« projet puis méthode ») : hors des cas ci-dessus, une question qui a une recommandation nette (spécification absente ou ambiguë, texte, affichage, découpage d'un ticket, cas limite, choix d'architecture interne) n'est pas posée. L'IA applique sa recommandation, continue, et ajoute une ligne à `docs/DECISIONS.md` : date, ticket, question, options, choix, raison. Chaque PR liste ses décisions automatiques dans « Décisions automatiques à relire ». Le porteur en annule une quand il veut : la correction se fait sur un ticket, et la ligne est marquée « annulée ». À chaque fin de jalon, l'IA compte les décisions annulées et le dit au porteur.
 
+**Contradicteur** (décision du porteur du 2026-11-27) : avant la PR d'un ticket qui a des décisions automatiques, l'IA lance le sous-agent `contradicteur` (`.claude/agents/contradicteur.md`) avec le numéro du ticket, ses lignes de `docs/DECISIONS.md` et la branche, sans son propre raisonnement. Pour chaque décision contestée :
+
+- contradiction avec un document validé ou décision qui aurait dû être réservée : la question est posée au porteur ;
+- argument qui convainc : l'IA change et note « changée après contradiction » ;
+- sinon : l'IA garde et note « contestée, maintenue : <raison> ».
+
+La PR liste les décisions contestées en premier.
+
 ## Mode de CI
 
 Mode de ce projet : **par jalon**, choisi au cadrage par le porteur le 2026-11-26. Un changement de mode est une décision datée du porteur, notée ici ; jamais une dérogation.
