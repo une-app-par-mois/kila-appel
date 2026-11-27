@@ -1,10 +1,11 @@
 // Paramètres (maquette Paramètres, onglet, ticket 012) : seules les lignes qui mènent à un écran
-// existant (décision du porteur du 2026-11-26). Relance, alertes : jalons suivants ; conservation et
-// tout effacer : ticket 015b.
+// existant (décision du porteur du 2026-11-26). Relance, alertes : jalons suivants ; conservation :
+// ticket 015b ; tout effacer : ticket 015f.
 import { useRouter } from 'expo-router';
 import { labels } from '@/config/libelles';
 import { toIsoDate } from '@/domain/formats';
 import { toLastBackup, useLastBackup } from '@/hooks/useBackupExport';
+import { useRetention } from '@/hooks/useErase';
 import { useGroups } from '@/hooks/useGroups';
 import { useLocalNow } from '@/hooks/useLocalNow';
 import { useMembers } from '@/hooks/useMembers';
@@ -24,13 +25,19 @@ export default function Settings() {
   const { members, loadFailed: membersFailed } = useMembers({ today: toIsoDate(new Date()) });
   const { slots, loadFailed: slotsFailed } = useSlots(active?.id ?? null);
   const { lastBackup, loaded: backupLoaded, loadFailed: backupFailed } = useLastBackup();
+  const { retention, loadFailed: retentionFailed } = useRetention();
   // Horloge partagée (ticket 012) : « aujourd'hui » devient « hier » après minuit, page ouverte.
   const now = useLocalNow();
   return (
     <Screen
       title={t.title}
       error={
-        loadFailed || groupsFailed || membersFailed || slotsFailed || backupFailed
+        loadFailed ||
+        groupsFailed ||
+        membersFailed ||
+        slotsFailed ||
+        backupFailed ||
+        retentionFailed
           ? labels.common.loadFailed
           : undefined
       }
@@ -83,6 +90,11 @@ export default function Settings() {
           subtitle={
             backupLoaded ? labels.backup.settingsRow(toLastBackup(lastBackup, now.date)) : undefined
           }
+          onPress={() => router.push('/donnees')}
+        />
+        <ListRow
+          title={labels.retention.section}
+          subtitle={retention === null ? undefined : labels.retention.settingsRow(retention)}
           onPress={() => router.push('/donnees')}
         />
       </Card>

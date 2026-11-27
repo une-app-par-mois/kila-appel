@@ -2,7 +2,7 @@
 // titre en en-tête, ce qui sera effacé dans une carte bordée de Marge, ce qui est gardé en dessous,
 // « Garder » sur un tiers et l'action destructive en Marge sur deux tiers. L'action ne part
 // qu'une fois par ouverture (double appui).
-import { useEffect, useRef } from 'react';
+import { type ReactNode, useEffect, useRef } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { theme } from '@/config/theme';
@@ -13,8 +13,8 @@ import { Screen } from '@/ui/Screen';
 type Props = {
   visible: boolean;
   title: string;
-  /** Ce qui sera effacé. */
-  message: string;
+  /** Ce qui sera effacé ; texte, ou textes imbriqués pour un mot en gras (purge, ticket 015b). */
+  message: ReactNode;
   /** Ce qui est gardé (« Les membres sont conservés. »). */
   note?: string;
   cancelLabel: string;
@@ -23,6 +23,11 @@ type Props = {
   onCancel: () => void;
   /** Confirmation sans effacement (« Faire un autre appel ») : bouton principal, pas rouge. */
   harmless?: boolean;
+  /**
+   * Action en cours (purge, ticket 015b) : boutons désactivés, retour caché, retour du système
+   * ignoré, comme l'écran Restauration ; la confirmation ne se ferme pas avant la fin.
+   */
+  busy?: boolean;
 };
 
 export const ConfirmDialog = ({
@@ -35,11 +40,15 @@ export const ConfirmDialog = ({
   onConfirm,
   onCancel,
   harmless = false,
+  busy = false,
 }: Props) => {
   const confirmed = useRef(false);
   useEffect(() => {
     if (visible) confirmed.current = false;
   }, [visible]);
+  const cancel = () => {
+    if (!busy) onCancel();
+  };
   const confirmOnce = () => {
     if (confirmed.current) return;
     confirmed.current = true;
@@ -47,20 +56,27 @@ export const ConfirmDialog = ({
   };
 
   return (
-    <Modal visible={visible} animationType="fade" onRequestClose={onCancel}>
+    <Modal visible={visible} animationType="fade" onRequestClose={cancel}>
       <SafeAreaProvider>
-        <Screen title={title} onBack={onCancel}>
+        <Screen title={title} onBack={busy ? undefined : cancel}>
           <Card warning>
             <Text style={styles.message}>{message}</Text>
             {note !== undefined && <Text style={styles.note}>{note}</Text>}
           </Card>
           <View style={styles.actions}>
-            <Button label={cancelLabel} variant="secondary" flex={1} onPress={onCancel} />
+            <Button
+              label={cancelLabel}
+              variant="secondary"
+              flex={1}
+              onPress={cancel}
+              disabled={busy}
+            />
             <Button
               label={confirmLabel}
               variant={harmless ? 'primary' : 'destructive'}
               flex={2}
               onPress={confirmOnce}
+              disabled={busy}
             />
           </View>
         </Screen>
