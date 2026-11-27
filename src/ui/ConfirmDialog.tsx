@@ -2,7 +2,7 @@
 // titre en en-tête, ce qui sera effacé dans une carte bordée de Marge, ce qui est gardé en dessous,
 // « Garder » sur un tiers et l'action destructive en Marge sur deux tiers. L'action ne part
 // qu'une fois par ouverture (double appui).
-import { useEffect, useRef } from 'react';
+import { type ReactNode, useEffect, useRef } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { theme } from '@/config/theme';
@@ -13,8 +13,8 @@ import { Screen } from '@/ui/Screen';
 type Props = {
   visible: boolean;
   title: string;
-  /** Ce qui sera effacé. */
-  message: string;
+  /** Ce qui sera effacé ; texte, ou textes imbriqués pour un mot en gras (purge, ticket 015b). */
+  message: ReactNode;
   /** Ce qui est gardé (« Les membres sont conservés. »). */
   note?: string;
   cancelLabel: string;

@@ -1,10 +1,11 @@
 // Verrou commun à l'export (ticket 014b) et à la restauration (ticket 014e), au niveau du module :
 // les deux attachent une copie à la base de l'appli sous le même alias et travaillent dans le
-// cache, ils ne tournent donc jamais en même temps (revue du 014e). Les écrans s'y abonnent pour
+// cache, ils ne tournent donc jamais en même temps (revue du 014e). La purge (ticket 015b) le
+// prend aussi : une copie ne se fait jamais pendant un effacement. Les écrans s'y abonnent pour
 // désactiver leurs boutons pendant l'autre opération.
 import { useSyncExternalStore } from 'react';
 
-export type FileTask = 'export' | 'restore';
+export type FileTask = 'export' | 'restore' | 'erase';
 
 let holder: FileTask | null = null;
 const listeners = new Set<() => void>();

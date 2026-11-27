@@ -9,6 +9,7 @@ describe('fileLock : une seule opération sur les fichiers à la fois', () => {
   afterEach(() => {
     fileLock.release('export');
     fileLock.release('restore');
+    fileLock.release('erase');
   });
 
   it('release(export) pendant que la restauration tient le verrou : il reste pris', () => {
@@ -25,5 +26,14 @@ describe('fileLock : une seule opération sur les fichiers à la fois', () => {
     expect(fileLock.acquire('export')).toBe(true);
     expect(fileLock.acquire('export')).toBe(false);
     expect(fileLock.acquire('restore')).toBe(false);
+  });
+
+  it('015b la purge prend le même verrou : ni export ni restauration pendant, ni l’inverse', () => {
+    expect(fileLock.acquire('erase')).toBe(true);
+    expect(fileLock.acquire('export')).toBe(false);
+    expect(fileLock.acquire('restore')).toBe(false);
+    fileLock.release('erase');
+    expect(fileLock.acquire('restore')).toBe(true);
+    expect(fileLock.acquire('erase')).toBe(false);
   });
 });

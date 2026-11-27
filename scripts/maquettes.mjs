@@ -234,6 +234,7 @@ ${section('Restaurer')}
 ${carte(`<p>Remplace <b>toutes</b> les données de l'appareil par celles du fichier. Le fichier est vérifié avant tout changement.</p>${go('restauration', 'Choisir un fichier…', 'btn-s')}`)}
 ${section('Conservation')}
 ${carte(`<div class="rang"><span>Garder les</span><span class="champ mini mono">3 ▾</span><span>dernières saisons</span></div><p class="l-sous">1 saison dépasse cette durée : 2023-2024.</p>${go('purge', 'Purger 2023-2024…', 'btn-s')}`)}
+<p class="note">Conservation (ticket 015b, décisions du porteur du 2026-11-27) : de 1 à 3 saisons, 3 par défaut ; changer la durée ne purge rien. Seules les saisons commencées comptent parmi les gardées ; une saison à venir est toujours gardée en plus ; la saison active n'est jamais purgée. Aucune saison au-delà : « Aucune saison ne dépasse cette durée. » ; plusieurs : « 2 saisons dépassent cette durée : 2022-2023, 2023-2024. » et « Purger 2 saisons… ». Pendant une purge, l'export et la restauration sont désactivés, et inversement.</p>
 ${section('Tout effacer')}
 ${carte(`<p class="l-sous">Efface toutes les données de cet appareil. Double confirmation.</p>${go('tout-effacer', 'Tout effacer…', 'btn-s danger')}`)}`);
 
@@ -338,8 +339,9 @@ ${section('Pendant la vérification')}
 <p class="note">Décisions du porteur du 2026-11-27 (tickets 014b et 014e) : « Choisir un fichier… » de l'écran Sauvegarde ouvre cet écran, qui lance le sélecteur ; sélecteur annulé = retour à Sauvegarde. La confirmation nomme l'appel en cours remplacé, s'il y en a un. Pendant la vérification : « Vérification du fichier… ». Messages d'un refus, chacun suivi de « Rien n'a été modifié. Choisissez un autre fichier. » et du bouton « Choisir un fichier… » : « Ce fichier n'est pas une sauvegarde Ki&La » ; « Cette sauvegarde est abîmée ou a été modifiée » ; « Cette sauvegarde vient d'une version plus récente de l'appli : mettez l'appli à jour » ; « La restauration n'a pas abouti ». Après une réussite : l'accueil, sans message.</p>
 <p class="note">Décisions automatiques, à relire (ticket 014e) : sans date dans le fichier, le titre est « Sauvegarde » ; appel en cours dont le groupe a été supprimé : « L'appel en cours sera aussi remplacé. » ; un échec du sélecteur s'affiche comme « La restauration n'a pas abouti » ; pendant la restauration, l'écran ne peut pas être quitté (retour caché, boutons désactivés, retour du système bloqué).</p>`);
 
-ecran('purge', 1, 'Purge des anciennes saisons', 'EX-24, ABS-05', 'parametres', confirmer('Purger 2023-2024 ?', 'donnees',
-  `<p>Seront effacés <b>définitivement</b> : la saison 2023-2024, ses groupes, créneaux, séances et présences.</p><p class="l-sous">Les membres qui ne figurent plus dans aucune saison conservée sont aussi effacés.</p>`, 'Purger', 'donnees'));
+ecran('purge', 1, 'Purge des anciennes saisons', 'EX-24, ABS-05', 'parametres', `${confirmer('Purger 2023-2024 ?', 'donnees',
+  `<p>Seront effacés <b>définitivement</b> : la saison 2023-2024, ses 3 groupes, 2 créneaux, 31 séances et 412 présences.</p><p class="l-sous">12 membres qui ne figurent plus dans aucune saison conservée seront aussi effacés.</p>`, 'Purger', 'donnees')}
+<p class="note">Réponse du porteur du 2026-11-27 (ticket 015b) : confirmation chiffrée (comptes nuls omis), membres compris ; « L'appel en cours sera aussi effacé. » s'il appartient à une saison purgée. Plusieurs saisons : « Purger 2 saisons ? », « les saisons 2022-2023 et 2023-2024, leurs … ». Aucun membre : « Aucun membre ne sera effacé. » Après la purge : retour à Sauvegarde ; en cas d'échec : « La purge n'a pas abouti. Rien n'a été effacé. » La purge est refusée, sans rien effacer, si la liste a changé depuis la confirmation (jour ou base).</p>`);
 
 ecran('tout-effacer', 1, 'Tout effacer (double confirmation)', 'EX-23, ABS-05', 'parametres', `
 ${titre('Tout effacer ?', 'donnees')}
