@@ -1,6 +1,6 @@
 # 015c — Mode de journal de la base fixé à l'ouverture
 
-Statut : à faire · Jalon : 1 · Zone sensible : oui · Trivial : non
+Statut : à faire · Jalon : 1 · Zone sensible : oui (plan validé par le porteur le 2026-11-27) · Trivial : non
 
 Dépend de : aucun ticket à faire · Fichiers touchés : `src/data/open.ts` et son test
 
@@ -31,6 +31,10 @@ Décidé par le porteur le 2026-11-27 (séance de clôture du lot 013-014-015).
 - Écran de récupération (014c), qui traitera la cause comme `SECURE_DELETE_OFF`
 
 ## Questions prévues
+
+- Séance de lancement du lot 014b-015c (2026-11-27), réponses du porteur :
+  - une base en mémoire répond toujours `memory` : accepté **seulement si la base principale n'a pas de fichier** (chemin vide dans `pragma_database_list`) ; une base sur fichier qui répond autre chose que `delete` est refusée, un test le vérifie ;
+  - plan validé : `PRAGMA main.journal_mode = DELETE` puis relecture, après `secure_delete` et avant les migrations ; erreur `JOURNAL_MODE_OFF` au texte fixe, aussi pour une erreur SQLite pendant le pragma ; 6 tests.
 
 ## Décisions
 

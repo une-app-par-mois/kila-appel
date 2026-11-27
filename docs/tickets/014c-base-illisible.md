@@ -2,7 +2,7 @@
 
 Statut : à faire · Jalon : 1 · Zone sensible : oui · Trivial : non
 
-Dépend de : 014, 014b · Fichiers touchés : `src/hooks/useDatabase.ts`, `src/data/open.ts`, `src/app/_layout.tsx`, `src/ui/Recovery.tsx`
+Dépend de : 014, 014b, 014e, 015c · Fichiers touchés : `src/hooks/useDatabase.ts`, `src/data/open.ts`, `src/app/_layout.tsx`, `src/ui/Recovery.tsx`
 
 Découpé le 2026-11-27 (décision du porteur) depuis le ticket 014.
 

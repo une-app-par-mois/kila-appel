@@ -2,7 +2,7 @@
 
 Statut : à faire · Jalon : 1 · Zone sensible : oui · Trivial : non
 
-Dépend de : 015, 014, 014b · Fichiers touchés : `src/app/donnees.tsx`, `src/app/tout-effacer.tsx`, `(tabs)/parametres.tsx`, libellés
+Dépend de : 015, 014, 014b, 014e · Fichiers touchés : `src/app/donnees.tsx`, `src/app/tout-effacer.tsx`, `(tabs)/parametres.tsx`, libellés
 
 Découpé le 2026-11-27 (décision du porteur) depuis le ticket 015.
 
