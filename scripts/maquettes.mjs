@@ -242,11 +242,11 @@ ecran('illisible', 1, 'Base illisible au démarrage', 'EX-22', null, `
 ${titre('Vos données ne peuvent pas être ouvertes')}
 ${carte(`<p>Le fichier de données de l'appli est abîmé. Rien n'a été effacé pour l'instant.</p><p>Vous pouvez restaurer votre dernière sauvegarde, ou repartir de zéro.</p>`)}
 ${go('accueil', 'Restaurer une sauvegarde')}
+${go('illisible', 'Réessayer', 'btn-s')}
 ${go('bienvenue', 'Repartir de zéro', 'btn-s')}
-<p class="note">Jamais de message technique ni de plantage. Décisions du porteur du 2026-11-27 : « Repartir de zéro » demande une confirmation (« Repartir de zéro ? », « Les données abîmées seront effacées définitivement. », « Garder » et « Effacer et repartir de zéro »), puis Bienvenue. Une seule maquette, trois variantes (ticket 014c) :</p>
-<p class="note"><b>Abîmée</b> (fichier illisible, ou toute erreur non reconnue) : cet écran. « Restaurer une sauvegarde » arrive avec le ticket 014f.</p>
-<p class="note"><b>Réglage refusé</b> (fichier sain) : « L'appli n'a pas pu préparer le fichier de données. Rien n'a été effacé. » et un seul bouton, « Réessayer ».</p>
-<p class="note"><b>Version plus récente</b> : « Vos données viennent d'une version plus récente de l'appli : mettez l'appli à jour. Rien n'a été effacé. », sans aucun bouton.</p>`);
+<p class="note">Jamais de message technique ni de plantage. Une seule maquette, trois variantes.</p>
+<p class="note">Réponses du porteur du 2026-11-27 (ticket 014c) : « Repartir de zéro » demande une confirmation (« Repartir de zéro ? », « Les données abîmées seront effacées définitivement. », « Garder » et « Effacer et repartir de zéro »), puis Bienvenue. (1) <b>Abîmée</b> seulement si le fichier est illisible (lecture d'essai ou contrôle du fichier) : cet écran, avec « Réessayer » au-dessus de « Repartir de zéro ». Toute autre erreur montre la variante « réglage refusé ». (2) Si l'effacement échoue : « L'effacement n'a pas abouti. Réessayez. » sous les boutons ; un fichier déjà absent compte comme effacé. (3) Le texte « Vous pouvez restaurer… » reste tel quel jusqu'au ticket 014f, qui ajoute « Restaurer une sauvegarde ». (4) <b>Réglage refusé</b> (ou erreur non reconnue, fichier gardé) : « L'appli n'a pas pu préparer le fichier de données. Rien n'a été effacé. » et un seul bouton, « Réessayer ». <b>Version plus récente</b> : « Vos données viennent d'une version plus récente de l'appli : mettez l'appli à jour. Rien n'a été effacé. », sans aucun bouton.</p>
+<p class="note">Décisions automatiques, à relire (ticket 014c) : même titre pour les trois variantes ; avant le 014f, « Réessayer » est le bouton principal et « Repartir de zéro » reste secondaire ; boutons désactivés pendant un nouvel essai ; au démarrage, une vue vide (Papier) tant que la base n'est pas prête.</p>`);
 
 // ---------- Écrans ajoutés à la deuxième passe ----------
 const confirmer = (t, retour, corps, oui, ouiVers, non = 'Garder') => `${titre(t, retour)}${carte(corps, 'bandeau')}<div class="duo">${go(retour, non, 'btn-s tiers')}${go(ouiVers, oui, 'btn-p deuxtiers fond-marge')}</div>`;

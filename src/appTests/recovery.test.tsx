@@ -15,9 +15,14 @@ import { resetStartupCleanupForTests } from '@/hooks/useStartupCleanup';
 
 let mockFile = '';
 let mockWrap: (db: Db) => Db = (db) => db;
+let mockDeleteFails = 0;
 jest.mock('@/data/expoDb', () => ({
   openExpoDb: async () => mockWrap(require('@/data/nodeDb').openNodeDb(mockFile)),
   deleteAppDatabase: async () => {
+    if (mockDeleteFails > 0) {
+      mockDeleteFails -= 1;
+      throw new Error('Unable to delete the database file');
+    }
     const { rmSync: rm } = require('node:fs');
     for (const suffix of ['', '-journal', '-wal', '-shm'])
       rm(`${mockFile}${suffix}`, { force: true });
@@ -46,6 +51,7 @@ describe('EX-22 écran de récupération (ticket 014c)', () => {
     dir = mkdtempSync(join(tmpdir(), 'kila-recuperation-'));
     mockFile = join(dir, 'kila.db');
     mockWrap = (db) => db;
+    mockDeleteFails = 0;
     resetDatabaseForTests();
     resetStartupCleanupForTests();
   });
@@ -57,7 +63,11 @@ describe('EX-22 écran de récupération (ticket 014c)', () => {
     expect(await screen.findByRole('header', { name: r.title })).toBeTruthy();
     expect(screen.getByText(r.damaged)).toBeTruthy();
     expect(screen.getByText(r.damagedChoice)).toBeTruthy();
-    expect(button(r.retry)).toBeNull();
+    // Réponse du porteur du 2026-11-27 : « Réessayer » au-dessus de « Repartir de zéro ».
+    const shown = screen.getAllByRole('button');
+    const retryAt = shown.indexOf(screen.getByRole('button', { name: r.retry }));
+    expect(retryAt).toBeGreaterThanOrEqual(0);
+    expect(retryAt).toBeLessThan(shown.indexOf(screen.getByRole('button', { name: r.startOver })));
     // Aucune navigation : pas de retour, pas d'onglets, pas d'accueil.
     expect(button(labels.common.back)).toBeNull();
     expect(screen.queryByText(labels.tabs.home)).toBeNull();
@@ -75,6 +85,19 @@ describe('EX-22 écran de récupération (ticket 014c)', () => {
     expect(await screen.findByRole('header', { name: labels.welcome.title })).toBeTruthy();
     expect(readFileSync(mockFile, 'utf8')).not.toContain('fichier texte');
     expect(router.getPathname()).toBe('/');
+  });
+
+  it('EX-22 effacement en échec : message sous les boutons, fichier gardé, nouvel essai possible', async () => {
+    writeFileSync(mockFile, 'Ceci est un fichier texte, pas une base de données. '.repeat(40));
+    mockDeleteFails = 1;
+    await open();
+    await fireEvent.press(await screen.findByRole('button', { name: r.startOver }));
+    await fireEvent.press(await screen.findByRole('button', { name: r.confirm }));
+    expect(await screen.findByText(r.resetFailed)).toBeTruthy();
+    expect(readFileSync(mockFile, 'utf8')).toContain('fichier texte');
+    await fireEvent.press(screen.getByRole('button', { name: r.startOver }));
+    await fireEvent.press(await screen.findByRole('button', { name: r.confirm }));
+    expect(await screen.findByRole('header', { name: labels.welcome.title })).toBeTruthy();
   });
 
   it('EX-22 réglage refusé : message, « Réessayer » rouvre, aucune action destructive', async () => {

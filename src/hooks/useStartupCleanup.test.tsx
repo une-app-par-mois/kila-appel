@@ -1,6 +1,6 @@
 // Nettoyage des dossiers temporaires au démarrage (ticket 014c ; revues de sécurité du 014b et du
 // 014e) : une fois par processus, sous le verrou commun, jamais pendant une opération en cours.
-import { renderHook } from '@testing-library/react-native';
+import { act, renderHook } from '@testing-library/react-native';
 import { Platform } from 'react-native';
 import { fileLock } from '@/hooks/fileLock';
 import {
@@ -75,6 +75,28 @@ describe('Nettoyage au démarrage (ticket 014c)', () => {
     // ABS-04 : un code seul.
     expect(log.mock.calls).toEqual([['STARTUP_CLEANUP_FAILED']]);
     expect(fileLock.holder()).toBeNull();
+  });
+
+  it('useStartupCleanup rend vrai une fois le nettoyage fini, échec compris', async () => {
+    let finish: () => void = () => undefined;
+    mockClearPicked.mockReturnValueOnce(
+      new Promise<void>((_resolve, reject) => (finish = () => reject(new Error('x')))),
+    );
+    const hook = await renderHook(() => useStartupCleanup());
+    expect(hook.result.current).toBe(false);
+    await act(async () => finish());
+    expect(hook.result.current).toBe(true);
+    // Nouveau montage dans le même processus : déjà fini.
+    const again = await renderHook(() => useStartupCleanup());
+    await act(async () => undefined);
+    expect(again.result.current).toBe(true);
+  });
+
+  it('useStartupCleanup : vrai aussi quand le nettoyage est sauté (verrou pris)', async () => {
+    expect(fileLock.acquire('export')).toBe(true);
+    const hook = await renderHook(() => useStartupCleanup());
+    await act(async () => undefined);
+    expect(hook.result.current).toBe(true);
   });
 
   it('useStartupCleanup : lancé au montage, une fois même après plusieurs montages', async () => {

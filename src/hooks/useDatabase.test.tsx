@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import type { Db } from '@/data/db';
 import { UNKNOWN_VERSION } from '@/data/migrations';
-import { DATABASE_DAMAGED, FOREIGN_KEYS_OFF } from '@/data/open';
+import { DATABASE_DAMAGED, DATABASE_UNAVAILABLE, FOREIGN_KEYS_OFF } from '@/data/open';
 import {
   resetDatabase,
   resetDatabaseForTests,
@@ -59,12 +59,18 @@ describe('EX-22 état partagé de l’ouverture (ticket 014c)', () => {
     [DATABASE_DAMAGED, 'damaged', 'DB_OPEN_DAMAGED'],
     [FOREIGN_KEYS_OFF, 'settings', 'DB_OPEN_SETTINGS'],
     [UNKNOWN_VERSION, 'newer', 'DB_OPEN_NEWER'],
+    [DATABASE_UNAVAILABLE, 'unavailable', 'DB_OPEN_UNAVAILABLE'],
   ])('échec « %s » : cause %s, code %s seul dans le journal', async (message, cause, code) => {
     openAppDatabase.mockRejectedValueOnce(new Error(message));
     const state = await renderHook(() => useDatabaseState(open));
     const db = await renderHook(() => useDatabase(open));
     await waitFor(() =>
-      expect(state.result.current).toEqual({ status: 'failed', cause, pending: false }),
+      expect(state.result.current).toEqual({
+        status: 'failed',
+        cause,
+        pending: false,
+        resetFailed: false,
+      }),
     );
     expect(db.result.current).toBeNull();
     // ABS-04 : un code, sans détail.
@@ -89,7 +95,12 @@ describe('EX-22 état partagé de l’ouverture (ticket 014c)', () => {
       retryDatabase();
       retryDatabase();
     });
-    expect(state.result.current).toEqual({ status: 'failed', cause: 'settings', pending: true });
+    expect(state.result.current).toEqual({
+      status: 'failed',
+      cause: 'settings',
+      pending: true,
+      resetFailed: false,
+    });
     await act(async () => finish(fakeDb));
     expect(state.result.current).toEqual({ status: 'ready', db: fakeDb });
     expect(openAppDatabase).toHaveBeenCalledTimes(2);
@@ -128,7 +139,7 @@ describe('EX-22 resetDatabase : suppression du fichier, puis base neuve (ticket 
     expect(log.mock.calls).toEqual([['DB_RESET_DONE']]);
   });
 
-  it.each([FOREIGN_KEYS_OFF, UNKNOWN_VERSION])(
+  it.each([FOREIGN_KEYS_OFF, UNKNOWN_VERSION, DATABASE_UNAVAILABLE])(
     'cause « %s » : rien n’est supprimé (fichier sain)',
     async (message) => {
       const state = await failedWith(message);
@@ -145,7 +156,25 @@ describe('EX-22 resetDatabase : suppression du fichier, puis base neuve (ticket 
     await act(async () => resetDatabase());
     expect(log.mock.calls).toEqual([['DB_RESET_FAILED']]);
     expect(openAppDatabase).toHaveBeenCalledTimes(1);
-    expect(state.result.current).toEqual({ status: 'failed', cause: 'damaged', pending: false });
+    expect(state.result.current).toEqual({
+      status: 'failed',
+      cause: 'damaged',
+      pending: false,
+      resetFailed: true,
+    });
+    // Un nouvel essai efface le message, puis l'effacement réussit : base neuve.
+    deleteAppDatabase.mockResolvedValueOnce(undefined);
+    openAppDatabase.mockResolvedValueOnce(fakeDb);
+    await act(async () => resetDatabase());
+    expect(state.result.current).toEqual({ status: 'ready', db: fakeDb });
+  });
+
+  it('base abîmée : « Réessayer » rouvre sans rien supprimer', async () => {
+    const state = await failedWith(DATABASE_DAMAGED);
+    openAppDatabase.mockResolvedValueOnce(fakeDb);
+    await act(async () => retryDatabase());
+    expect(deleteAppDatabase).not.toHaveBeenCalled();
+    expect(state.result.current).toEqual({ status: 'ready', db: fakeDb });
   });
 
   it('deux appuis : une seule suppression', async () => {

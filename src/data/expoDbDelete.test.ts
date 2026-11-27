@@ -20,7 +20,30 @@ describe('EX-22 deleteAppDatabase', () => {
   });
 
   it('relaie l’échec de la suppression', async () => {
-    mockDelete.mockRejectedValueOnce(new Error('Unable to delete'));
+    mockDelete.mockRejectedValueOnce(
+      new Error("Unable to delete the database file for 'kila.db' database"),
+    );
+    await expect(deleteAppDatabase()).rejects.toThrow();
+  });
+
+  // Réponse du porteur du 2026-11-27 : un fichier déjà absent compte comme effacé.
+  it.each([
+    [
+      'Android',
+      "Call to function 'ExpoSQLite.deleteDatabaseAsync' has been rejected.\n→ Caused by: Database 'kila.db' not found",
+    ],
+    ['iOS', 'Database /var/mobile/Containers/Data/x/Documents/SQLite/kila.db not found'],
+  ])('fichier déjà absent (%s, DatabaseNotFoundException) : réussite', async (_os, message) => {
+    mockDelete.mockRejectedValueOnce(new Error(message));
+    await expect(deleteAppDatabase()).resolves.toBeUndefined();
+  });
+
+  it('base encore ouverte : échec relayé, pas pris pour un fichier absent', async () => {
+    mockDelete.mockRejectedValueOnce(
+      new Error(
+        "Unable to delete database 'kila.db' that is currently open. Close it prior to deletion.",
+      ),
+    );
     await expect(deleteAppDatabase()).rejects.toThrow();
   });
 });

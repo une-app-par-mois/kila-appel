@@ -3,21 +3,19 @@
 // clair resteraient dans le cache (`sauvegardes/`, `restauration/`, `DocumentPicker/`) ou, sur
 // iOS, dans `tmp/<identifiant>-Inbox/`. Une fois par processus, sous le verrou commun : jamais
 // pendant une opération en cours, qui efface elle-même ses copies.
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import { expoPicker, expoStorage } from '@/data/expoFiles';
 import { log } from '@/data/log';
 import { fileLock } from '@/hooks/fileLock';
 
-let started = false;
+let running: Promise<void> | null = null;
 
 /** Lance `clear` ; une erreur immédiate devient un refus, comme une erreur plus tardive. */
 const attempt = (clear: () => Promise<void>) => Promise.resolve().then(clear);
 
 /** Vide les dossiers temporaires ; un échec est écrit (code seul) et ne bloque rien. */
-export const cleanupAtStartup = async (): Promise<void> => {
-  if (started) return;
-  started = true;
+const cleanupOnce = async (): Promise<void> => {
   if (!fileLock.acquire('cleanup')) return;
   try {
     const results = await Promise.allSettled([
@@ -31,14 +29,34 @@ export const cleanupAtStartup = async (): Promise<void> => {
   }
 };
 
-/** Tests seulement : permet un nouveau nettoyage. */
-export const resetStartupCleanupForTests = (): void => {
-  started = false;
+/**
+ * Nettoyage, une fois par processus : sauté pour de bon si le verrou est pris. Rend la même
+ * promesse à chaque appel ; elle ne rejette jamais.
+ */
+export const cleanupAtStartup = (): Promise<void> => {
+  running ??= cleanupOnce().catch(() => log('STARTUP_CLEANUP_FAILED'));
+  return running;
 };
 
-/** Layout racine : nettoyage au premier montage. */
-export const useStartupCleanup = (): void => {
+/** Tests seulement : permet un nouveau nettoyage. */
+export const resetStartupCleanupForTests = (): void => {
+  running = null;
+};
+
+/**
+ * Layout racine : nettoyage au premier montage. Rend vrai une fois fini (réussi, en échec ou
+ * sauté) : la pile n'est montée qu'ensuite, aucun écran Export ou Restauration ne s'ouvre pendant.
+ */
+export const useStartupCleanup = (): boolean => {
+  const [done, setDone] = useState(false);
   useEffect(() => {
-    void cleanupAtStartup();
+    let active = true;
+    void cleanupAtStartup().then(() => {
+      if (active) setDone(true);
+    });
+    return () => {
+      active = false;
+    };
   }, []);
+  return done;
 };

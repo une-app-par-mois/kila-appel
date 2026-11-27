@@ -10,17 +10,21 @@ import { deleteAppDatabase, openExpoDb } from '@/data/expoDb';
 import { log } from '@/data/log';
 import { classifyOpenError, type OpenFailure, openAppDatabase } from '@/data/open';
 
-/** Ouverture en cours, base prête, ou échec et sa cause (`pending` : nouvel essai en cours). */
+/**
+ * Ouverture en cours, base prête, ou échec et sa cause (`pending` : nouvel essai en cours ;
+ * `resetFailed` : le dernier effacement de « Repartir de zéro » n'a pas abouti).
+ */
 export type DatabaseState =
   | { status: 'opening' }
   | { status: 'ready'; db: Db }
-  | { status: 'failed'; cause: OpenFailure; pending: boolean };
+  | { status: 'failed'; cause: OpenFailure; pending: boolean; resetFailed: boolean };
 
 // ABS-04 : le journal ne reçoit qu'un code par cause.
 const FAILURE_CODES: Record<OpenFailure, string> = {
   damaged: 'DB_OPEN_DAMAGED',
   settings: 'DB_OPEN_SETTINGS',
   newer: 'DB_OPEN_NEWER',
+  unavailable: 'DB_OPEN_UNAVAILABLE',
 };
 
 const OPENING: DatabaseState = { status: 'opening' };
@@ -49,7 +53,7 @@ const openNow = async (): Promise<void> => {
   } catch (error) {
     const cause = classifyOpenError(error);
     log(FAILURE_CODES[cause]);
-    setState({ status: 'failed', cause, pending: false });
+    setState({ status: 'failed', cause, pending: false, resetFailed: false });
   }
 };
 
@@ -63,28 +67,29 @@ const start = (open: () => Promise<Db>) => {
 /** Échec en cours sans nouvel essai, ou null. */
 const idleFailure = () => (state.status === 'failed' && !state.pending ? state : null);
 
-/** « Réessayer » (réglage refusé) : rouvre, une fois même après plusieurs appuis. */
+/** « Réessayer » : rouvre sans rien effacer, une fois même après plusieurs appuis. */
 export const retryDatabase = (): void => {
   const failed = idleFailure();
   if (failed === null) return;
-  setState({ ...failed, pending: true });
+  setState({ ...failed, pending: true, resetFailed: false });
   void openNow();
 };
 
 /**
  * « Repartir de zéro » (base abîmée seulement) : supprime le fichier et ses fichiers `-journal`,
- * `-wal`, `-shm`, puis ouvre une base neuve. Jamais pour un réglage refusé ni une version plus
- * récente : le fichier est sain. Une suppression en échec garde l'écran de récupération.
+ * `-wal`, `-shm`, puis ouvre une base neuve. Jamais pour une autre cause (réglage refusé, erreur
+ * non reconnue, version plus récente) : le fichier est gardé. Une suppression en échec garde
+ * l'écran de récupération, avec son message ; un fichier déjà absent compte comme effacé.
  */
 export const resetDatabase = async (): Promise<void> => {
   const failed = idleFailure();
   if (failed === null || failed.cause !== 'damaged') return;
-  setState({ ...failed, pending: true });
+  setState({ ...failed, pending: true, resetFailed: false });
   try {
     await deleteAppDatabase();
   } catch {
     log('DB_RESET_FAILED');
-    setState({ ...failed, pending: false });
+    setState({ ...failed, pending: false, resetFailed: true });
     return;
   }
   log('DB_RESET_DONE');

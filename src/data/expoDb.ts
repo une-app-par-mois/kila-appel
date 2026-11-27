@@ -16,6 +16,9 @@ const wrap = (raw: SQLiteDatabase): Db =>
   });
 
 const APP_DATABASE = 'kila.db';
+// Texte de DatabaseNotFoundException (expo-sqlite 58 : « Database 'nom' not found » sur Android,
+// « Database chemin not found » sur iOS).
+const NOT_FOUND = /\bDatabase \S+ not found\b/;
 
 export const openExpoDb = async (name = APP_DATABASE): Promise<Db> =>
   wrap(await openDatabaseAsync(name));
@@ -26,7 +29,17 @@ export const openExpoDb = async (name = APP_DATABASE): Promise<Db> =>
  * (openAppDatabase la ferme en cas d'échec). SEC-11 : les octets ne sont pas écrasés ; ils restent
  * dans le stockage privé de l'appli, chiffré par le système.
  */
-export const deleteAppDatabase = (): Promise<void> => deleteDatabaseAsync(APP_DATABASE);
+export const deleteAppDatabase = async (): Promise<void> => {
+  try {
+    await deleteDatabaseAsync(APP_DATABASE);
+  } catch (error) {
+    // Fichier déjà absent (DatabaseNotFoundException d'expo-sqlite, Android et iOS) : rien à
+    // effacer, c'est une réussite (réponse du porteur du 2026-11-27).
+    const message = (error as { message?: unknown } | null)?.message;
+    if (typeof message === 'string' && NOT_FOUND.test(message)) return;
+    throw error;
+  }
+};
 
 /**
  * Chemin absolu du système de fichiers, sans `file://` ni segment `.` ou `..` (ticket 014b :

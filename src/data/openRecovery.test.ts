@@ -13,7 +13,9 @@ import { openNodeDb } from '@/data/nodeDb';
 import {
   classifyOpenError,
   DATABASE_DAMAGED,
+  DATABASE_UNAVAILABLE,
   FOREIGN_KEYS_OFF,
+  isCorruption,
   JOURNAL_MODE_OFF,
   openAppDatabase,
   prepareDatabase,
@@ -169,7 +171,9 @@ describe('EX-22 base illisible au démarrage (ticket 014c)', () => {
     expect(classifyOpenError(new Error(message))).toBe('settings');
   });
 
-  it('EX-22 erreur inconnue pendant les migrations : DATABASE_DAMAGED, texte fixe', async () => {
+  // Réponse du porteur du 2026-11-27 : « abîmée » seulement si le fichier est illisible ; toute
+  // autre erreur mène à « Réessayer », sans effacement.
+  it('EX-22 erreur inconnue pendant les migrations : DATABASE_UNAVAILABLE, texte fixe', async () => {
     const db = openNodeDb(file);
     const failing: Db = {
       ...db,
@@ -177,15 +181,46 @@ describe('EX-22 base illisible au démarrage (ticket 014c)', () => {
         throw new Error('disk I/O error near Zznomzz');
       },
     };
-    expect(await failure(async () => failing)).toBe(DATABASE_DAMAGED);
+    const message = await failure(async () => failing);
+    expect(message).toBe(DATABASE_UNAVAILABLE);
+    expect(classifyOpenError(new Error(message))).toBe('unavailable');
   });
 
-  it('EX-22 ouverture du fichier impossible : DATABASE_DAMAGED', async () => {
+  it('EX-22 ouverture du fichier impossible : DATABASE_UNAVAILABLE', async () => {
     expect(
       await failure(async () => {
         throw new Error('unable to open database file');
       }),
-    ).toBe(DATABASE_DAMAGED);
+    ).toBe(DATABASE_UNAVAILABLE);
+  });
+
+  it('EX-22 réglage qui lève une exception : DATABASE_UNAVAILABLE', async () => {
+    const db = openNodeDb(file);
+    const throwing: Db = {
+      ...db,
+      execute: async (s, p = []) => {
+        if (s === 'PRAGMA foreign_keys = ON') throw new Error('database is locked');
+        return db.execute(s, p);
+      },
+    };
+    expect(await failure(async () => throwing)).toBe(DATABASE_UNAVAILABLE);
+  });
+
+  it.each([
+    ['database is locked', DATABASE_UNAVAILABLE],
+    ['Error code 5: database is locked', DATABASE_UNAVAILABLE],
+    ['Error code 11: database disk image is malformed', DATABASE_DAMAGED],
+    ['Error code 26: file is not a database', DATABASE_DAMAGED],
+  ])('EX-22 lecture d’essai en erreur « %s » : %s', async (raw, expected) => {
+    const db = openNodeDb(file);
+    const failing: Db = {
+      ...db,
+      query: async <T>(s: string, p: (string | number | null)[] = []) => {
+        if (s.includes('sqlite_schema')) throw new Error(raw);
+        return db.query<T>(s, p);
+      },
+    };
+    expect(await failure(async () => failing)).toBe(expected);
   });
 
   it('ABS-04 aucun nom dans l’erreur ni dans le journal (base abîmée pleine de noms)', async () => {
@@ -205,13 +240,33 @@ describe('EX-22 classifyOpenError : réglage, version plus récente ou base abî
     [JOURNAL_MODE_OFF, 'settings'],
     [UNKNOWN_VERSION, 'newer'],
     [DATABASE_DAMAGED, 'damaged'],
-    ['file is not a database', 'damaged'],
+    [DATABASE_UNAVAILABLE, 'unavailable'],
+    ['file is not a database', 'unavailable'],
   ])('%s → %s', (message, cause) => {
     expect(classifyOpenError(new Error(message))).toBe(cause);
   });
 
-  it('ce qui n’est pas une Error : damaged', () => {
-    expect(classifyOpenError(FOREIGN_KEYS_OFF)).toBe('damaged');
-    expect(classifyOpenError(undefined)).toBe('damaged');
+  it('ce qui n’est pas une Error : unavailable (rien n’est effacé)', () => {
+    expect(classifyOpenError(DATABASE_DAMAGED)).toBe('unavailable');
+    expect(classifyOpenError(undefined)).toBe('unavailable');
+  });
+});
+
+describe('EX-22 isCorruption : SQLITE_CORRUPT ou SQLITE_NOTADB seulement', () => {
+  const withCode = (errcode: number) => Object.assign(new Error('x'), { errcode });
+  it.each([
+    ['node:sqlite errcode 11', withCode(11), true],
+    ['node:sqlite errcode 26', withCode(26), true],
+    ['code étendu 779 (SQLITE_CORRUPT_INDEX)', withCode(779), true],
+    ['node:sqlite errcode 5 (BUSY)', withCode(5), false],
+    ['expo-sqlite « Error code 11 »', new Error('→ Caused by: Error code 11: malformed'), true],
+    ['expo-sqlite « Error code 267 »', new Error('Error code 267: vtab'), true],
+    ['expo-sqlite « Error code 10 »', new Error('Error code 10: disk I/O error'), false],
+    ['texte de SQLite', new Error('database disk image is malformed'), true],
+    ['texte de SQLite', new Error('file is not a database'), true],
+    ['autre', new Error('unable to open database file'), false],
+    ['pas une Error', 'file is not a database', false],
+  ])('%s → %s', (_cas, error, expected) => {
+    expect(isCorruption(error)).toBe(expected);
   });
 });
