@@ -1,6 +1,6 @@
 # 006f — Modifier une saison sans laisser d'inscription hors de ses dates
 
-Statut : à faire · Jalon : 1 · Zone sensible : oui (comme 006 et 006c) · Trivial : non
+Statut : en cours · Jalon : 1 · Zone sensible : oui (comme 006 et 006c) · Trivial : non
 
 Relevé par la revue du 007e ; décision du porteur du 2026-11-26.
 
@@ -10,8 +10,8 @@ Relevé par la revue du 007e ; décision du porteur du 2026-11-26.
 
 ## Critères d'acceptation
 
-- [ ] Refus si une inscription commence avant le nouveau début ou après la nouvelle fin ; rien n'est modifié
-- [ ] Une période vide (fin = début) ne bloque pas
+- [x] Refus si une inscription commence avant le nouveau début ou après la nouvelle fin ; rien n'est modifié
+- [x] Une période vide (fin = début) ne bloque pas
 
 ## Tests attendus
 

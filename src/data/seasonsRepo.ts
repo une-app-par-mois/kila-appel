@@ -39,6 +39,22 @@ const toSeason = (row: SeasonRow): Season => ({
 
 const SELECT = 'SELECT id, name, start_date, end_date, is_active FROM seasons';
 
+/** Séances et débuts d'inscription de la saison dans les nouvelles dates (EX-01, EX-04). */
+const expectDatesFit = async (tx: Db, id: number, startDate: string, endDate: string) => {
+  const [outside] = await tx.query<{ n: number }>(
+    'SELECT COUNT(*) AS n FROM sessions WHERE season_id = ? AND (date < ? OR date > ?)',
+    [id, startDate, endDate],
+  );
+  if ((outside?.n ?? 0) > 0) throw new DataError('SESSIONS_OUTSIDE_SEASON');
+  const [enrolled] = await tx.query<{ n: number }>(
+    `SELECT COUNT(*) AS n FROM enrollments e JOIN groups g ON g.id = e.group_id
+     WHERE g.season_id = ? AND (e.start_date < ? OR e.start_date > ?)
+       AND (e.end_date IS NULL OR e.end_date > e.start_date)`,
+    [id, startDate, endDate],
+  );
+  if ((enrolled?.n ?? 0) > 0) throw new DataError('ENROLLMENTS_OUTSIDE_SEASON');
+};
+
 export const seasonsRepo = (db: Db) => ({
   /** De la plus récente à la plus ancienne. */
   list: async (): Promise<Season[]> =>
@@ -63,15 +79,21 @@ export const seasonsRepo = (db: Db) => ({
     return result.lastInsertRowId;
   },
 
-  /** EX-01 : refusé si des séances tomberaient hors des nouvelles dates (décision du porteur du 2026-11-26). */
+  /**
+   * EX-01 : refusé si des séances tomberaient hors des nouvelles dates, ou si une inscription à l'un
+   * de ses groupes y commencerait (EX-04, ticket 006f) ; membres et groupes archivés compris, période
+   * vide exclue (décisions du porteur du 2026-11-26).
+   */
   update: (id: number, input: SeasonInput): Promise<void> => {
     const s = validateSeason(input);
     return db.transaction(async (tx) => {
-      const [outside] = await tx.query<{ n: number }>(
-        'SELECT COUNT(*) AS n FROM sessions WHERE season_id = ? AND (date < ? OR date > ?)',
-        [id, s.startDate, s.endDate],
+      const [current] = await tx.query<{ start_date: string; end_date: string }>(
+        'SELECT start_date, end_date FROM seasons WHERE id = ?',
+        [id],
       );
-      if ((outside?.n ?? 0) > 0) throw new DataError('SESSIONS_OUTSIDE_SEASON');
+      // Dates inchangées (renommage) : rien à contrôler.
+      if (current?.start_date !== s.startDate || current?.end_date !== s.endDate)
+        await expectDatesFit(tx, id, s.startDate, s.endDate);
       expectChanged(
         await tx.execute('UPDATE seasons SET name = ?, start_date = ?, end_date = ? WHERE id = ?', [
           s.name,

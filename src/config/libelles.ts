@@ -273,6 +273,7 @@ export const labels = {
     PHONE_INVALID: 'Numéro à 10 chiffres commençant par 0, ou +33 suivi de 9 chiffres.',
     ALREADY_ENROLLED: 'Un des membres est déjà inscrit à ce groupe.',
     SESSIONS_OUTSIDE_SEASON: 'Des séances ont déjà eu lieu hors de ces dates.',
+    ENROLLMENTS_OUTSIDE_SEASON: 'Des inscriptions commencent hors de ces dates.',
     NOT_FOUND: 'Cet élément n’existe plus.',
     unknown: 'L’opération a échoué. Réessayez.',
   },
