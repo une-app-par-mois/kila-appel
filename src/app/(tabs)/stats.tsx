@@ -2,9 +2,10 @@
 // appliquée en clair, taux de présence et séances, puis une ligne par groupe. Affiche ce que
 // calcule le ticket 023, sans rien recalculer. La période choisie vit dans l'état de l'onglet,
 // jamais en base ; les dates libres reviennent de `stats/periode` en paramètres `du` et `au`.
+// Un appui sur un groupe ouvre ses statistiques sur la période affichée (ticket 025).
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
 import type { GroupStatsRow } from '@/data/statsRepo';
@@ -19,6 +20,7 @@ import { Button } from '@/ui/Button';
 import { Card } from '@/ui/Card';
 import { FilterChip } from '@/ui/FilterChip';
 import { Screen, Section } from '@/ui/Screen';
+import { periodParams } from '@/ui/statsPeriodParams';
 
 const t = labels.stats;
 
@@ -32,9 +34,17 @@ const Figure = ({ testID, title, value }: { testID: string; title: string; value
   </View>
 );
 
-/** Ligne « Par groupe » : nom (« Archivé » dessous), taux, barre ou « Aucune séance ». */
-const GroupLine = ({ group }: { group: GroupStatsRow }) => (
-  <View testID="stats-group" style={styles.group}>
+/**
+ * Ligne « Par groupe » : nom (« Archivé » dessous), taux, barre ou « Aucune séance ». Appuyable
+ * entière, même archivée ou sans séance ; lue d'un bloc, parts de la barre comprises (NF-06).
+ */
+const GroupLine = ({ group, onPress }: { group: GroupStatsRow; onPress: () => void }) => (
+  <Pressable
+    testID="stats-group"
+    accessibilityRole="button"
+    onPress={onPress}
+    style={({ pressed }) => [styles.group, pressed && styles.pressed]}
+  >
     <View style={styles.row}>
       <View style={styles.name}>
         <Text testID="stats-group-name" style={styles.title}>
@@ -49,7 +59,7 @@ const GroupLine = ({ group }: { group: GroupStatsRow }) => (
     ) : (
       <AttendanceBar counts={group.counts} />
     )}
-  </View>
+  </Pressable>
 );
 
 export default function StatsScreen() {
@@ -78,11 +88,12 @@ export default function StatsScreen() {
   };
 
   /** Champs de l'écran Période : période affichée, sinon dates demandées (même invalides). */
-  const periodParams = (): { du?: string; au?: string } => {
+  const periodScreenParams = (): { du?: string; au?: string } => {
     if (shown) return { du: shown.period.from, au: shown.period.to };
     return choice?.kind === 'custom' ? { du: choice.from, au: choice.to } : {};
   };
-  const openPeriod = () => router.push({ pathname: '/stats/periode', params: periodParams() });
+  const openPeriod = () =>
+    router.push({ pathname: '/stats/periode', params: periodScreenParams() });
 
   return (
     <Screen title={t.title} error={loadFailed ? labels.common.loadFailed : undefined}>
@@ -135,7 +146,16 @@ export default function StatsScreen() {
           <Section title={t.byGroup} />
           <Card>
             {shown.overview.groups.map((group) => (
-              <GroupLine key={group.groupId} group={group} />
+              <GroupLine
+                key={group.groupId}
+                group={group}
+                onPress={() =>
+                  router.push({
+                    pathname: '/stats/groupes/[id]',
+                    params: { id: group.groupId, ...periodParams(shown.period) },
+                  })
+                }
+              />
             ))}
             {shown.overview.groups.length === 0 && (
               <Text style={styles.subtitle}>{t.noSession}</Text>
@@ -160,7 +180,8 @@ const styles = StyleSheet.create({
   // Côte à côte, l'une sous l'autre quand le texte est agrandi.
   figure: { flexGrow: 1, flexBasis: 140 },
   number: { fontFamily: theme.fonts.digits, fontSize: 26, color: theme.colors.texte },
-  group: { paddingVertical: theme.spacing * 2.5 },
+  group: { paddingVertical: theme.spacing * 2.5, minHeight: theme.minTouchTarget },
+  pressed: { opacity: 0.6 },
   row: {
     flexDirection: 'row',
     flexWrap: 'wrap',
