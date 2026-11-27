@@ -6,6 +6,7 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Ajouté
 
+- Enregistrement d'un appel (données) : séance, groupe figé et présences d'un bloc ; une séance par créneau et par date ; membres inscrits à la date ; commentaire de 500 caractères au plus ; séance proposée (créneau en cours ou le plus proche) — ticket 010.
 - Écrans des créneaux : liste « Mercredi 14:00 – 15:30 », création et modification (jour, début, durée « 1 h 30 », groupe, lieu et nom facultatifs), suppression après confirmation qui garde les séances ; ligne « Créneaux » dans Paramètres — ticket 009b.
 - Créneaux hebdomadaires (données) : jour, début, durée, lieu et nom facultatifs, un groupe ; un nouveau jour ou une nouvelle heure prennent effet le jour même ; modifier ou supprimer un créneau ne touche à aucune séance enregistrée — ticket 009.
 - Saisons : changer les dates est refusé si une inscription à l’un de ses groupes commencerait hors des nouvelles dates — ticket 006f.

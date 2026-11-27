@@ -2,6 +2,7 @@ import {
   InputError,
   validateMember,
   validateName,
+  validateRollCall,
   validateSeason,
   validateSlot,
 } from '@/domain/validation';
@@ -152,5 +153,61 @@ describe('EX-07 créneau hebdomadaire', () => {
   it('EX-07 durées limites : 1 min et 24 h', () => {
     expect(validateSlot({ ...slot, durationMin: 1 }).durationMin).toBe(1);
     expect(validateSlot({ ...slot, durationMin: 1440 }).durationMin).toBe(1440);
+  });
+});
+
+describe('EX-15 appel à enregistrer', () => {
+  const call = {
+    slotId: 3,
+    groupId: 2,
+    date: '2026-12-02',
+    startTime: '17:30',
+    statuses: [
+      { memberId: 1, status: 'present' as const },
+      { memberId: 2, status: 'absent' as const },
+    ],
+    comment: '  Gymnase fermé, séance au dojo  ',
+  };
+
+  it('EX-13 EX-15 accepte un appel ; commentaire nettoyé, vide → aucun', () => {
+    expect(validateRollCall(call)).toEqual({ ...call, comment: 'Gymnase fermé, séance au dojo' });
+    expect(validateRollCall({ ...call, comment: '   ', slotId: null }).comment).toBeNull();
+  });
+
+  it('EX-13 commentaire de 500 caractères au plus (décision du porteur du 2026-11-27)', () => {
+    expect(validateRollCall({ ...call, comment: 'a'.repeat(500) }).comment).toHaveLength(500);
+    expect(() => validateRollCall({ ...call, comment: 'a'.repeat(501) })).toThrow(
+      expect.objectContaining({ code: 'COMMENT_TOO_LONG' }),
+    );
+  });
+
+  it('EX-10 refuse un statut inconnu ou un membre en double', () => {
+    expect(() =>
+      validateRollCall({
+        ...call,
+        statuses: [{ memberId: 1, status: 'unknown' as unknown as 'present' }],
+      }),
+    ).toThrow(expect.objectContaining({ code: 'STATUS_INVALID' }));
+    expect(() =>
+      validateRollCall({
+        ...call,
+        statuses: [
+          { memberId: 1, status: 'present' },
+          { memberId: 1, status: 'absent' },
+        ],
+      }),
+    ).toThrow(expect.objectContaining({ code: 'STATUS_INVALID' }));
+  });
+
+  it('refuse une date, une heure ou un groupe invalides (RM-04)', () => {
+    expect(() => validateRollCall({ ...call, date: '02/12/2026' })).toThrow(
+      expect.objectContaining({ code: 'DATE_INVALID' }),
+    );
+    expect(() => validateRollCall({ ...call, startTime: '9:00' })).toThrow(
+      expect.objectContaining({ code: 'TIME_INVALID' }),
+    );
+    expect(() => validateRollCall({ ...call, groupId: 0 })).toThrow(
+      expect.objectContaining({ code: 'GROUP_REQUIRED' }),
+    );
   });
 });

@@ -22,9 +22,9 @@ Le cœur de l'appli : faire l'appel en moins de 30 s (NF-01).
 
 ## Critères d'acceptation
 
-- [ ] Séance et présences enregistrées d'un bloc, ou rien (EX-15)
-- [ ] Une seule séance par créneau et par date (RM-05) ; appel sans créneau possible (EX-39)
-- [ ] Liste de l'appel : inscrits au groupe à la date de la séance, triés par nom (EX-09)
+- [x] Séance et présences enregistrées d'un bloc, ou rien (EX-15)
+- [x] Une seule séance par créneau et par date (RM-05) ; appel sans créneau possible (EX-39)
+- [x] Liste de l'appel : inscrits au groupe à la date de la séance, triés par nom (EX-09)
 
 ## Tests attendus
 

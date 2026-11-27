@@ -43,7 +43,7 @@ Priorité : toutes les exigences sont dans la v1 (décision du 2026-11-26). Le j
 | EX-10 | Saisir les **présences** | Tous les membres démarrent à Présent. Un appui sur un membre change son statut ; Absent et Retard s'obtiennent en 1 et 2 appuis au plus. Chaque statut a une couleur, **un libellé et une icône** (jamais la couleur seule). Un compteur affiche le nombre de présents. |
 | EX-11 | Trouver un membre dans l'appel | Au-delà de 20 membres, un champ de recherche filtre la liste. |
 | EX-12 | Ajouter un membre pendant l'appel | Un nouveau membre peut être créé et inscrit au groupe sans quitter l'appel. |
-| EX-13 | Commenter la séance | Un commentaire libre facultatif, au niveau de la séance uniquement (ABS-03). |
+| EX-13 | Commenter la séance | Un commentaire libre facultatif, au niveau de la séance uniquement (ABS-03), 500 caractères au plus (décision du porteur du 2026-11-27). |
 | EX-14 | Conserver le **brouillon d'appel** | Chaque changement est conservé aussitôt. Après une fermeture forcée de l'appli ou un redémarrage de l'appareil, l'appel est retrouvé tel quel à la réouverture. Le brouillon disparaît à l'enregistrement ou si l'encadrant l'abandonne explicitement. |
 | EX-39 | Faire l'appel sans créneau | L'encadrant choisit un groupe et une date ; la séance enregistrée n'est rattachée à aucun créneau et compte comme les autres. |
 | EX-15 | Enregistrer l'appel | Un appui enregistre la séance et ses présences, puis affiche une confirmation. |
