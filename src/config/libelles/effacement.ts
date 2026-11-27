@@ -73,4 +73,24 @@ export const effacement = {
     confirm: 'Purger',
     failed: 'La purge n’a pas abouti. Rien n’a été effacé.',
   },
+  /** Tout effacer (ticket 015f, EX-23) : maquettes « Tout effacer », Sauvegarde et Paramètres. */
+  eraseAll: {
+    /** Ligne de Paramètres, section de Sauvegarde. */
+    section: 'Tout effacer',
+    intro: 'Efface toutes les données de cet appareil. Double confirmation.',
+    open: 'Tout effacer…',
+    title: 'Tout effacer ?',
+    /** Texte de la maquette, tel quel (réponse du porteur du 2026-11-27) ; « définitivement » en gras. */
+    warningBefore: 'Toutes les données de cet appareil seront effacées ',
+    warningStrong: 'définitivement',
+    warningAfter:
+      ' : membres, contacts d’urgence, groupes, créneaux, séances, présences et réglages.',
+    warningNote: 'Sans sauvegarde, elles ne pourront pas être retrouvées.',
+    /** Mot à taper (majuscules et espaces autour ignorés, réponse du porteur du 2026-11-27). */
+    word: 'EFFACER',
+    field: 'Pour confirmer, tapez EFFACER',
+    cancel: 'Garder',
+    confirm: 'Tout effacer',
+    failed: 'L’effacement n’a pas abouti. Rien n’a été effacé.',
+  },
 };
