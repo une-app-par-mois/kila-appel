@@ -106,7 +106,7 @@ describe('Onglets et accueil (ticket 012)', () => {
     expect(router.getPathname()).toBe('/urgence');
   });
 
-  it('EX-09 EX-16 onglets : Accueil, place de Stats, Nouvel appel au centre, Historique, Paramètres', async () => {
+  it('EX-09 EX-16 EX-27 onglets : Accueil, Stats, Nouvel appel au centre, Historique, Paramètres', async () => {
     const router = await open();
     expect(await button(tab.home)).toBeTruthy();
     const bar = screen.getByLabelText(tab.label);
@@ -114,18 +114,14 @@ describe('Onglets et accueil (ticket 012)', () => {
       within(bar)
         .getAllByRole('button')
         .map((b) => b.props.accessibilityLabel),
-    ).toEqual([tab.home, tab.newRollCall, tab.history, tab.settings]);
-    // Cinq places (décision du porteur du 2026-11-27) : une place vide pour Stats (jalon 2), le
-    // rond au centre ; la place vide n'est ni un bouton ni lue par le lecteur d'écran.
+    ).toEqual([tab.home, tab.stats, tab.newRollCall, tab.history, tab.settings]);
+    // Cinq places (décision du porteur du 2026-11-27) : Stats (ticket 024) à la place gardée, le
+    // rond au centre.
     const places = bar.children.filter((c) => typeof c !== 'string');
     expect(places).toHaveLength(5);
-    const empty = within(bar).getByTestId('tab-placeholder', { includeHiddenElements: true });
-    expect(places[1]).toBe(empty);
-    expect(empty.props.accessibilityRole).toBeUndefined();
-    expect(empty.props.onPress).toBeUndefined();
-    expect(empty.props.importantForAccessibility).toBe('no-hide-descendants');
-    expect(empty.props.accessibilityElementsHidden).toBe(true);
-    expect(within(places[2] as typeof empty).getByText(tab.newRollCall)).toBeTruthy();
+    expect(within(places[2] as never).getByText(tab.newRollCall)).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: tab.stats }));
+    expect(router.getPathname()).toBe('/stats');
     await fireEvent.press(screen.getByRole('button', { name: tab.history }));
     expect(router.getPathname()).toBe('/historique');
     await fireEvent.press(screen.getByRole('button', { name: tab.settings }));

@@ -3,6 +3,7 @@
 // Import icône par icône : le point d'entrée principal ré-exporte toute la bibliothèque.
 import Archive from 'lucide-react-native/icons/archive';
 import ArchiveRestore from 'lucide-react-native/icons/archive-restore';
+import ChartColumn from 'lucide-react-native/icons/chart-column';
 import Check from 'lucide-react-native/icons/check';
 import ChevronDown from 'lucide-react-native/icons/chevron-down';
 import ChevronLeft from 'lucide-react-native/icons/chevron-left';
@@ -31,8 +32,9 @@ const ICONS = {
   delete: Trash2,
   /** Poignée ≡ pour glisser (maquette Fiche membre). */
   grip: Grip,
-  /** Onglets (maquette : ⌂, ☰ et ⚙). */
+  /** Onglets (maquette : ⌂, ▥, ☰ et ⚙). */
   home: House,
+  stats: ChartColumn,
   list: List,
   settings: Settings,
   phone: Phone,

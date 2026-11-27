@@ -28,6 +28,8 @@ const useStatsLoad = <T>(
   readStats: (db: Db, period: StatsPeriod) => Promise<T>,
   failureCode: string,
   details: Record<string, number>,
+  /** Garde la période et les chiffres précédents pendant une relecture (useLoaded). */
+  keepPrevious = false,
 ) => {
   const db = useDatabase();
   const { date } = useLocalNow();
@@ -52,7 +54,7 @@ const useStatsLoad = <T>(
         : null,
     [db, date, wanted, inputError, readStats],
   );
-  const { value, loaded, loadFailed } = useLoaded(load, failureCode, details);
+  const { value, loaded, loadFailed } = useLoaded(load, failureCode, details, keepPrevious);
   return { stats: value, loaded, loadFailed, inputError };
 };
 
@@ -60,9 +62,12 @@ const readOverview = async (db: Db, period: StatsPeriod): Promise<{ overview: St
   overview: await statsRepo(db).overview(period),
 });
 
-/** EX-27 : écran « Statistiques » (synthèse et ligne par groupe). */
+/**
+ * EX-27 : écran « Statistiques » (synthèse et ligne par groupe). La vue précédente reste pendant un
+ * changement de période ; elle reste aussi quand des dates invalides sautent la lecture.
+ */
 export const useStats = (choice: PeriodChoice | null) =>
-  useStatsLoad(choice, readOverview, 'STATS_LOAD_FAILED', {});
+  useStatsLoad(choice, readOverview, 'STATS_LOAD_FAILED', {}, true);
 
 /** EX-27 : écran « Statistiques d'un groupe » ; `group` nul si le groupe n'existe pas (ou plus). */
 export const useGroupStats = (groupId: number, choice: PeriodChoice | null) => {
