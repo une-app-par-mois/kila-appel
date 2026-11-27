@@ -2,9 +2,10 @@
  * @jest-environment node
  */
 // useEraseAll (ticket 015f, EX-23, SEC-10, SEC-11, ABS-04, ABS-05) : tout effacer sous le verrou
-// commun, sur la base ouverte, puis vidage des copies du cache sous le même verrou. Vraie base
-// node:sqlite et jeu fictif.
+// commun, sur la base ouverte, puis vidage des copies du cache et des relances (ticket 028c) sous
+// le même verrou. Vraie base node:sqlite et jeu fictif ; expo-notifications imité en mémoire.
 import { act, renderHook } from '@testing-library/react-native';
+import type { fakeNotifications } from '@/__fixtures__/expoModules';
 import { TABLES } from '@/__fixtures__/purgeSeed';
 import { count, seed } from '@/__fixtures__/seed';
 import type { Db } from '@/data/db';
@@ -13,7 +14,7 @@ import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
 import { erasedCount, onDataChanged } from '@/hooks/dataChanged';
 import { type FileTask, fileLock } from '@/hooks/fileLock';
-import { useEraseAll } from '@/hooks/useErase';
+import { clearAllReminders, useEraseAll } from '@/hooks/useErase';
 
 let mockDb: Db | null = null;
 jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => mockDb }));
@@ -22,6 +23,10 @@ jest.mock('@/hooks/useLocalNow', () => ({
 }));
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
 const { log } = jest.requireMock('@/data/log') as { log: jest.Mock };
+jest.mock('expo-notifications', () => require('@/__fixtures__/expoModules').fakeNotifications());
+const notifications = jest.requireMock('expo-notifications') as ReturnType<
+  typeof fakeNotifications
+>;
 
 const schema = (db: Db) =>
   db.query("SELECT name, sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY name");
@@ -29,12 +34,14 @@ const schema = (db: Db) =>
 describe('useEraseAll : tout effacer (EX-23, SEC-11)', () => {
   let db: Db;
   let clearCopies: jest.Mock;
+  let clearReminders: jest.Mock;
   beforeEach(async () => {
     db = await prepareDatabase(openNodeDb());
     await seed(db);
     await db.execute('INSERT INTO settings (key, value) VALUES (?, ?)', ['retention_seasons', '1']);
     mockDb = db;
     clearCopies = jest.fn(async () => undefined);
+    clearReminders = jest.fn(async () => undefined);
     log.mockClear();
   });
   afterEach(async () => {
@@ -46,7 +53,7 @@ describe('useEraseAll : tout effacer (EX-23, SEC-11)', () => {
   });
 
   const erase = async () => {
-    const { result } = await renderHook(() => useEraseAll({ clearCopies }));
+    const { result } = await renderHook(() => useEraseAll({ clearCopies, clearReminders }));
     let done: boolean | null = null;
     await act(async () => {
       done = await result.current.eraseNow();
@@ -96,6 +103,7 @@ describe('useEraseAll : tout effacer (EX-23, SEC-11)', () => {
       expect(done).toBe(false);
       expect(await count(db, 'members')).toBe(2);
       expect(clearCopies).not.toHaveBeenCalled();
+      expect(clearReminders).not.toHaveBeenCalled();
       expect(log.mock.calls).toEqual([['ERASE_ALL_REFUSED']]);
       expect(fileLock.holder()).toBe(task);
     },
@@ -110,6 +118,7 @@ describe('useEraseAll : tout effacer (EX-23, SEC-11)', () => {
     expect(done).toBe(false);
     expect(await count(db, 'members')).toBe(2);
     expect(clearCopies).not.toHaveBeenCalled();
+    expect(clearReminders).not.toHaveBeenCalled();
     expect(log.mock.calls).toEqual([['ERASE_ALL_FAILED']]);
     expect(fileLock.holder()).toBeNull();
     expect(result.current.erasing).toBe(false);
@@ -134,11 +143,32 @@ describe('useEraseAll : tout effacer (EX-23, SEC-11)', () => {
     expect(fileLock.holder()).toBeNull();
   });
 
+  it('SEC-11 relances retirées une seule fois, après l’effacement, sous le même verrou', async () => {
+    const seen: { holder: string | null; seasons: number }[] = [];
+    clearReminders.mockImplementation(async () => {
+      seen.push({ holder: fileLock.holder(), seasons: await count(db, 'seasons') });
+    });
+    const { done } = await erase();
+    expect(done).toBe(true);
+    expect(seen).toEqual([{ holder: 'erase', seasons: 0 }]);
+  });
+
+  it('SEC-11 échec du retrait des relances : ERASE_REMINDERS_FAILED, Bienvenue quand même', async () => {
+    clearReminders.mockRejectedValue(new Error('relances'));
+    const { done } = await erase();
+    expect(done).toBe(true);
+    expect(await count(db, 'members')).toBe(0);
+    expect(clearCopies).toHaveBeenCalledTimes(1);
+    expect(log.mock.calls).toEqual([['ERASE_ALL_DONE'], ['ERASE_REMINDERS_FAILED']]);
+    expect(fileLock.holder()).toBeNull();
+  });
+
   it('ABS-04 le journal ne reçoit que des codes, jamais un nom fictif', async () => {
     const names = await db.query<{ last_name: string; first_name: string }>(
       'SELECT last_name, first_name FROM members',
     );
     clearCopies.mockRejectedValue(new Error(names.map((m) => m.last_name).join(' ')));
+    clearReminders.mockRejectedValue(new Error(names.map((m) => m.first_name).join(' ')));
     await erase();
     jest.spyOn(db, 'transaction').mockRejectedValue(new Error(names[0]?.first_name ?? ''));
     await erase();
@@ -148,5 +178,49 @@ describe('useEraseAll : tout effacer (EX-23, SEC-11)', () => {
       expect(written).not.toContain(m.first_name);
     }
     for (const call of log.mock.calls) expect(call[0]).toMatch(/^[A-Z_]+$/);
+  });
+});
+
+describe('clearAllReminders : relances de Tout effacer (ticket 028c, SEC-11)', () => {
+  const { state } = notifications;
+  const request = (identifier: string) => ({ identifier, content: { data: {} } });
+  beforeEach(() => {
+    state.scheduled = [{ identifier: 'relance-1-2026-11-28', content: {}, trigger: {} }];
+    state.presented = [request('relance-1-2026-11-27'), request('autre')];
+    state.fail.clear();
+    log.mockClear();
+  });
+  afterEach(() => jest.restoreAllMocks());
+
+  it('SEC-11 annule les relances programmées puis retire celles qui sont affichées', async () => {
+    const order: string[] = [];
+    const cancel = notifications.cancelAllScheduledNotificationsAsync;
+    const presented = notifications.getPresentedNotificationsAsync;
+    jest.spyOn(notifications, 'cancelAllScheduledNotificationsAsync').mockImplementation(() => {
+      order.push('cancel');
+      return cancel();
+    });
+    jest.spyOn(notifications, 'getPresentedNotificationsAsync').mockImplementation(() => {
+      order.push('presented');
+      return presented();
+    });
+    await clearAllReminders();
+    expect(order).toEqual(['cancel', 'presented']);
+    expect(state.scheduled).toEqual([]);
+    expect(state.presented).toEqual([]);
+    expect(log).not.toHaveBeenCalled();
+  });
+
+  it('SEC-11 annulation en échec : affichées retirées quand même, puis échec signalé', async () => {
+    state.fail.add('cancelAllScheduledNotificationsAsync');
+    await expect(clearAllReminders()).rejects.toThrow();
+    expect(state.presented).toEqual([]);
+  });
+
+  it('SEC-11 retrait en échec : journalisé par l’adaptateur (code seul), annulation faite', async () => {
+    state.fail.add('getPresentedNotificationsAsync');
+    await expect(clearAllReminders()).resolves.toBeUndefined();
+    expect(state.scheduled).toEqual([]);
+    expect(log.mock.calls).toEqual([['REMINDER_DISMISS_FAILED']]);
   });
 });

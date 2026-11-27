@@ -10,6 +10,7 @@ import {
   useDatabaseState,
 } from '@/hooks/useDatabase';
 import { useRecovery } from '@/hooks/useRecovery';
+import { useReminderTap } from '@/hooks/useReminderTap';
 import { useStartupCleanup } from '@/hooks/useStartupCleanup';
 import { Recovery } from '@/ui/Recovery';
 
@@ -21,17 +22,20 @@ import { Recovery } from '@/ui/Recovery';
 // Export ou Restauration ne s'ouvre pendant ce nettoyage. La restauration depuis l'écran de
 // récupération (ticket 014f) vit ici : son état survit au passage d'une variante à l'autre, et la
 // pile s'affiche d'elle-même (accueil) une fois la base restaurée.
-// Racine des gestes : la poignée ≡ des contacts d'urgence (008b).
+// Racine des gestes : la poignée ≡ des contacts d'urgence (008b). Appui sur une relance (028c) :
+// l'appel s'ouvre une fois la pile montée, jamais depuis l'écran de récupération.
 export default function RootLayout() {
   const database = useDatabaseState();
   const cleaned = useStartupCleanup();
   const recovery = useRecovery(expoRestoreDeps, database.status);
+  const showRecovery =
+    database.status === 'failed' ||
+    database.status === 'restoreFailed' ||
+    database.status === 'erased';
+  const ready = database.status === 'ready' && cleaned;
+  useReminderTap(showRecovery ? 'recovery' : ready ? 'ready' : 'starting');
   const content = () => {
-    if (
-      database.status === 'failed' ||
-      database.status === 'restoreFailed' ||
-      database.status === 'erased'
-    ) {
+    if (showRecovery) {
       return (
         <Recovery
           database={database}
@@ -43,7 +47,7 @@ export default function RootLayout() {
         />
       );
     }
-    if (database.status === 'ready' && cleaned) {
+    if (ready) {
       return <Stack screenOptions={{ headerShown: false }} />;
     }
     return <View testID="startup" style={styles.neutral} />;
