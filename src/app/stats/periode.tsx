@@ -1,7 +1,7 @@
 // Choix d'une période (maquette « Choix d'une période », EX-27, ticket 024) : « Du » et « Au » en
 // JJ/MM/AAAA (RM-04), partis de la période en cours (`du`, `au` en AAAA-MM-JJ). « Appliquer »
-// refuse une date invalide ou une fin avant le début, sous le champ (CONV-15) ; sinon retour à
-// l'onglet avec les dates. Dates futures et sur plusieurs saisons acceptées.
+// refuse une date invalide ou une fin avant le début, sous le champ (CONV-15) ; sinon l'écran se
+// referme sur l'onglet avec les dates. Dates futures et sur plusieurs saisons acceptées.
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -47,7 +47,8 @@ export default function PeriodScreen() {
       setErrors({ to: E[code] });
       return;
     }
-    router.navigate({ pathname: '/stats', params: { du: start, au: end } });
+    // Referme l'écran (pas de second `(tabs)` empilé), comme `membres/[id].tsx`.
+    router.dismissTo({ pathname: '/stats', params: { du: start, au: end } });
   };
 
   return (

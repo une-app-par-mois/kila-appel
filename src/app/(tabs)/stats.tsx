@@ -3,7 +3,7 @@
 // calcule le ticket 023, sans rien recalculer. La période choisie vit dans l'état de l'onglet,
 // jamais en base ; les dates libres reviennent de `stats/periode` en paramètres `du` et `au`.
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
@@ -62,26 +62,27 @@ export default function StatsScreen() {
   useEffect(() => {
     if (du !== undefined && au !== undefined) setChoice({ kind: 'custom', from: du, to: au });
   }, [du, au]);
+  // Vue précédente gardée pendant une relecture (`keepPrevious`) : ni les puces ni les chiffres
+  // ne disparaissent au changement de période.
   const { stats, loadFailed, inputError } = useStats(choice);
-  // Dernier état connu (état vide, saison active) : les puces restent pendant une relecture.
-  const known = useRef<{ anyRecorded: boolean; season: boolean } | null>(null);
-  if (stats) known.current = { anyRecorded: stats.overview.anyRecorded, season: !!stats.season };
-  const empty = known.current?.anyRecorded === false && inputError === null;
-  const showFilters = !empty && (known.current !== null || inputError !== null);
-  const selected: PeriodKind | undefined = stats?.period.kind ?? choice?.kind;
-  const kinds: ('season' | 'month')[] =
-    known.current?.season === false ? ['month'] : ['season', 'month'];
+  const shown = inputError === null ? stats : null;
+  const empty = stats?.overview.anyRecorded === false && inputError === null;
+  const showFilters = !empty && (stats !== null || inputError !== null);
+  const selected: PeriodKind | undefined = choice?.kind ?? stats?.period.kind;
+  // « Saison » seulement si une saison active est connue (inconnue : dates reçues invalides).
+  const kinds: ('season' | 'month')[] = stats?.season ? ['season', 'month'] : ['month'];
   /** Saison ou mois : les dates reçues sont oubliées, et reviennent si on les réapplique. */
   const choose = (kind: 'season' | 'month') => {
     router.setParams({ du: undefined, au: undefined });
     setChoice({ kind });
   };
 
-  const openPeriod = () =>
-    router.push({
-      pathname: '/stats/periode',
-      params: stats ? { du: stats.period.from, au: stats.period.to } : {},
-    });
+  /** Champs de l'écran Période : période affichée, sinon dates demandées (même invalides). */
+  const periodParams = (): { du?: string; au?: string } => {
+    if (shown) return { du: shown.period.from, au: shown.period.to };
+    return choice?.kind === 'custom' ? { du: choice.from, au: choice.to } : {};
+  };
+  const openPeriod = () => router.push({ pathname: '/stats/periode', params: periodParams() });
 
   return (
     <Screen title={t.title} error={loadFailed ? labels.common.loadFailed : undefined}>
@@ -114,29 +115,29 @@ export default function StatsScreen() {
         </View>
       )}
       {inputError !== null && <Text style={styles.error}>{labels.errors[inputError]}</Text>}
-      {stats?.overview.anyRecorded && (
+      {shown?.overview.anyRecorded && (
         <>
           <Text style={styles.period}>
-            {t.periodShown(toDisplayDate(stats.period.from), toDisplayDate(stats.period.to))}
+            {t.periodShown(toDisplayDate(shown.period.from), toDisplayDate(shown.period.to))}
           </Text>
           <View style={styles.figures}>
             <Figure
               testID="stats-rate"
               title={t.rate}
-              value={formatRate(attendanceRate(stats.overview.counts))}
+              value={formatRate(attendanceRate(shown.overview.counts))}
             />
             <Figure
               testID="stats-sessions"
               title={t.sessions}
-              value={String(stats.overview.sessions)}
+              value={String(shown.overview.sessions)}
             />
           </View>
           <Section title={t.byGroup} />
           <Card>
-            {stats.overview.groups.map((group) => (
+            {shown.overview.groups.map((group) => (
               <GroupLine key={group.groupId} group={group} />
             ))}
-            {stats.overview.groups.length === 0 && (
+            {shown.overview.groups.length === 0 && (
               <Text style={styles.subtitle}>{t.noSession}</Text>
             )}
           </Card>

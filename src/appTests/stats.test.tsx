@@ -26,6 +26,9 @@ const open = (initialUrl = '/stats') => renderRouter(routes, { initialUrl });
 const t = labels.stats;
 const pct = (n: number) => `${n}${NBSP}%`;
 const chip = (name: string) => screen.findByRole('button', { name });
+/** Écrans de la pile racine : un retour ne rouvre que ce qui y reste. */
+const rootStack = (router: Awaited<ReturnType<typeof open>>) =>
+  router.getRouterState()?.routes[0]?.state?.routes.map((r) => r.name);
 /** Carte d'un chiffre de la synthèse : « Taux de présence » ou « Séances ». */
 const figure = async (testID: 'stats-rate' | 'stats-sessions') =>
   within(await screen.findByTestId(testID));
@@ -168,6 +171,41 @@ describe('Onglet Statistiques (ticket 024, EX-27, RM-01)', () => {
     expect(await screen.findByText(t.periodShown('01/03/2026', '31/03/2026'))).toBeTruthy();
   });
 
+  it('EX-27 « Appliquer » referme l’écran Période : rien d’empilé, même appliqué deux fois', async () => {
+    const router = await open();
+    const periods: [string, string][] = [
+      ['01/03/2026', '31/03/2026'],
+      ['01/10/2026', '31/10/2026'],
+    ];
+    for (const [from, to] of periods) {
+      await fireEvent.press(await chip(t.periods.custom));
+      await fireEvent.changeText(await screen.findByLabelText(t.periodScreen.from), from);
+      await fireEvent.changeText(screen.getByLabelText(t.periodScreen.to), to);
+      await fireEvent.press(screen.getByRole('button', { name: t.periodScreen.apply }));
+      expect(router.getPathname()).toBe('/stats');
+      expect(await screen.findByText(t.periodShown(from, to))).toBeTruthy();
+      expect(rootStack(router)).toEqual(['(tabs)']);
+    }
+  });
+
+  it('EX-27 changement de puce : les chiffres restent affichés pendant la relecture', async () => {
+    await open();
+    expect((await figure('stats-rate')).getByText(pct(87))).toBeTruthy();
+    // Lecture suspendue jusqu'au déblocage : on voit l'écran pendant la relecture.
+    let release = () => {};
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    const query = db.query.bind(db);
+    jest.spyOn(db, 'query').mockImplementation(async (...args) => {
+      await gate;
+      return query(...args);
+    });
+    await fireEvent.press(await chip(t.periods.month));
+    expect((await chip(t.periods.month)).props.accessibilityState).toEqual({ selected: true });
+    expect((await figure('stats-rate')).getByText(pct(87))).toBeTruthy();
+    release();
+    expect(await (await figure('stats-rate')).findByText(pct(73))).toBeTruthy();
+  });
+
   it('EX-27 retour de l’écran Période sans appliquer : la période ne change pas', async () => {
     const router = await open();
     await fireEvent.press(await chip(t.periods.custom));
@@ -181,6 +219,13 @@ describe('Onglet Statistiques (ticket 024, EX-27, RM-01)', () => {
     expect(await screen.findByText(labels.errors.END_BEFORE_START)).toBeTruthy();
     expect(screen.queryByTestId('stats-rate')).toBeNull();
     expect(screen.queryByText(labels.common.loadFailed)).toBeNull();
+    // Saison active encore inconnue : pas de puce « Saison ».
+    expect(screen.queryByRole('button', { name: t.periods.season })).toBeNull();
+    // « Dates… » reprend les dates reçues.
+    await fireEvent.press(await chip(t.periods.custom));
+    expect((await screen.findByLabelText(t.periodScreen.from)).props.value).toBe('01/12/2026');
+    expect(screen.getByLabelText(t.periodScreen.to).props.value).toBe('01/11/2026');
+    await fireEvent.press(screen.getByRole('button', { name: labels.common.back }));
     await fireEvent.press(await chip(t.periods.month));
     expect((await figure('stats-rate')).getByText(pct(73))).toBeTruthy();
   });

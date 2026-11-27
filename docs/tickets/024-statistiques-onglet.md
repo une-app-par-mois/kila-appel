@@ -66,8 +66,8 @@ Reports de l'intégration du lot J2-1 (2026-11-27) :
 | Période affichée | rien (maquette) ; ligne sous les puces | ligne « Du JJ/MM/AAAA au JJ/MM/AAAA » toujours affichée, puce « Dates… » inchangée | décidée par le porteur le 2026-11-27 (écart voulu avec la maquette) | décidée |
 | Taille du ticket | découper ; garder entier | entier, 12 fichiers : les 9 de la fiche, plus `libelles/accueil.ts` (`tabs.stats`), `ui/Icon.tsx` (`chart-column`, déjà installé) et `appTests/home.test.tsx` (seul le test des onglets) | ajouts d'une ligne, sans logique nouvelle | à relire |
 | Ordre des onglets | — | `index, stats, historique, parametres` ; Stats prend la place vide, le rond reste au centre | maquette | à relire |
-| Appui sur un groupe | appuyable ; non | lignes non appuyables, pas de route `stats/groupes` | l'écran du groupe arrive au 025 | à relire |
-| Écran Période | modale ; écran de la pile racine | `src/app/stats/periode.tsx` dans la pile racine, sans barre d'onglets ; retour par `router.navigate` vers `/stats` avec `du`, `au` (AAAA-MM-JJ) ; période gardée dans l'état de l'onglet, jamais en base ; aucun `stats/index.tsx` | cohabitation `(tabs)/stats` et `stats/periode` vérifiée dans les tests | à relire |
+| Appui sur un groupe | appuyable ; non | lignes non appuyables, pas de route `stats/groupes` | l'écran du groupe arrive au 025 ; appui à ajouter au 025 (voir « À reporter ») | changée après contradiction |
+| Écran Période | modale ; écran de la pile racine | `src/app/stats/periode.tsx` dans la pile racine, sans barre d'onglets ; retour par `router.dismissTo` vers `/stats` avec `du`, `au` (AAAA-MM-JJ), comme `membres/[id].tsx` : la pile garde un seul `(tabs)`, un retour ne rouvre pas l'écran Période ; période gardée dans l'état de l'onglet, jamais en base ; aucun `stats/index.tsx` | `router.navigate` empilait un second `(tabs)` (revue) ; test : deux applications de suite, pile `['(tabs)']` | changée après contradiction |
 | Même période réappliquée après « Saison » ou « Ce mois » | — | ces puces effacent `du`, `au` de l'adresse (`setParams`) : réappliquer les mêmes dates les reprend | sinon les paramètres inchangés ne relancent rien (test dédié) | à relire |
 | Saisie des dates | — | `parseDisplayDate` puis `choiceError` ; `DATE_INVALID` sous le champ fautif, `END_BEFORE_START` sous « Au » ; champs partis de `stats.period` ; dates futures et sur plusieurs saisons acceptées ; `inputError` affiché sur l'onglet en filet | CONV-15, RM-04 | à relire |
 | État vide | — | `!anyRecorded` : seule la carte de la maquette, « Faire l'appel » par `useNewRollCallRoute` (désactivé tant que la route est nulle) | maquette « États vides du lot 2 » | à relire |
@@ -76,6 +76,9 @@ Reports de l'intégration du lot J2-1 (2026-11-27) :
 | Synthèse et somme des groupes | note ; rien | aucune note, aucun test de somme ; écart signalé dans la PR | la synthèse compte chaque présence une fois (séance sans groupe, séance commune) | à relire |
 | Barre par statut | — | 12 pt, rayon 4, ordre `SHARE_ORDER`, couleurs `theme.statuses` ; libellé d'accessibilité des parts non nulles avec `NBSP` ; légende affichée sous « Par groupe » ; aucune barre sans présence | NF-06 | à relire |
 | Chiffres et texte agrandi | — | Plex Mono, 26 dans les cartes ; cartes, champs et puces passent à la ligne | charte, NF-06 | à relire |
+| Dates reçues invalides au premier affichage | lire saison et état vide quand même ; masquer « Saison » tant que c'est inconnu | « Saison » masquée tant que la saison active est inconnue ; « Ce mois » et « Dates… » restent pour sortir de l'erreur | le plus simple : aucune lecture de plus. Reste : sans aucune séance enregistrée, ces deux puces s'affichent jusqu'au choix d'une période, puis l'état vide les remplace (cas d'une adresse forgée seulement) | à relire |
+| « Dates… » sans chiffres lus | — | champs remplis avec la période affichée, sinon avec les dates demandées (`choice`) ; une date non valide arrive vide | revue | à relire |
+| Changement de puce | vider ; garder la vue précédente | vue précédente gardée pendant la relecture : `useStats` passe `keepPrevious` à `useLoaded` ; puce choisie sélectionnée tout de suite ; chiffres masqués quand des dates invalides sautent la lecture. Ajoute `src/hooks/useStats.ts` aux fichiers (13), `useGroupStats` et `useMemberStats` inchangés | revue ; test avec une lecture suspendue | à relire |
 | Textes | — | `src/config/libelles/stats.ts`, clé unique `stats` ; `index.ts` : un import, une ligne | CONV-03 | à relire |
 
 ## Questions pour le porteur
@@ -85,6 +88,7 @@ Aucune.
 ## À reporter
 
 - Écarts avec la maquette, pour la PR : ligne « Du … au … » sous les puces (voulue par le porteur) ; boutons « Exporter (CSV) » et « Rapport PDF » masqués (jalon 3) ; écran Période sans la barre d'onglets ; lignes de groupe non appuyables jusqu'au 025.
+- Pour le ticket 025 : ajouter `src/app/(tabs)/stats.tsx` à ses fichiers (appui sur une ligne de groupe vers `stats/groupes/[id]`, avec `du` et `au` de la période affichée) et le critère « un appui sur un groupe de l'onglet Stats ouvre ses statistiques ».
 - Pour la PR : la synthèse ne vaut pas la somme des groupes (jeu fictif : 45 présents contre 44), car une séance sans groupe compte seulement dans la synthèse ; aucune note à l'écran.
 
 - CHANGELOG : Onglet Stats : taux de présence de la période et par groupe, période au choix (F-05, EX-27).
