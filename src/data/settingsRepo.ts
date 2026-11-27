@@ -2,8 +2,9 @@
 // base). Requêtes paramétrées (SEC-05). ABS-08 : aucun réglage ne porte une donnée personnelle.
 // Jamais d'INSERT OR REPLACE (ARCHITECTURE §4.2) : ON CONFLICT met la valeur à jour.
 import type { Db } from '@/data/db';
+import { DataError } from '@/data/errors';
 import { isIsoDate } from '@/domain/formats';
-import { InputError, validateDate } from '@/domain/validation';
+import { validateDate } from '@/domain/validation';
 
 /** Clés connues ; aucune autre n'est écrite par l'appli. */
 export const SETTING_KEYS = {
@@ -69,7 +70,7 @@ export const settingsRepo = (db: Db) => ({
   },
 
   setRetentionSeasons: async (seasons: number): Promise<void> => {
-    if (!RETENTION_VALUES.includes(String(seasons))) throw new InputError('RETENTION_INVALID');
+    if (!RETENTION_VALUES.includes(String(seasons))) throw new DataError('RETENTION_INVALID');
     await write(db, SETTING_KEYS.retentionSeasons, String(seasons));
   },
 });
