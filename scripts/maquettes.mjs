@@ -188,7 +188,8 @@ ecran('creneaux', 1, 'Créneaux', 'EX-07', 'parametres', `
 ${titre('Créneaux', 'parametres')}
 ${carte(`${ligne('Mercredi 14:00 – 15:30', 'Poussins mercredi · Gymnase Jean-Moulin', 'data-go="creneau-modif"')}${ligne('Lundi 18:00 – 19:30', 'Benjamins lundi · Dojo municipal', 'data-go="creneau"')}${ligne('Jeudi 20:00 – 21:30', 'Adultes jeudi · Dojo municipal', 'data-go="creneau"')}`)}
 <div class="duo">${go('creneau', 'Chaque semaine', 'btn-s tiers')}${go('creneau-ponctuel', 'Nouveau créneau', 'btn-p deuxtiers')}</div>
-${carte(ligne('Stage de Noël', '27, 28 et 29/12 · Poussins et Benjamins', 'data-go="creneau-ponctuel"'))}`);
+${carte(ligne('Stage de Noël', '27, 28 et 29/12 · Poussins et Benjamins', 'data-go="creneau-ponctuel"'))}
+<p class="note">Lot 1 : un seul bouton « Nouveau créneau », vers le créneau hebdomadaire ; « Chaque semaine » et les ponctuels arrivent au lot 2 (décision du 2026-11-27).</p>`);
 
 // 12 — Fiche membre (EX-03, EX-04, EX-05)
 ecran('membre', 1, 'Fiche membre', 'EX-03, EX-04, EX-05', 'parametres', `
@@ -309,9 +310,15 @@ ${titre('Mercredi 14:00', 'creneaux')}
 <label>Jour</label><div class="jours">${['L', 'M', 'Me', 'J', 'V', 'S', 'D'].map((d) => `<span class="jour ${d === 'Me' ? 'on' : ''}">${d}</span>`).join('')}</div>
 <div class="deux"><div><label>Début</label><div class="champ mono">14:00</div></div><div><label>Durée</label><div class="champ mono">1 h 30</div></div></div>
 <label>Groupe</label><div class="champ">Poussins mercredi ▾</div>
+<label>Lieu <span class="facultatif">facultatif</span></label><div class="champ">Gymnase Jean-Moulin</div>
+<label>Nom <span class="facultatif">facultatif</span></label><div class="champ vide">Par exemple « Technique »</div>
 ${go('creneaux', 'Enregistrer')}
-${go('creneaux', 'Supprimer le créneau', 'btn-s danger')}
-<p class="note">Modifier ou supprimer un créneau ne touche à aucune séance déjà enregistrée (EX-07).</p>`);
+${go('suppression-creneau', 'Supprimer le créneau', 'btn-s danger')}
+<p class="note">Modifier ou supprimer un créneau ne touche à aucune séance déjà enregistrée (EX-07). Lieu et nom modifiables (décision du 2026-11-27).</p>`);
+
+ecran('suppression-creneau', 1, "Suppression d'un créneau", 'EX-07', 'parametres', confirmer('Supprimer ce créneau ?', 'creneau-modif',
+  `<p>Le créneau sera supprimé. L'appel interrompu sur ce créneau sera effacé.</p><p class="l-sous">Les séances déjà enregistrées sont conservées.</p>`, 'Supprimer', 'creneaux') + `
+<p class="note">La phrase sur l'appel interrompu n'apparaît que s'il y en a un (décision du 2026-11-27).</p>`);
 
 ecran('suppression-seance', 1, "Suppression d'une séance", 'EX-18', 'historique', confirmer('Supprimer cette séance ?', 'seance',
   `<p>L'appel de <b>Poussins mercredi</b> du <span class="mono">19/11/2026</span> et ses <span class="mono">22</span> présences seront effacés définitivement.</p><p class="l-sous">La date réapparaîtra comme appel manquant.</p>`, 'Supprimer définitivement', 'historique'));

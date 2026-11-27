@@ -15,7 +15,7 @@ Rendre vérifiables par la machine les règles CONV-03, CONV-16, CONV-17, SEC-01
 ## Ce qui change
 
 - Thème `src/config/theme.ts` dérivé de `design/jetons.json`
-- `src/config/libelles.ts` (textes)
+- `src/config/libelles.ts` (textes ; devenu le dossier `src/config/libelles/` le 2026-11-27, ticket 009b)
 - Module de journal unique `src/data/log.ts` (codes et identifiants seulement)
 - Polices IBM Plex (.ttf) et licence OFL dans `assets/fonts/`, chargées par expo-font
 - Contrôles : `console.*` hors du module de journal, texte littéral dans le JSX hors libellés, couleur littérale hors thème, `fetch`/`XMLHttpRequest`/`WebSocket`, `getExpoPushTokenAsync`/`getDevicePushTokenAsync`

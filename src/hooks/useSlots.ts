@@ -62,6 +62,10 @@ export const useSlot = (id: number) => {
     [change, id],
   );
   const remove = useCallback(() => change((r) => r.remove(id)), [change, id]);
+  const deletionImpact = useCallback(async () => {
+    if (!repo) throw new DataError('DB_NOT_READY');
+    return repo.deletionImpact(id);
+  }, [repo, id]);
   return {
     slot,
     /** Lu au moins une fois : un `slot` nul veut alors dire introuvable. */
@@ -69,5 +73,6 @@ export const useSlot = (id: number) => {
     loadFailed,
     update,
     remove,
+    deletionImpact,
   };
 };

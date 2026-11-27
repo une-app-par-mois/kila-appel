@@ -10,7 +10,8 @@ import ts from 'typescript';
 
 type Violation = { rule: string; file: string; line: number };
 
-const LABELS_FILE = 'src/config/libelles.ts';
+// Libellés : un fichier par domaine dans ce dossier (décision du porteur du 2026-11-27).
+const LABELS_DIR = 'src/config/libelles/';
 const THEME_FILE = 'src/config/theme.ts';
 const TEXT_PROPS = new Set(['accessibilityLabel', 'accessibilityHint', 'placeholder', 'title']);
 // Une chaîne qui est entièrement une couleur (un texte contenant « #123 » n'en est pas une).
@@ -79,7 +80,7 @@ const check = (file: string, source: string): Violation[] => {
     found.push({ rule, file, line: tree.getLineAndCharacterOfPosition(node.getStart()).line + 1 });
 
   const visit = (node: ts.Node) => {
-    if (!isTest && file !== LABELS_FILE) {
+    if (!isTest && !file.startsWith(LABELS_DIR)) {
       if (ts.isJsxText(node) && node.getText().trim() !== '') add('CONV-03', node);
       if (
         ts.isJsxExpression(node) &&
@@ -132,7 +133,7 @@ const check = (file: string, source: string): Violation[] => {
 
 const rules = (file: string, source: string) => check(file, source).map((v) => v.rule);
 
-describe('CONV-03 texte de l’interface seulement dans libelles.ts', () => {
+describe('CONV-03 texte de l’interface seulement dans src/config/libelles/', () => {
   it.each([
     ['texte entre balises', '<Text>Faire l’appel</Text>'],
     ['chaîne entre accolades', "<Text>{'Faire l’appel'}</Text>"],
@@ -155,12 +156,12 @@ describe('CONV-03 texte de l’interface seulement dans libelles.ts', () => {
     expect(rules('src/app/Screen.tsx', `const A = () => ${jsx};`)).toEqual([]);
   });
 
-  it('autorise le texte dans libelles.ts', () => {
-    // libelles.ts ne contient pas de JSX : on vérifie l'exception sur le même chemin en .tsx.
-    expect(rules('src/app/Screen.tsx', 'const A = () => <Text>Ki&amp;La</Text>;')).toEqual([
-      'CONV-03',
-    ]);
-    expect(rules(LABELS_FILE, "export const labels = { appName: 'Ki&La' };")).toEqual([]);
+  it('autorise le texte dans le dossier des libellés, et seulement là', () => {
+    // Les libellés ne contiennent pas de JSX : l'exception est vérifiée sur un chemin en .tsx.
+    const jsx = 'const A = () => <Text>Ki&amp;La</Text>;';
+    expect(rules('src/app/Screen.tsx', jsx)).toEqual(['CONV-03']);
+    expect(rules(`${LABELS_DIR}commun.tsx`, jsx)).toEqual([]);
+    expect(rules('src/config/libelles-ecran.tsx', jsx)).toEqual(['CONV-03']);
   });
 });
 

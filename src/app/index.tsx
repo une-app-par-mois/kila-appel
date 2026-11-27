@@ -9,6 +9,7 @@ import { toIsoDate } from '@/domain/formats';
 import { useGroups } from '@/hooks/useGroups';
 import { useMembers } from '@/hooks/useMembers';
 import { useSeasons } from '@/hooks/useSeasons';
+import { useSlots } from '@/hooks/useSlots';
 import { Card } from '@/ui/Card';
 import { Icon } from '@/ui/Icon';
 import { ListRow } from '@/ui/ListRow';
@@ -22,10 +23,15 @@ export default function Settings() {
   const active = seasons?.find((s) => s.isActive);
   const { groups, loadFailed: groupsFailed } = useGroups(active?.id ?? null);
   const { members, loadFailed: membersFailed } = useMembers({ today: toIsoDate(new Date()) });
+  const { slots, loadFailed: slotsFailed } = useSlots(active?.id ?? null);
   return (
     <Screen
       title={t.title}
-      error={loadFailed || groupsFailed || membersFailed ? labels.common.loadFailed : undefined}
+      error={
+        loadFailed || groupsFailed || membersFailed || slotsFailed
+          ? labels.common.loadFailed
+          : undefined
+      }
     >
       <Pressable
         accessibilityRole="button"
@@ -62,6 +68,19 @@ export default function Settings() {
           title={t.members}
           subtitle={members === null ? undefined : t.memberCount(members.length)}
           onPress={() => router.push('/membres')}
+        />
+        <ListRow
+          title={t.slots}
+          subtitle={
+            seasons === null
+              ? undefined
+              : active === undefined
+                ? t.noActiveSeason
+                : slots === null
+                  ? undefined
+                  : labels.slots.count(slots.length)
+          }
+          onPress={() => router.push('/creneaux')}
         />
       </Card>
       <Section title={t.about} />

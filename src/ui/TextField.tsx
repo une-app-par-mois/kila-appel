@@ -49,12 +49,15 @@ export const TextField = ({
       placeholderTextColor={theme.colors.texteSecondaire}
       style={[styles.input, mono && styles.mono, error !== undefined && styles.invalid]}
     />
-    {error !== undefined && (
-      <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={styles.error}>
-        {error}
-      </Text>
-    )}
+    {error !== undefined && <FieldError error={error} />}
   </View>
+);
+
+/** Erreur sous un champ, annoncée au lecteur d'écran (aussi sous un choix de jour). */
+export const FieldError = ({ error }: { error: string }) => (
+  <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={styles.error}>
+    {error}
+  </Text>
 );
 
 /** Étiquette d'un champ, suivie d'une indication facultative (« facultative »). */

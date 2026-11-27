@@ -38,8 +38,8 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 007e | [Inscription dans les dates de la saison](007e-dates-inscription.md) | 1 | F-01 | non | fusionné dans le groupe |
 | 008 | [Contacts d'urgence : données](008-contacts-urgence.md) | 1 | F-01 | non | fusionné dans le groupe |
 | 008b | [Contacts d'urgence : écrans](008b-ecrans-contacts.md) | 1 | F-01 | non | fusionné dans le groupe |
-| 009 | [Créneaux récurrents : données](009-creneaux-donnees.md) | 1 | F-02 | non | en cours |
-| 009b | [Créneaux récurrents : écrans](009b-creneaux-ecrans.md) | 1 | F-02 | non | à faire |
+| 009 | [Créneaux récurrents : données](009-creneaux-donnees.md) | 1 | F-02 | non | fusionné dans le groupe |
+| 009b | [Créneaux récurrents : écrans](009b-creneaux-ecrans.md) | 1 | F-02 | non | en cours |
 | 010 | [Écran d'appel et enregistrement](010-appel.md) | 1 | F-02 | non | à faire |
 | 011 | [Brouillon d'appel](011-brouillon-appel.md) | 1 | F-02 | oui | à faire |
 | 012 | [Accueil, mise en route et navigation](012-accueil-navigation.md) | 1 | F-01, F-02, F-03 | non | à faire |

@@ -1,6 +1,6 @@
 # 009 — Créneaux récurrents : données
 
-Statut : en cours · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : fusionné dans le groupe · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Découpé le 2026-11-27 (décision du porteur) : 009 (données et hooks), 009b (écrans).
 

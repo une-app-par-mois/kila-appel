@@ -3,7 +3,7 @@
 // Modifier ou supprimer un créneau ne touche à aucune séance : elles gardent leur date, leur heure
 // et leurs groupes ; supprimer vide leur créneau (ON DELETE SET NULL). Hors périmètre : ponctuels.
 import type { Db } from '@/data/db';
-import { DataError, expectChanged } from '@/data/errors';
+import { DataError, expectChanged, expectFound } from '@/data/errors';
 import { type SlotInput, validateDate, validateSlot } from '@/domain/validation';
 
 export type Slot = {
@@ -136,6 +136,16 @@ export const slotsRepo = (db: Db) => ({
         ]);
       }
     });
+  },
+
+  /** EX-07 : ce que la suppression effacera en plus du créneau, pour la confirmation. */
+  deletionImpact: async (id: number): Promise<{ rollCallDraft: boolean }> => {
+    const [row] = await db.query<{ drafts: number }>(
+      `SELECT (SELECT COUNT(*) FROM roll_call_drafts WHERE slot_id = ?1) AS drafts
+       FROM slots WHERE id = ?1 AND weekday IS NOT NULL`,
+      [id],
+    );
+    return { rollCallDraft: expectFound(row).drafts > 0 };
   },
 
   /** EX-07 : les séances restent, sans créneau ; un appel interrompu sur ce créneau est effacé. */
