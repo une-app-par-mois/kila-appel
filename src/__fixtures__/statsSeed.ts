@@ -207,9 +207,12 @@ export const statsSeed = async (db: Db): Promise<StatsSeeded> => {
 /**
  * NF-08 : 3 saisons, 10 groupes par saison, 500 membres (50 par groupe, inscrits chaque saison),
  * 40 séances hebdomadaires par groupe, soit 1 200 séances et 60 000 présences. En SQL, d'un bloc.
+ * `twoGroups` : chaque séance est commune avec le groupe suivant de la saison (Groupe 10 avec
+ * Groupe 1), et les membres des deux groupes y ont une présence (120 000 présences).
  */
 export const volumeSeed = async (
   db: Db,
+  { twoGroups = false } = {},
 ): Promise<{ seasonIds: number[]; groupId: number; memberId: number }> => {
   const seasonIds: number[] = [];
   for (const year of [2024, 2025, 2026]) {
@@ -243,6 +246,13 @@ export const volumeSeed = async (
   await db.execute(
     'INSERT INTO session_groups (session_id, group_id) SELECT id, id / 1000 FROM sessions',
   );
+  if (twoGroups)
+    await db.execute(
+      `INSERT INTO session_groups (session_id, group_id)
+       SELECT s.id, g2.id FROM sessions s JOIN groups g1 ON g1.id = s.id / 1000
+       JOIN groups g2 ON g2.season_id = g1.season_id
+         AND g2.name = 'Groupe ' || (CAST(substr(g1.name, 8) AS INTEGER) % 10 + 1)`,
+    );
   await db.execute(
     `INSERT INTO attendances (session_id, member_id, status)
      SELECT sg.session_id, e.member_id,

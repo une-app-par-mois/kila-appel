@@ -5,7 +5,12 @@ import { useCallback, useMemo } from 'react';
 import type { Db } from '@/data/db';
 import { type Season, seasonsRepo } from '@/data/seasonsRepo';
 import { type GroupStats, type MemberStats, type StatsOverview, statsRepo } from '@/data/statsRepo';
-import { type PeriodChoice, resolvePeriod, type StatsPeriod } from '@/domain/statsPeriod';
+import {
+  choiceError,
+  type PeriodChoice,
+  resolvePeriod,
+  type StatsPeriod,
+} from '@/domain/statsPeriod';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useLoaded } from '@/hooks/useLoaded';
 import { useLocalNow } from '@/hooks/useLocalNow';
@@ -30,25 +35,25 @@ const useStatsLoad = <T>(
   const from = choice?.kind === 'custom' ? choice.from : null;
   const to = choice?.kind === 'custom' ? choice.to : null;
   // Choix aplati : un nouvel objet au même contenu ne relance pas la lecture.
+  const wanted = useMemo((): PeriodChoice | null => {
+    if (kind === 'custom') return { kind, from: from ?? '', to: to ?? '' };
+    return kind === null ? null : { kind };
+  }, [kind, from, to]);
+  // Dates libres invalides : une saisie à corriger, pas un échec de lecture (rien n'est lu).
+  const inputError = choiceError(wanted);
   const load = useMemo(
     () =>
-      db
+      db && inputError === null
         ? async (): Promise<StatsContext & T> => {
             const season = await seasonsRepo(db).getActive();
-            const wanted: PeriodChoice | null =
-              kind === 'custom'
-                ? { kind, from: from ?? '', to: to ?? '' }
-                : kind === null
-                  ? null
-                  : { kind };
             const period = resolvePeriod(wanted, season, date);
             return { season, period, ...(await readStats(db, period)) };
           }
         : null,
-    [db, date, kind, from, to, readStats],
+    [db, date, wanted, inputError, readStats],
   );
   const { value, loaded, loadFailed } = useLoaded(load, failureCode, details);
-  return { stats: value, loaded, loadFailed };
+  return { stats: value, loaded, loadFailed, inputError };
 };
 
 const readOverview = async (db: Db, period: StatsPeriod): Promise<{ overview: StatsOverview }> => ({

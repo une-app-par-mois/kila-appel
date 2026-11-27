@@ -1,53 +1,45 @@
-import { customPeriod, monthPeriod, resolvePeriod, seasonPeriod } from '@/domain/statsPeriod';
+import {
+  choiceError,
+  customPeriod,
+  monthPeriod,
+  resolvePeriod,
+  seasonPeriod,
+} from '@/domain/statsPeriod';
 
-const season = { startDate: '2026-09-01', endDate: '2027-07-31' };
+const season = { id: 4, startDate: '2026-09-01', endDate: '2027-07-31' };
+const month = (from: string, to: string) => ({ kind: 'month', from, to, seasonId: null });
 
 describe('Période des statistiques (EX-27, RM-04)', () => {
-  it('EX-27 « Saison » : du début de la saison active à aujourd’hui', () => {
+  it('EX-27 « Saison » : du début de la saison active à aujourd’hui, séances de cette saison seulement', () => {
     expect(seasonPeriod(season, '2026-11-27')).toEqual({
       kind: 'season',
       from: '2026-09-01',
       to: '2026-11-27',
+      seasonId: 4,
     });
   });
 
   it('EX-27 « Saison » finie : bornée à sa fin ; à venir : bornée à son début', () => {
     expect(seasonPeriod(season, '2027-09-15').to).toBe('2027-07-31');
-    expect(seasonPeriod(season, '2026-08-15')).toEqual({
-      kind: 'season',
+    expect(seasonPeriod(season, '2026-08-15')).toMatchObject({
       from: '2026-09-01',
       to: '2026-09-01',
     });
   });
 
-  it('EX-27 « Ce mois » : du 1er à aujourd’hui (fin de mois, 29 février)', () => {
-    expect(monthPeriod('2026-11-27')).toEqual({
-      kind: 'month',
-      from: '2026-11-01',
-      to: '2026-11-27',
-    });
-    expect(monthPeriod('2026-12-31')).toEqual({
-      kind: 'month',
-      from: '2026-12-01',
-      to: '2026-12-31',
-    });
-    expect(monthPeriod('2028-02-29')).toEqual({
-      kind: 'month',
-      from: '2028-02-01',
-      to: '2028-02-29',
-    });
-    expect(monthPeriod('2026-11-01')).toEqual({
-      kind: 'month',
-      from: '2026-11-01',
-      to: '2026-11-01',
-    });
+  it('EX-27 « Ce mois » : du 1er à aujourd’hui (fin de mois, 29 février), toutes saisons', () => {
+    expect(monthPeriod('2026-11-27')).toEqual(month('2026-11-01', '2026-11-27'));
+    expect(monthPeriod('2026-12-31')).toEqual(month('2026-12-01', '2026-12-31'));
+    expect(monthPeriod('2028-02-29')).toEqual(month('2028-02-01', '2028-02-29'));
+    expect(monthPeriod('2026-11-01')).toEqual(month('2026-11-01', '2026-11-01'));
   });
 
-  it('EX-27 RM-04 dates libres : bornes comprises, un seul jour permis', () => {
+  it('EX-27 RM-04 dates libres : bornes comprises, un seul jour permis, toutes saisons', () => {
     expect(customPeriod('2026-09-02', '2026-09-02')).toEqual({
       kind: 'custom',
       from: '2026-09-02',
       to: '2026-09-02',
+      seasonId: null,
     });
   });
 
@@ -63,6 +55,18 @@ describe('Période des statistiques (EX-27, RM-04)', () => {
     );
     expect(() => monthPeriod('2026-13-01')).toThrow(
       expect.objectContaining({ code: 'DATE_INVALID' }),
+    );
+  });
+
+  it('EX-27 code de saisie d’un choix, sans exception (affiché par l’écran)', () => {
+    expect(choiceError(null)).toBeNull();
+    expect(choiceError({ kind: 'season' })).toBeNull();
+    expect(choiceError({ kind: 'custom', from: '2026-03-01', to: '2026-03-31' })).toBeNull();
+    expect(choiceError({ kind: 'custom', from: '2026-04-01', to: '2026-03-31' })).toBe(
+      'END_BEFORE_START',
+    );
+    expect(choiceError({ kind: 'custom', from: '31/03/2026', to: '2026-03-31' })).toBe(
+      'DATE_INVALID',
     );
   });
 

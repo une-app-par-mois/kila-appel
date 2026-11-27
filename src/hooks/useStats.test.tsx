@@ -22,8 +22,8 @@ const season = {
   endDate: '2027-07-31',
   isActive: true,
 };
-const SEASON = { kind: 'season', from: '2026-09-01', to: '2026-11-27' };
-const MONTH = { kind: 'month', from: '2026-11-01', to: '2026-11-27' };
+const SEASON = { kind: 'season', from: '2026-09-01', to: '2026-11-27', seasonId: 1 };
+const MONTH = { kind: 'month', from: '2026-11-01', to: '2026-11-27', seasonId: null };
 
 describe('useStats (EX-27, CONV-10)', () => {
   beforeEach(() => {
@@ -50,13 +50,35 @@ describe('useStats (EX-27, CONV-10)', () => {
     expect(result.current.stats?.period).toEqual(MONTH);
   });
 
-  it('EX-27 dates libres invalides : échec de lecture journalisé, sans donnée', async () => {
+  it('EX-27 dates libres invalides : code de saisie rendu à l’écran, aucune lecture ni journal', async () => {
     const { result } = await renderHook(() =>
       useStats({ kind: 'custom', from: '2026-12-01', to: '2026-11-01' }),
     );
-    await waitFor(() => expect(result.current.loadFailed).toBe(true));
+    expect(result.current.inputError).toBe('END_BEFORE_START');
+    const dates = await renderHook(() =>
+      useStats({ kind: 'custom', from: '01/11/2026', to: '2026-11-30' }),
+    );
+    expect(dates.result.current.inputError).toBe('DATE_INVALID');
+    await act(async () => notifyDataChanged());
+    expect(result.current).toMatchObject({ stats: null, loaded: false, loadFailed: false });
+    expect(mockSeasons.getActive).not.toHaveBeenCalled();
     expect(mockStats.overview).not.toHaveBeenCalled();
-    expect(log).toHaveBeenCalledWith('STATS_LOAD_FAILED', {});
+    expect(log).not.toHaveBeenCalled();
+  });
+
+  it('EX-27 dates libres valides : aucun code de saisie', async () => {
+    mockStats.overview.mockResolvedValue({ sessions: 1 });
+    const { result } = await renderHook(() =>
+      useStats({ kind: 'custom', from: '2026-11-01', to: '2026-11-30' }),
+    );
+    await waitFor(() => expect(result.current.loaded).toBe(true));
+    expect(result.current.inputError).toBeNull();
+    expect(result.current.stats?.period).toEqual({
+      kind: 'custom',
+      from: '2026-11-01',
+      to: '2026-11-30',
+      seasonId: null,
+    });
   });
 
   it('EX-27 groupe : identifiant et période transmis, rechargé après notifyDataChanged', async () => {

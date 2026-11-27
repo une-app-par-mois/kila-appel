@@ -3,15 +3,14 @@
  */
 // Statistiques (ticket 023, EX-27, RM-01, RM-03) sur le jeu fictif vérifié à la main
 // (`statsSeed.ts`, tableaux en tête du fichier). Taux attendus écrits en clair.
-import { STATS_TODAY, type StatsSeeded, statsSeed, volumeSeed } from '@/__fixtures__/statsSeed';
+import { STATS_TODAY, type StatsSeeded, statsSeed } from '@/__fixtures__/statsSeed';
 import type { Db } from '@/data/db';
 import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
 import { statsRepo } from '@/data/statsRepo';
-import { attendanceRate, formatRate, type StatusCounts } from '@/domain/attendanceRate';
-import { customPeriod, monthPeriod, seasonPeriod } from '@/domain/statsPeriod';
+import { attendanceRate, formatRate, NBSP, type StatusCounts } from '@/domain/attendanceRate';
+import { customPeriod, monthPeriod, type StatsPeriod, seasonPeriod } from '@/domain/statsPeriod';
 
-const SEASON = seasonPeriod({ startDate: '2026-09-01', endDate: '2027-07-31' }, STATS_TODAY);
 const MONTH = monthPeriod(STATS_TODAY);
 const MARCH = customPeriod('2026-03-01', '2026-03-31');
 const c = (present: number, late: number, excused: number, absent: number): StatusCounts => ({
@@ -25,9 +24,14 @@ const rate = (counts: StatusCounts) => formatRate(attendanceRate(counts));
 describe('Statistiques (EX-27, RM-01, RM-03)', () => {
   let db: Db;
   let s: StatsSeeded;
+  let SEASON: StatsPeriod;
   beforeEach(async () => {
     db = await prepareDatabase(openNodeDb());
     s = await statsSeed(db);
+    SEASON = seasonPeriod(
+      { id: s.seasonId, startDate: '2026-09-01', endDate: '2027-07-31' },
+      STATS_TODAY,
+    );
   });
   afterEach(async () => {
     await db.close();
@@ -39,53 +43,34 @@ describe('Statistiques (EX-27, RM-01, RM-03)', () => {
     expect(o.anyRecorded).toBe(true);
     expect(o.sessions).toBe(21);
     expect(o.counts).toEqual(c(45, 2, 3, 7));
-    expect(rate(o.counts)).toBe('87 %');
+    expect(rate(o.counts)).toBe(`87${NBSP}%`);
   });
 
   it('EX-27 RM-01 par groupe sur la saison : actifs triés par nom, puis archivés ; « — » sans séance', async () => {
     const { groups } = await repo().overview(SEASON);
-    expect(groups).toEqual([
-      {
-        groupId: s.groups.adultes,
-        name: 'Adultes',
-        archived: false,
-        sessions: 0,
-        counts: c(0, 0, 0, 0),
-      },
-      {
-        groupId: s.groups.benjamins,
-        name: 'Benjamins',
-        archived: false,
-        sessions: 7,
-        counts: c(7, 0, 0, 2),
-      },
-      {
-        groupId: s.groups.poussins,
-        name: 'Poussins',
-        archived: false,
-        sessions: 13,
-        counts: c(37, 1, 3, 5),
-      },
-      {
-        groupId: s.groups.veterans,
-        name: 'Vétérans',
-        archived: true,
-        sessions: 1,
-        counts: c(0, 1, 0, 0),
-      },
+    expect(groups.map((g) => [g.groupId, g.name, g.archived, g.sessions, g.counts])).toEqual([
+      [s.groups.adultes, 'Adultes', false, 0, c(0, 0, 0, 0)],
+      [s.groups.benjamins, 'Benjamins', false, 7, c(7, 0, 0, 2)],
+      [s.groups.poussins, 'Poussins', false, 13, c(37, 1, 3, 5)],
+      [s.groups.veterans, 'Vétérans', true, 1, c(0, 1, 0, 0)],
     ]);
-    expect(groups.map((g) => rate(g.counts))).toEqual(['—', '78 %', '88 %', '100 %']);
+    expect(groups.map((g) => rate(g.counts))).toEqual([
+      '—',
+      `78${NBSP}%`,
+      `88${NBSP}%`,
+      `100${NBSP}%`,
+    ]);
   });
 
   it('EX-27 RM-01 « Ce mois » : synthèse 9 séances, 11/15 = « 73 % » ; groupe archivé sans séance absent', async () => {
     const o = await repo().overview(MONTH);
     expect(o.sessions).toBe(9);
     expect(o.counts).toEqual(c(11, 0, 2, 4));
-    expect(rate(o.counts)).toBe('73 %');
+    expect(rate(o.counts)).toBe(`73${NBSP}%`);
     expect(o.groups.map((g) => [g.name, g.sessions, rate(g.counts)])).toEqual([
       ['Adultes', 0, '—'],
-      ['Benjamins', 4, '75 %'],
-      ['Poussins', 4, '70 %'],
+      ['Benjamins', 4, `75${NBSP}%`],
+      ['Poussins', 4, `70${NBSP}%`],
     ]);
   });
 
@@ -131,11 +116,11 @@ describe('Statistiques (EX-27, RM-01, RM-03)', () => {
       sessions: 13,
     });
     expect(g?.members.map((m) => [m.lastName, m.firstName, m.archived, rate(m.counts)])).toEqual([
-      ['Blanc', 'Zoé', false, '100 %'],
+      ['Blanc', 'Zoé', false, `100${NBSP}%`],
       ['Durand', 'Emma', false, '—'],
-      ['Lefebvre', 'Jules', true, '92 %'],
-      ['Michel', 'Léa', false, '100 %'],
-      ['Moreau', 'Hugo', false, '64 %'],
+      ['Lefebvre', 'Jules', true, `92${NBSP}%`],
+      ['Michel', 'Léa', false, `100${NBSP}%`],
+      ['Moreau', 'Hugo', false, `64${NBSP}%`],
     ]);
     expect(g?.members.find((m) => m.memberId === s.members.hugo)?.counts).toEqual(c(6, 1, 1, 4));
   });
@@ -214,8 +199,6 @@ describe('Statistiques (EX-27, RM-01, RM-03)', () => {
       ['10:00', null, false],
       ['17:00', 'present', false],
     ]);
-    const paul = await repo().member(s.members.paul, s.groups.benjamins, SEASON);
-    expect(paul?.sessions[1]).toMatchObject({ status: null, enrolled: false });
   });
 
   it('EX-27 membre ou groupe introuvable', async () => {
@@ -224,45 +207,72 @@ describe('Statistiques (EX-27, RM-01, RM-03)', () => {
     expect(await repo().member(-1, s.groups.poussins, SEASON)).toBeNull();
   });
 
+  it('EX-27 « Saison » : seules les séances de la saison active, même si une autre la chevauche', async () => {
+    const other = (
+      await db.execute(
+        "INSERT INTO seasons (name, start_date, end_date) VALUES ('Été', '2026-10-01', '2026-10-31')",
+      )
+    ).lastInsertRowId;
+    const group = (
+      await db.execute("INSERT INTO groups (season_id, name) VALUES (?, 'Stage')", [other])
+    ).lastInsertRowId;
+    const id = (
+      await db.execute(
+        "INSERT INTO sessions (season_id, date, start_time, state) VALUES (?, '2026-10-10', '09:00', 'recorded')",
+        [other],
+      )
+    ).lastInsertRowId;
+    await db.execute('INSERT INTO session_groups (session_id, group_id) VALUES (?, ?)', [
+      id,
+      group,
+    ]);
+    await db.execute("INSERT INTO attendances VALUES (?, ?, 'absent')", [id, s.members.zoe]);
+    const season = await repo().overview(SEASON);
+    expect(season.sessions).toBe(21);
+    expect(season.groups.map((g) => g.name)).not.toContain('Stage');
+    const dates = await repo().overview(customPeriod(SEASON.from, SEASON.to));
+    expect(dates.sessions).toBe(22);
+    expect(dates.counts).toEqual(c(45, 2, 3, 8));
+    expect(await repo().group(group, SEASON)).toMatchObject({ sessions: 0, members: [] });
+    expect(dates.groups.find((g) => g.name === 'Stage')).toMatchObject({
+      archived: true,
+      sessions: 1,
+    });
+  });
+
+  it('EX-02 RM-03 comportement actuel, revu au jalon 4 (F-11) : groupe supprimé d’une séance commune, ses présences passent au groupe restant par le cas de secours', async () => {
+    await db.execute('DELETE FROM groups WHERE id = ?', [s.groups.veterans]);
+    const b = await repo().group(s.groups.benjamins, SEASON);
+    expect(b?.members.map((m) => [m.firstName, m.counts])).toEqual([
+      ['Nour', c(1, 0, 0, 1)],
+      ['Léa', c(6, 0, 0, 1)],
+      ['Paul', c(0, 1, 0, 0)],
+    ]);
+  });
+
+  it('EX-27 membre sans inscription ni présence comptée pour le groupe dans la période : null', async () => {
+    expect(await repo().member(s.members.max, s.groups.poussins, SEASON)).toBeNull();
+    expect(await repo().member(s.members.paul, s.groups.benjamins, SEASON)).toBeNull();
+    expect(await repo().member(s.members.hugo, s.groups.benjamins, SEASON)).toBeNull();
+    expect(await repo().member(s.members.lea, s.groups.poussins, MONTH)).toBeNull();
+    expect(await repo().member(s.members.nour, s.groups.benjamins, MONTH)).toBeNull();
+    expect(await repo().member(s.members.jules, s.groups.poussins, MONTH)).not.toBeNull();
+  });
+
   it('SEC-05 RM-04 période invalide refusée avant toute requête', async () => {
-    const bad = { kind: 'custom' as const, from: '2026-12-01', to: '2026-11-01' };
+    const bad = { kind: 'custom' as const, from: '2026-12-01', to: '2026-11-01', seasonId: null };
     await expect(repo().overview(bad)).rejects.toMatchObject({ code: 'END_BEFORE_START' });
-    const injected = { kind: 'custom' as const, from: "2026-01-01' OR 1=1 --", to: '2026-12-31' };
+    const injected = {
+      kind: 'custom' as const,
+      from: "2026-01-01' OR 1=1 --",
+      to: '2026-12-31',
+      seasonId: null,
+    };
     await expect(repo().group(s.groups.poussins, injected)).rejects.toMatchObject({
       code: 'DATE_INVALID',
     });
-  });
-});
-
-describe('NF-08 volume : 500 membres, 3 saisons', () => {
-  it('NF-08 chaque écran en une requête, durée mesurée', async () => {
-    const db = await prepareDatabase(openNodeDb());
-    const { groupId, memberId } = await volumeSeed(db);
-    let queries = 0;
-    const counted: Db = {
-      ...db,
-      query: (sql, params) => {
-        queries += 1;
-        return db.query(sql, params);
-      },
-    };
-    const period = customPeriod('2026-09-01', '2027-07-31');
-    const screens = [
-      () => statsRepo(counted).overview(period),
-      () => statsRepo(counted).group(groupId, period),
-      () => statsRepo(counted).member(memberId, groupId, period),
-    ];
-    const results = [];
-    for (const screen of screens) {
-      queries = 0;
-      const start = Date.now();
-      results.push(await screen());
-      expect(Date.now() - start).toBeLessThan(2000);
-      expect(queries).toBe(1);
-    }
-    const [overview] = results as [Awaited<ReturnType<ReturnType<typeof statsRepo>['overview']>>];
-    expect(overview.sessions).toBe(400);
-    expect(overview.groups).toHaveLength(10);
-    await db.close();
+    await expect(repo().member(1, 1, { ...SEASON, seasonId: 0 })).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+    });
   });
 });

@@ -1,16 +1,33 @@
 // Morceaux SQL des statistiques (ticket 023), partagés par les trois requêtes de `statsRepo.ts`.
-// Paramètres positionnels communs : ?1 = début, ?2 = fin de la période (comprises, SEC-05).
+// Paramètres positionnels communs (SEC-05) : ?1 = début, ?2 = fin de la période (comprises),
+// ?3 = saison des séances (`NULL` : toutes les saisons).
 import type { StatusCounts } from '@/domain/attendanceRate';
 
-/** Séances enregistrées de la période : seules elles comptent (glossaire, plan point 1). */
+/**
+ * Séances enregistrées de la période : seules elles comptent (glossaire, plan point 1) ; avec
+ * « Saison », celles de la saison active seulement (décision du porteur du 2026-11-27).
+ */
 export const RECORDED = `rs AS (
   SELECT id, date, start_time FROM sessions
-  WHERE state = 'recorded' AND date BETWEEN ?1 AND ?2)`;
+  WHERE state = 'recorded' AND date BETWEEN ?1 AND ?2 AND (?3 IS NULL OR season_id = ?3))`;
 
-/** RM-03 : le membre est inscrit au groupe à la date (début compris, fin exclue). */
+/**
+ * EX-27 (plan point 5) : membre `m` non archivé, inscrit au groupe à un moment de la période
+ * (inscription non vide qui la recoupe).
+ */
+export const enrolledInPeriod = (m: string, group: string) =>
+  `(${m}.archived_at IS NULL AND EXISTS (SELECT 1 FROM enrollments e
+    WHERE e.member_id = ${m}.id AND e.group_id = ${group} AND e.start_date <= ?2
+      AND (e.end_date IS NULL OR (e.end_date > ?1 AND e.end_date > e.start_date))))`;
+
+/**
+ * RM-03 : le membre est inscrit au groupe à la date (début compris, fin exclue). `+e.group_id`
+ * écarte l'index du groupe : SQLite passe par `enrollments_member` (quelques lignes par membre au
+ * lieu de tout le groupe ; NF-08 : synthèse 5 fois plus rapide sur le jeu de volume).
+ */
 export const enrolledAt = (member: string, group: string, date: string) =>
   `EXISTS (SELECT 1 FROM enrollments e
-    WHERE e.member_id = ${member} AND e.group_id = ${group}
+    WHERE e.member_id = ${member} AND +e.group_id = ${group}
       AND e.start_date <= ${date} AND (e.end_date IS NULL OR e.end_date > ${date}))`;
 
 /** Nombre de groupes figés d'une séance. */

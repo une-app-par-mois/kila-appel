@@ -1,6 +1,7 @@
 // Statistiques (F-05, EX-27) : agrégats calculés en SQL, une requête par écran (NF-08). Les taux
 // se calculent avec `src/domain/attendanceRate.ts` (RM-01) ; requêtes paramétrées (SEC-05).
 import type { Db } from '@/data/db';
+import { DataError } from '@/data/errors';
 import {
   byGroup,
   byName,
@@ -8,6 +9,7 @@ import {
   type CountRow,
   credits,
   enrolledAt,
+  enrolledInPeriod,
   GROUP_ARCHIVED,
   groupCount,
   RECORDED,
@@ -91,12 +93,18 @@ type MemberRow = Omit<MemberStats, 'archived' | 'groupArchived' | 'counts' | 'se
   startTime: string;
   status: AttendanceStatus | null;
   enrolled: Flag;
+  listed: Flag;
 };
 
-/** Période revalidée avant toute requête (RM-04 ; entrée venue d'un écran). */
-const bounds = (period: StatsPeriod): [string, string] => {
+/**
+ * Période revalidée avant toute requête (RM-04 ; entrée venue d'un écran) : ?1 début, ?2 fin,
+ * ?3 saison (`null` : toutes les saisons).
+ */
+const bounds = (period: StatsPeriod): [string, string, number | null] => {
   const { from, to } = customPeriod(period.from, period.to);
-  return [from, to];
+  const { seasonId } = period;
+  if (seasonId !== null && !isId(seasonId)) throw new DataError('NOT_FOUND');
+  return [from, to, seasonId];
 };
 
 // EX-27 (plan point 4, décision du 2026-11-27) : groupes de la saison active non archivés, plus tout
@@ -119,12 +127,10 @@ FROM rs JOIN attendances a ON a.session_id = rs.id`;
 // EX-27 (plan point 5, lancement du lot J2-1) : membres inscrits au groupe à un moment de la
 // période (inscription non vide qui la recoupe), archivés exclus ; plus tout membre dont une
 // présence compte pour le groupe (archivé compris, cas de secours de RM-03).
-const GROUP = `WITH ${RECORDED}, ${credits('sg.group_id = ?3')},
+const GROUP = `WITH ${RECORDED}, ${credits('sg.group_id = ?4')},
   listed AS (
     SELECT member_id FROM credits
-    UNION SELECT e.member_id FROM enrollments e JOIN members m ON m.id = e.member_id
-    WHERE e.group_id = ?3 AND m.archived_at IS NULL AND e.start_date <= ?2
-      AND (e.end_date IS NULL OR (e.end_date > ?1 AND e.end_date > e.start_date)))
+    UNION SELECT m.id FROM members m WHERE ${enrolledInPeriod('m', '?4')})
 SELECT g.id AS groupId, g.name, ${GROUP_ARCHIVED} AS archived,
   (SELECT COUNT(*) FROM rs JOIN session_groups sg ON sg.session_id = rs.id
    WHERE sg.group_id = g.id) AS sessions,
@@ -133,24 +139,25 @@ SELECT g.id AS groupId, g.name, ${GROUP_ARCHIVED} AS archived,
 FROM groups g JOIN seasons se ON se.id = g.season_id
 LEFT JOIN members m ON m.id IN (SELECT member_id FROM listed)
 LEFT JOIN credits cr ON cr.member_id = m.id
-WHERE g.id = ?3
+WHERE g.id = ?4
 GROUP BY m.id`;
 
 // EX-27 : chaque séance enregistrée du groupe dans la période ; statut seulement s'il compte pour
-// le groupe (même règle que `credits`).
+// le groupe (même règle que `credits`). `listed` : même règle que la liste des membres (GROUP).
 const MEMBER = `WITH ${RECORDED}
 SELECT m.id AS memberId, m.last_name AS lastName, m.first_name AS firstName,
-  m.archived_at IS NOT NULL AS archived, g.id AS groupId, g.name AS groupName,
+  m.archived_at IS NOT NULL AS archived, ${enrolledInPeriod('m', '?5')} AS listed,
+  g.id AS groupId, g.name AS groupName,
   ${GROUP_ARCHIVED} AS groupArchived, x.id AS sessionId, x.date, x.start_time AS startTime,
   x.enrolled, CASE WHEN x.enrolled OR x.groups = 1 THEN x.status END AS status
-FROM members m JOIN groups g ON g.id = ?4 JOIN seasons se ON se.id = g.season_id
+FROM members m JOIN groups g ON g.id = ?5 JOIN seasons se ON se.id = g.season_id
 LEFT JOIN (
-  SELECT rs.id, rs.date, rs.start_time, ${enrolledAt('?3', '?4', 'rs.date')} AS enrolled,
-    (SELECT a.status FROM attendances a WHERE a.session_id = rs.id AND a.member_id = ?3) AS status,
+  SELECT rs.id, rs.date, rs.start_time, ${enrolledAt('?4', '?5', 'rs.date')} AS enrolled,
+    (SELECT a.status FROM attendances a WHERE a.session_id = rs.id AND a.member_id = ?4) AS status,
     ${groupCount('rs.id')} AS groups
-  FROM rs JOIN session_groups sg ON sg.session_id = rs.id AND sg.group_id = ?4
+  FROM rs JOIN session_groups sg ON sg.session_id = rs.id AND sg.group_id = ?5
 ) x ON 1
-WHERE m.id = ?3
+WHERE m.id = ?4
 ORDER BY x.date, x.start_time, x.id`;
 
 export const statsRepo = (db: Db) => ({
@@ -202,7 +209,8 @@ export const statsRepo = (db: Db) => ({
 
   /**
    * EX-27 : un membre dans un groupe, séance par séance de la plus ancienne à la plus récente
-   * (date, puis heure) ; `null` si le membre ou le groupe n'existe pas.
+   * (date, puis heure) ; `null` si le membre ou le groupe n'existe pas, ou si le membre n'est pas
+   * dans la liste du groupe pour la période.
    */
   member: async (
     memberId: number,
@@ -225,6 +233,8 @@ export const statsRepo = (db: Db) => ({
       }));
     const counts = { present: 0, late: 0, excused: 0, absent: 0 };
     for (const { status } of sessions) if (status) counts[status] += 1;
+    // Absent de la liste du groupe (ni inscription sur la période, ni présence comptée) : null.
+    if (!first.listed && sessions.every((x) => x.status === null)) return null;
     return {
       memberId: first.memberId,
       firstName: first.firstName,
