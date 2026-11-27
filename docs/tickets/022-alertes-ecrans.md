@@ -1,6 +1,6 @@
 # 022 — Alertes d'assiduité : écrans
 
-Statut : à faire · Jalon : 2 · Zone sensible : non (affiche sans calculer : séries et alertes viennent du 021) · Trivial : non
+Statut : fusionné dans le groupe (PR #72) · Jalon : 2 · Zone sensible : non (affiche sans calculer : séries et alertes viennent du 021) · Trivial : non
 
 Dépend de : 021 · Fichiers touchés : `src/app/(tabs)/index.tsx`, `src/ui/AttendanceAlerts.tsx` (nouveau), `src/app/alertes/[id].tsx` (nouveau), `src/app/assiduite.tsx` (nouveau), `src/app/(tabs)/parametres.tsx`, `src/config/libelles/alertes.ts` (nouveau), `src/config/libelles/index.ts`, `src/ui/SessionSquares.tsx` (nouveau, repris par le 025), `src/appTests/alerts.test.tsx` (nouveau) — 9 fichiers
 
@@ -26,13 +26,13 @@ Montrer les alertes sur l'accueil, l'écran « Alerte d'assiduité » avec « Ma
 
 ## Critères d'acceptation
 
-- [ ] EX-25 : un membre fictif à 3 absences apparaît sur l'accueil avec son groupe et « 3 absences » ; sans alerte, l'état vide de la maquette, avec le seuil réglé.
-- [ ] Bienvenue (012b) remplace toujours l'accueil quand il le doit : la section n'apparaît que sur l'accueil, appel en cours compris.
-- [ ] EX-26 : « Marquer comme traitée » le retire de l'accueil ; une absence de plus le fait revenir.
-- [ ] Seuil modifié dans le réglage : l'accueil et la ligne de Paramètres suivent sans redémarrer.
-- [ ] Les cases des dernières séances portent une icône et un libellé d'accessibilité, jamais la couleur seule (NF-06) ; zones d'appui de 44 pt au moins.
-- [ ] Aucun texte en dur (CONV-03), aucune couleur hors du thème (CONV-16).
-- [ ] Écarts avec la maquette listés dans la PR.
+- [x] EX-25 : un membre fictif à 3 absences apparaît sur l'accueil avec son groupe et « 3 absences » ; sans alerte, l'état vide de la maquette, avec le seuil réglé. — tests d'écran (`src/appTests/alerts.test.tsx`) ; non vérifié sur le téléphone
+- [x] Bienvenue (012b) remplace toujours l'accueil quand il le doit : la section n'apparaît que sur l'accueil, appel en cours compris. — retour anticipé de l'accueil inchangé, tests de Bienvenue existants verts ; la section reste visible pendant un appel en cours (test)
+- [x] EX-26 : « Marquer comme traitée » le retire de l'accueil ; une absence de plus le fait revenir. — test d'écran ; alerte levée puis traitée sur un jeu fictif à la main : non vérifié sur le téléphone
+- [x] Seuil modifié dans le réglage : l'accueil et la ligne de Paramètres suivent sans redémarrer. — test d'écran
+- [x] Les cases des dernières séances portent une icône et un libellé d'accessibilité, jamais la couleur seule (NF-06) ; zones d'appui de 44 pt au moins. — icône et libellé testés ; zones d'appui de 44 pt et lecteur d'écran réel : non vérifié sur le téléphone
+- [x] Aucun texte en dur (CONV-03), aucune couleur hors du thème (CONV-16). — contrôles CONV-03 et CONV-16 de `./scripts/test.sh`
+- [x] Écarts avec la maquette listés dans la PR. — PR #72
 
 ## Tests attendus
 

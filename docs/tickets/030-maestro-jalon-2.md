@@ -48,6 +48,11 @@ Reports de l'intégration du lot J2-1 (2026-11-27) :
 - taux affiché avec l'espace insécable `NBSP` (U+00A0, constante exportée par `src/domain/attendanceRate.ts`) avant « % » : l'utiliser dans `getByText` (`64\u00a0%` ou `` `64${NBSP}%` ``) et dans les parcours Maestro ; un « 64 % » tapé avec une espace simple ne correspond pas (023).
 - mesurer NF-08 sur l'appareil avec `volumeSeed` de `src/__fixtures__/statsSeed.ts` (variante `twoGroups` comprise) et le jeu de volume des alertes (`src/__fixtures__/alertsSeed.ts`) ; durées `node:sqlite` de référence dans la fiche du 023 (023, 021).
 
+Reports de l'intégration du lot J2-2 (2026-11-27) :
+
+- vérifier sur l'appareil le focus et le retour Android de l'écran d'alerte (`alertes/[id].tsx` : retour à l'accueil quand l'alerte n'est plus montrée, seulement avec le focus ; recherche d'urgence ouverte par-dessus) (022).
+- vérifier sur l'appareil `router.dismissTo` de l'écran Période (`stats/periode.tsx`) : un retour ne rouvre pas l'écran Période, la barre d'onglets revient (024).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

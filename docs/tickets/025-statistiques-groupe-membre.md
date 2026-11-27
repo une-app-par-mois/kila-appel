@@ -2,7 +2,7 @@
 
 Statut : à faire · Jalon : 2 · Zone sensible : non (affiche sans calculer : taux, cases et arrondi viennent du 023) · Trivial : non
 
-Dépend de : 022 (`SessionSquares`), 023, 024 · Fichiers touchés : `src/app/stats/groupes/[id].tsx` (nouveau), `src/app/stats/membres/[id].tsx` (nouveau), `src/ui/SessionSquares.tsx` (case vide « hors inscription »), `src/config/libelles/stats.ts`, `src/appTests/statsGroup.test.tsx` (nouveau), `src/appTests/statsMember.test.tsx` (nouveau) — 6 fichiers
+Dépend de : 022 (`SessionSquares`), 023, 024 · Fichiers touchés : `src/app/stats/groupes/[id].tsx` (nouveau), `src/app/stats/membres/[id].tsx` (nouveau), `src/ui/SessionSquares.tsx` (case vide « hors inscription »), `src/config/libelles/stats.ts`, `src/appTests/statsGroup.test.tsx` (nouveau), `src/appTests/statsMember.test.tsx` (nouveau), `src/app/(tabs)/stats.tsx` (appui sur un groupe, report du 024) — 7 fichiers
 
 Découpé le 2026-11-27 (séance de découpage du jalon 2).
 
@@ -29,6 +29,7 @@ EX-27 demande le taux par membre : écrans « Statistiques d'un groupe » (sans 
 - [ ] RM-03 : un membre inscrit en cours de période a des cases vides avant son inscription ; ses présences dans un autre groupe n'apparaissent pas ici.
 - [ ] RM-01 : membre sans séance sur la période : « — ».
 - [ ] Accords des comptes (« 1 retard », « 2 retards » ; maquette : « présent », « absent » invariables dans la ligne) suivant les textes validés.
+- [ ] Un appui sur un groupe de l'onglet Stats ouvre ses statistiques (`stats/groupes/[id]`, avec `du` et `au` de la période affichée ; report du 024).
 - [ ] NF-06, CONV-03, CONV-16 ; écarts avec la maquette listés dans la PR.
 
 ## Tests attendus
@@ -55,6 +56,14 @@ Reports de l'intégration du lot J2-1 (2026-11-27) :
 
 - taux affiché avec l'espace insécable `NBSP` (U+00A0, constante exportée par `src/domain/attendanceRate.ts`) avant « % » : l'utiliser dans `getByText` (`64\u00a0%` ou `` `64${NBSP}%` ``) et dans les parcours Maestro ; un « 64 % » tapé avec une espace simple ne correspond pas (023).
 - séance où le membre était inscrit sans statut : le 023 renvoie `status: null` et `enrolled: true`, l'affichage se décide ici (en attente du porteur, `docs/QUESTIONS.md`) ; `useMemberStats` rend `null` pour un membre hors de la liste du groupe ; `useStats` rend `inputError` pour des dates libres invalides (023).
+
+Reports de l'intégration du lot J2-2 (2026-11-27) :
+
+- onglet Stats (024) : les lignes de groupe ne sont pas appuyables ; ajouter l'appui dans `src/app/(tabs)/stats.tsx` vers `stats/groupes/[id]` avec `du` et `au` (AAAA-MM-JJ) de la période affichée.
+- `src/ui/AttendanceBar.tsx` (024) : barre par statut (12 pt, rayon 4, ordre `SHARE_ORDER`, couleurs `theme.statuses`, libellé d'accessibilité des parts non nulles avec `NBSP`) et `AttendanceLegend`, à réutiliser tels quels.
+- écran Période (024) : `src/app/stats/periode.tsx` revient vers `/stats` par `router.dismissTo` avec `du` et `au` (jamais `router.navigate`, qui empilait un second `(tabs)`).
+- `useStats` garde la vue précédente pendant une relecture (`keepPrevious`, 024) ; `useGroupStats` et `useMemberStats` sont inchangés.
+- `src/ui/SessionSquares.tsx` (022) : cases de 22 pt, non cliquables, icône et libellé d'accessibilité (« Absent, 03/12/2026 »), la plus récente d'abord, **sans case vide** : la case vide « hors inscription » (RM-03, `status: null`, `enrolled: true`) s'ajoute ici, avec son icône et son libellé (NF-06) ; l'écran d'alerte du 022 ne doit pas changer.
 
 ## Décisions
 

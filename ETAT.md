@@ -6,15 +6,15 @@ Dernière mise à jour : 2026-11-27
 
 ## En cours
 
-**Jalon 2 (Suivre l'assiduité), lot J2-1 fusionné** dans `groupe/jalon-2-suivre-assiduite` : 021 alertes, calcul (PR #68), 026 expo-notifications et garde-fous du binaire (PR #69), 023 statistiques, calcul (PR #70) ; **1449 tests**. Intégration documentaire : branche `ticket/lot-j2-1-integration`. Jalon 1 fait (PR #63, `main` à `91ed684`), jalon 0 fait (PR #7).
+**Jalon 2 (Suivre l'assiduité), lot J2-2 fusionné** dans `groupe/jalon-2-suivre-assiduite` : 022 alertes, écrans (PR #72), 024 onglet Stats et période (PR #73), 027 relance, calcul et réglages (PR #74) ; **1526 tests**. Lot J2-1 fusionné avant (021, 023, 026 : PR #68, #69, #70). Intégration documentaire : branche `ticket/lot-j2-2-integration`. Jalon 1 fait (PR #63, `main` à `91ed684`), jalon 0 fait (PR #7).
 
-Décisions du lot : 59 lignes ajoutées à `docs/DECISIONS.md` ; 3 en attente du porteur, dans `docs/QUESTIONS.md` (023 période sans saison active ; 021 `useAlert` à `null` ; 023 séance inscrite sans statut, affichage au 025). ABS-08 du 021 et décisions du 026 au journal de `docs/CONFORMITE.md`.
+Décisions du lot : 50 lignes ajoutées à `docs/DECISIONS.md` (5 du 027 déjà présentes depuis le découpage, non dupliquées) ; 1 en attente du porteur, dans `docs/QUESTIONS.md` (027 : un appel sans créneau du même jour ne retire pas la relance). ABS-08 du 027 et public cible 16 ans et plus (§8, décision du porteur) au journal de `docs/CONFORMITE.md`.
 
 ## Prochaines étapes
 
-1. **Lot J2-2 : 022, 024, 027** (séance de lancement, pré-analyse, QCM). Reports déjà écrits dans les fiches : `useAlert` à `null` (022), constante `NBSP` (024, 025, 030), `inputError` (024, 025).
-2. Lots suivants : 025, 028 (liste des fonctions d'expo-notifications à refuser), 029, 020, puis 030 (campagne Maestro, NF-08 sur l'appareil avec `volumeSeed`).
-3. **Recette sur l'A55 jamais faite** (lots 4, 5, 6 du jalon 1 et lot J2-1 ; décision du porteur du 2026-11-27). À vérifier à la main dès que le téléphone est disponible :
+1. **Lot J2-3 : 020, 025, 028** (séance de lancement, pré-analyse, QCM ; plan du 028 en zone sensible). Reports déjà écrits dans les fiches : appui sur un groupe de l'onglet Stats et case vide de `SessionSquares` (025) ; requête des séances avec `state` dans `sessionsRepo.ts`, heure d'été et d'hiver, déclencheur passé, erreur de `plannedReminders` attrapée (028).
+2. Lots suivants : 029 (état réel après une restauration, ligne Relance, clé `alerts.settingsSection`), puis 030 (campagne Maestro, NF-08 sur l'appareil, focus de l'écran d'alerte et `dismissTo` de l'écran Période).
+3. **Recette sur l'A55 en cours le 2026-11-27** (lots 4, 5, 6 du jalon 1 et lot J2-1 ; décision du porteur du 2026-11-27 ; liste mise à jour par le porteur après la recette). À vérifier à la main dès que le téléphone est disponible :
    - aller-retour réel : export vers Drive ou Gmail, puis restauration de ce fichier ; restauration depuis Drive ;
    - base réellement abîmée (APK de debug, `run-as`) : écran « abîmée », confirmation, Bienvenue ; restauration depuis l'écran de récupération (014f) ;
    - brouillon après redémarrage de l'appareil ;
@@ -52,5 +52,6 @@ Décisions du lot : 59 lignes ajoutées à `docs/DECISIONS.md` ; 3 en attente du
 - **Bases de test à effacer** (Galaxy A55, émulateur) : une base d'un ancien build (migration 1 sans `slots.schedule_from`) fait échouer la création d'un créneau et donne aussi un accueil vide (`DRAFT_LOAD_FAILED`, `PROPOSED_SESSION_FAILED`, `MISSING_CALLS_FAILED`, avec `DB_READY` version 1), constaté sur l'émulateur au 016. **Désinstaller Ki&La avant d'installer** un nouvel APK.
 - Requêtes métier sur le module natif `expo-sqlite` : vues sur l'émulateur (016) ; sur le Galaxy A55, recette des lots 4 à 6 non faite. Rien encore sur un iPhone réel.
 - **Requêtes du lot J2-1 jamais lancées par expo-sqlite sur un appareil** : séries d'absences (CTE, `ROW_NUMBER`, 021) et agrégats des statistiques (`+e.group_id` pour forcer l'index `enrollments_member`, 023) ; vérifiées sur `node:sqlite` seulement. APK de la CI et build iOS avec expo-notifications : à la PR du jalon vers `main`.
+- **Écrans du lot J2-2 jamais vus sur un appareil** : alertes (focus et retour Android de l'écran d'alerte, recherche d'urgence limitée au membre), onglet Stats (`router.dismissTo` de l'écran Période, textes agrandis, tablette) ; testés avec le routeur simulé de Jest seulement.
 - Couleurs nommées (`'red'`) non détectées par le contrôle CONV-16.
 - Habilitations iOS contrôlées sur le projet généré, pas sur un binaire signé : à revoir avec la signature (jalon 6). Polices IBM Plex absentes du poste : les maquettes s'affichent dans la police du système.

@@ -1,6 +1,6 @@
 # 024 — Statistiques : onglet et période
 
-Statut : à faire · Jalon : 2 · Zone sensible : non (affiche sans calculer : taux et arrondi viennent du 023) · Trivial : non
+Statut : fusionné dans le groupe (PR #73) · Jalon : 2 · Zone sensible : non (affiche sans calculer : taux et arrondi viennent du 023) · Trivial : non
 
 Dépend de : 023 · Fichiers touchés : `src/ui/TabBar.tsx`, `src/app/(tabs)/_layout.tsx`, `src/app/(tabs)/stats.tsx` (nouveau), `src/app/stats/periode.tsx` (nouveau), `src/ui/AttendanceBar.tsx` (nouveau), `src/config/libelles/stats.ts` (nouveau), `src/config/libelles/index.ts`, `src/appTests/stats.test.tsx` (nouveau), `src/appTests/tabRoutes.tsx` — 9 fichiers
 
@@ -26,11 +26,11 @@ L'onglet Stats prend la place vide gardée dans la barre d'onglets (décision du
 
 ## Critères d'acceptation
 
-- [ ] EX-27 : sur le jeu fictif du 023, la synthèse et chaque groupe affichent les taux attendus, pour la saison, le mois et des dates libres.
-- [ ] RM-01 : un groupe sans séance sur la période affiche « — » et « Aucune séance sur la période. ».
-- [ ] La période choisie est gardée en changeant d'onglet (état de l'écran), pas en base.
-- [ ] NF-06 : chaque barre a un libellé d'accessibilité ; textes agrandis du système lisibles ; zones d'appui de 44 pt.
-- [ ] CONV-03, CONV-16 respectées ; écarts avec la maquette listés dans la PR.
+- [x] EX-27 : sur le jeu fictif du 023, la synthèse et chaque groupe affichent les taux attendus, pour la saison, le mois et des dates libres. — tests d'écran (`src/appTests/stats.test.tsx`) : saison, « Ce mois », dates libres ; non vérifié sur le téléphone
+- [x] RM-01 : un groupe sans séance sur la période affiche « — » et « Aucune séance sur la période. ». — test d'écran
+- [x] La période choisie est gardée en changeant d'onglet (état de l'écran), pas en base. — état de l'onglet et paramètres `du`, `au` de l'adresse, jamais en base ; retour de l'écran Période (`router.dismissTo`) testé avec le routeur simulé, non vérifié sur le téléphone
+- [x] NF-06 : chaque barre a un libellé d'accessibilité ; textes agrandis du système lisibles ; zones d'appui de 44 pt. — libellé d'accessibilité testé ; textes agrandis, zones d'appui de 44 pt, défilement avec beaucoup de groupes et tablette : non vérifié sur le téléphone
+- [x] CONV-03, CONV-16 respectées ; écarts avec la maquette listés dans la PR. — contrôles de `./scripts/test.sh` ; écarts listés dans la PR #73
 
 ## Tests attendus
 

@@ -63,6 +63,14 @@ Reports de l'intégration du lot J2-1 (2026-11-27) :
 - le contrôle statique (SEC-01, SEC-03) refuse, en plus de l'import d'expo-notifications hors de `src/data/expoNotifications.ts` : `getExpoPushTokenAsync`, `getDevicePushTokenAsync`, `subscribeToTopicAsync`, `unsubscribeFromTopicAsync`, `setAutoServerRegistrationEnabledAsync`, `registerTaskAsync`, `setBadgeCountAsync`, `getExactAlarmPermissionsAsync`, `requestExactAlarmPermissionsAsync`, et tout import d'`expo-application` (décision du porteur du 2026-11-27, 026) ;
 - régénérer `src/config/licences.json` (EX-42) quand le paquet entre dans le bundle JavaScript (026).
 
+Reports de l'intégration du lot J2-2 (2026-11-27) :
+
+- sa liste de fichiers doit inclure `src/data/sessionsRepo.ts` (et son test) : `plannedReminders` attend les séances avec leur état (`{ slotId, date, state }`) ; la requête doit renvoyer `state` et inclure les séances futures annulées ou non planifiées (EX-38) (027).
+- conversion des heures locales en `Date` : traiter l'heure absente au passage à l'heure d'été (02:00 à 03:00 le dernier dimanche de mars) et l'heure doublée au passage à l'heure d'hiver (dernier dimanche d'octobre), sans relance en double ; la fonction ne renvoie que des dates et heures locales en texte (027).
+- au moment de programmer, écarter un déclencheur déjà passé : le calcul et la programmation n'ont pas lieu à la même minute (027).
+- attraper l'erreur de `plannedReminders` (délai invalide) pour qu'un appel bien enregistré ne paraisse pas échoué (027).
+- test « séance préparée → la relance part » qui passe par le dépôt (EX-36) ; le test SEC-12 du 027 marque pour l'instant toutes les séances lues comme `recorded` (027).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

@@ -89,7 +89,7 @@ Apple et Google demandent de déclarer si l'éditeur est un **commerçant** (*tr
 | Rédiger la politique de confidentialité et les conditions d'utilisation (source unique pour l'appli et la page web) | IA, validé par le porteur | Ticket des pages légales |
 | Publier sur GitHub Pages un modèle de mention d'information que le club remet aux familles | IA, validé par le porteur | Ticket des pages légales |
 | Remplir « Sécurité des données » (Play) et « App Privacy » (Apple) | Porteur | À la soumission |
-| Déclarer le public cible 18+ (Play) et remplir le questionnaire d'âge (Apple) | Porteur | À la soumission |
+| Déclarer le public cible 16 ans et plus (Play : tranches 16-17 et 18+, §3, décision du 2026-11-26) et remplir le questionnaire d'âge (Apple) | Porteur | À la soumission |
 | Auditer les permissions et l'absence de chiffrement sur les binaires | IA (CI), porteur (lecture) | Fin de jalon et chaque version |
 | Générer le registre des licences | IA | Chaque version |
 | Inventorier les licences des bibliothèques natives (Gradle, CocoaPods : AndroidX, Kotlin, OkHttp, Hermes…) et les ajouter au registre affiché (EX-42), décision du porteur du 2026-11-26 | IA | Avant la première soumission |
@@ -140,6 +140,8 @@ Non lus (pages vides ou en erreur) : considérant 18 du RGPD (EUR-Lex), deux pag
 - 2026-11-26 : comptes Jita Vision, nom Ki&La, GitHub Pages ; Jita Vision **commerçant** au sens du DSA ; modèle de mention d'information pour les familles sur la page web ; export non déclaré comme partage (action initiée par l'utilisateur) ; public cible Play **16 ans et plus**.
 - 2026-11-27 (ticket 021, ABS-08) : Alertes traitées (membre, longueur, date) : stockées sur l'appareil, sauvegardées, effacées avec le membre ; déclarations des stores inchangées (aucune donnée collectée) ; reprises dans la politique (jalon 6).
 - 2026-11-27 (ticket 026, ABS-01, ABS-07, ABS-08) : expo-notifications 58.1.10 accepté avec expo-application, badgin, abort-controller (et event-target-shim, tirée), verrouillé (Firebase retiré du manifeste, audit SEC-02) ; permissions `POST_NOTIFICATIONS` et `RECEIVE_BOOT_COMPLETED` seules (§3) ; Android SDK License pour 8 bibliothèques nommées (§7) ; ShortcutBadger accepté, ses 16 permissions bloquées (§8) ; « aucune donnée collectée » gardé ; risque de l'index des SDK de Play noté (§3) ; notifications locales reprises dans la politique (jalon 6).
+- 2026-11-27 (ticket 027, ABS-08) : Réglages de la relance (activée, délai) : réglages non personnels stockés sur l'appareil, sauvegardés ; déclarations des stores inchangées (aucune donnée collectée).
+- 2026-11-27 (décision du porteur) : §8, l'action « Déclarer le public cible 18+ (Play) » devient « 16 ans et plus » (tranches 16-17 et 18+), conformément au §3 et à la décision du 2026-11-26.
 
 ## Questions ouvertes
 
