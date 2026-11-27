@@ -136,6 +136,9 @@ const MIGRATION_1: string[] = [
     slot_id INTEGER REFERENCES slots (id) ON DELETE CASCADE,
     date TEXT NOT NULL CHECK ${isoDate('date')},
     comment TEXT,
+    -- Ticket 011 (décision du porteur du 2026-11-27, ADR-003) : ouverture de l'appel, « commencé à »
+    -- et heure d'un appel sans créneau repris. Aucune donnée personnelle (ABS-03).
+    started_at TEXT NOT NULL CHECK ${hhmm('started_at')},
     updated_at TEXT NOT NULL
   ) STRICT`,
   // Groupes et statuts du brouillon en tables filles (décision du porteur du 2026-11-26) :

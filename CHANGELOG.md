@@ -6,6 +6,7 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Ajouté
 
+- Brouillon d'appel : chaque changement (statut, commentaire) écrit aussitôt dès le premier ; appel retrouvé tel quel après une fermeture forcée ; carte « Appel en cours » sur l'accueil (commencé à, absents notés), « Abandonner » confirmé ou « Reprendre l'appel » ; « Nouvel appel » ouvre le brouillon ; un autre appel est bloqué tant qu'il existe ; brouillon effacé à l'enregistrement — ticket 011.
 - Appel sans créneau : groupe et date (jamais future, dans la saison), heure de l'ouverture de l'appel ; « Ajouter un membre » pendant l'appel, inscrit à la date de la séance et ajouté à Présent, statuts gardés ; « Nouvel appel » y mène sans séance à faire — ticket 010c.
 - Écran d'appel : membres inscrits à la date, tous à Présent ; un appui fait passer à Absent, Retard, Excusé ; pastilles avec icône et libellé, compteur, recherche au-delà de 20 membres, commentaire, « Enregistrer l'appel » puis « Appel enregistré » ; « Nouvel appel » en tête de l'accueil, vers la séance proposée (jamais d'un jour à venir) — ticket 010b.
 - Enregistrement d'un appel (données) : séance, groupe figé et présences d'un bloc ; une séance par créneau et par date ; membres inscrits à la date ; commentaire de 500 caractères au plus ; séance proposée (créneau en cours ou le plus proche) — ticket 010.

@@ -37,6 +37,8 @@ describe('Appel sans créneau, ajout pendant l’appel (EX-12, EX-39)', () => {
   beforeEach(async () => {
     db = await prepareDatabase(openNodeDb());
     s = await seed(db);
+    // Le brouillon du jeu fictif bloquerait tout autre appel (ticket 011) : chaque test part sans.
+    await db.execute('DELETE FROM roll_call_drafts');
     mockDb = db;
     // Horloge figée : mardi 17/11/2026 10:05, aucun créneau ce jour-là.
     jest.useFakeTimers({ advanceTimers: true, now: new Date(2026, 10, 17, 10, 5) });

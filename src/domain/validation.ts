@@ -84,6 +84,8 @@ export type SlotInput = {
 };
 
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+/** RM-04 : heure HH:MM de 00:00 à 23:59. */
+export const isTime = (text: string) => HHMM.test(text);
 const optional = (text: string | null) =>
   text === null || text.trim() === '' ? null : text.trim();
 
@@ -108,10 +110,22 @@ export const validateSlot = (input: SlotInput): SlotInput => {
 /** EX-10 : statuts d'une présence enregistrée. */
 export type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused';
 const STATUSES: readonly string[] = ['present', 'absent', 'late', 'excused'];
+
+/** EX-10 : statut de présence connu (brouillon et enregistrement). */
+export const isAttendanceStatus = (status: string): status is AttendanceStatus =>
+  STATUSES.includes(status);
 /** EX-13 : 500 caractères au plus (décision du porteur du 2026-11-27). */
 export const COMMENT_MAX = 500;
 
-const isId = (n: number) => Number.isInteger(n) && n >= 1;
+export const isId = (n: number) => Number.isInteger(n) && n >= 1;
+
+/** EX-13 : commentaire nettoyé, vide → aucun ; 500 caractères vus au plus (un émoji compte pour un). */
+export const validateComment = (text: string | null): string | null => {
+  const comment = optional(text);
+  if (comment !== null && [...comment].length > COMMENT_MAX)
+    throw new InputError('COMMENT_TOO_LONG');
+  return comment;
+};
 
 /** EX-15 : un appel à enregistrer ; `slotId` nul : appel sans créneau (EX-39). */
 export type RollCallInput = {
@@ -135,10 +149,7 @@ export const validateRollCall = (input: RollCallInput): RollCallInput => {
       throw new InputError('STATUS_INVALID');
     seen.add(memberId);
   }
-  const comment = optional(input.comment);
-  // Caractères vus (points de code), pas unités UTF-16 : un émoji compte pour un.
-  if (comment !== null && [...comment].length > COMMENT_MAX)
-    throw new InputError('COMMENT_TOO_LONG');
+  const comment = validateComment(input.comment);
   return {
     slotId: input.slotId,
     groupId: input.groupId,

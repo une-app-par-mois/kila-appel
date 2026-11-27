@@ -140,3 +140,30 @@ describe('Migration 1 (ADR-003)', () => {
     expect(applied).toEqual(['SELECT 1', 'PRAGMA user_version = 1']);
   });
 });
+
+describe('Brouillon : heure de début (ticket 011, ADR-003 : migration 1 corrigée avant publication)', () => {
+  let db: Db;
+  beforeEach(async () => {
+    db = await prepareDatabase(openNodeDb());
+    await db.execute(
+      "INSERT INTO seasons (name, start_date, end_date, is_active) VALUES ('S', '2026-09-01', '2027-07-31', 1)",
+    );
+  });
+  afterEach(async () => {
+    await db.close();
+  });
+
+  it('EX-14 l’heure de début est obligatoire et écrite HH:MM', async () => {
+    const insert = (startedAt: string | null) =>
+      db.execute(
+        "INSERT INTO roll_call_drafts (id, season_id, date, started_at, updated_at) VALUES (1, 1, '2026-11-18', ?, '2026-11-18T10:05')",
+        [startedAt],
+      );
+    await expect(insert(null)).rejects.toThrow();
+    await expect(insert('9:05')).rejects.toThrow();
+    await insert('09:05');
+    expect(await db.query('SELECT started_at FROM roll_call_drafts')).toEqual([
+      { started_at: '09:05' },
+    ]);
+  });
+});

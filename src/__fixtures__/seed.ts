@@ -89,8 +89,8 @@ export const seed = async (db: Db): Promise<Seeded> => {
     [sessionId, otherMemberId],
   );
   await db.execute(
-    'INSERT INTO roll_call_drafts (id, season_id, slot_id, date, updated_at) VALUES (1, ?, ?, ?, ?)',
-    [seasonId, slotId, '2026-12-02', '2026-12-02T17:35:00'],
+    'INSERT INTO roll_call_drafts (id, season_id, slot_id, date, started_at, updated_at) VALUES (1, ?, ?, ?, ?, ?)',
+    [seasonId, slotId, '2026-12-02', '17:32', '2026-12-02T17:35:00'],
   );
   await db.execute('INSERT INTO roll_call_draft_groups (draft_id, group_id) VALUES (1, ?)', [
     groupId,

@@ -1,14 +1,16 @@
 // Appel pour les écrans (EX-09, EX-15, CONV-10) : liste de l'appel, séance proposée,
 // enregistrement. Même contrat que les autres hooks de données.
 import { useCallback, useMemo } from 'react';
+import { type DraftTarget, draftsRepo, type RollCallDraft } from '@/data/draftsRepo';
 import { enrollmentsRepo, type GroupEnrollment } from '@/data/enrollmentsRepo';
 import { DataError } from '@/data/errors';
 import { groupsRepo } from '@/data/groupsRepo';
 import { seasonsRepo } from '@/data/seasonsRepo';
 import { type RollCall, sessionsRepo } from '@/data/sessionsRepo';
 import { type Slot, slotsRepo } from '@/data/slotsRepo';
-import { toIsoDate } from '@/domain/formats';
+import { toIsoDate, toLocalTime } from '@/domain/formats';
 import { type LocalNow, proposedSession, type WeeklySlot } from '@/domain/occurrences';
+import type { AttendanceStatus } from '@/domain/validation';
 import { notifyDataChanged } from '@/hooks/dataChanged';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useLoaded } from '@/hooks/useLoaded';
@@ -99,4 +101,47 @@ export const useRollCall = () => {
     [repo],
   );
   return { record, isRecorded, isGroupRecorded };
+};
+
+/** Adresse de l'écran d'appel d'un brouillon (reprise depuis l'accueil ou un autre appel). */
+export const draftRoute = (draft: RollCallDraft) => ({
+  pathname: '/appel' as const,
+  params:
+    draft.slotId !== null
+      ? { creneau: draft.slotId, date: draft.date }
+      : { groupe: draft.groupId ?? 0, date: draft.date },
+});
+
+/** Instant local pour `updated_at` du brouillon (AAAA-MM-JJTHH:MM). */
+const localNow = () => {
+  const now = new Date();
+  return `${toIsoDate(now)}T${toLocalTime(now)}`;
+};
+
+/**
+ * EX-14 : brouillon d'appel. Les écritures de l'appel ne préviennent pas les autres écrans (un
+ * appui ne recharge pas tout) : l'écran d'appel le fait en se fermant ; l'abandon tout de suite.
+ */
+export const useDraft = () => {
+  const db = useDatabase();
+  const load = useMemo(() => (db ? () => draftsRepo(db).get() : null), [db]);
+  const { value: draft, loaded, loadFailed } = useLoaded(load, 'DRAFT_LOAD_FAILED', {});
+  const repo = useCallback(() => {
+    if (!db) throw new DataError('DB_NOT_READY');
+    return draftsRepo(db);
+  }, [db]);
+  const setStatus = useCallback(
+    (target: DraftTarget, memberId: number, status: AttendanceStatus) =>
+      repo().setStatus(target, memberId, status, localNow()),
+    [repo],
+  );
+  const setComment = useCallback(
+    (target: DraftTarget, comment: string) => repo().setComment(target, comment, localNow()),
+    [repo],
+  );
+  const discard = useCallback(async () => {
+    await repo().discard();
+    notifyDataChanged();
+  }, [repo]);
+  return { draft, loaded, loadFailed, setStatus, setComment, discard };
 };

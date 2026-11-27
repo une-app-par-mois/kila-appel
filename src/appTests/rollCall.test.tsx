@@ -30,6 +30,8 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
   beforeEach(async () => {
     db = await prepareDatabase(openNodeDb());
     s = await seed(db);
+    // Le brouillon du jeu fictif bloquerait tout autre appel (ticket 011) : chaque test part sans.
+    await db.execute('DELETE FROM roll_call_drafts');
     mockDb = db;
     // Horloge figée : mercredi 18/11/2026 18:00, pendant la séance du jeu fictif.
     jest.useFakeTimers({ advanceTimers: true, now: new Date(2026, 10, 18, 18, 0) });
