@@ -1,9 +1,9 @@
 /**
  * @jest-environment node
  */
-// useBackupExport (ticket 014b, revue de code et de sécurité) : un seul export à la fois, vidage
-// du dossier une fois par montage et jamais pendant un export, date notée à part. Vrai cycle sur
-// node:fs et node:sqlite ; le partage est imité.
+// useBackupExport (ticket 014b, revue de code et de sécurité ; ticket 014g) : un seul export à la
+// fois, vidage du dossier au début de chaque export et jamais au montage, date notée à part. Vrai
+// cycle sur node:fs et node:sqlite ; le partage est imité. Vidage sous le verrou : fichier voisin.
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
@@ -59,7 +59,7 @@ describe('useBackupExport', () => {
     dir.remove();
   });
 
-  it('vide le dossier une fois par montage, même si `deps` change d’identité', async () => {
+  it('SEC-10 : aucun vidage au montage, même si `deps` change d’identité', async () => {
     const share = jest.fn(async () => undefined);
     const { rerender, unmount } = await renderHook(
       ({ deps }: { deps: BackupDeps }) => useBackupExport(deps),
@@ -68,27 +68,30 @@ describe('useBackupExport', () => {
       },
     );
     await rerender({ deps: depsWith(share) });
-    await rerender({ deps: depsWith(share) });
-    await waitFor(() => expect(files.clear).toHaveBeenCalledTimes(1));
+    await act(async () => undefined);
+    expect(files.clear).not.toHaveBeenCalled();
     await unmount();
   });
 
-  it('un second écran monté pendant un partage ne vide pas le dossier', async () => {
+  it('SEC-10 : un second écran monté pendant un partage ne vide pas le dossier', async () => {
     const { share, shared, finish } = pendingShare();
     const first = await renderHook(() => useBackupExport(depsWith(share)));
-    await waitFor(() => expect(files.clear).toHaveBeenCalledTimes(1));
     let running: Promise<void> = Promise.resolve();
     await act(async () => {
       running = first.result.current.exportNow();
     });
     await waitFor(() => expect(share).toHaveBeenCalledTimes(1));
+    // Le seul vidage est celui du début de l'export en cours.
+    expect(files.clear).toHaveBeenCalledTimes(1);
     const second = await renderHook(() => useBackupExport(depsWith(share)));
     await act(async () => undefined);
     expect(files.clear).toHaveBeenCalledTimes(1);
     expect(existsSync(shared[0] ?? '')).toBe(true);
-    // Le second écran ne lance pas d'autre export pendant ce temps.
+    // Le second écran ne lance pas d'autre export, ni de vidage, pendant ce temps.
     await act(() => second.result.current.exportNow());
     expect(share).toHaveBeenCalledTimes(1);
+    expect(files.clear).toHaveBeenCalledTimes(1);
+    expect(existsSync(shared[0] ?? '')).toBe(true);
     finish();
     await act(() => running);
     expect(existsSync(shared[0] ?? '')).toBe(false);
