@@ -9,7 +9,13 @@ import { seasonsRepo } from '@/data/seasonsRepo';
 import { type RollCall, sessionsRepo } from '@/data/sessionsRepo';
 import { type Slot, slotsRepo } from '@/data/slotsRepo';
 import { toIsoDate, toLocalTime } from '@/domain/formats';
-import { type LocalNow, proposedSession, type WeeklySlot } from '@/domain/occurrences';
+import {
+  type LocalNow,
+  missingRollCalls,
+  type Occurrence,
+  proposedSession,
+  type WeeklySlot,
+} from '@/domain/occurrences';
 import type { AttendanceStatus } from '@/domain/validation';
 import { notifyDataChanged } from '@/hooks/dataChanged';
 import { useDatabase } from '@/hooks/useDatabase';
@@ -144,4 +150,56 @@ export const useDraft = () => {
     notifyDataChanged();
   }, [repo]);
   return { draft, loaded, loadFailed, setStatus, setComment, discard };
+};
+
+/** Appel manquant de l'accueil : séance passée, son groupe actif (EX-17). */
+export type MissingRollCall = Occurrence & { groupName: string };
+
+/** EX-17 : séances finies sans appel, les plus récentes d'abord ; créneaux sans groupe actif exclus. */
+export const useMissingRollCalls = (now: LocalNow) => {
+  const db = useDatabase();
+  const { date, time } = now;
+  const load = useMemo(
+    () =>
+      db
+        ? async (): Promise<MissingRollCall[]> => {
+            const season = await seasonsRepo(db).getActive();
+            if (!season) return [];
+            const active = new Set((await groupsRepo(db).listBySeason(season.id)).map((g) => g.id));
+            const slots = await slotsRepo(db).listBySeason(season.id);
+            const groupOf = new Map(
+              slots.flatMap((s) => {
+                const g = s.groups.find((x) => active.has(x.id));
+                return g ? [[s.id, g.name] as const] : [];
+              }),
+            );
+            const recorded = await sessionsRepo(db, date).slotSessions(season.id);
+            const usable = slots.filter((s) => groupOf.has(s.id)) as WeeklySlot[];
+            return missingRollCalls(usable, season, recorded, { date, time })
+              .reverse()
+              .map((o) => ({ ...o, groupName: groupOf.get(o.slotId) ?? '' }));
+          }
+        : null,
+    [db, date, time],
+  );
+  const { value, loaded, loadFailed } = useLoaded(load, 'MISSING_CALLS_FAILED', {});
+  return { missing: value ?? [], loaded, loadFailed };
+};
+
+/**
+ * « Nouvel appel » (onglet central, décision du 2026-11-27) : l'appel en cours, sinon la séance
+ * proposée, sinon l'appel sans créneau. `null` tant que ce n'est pas connu. Un appel en cours qui
+ * ne peut plus être repris mène à l'accueil, où il s'abandonne.
+ */
+export const useNewRollCallRoute = (now: LocalNow) => {
+  const { draft, loaded: draftLoaded } = useDraft();
+  const { session, loaded } = useProposedSession(now);
+  if (!draftLoaded || !loaded) return null;
+  if (draft) return draft.resumable ? draftRoute(draft) : ('/' as const);
+  if (session && !session.recorded)
+    return {
+      pathname: '/appel' as const,
+      params: { creneau: session.slot.id, date: session.date },
+    };
+  return '/appel-libre' as const;
 };

@@ -62,7 +62,7 @@ ${carte(`
 ${ligne('<span class="rouge">●</span> Benjamins lundi', 'Lundi 24 nov. · 18:00', 'data-go="appel"')}
 `)}
 ${carte(`<div class="l-titre">Pas de sauvegarde depuis 34 jours</div><div class="l-sous">Vos données ne vivent que sur cet appareil.</div>${go('donnees', 'Sauvegarder maintenant', 'btn-s')}`, 'bandeau')}
-<p class="note">Version finale avec frise et alertes : <a class="lien" data-go="accueil-complet">Accueil complet</a> (lot 2).</p>`);
+<p class="note">Version finale avec frise et alertes : <a class="lien" data-go="accueil-complet">Accueil complet</a> (lot 2). Ticket 012 (décisions du 2026-11-27) : sans « Annuler » (jalon 2) ni bandeau de sauvegarde (ticket 014) ; appels manquants : 5 au plus, puis « et N autres » ; séance déjà faite : « Appel enregistré », sans bouton ; onglets Accueil, Nouvel appel, Paramètres jusqu'au ticket 013.</p>`);
 
 // 03 — Recherche contact d'urgence
 ecran('urgence', 1, "Recherche d'un contact d'urgence", 'EX-06, EX-05', 'accueil', `

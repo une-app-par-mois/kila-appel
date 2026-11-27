@@ -4,7 +4,7 @@ import { count, type Seeded, seed } from '@/__fixtures__/seed';
 import SlotForm from '@/app/creneaux/[id]';
 import Slots from '@/app/creneaux/index';
 import Groups from '@/app/groupes/index';
-import Settings from '@/app/index';
+import { tabRoutes } from '@/appTests/tabRoutes';
 import { labels } from '@/config/libelles';
 import type { Db } from '@/data/db';
 import { openNodeDb } from '@/data/nodeDb';
@@ -16,7 +16,7 @@ jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => mockDb }));
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
 
 const routes = {
-  index: Settings,
+  ...tabRoutes,
   'creneaux/index': Slots,
   'creneaux/[id]': SlotForm,
   'groupes/index': Groups,
@@ -41,7 +41,7 @@ describe('Écrans des créneaux (EX-07)', () => {
   });
 
   it('EX-07 Paramètres → Créneaux : « Mercredi 17:30 – 19:00 », groupe · lieu', async () => {
-    const router = await open('/');
+    const router = await open('/parametres');
     await fireEvent.press(await button(t.rowAccessibility(t.settings.slots, t.slots.count(1))));
     expect(router.getPathname()).toBe('/creneaux');
     expect(await screen.findByText('Mercredi 17:30 – 19:00')).toBeTruthy();

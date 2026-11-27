@@ -1,21 +1,14 @@
-// Paramètres (maquette) : écran d'accueil provisoire jusqu'au ticket 012 (barre d'onglets).
-// Seules les lignes qui mènent à un écran existant (décision du porteur du 2026-11-26). En tête,
-// l'entrée de la recherche d'un contact d'urgence, à sa place dans l'accueil du 012 (EX-06), et
-// l'entrée de l'appel (`RollCallEntry` : brouillon, séance proposée, appel sans créneau).
+// Paramètres (maquette Paramètres, onglet, ticket 012) : seules les lignes qui mènent à un écran
+// existant (décision du porteur du 2026-11-26). Relance, alertes, données : jalons suivants.
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
 import { labels } from '@/config/libelles';
-import { theme } from '@/config/theme';
 import { toIsoDate } from '@/domain/formats';
 import { useGroups } from '@/hooks/useGroups';
 import { useMembers } from '@/hooks/useMembers';
 import { useSeasons } from '@/hooks/useSeasons';
 import { useSlots } from '@/hooks/useSlots';
 import { Card } from '@/ui/Card';
-import { Icon } from '@/ui/Icon';
 import { ListRow } from '@/ui/ListRow';
-import { RollCallEntry } from '@/ui/RollCallEntry';
 import { Screen, Section } from '@/ui/Screen';
 
 const t = labels.settings;
@@ -27,26 +20,15 @@ export default function Settings() {
   const { groups, loadFailed: groupsFailed } = useGroups(active?.id ?? null);
   const { members, loadFailed: membersFailed } = useMembers({ today: toIsoDate(new Date()) });
   const { slots, loadFailed: slotsFailed } = useSlots(active?.id ?? null);
-  const [entryError, setEntryError] = useState<string | undefined>();
   return (
     <Screen
       title={t.title}
       error={
         loadFailed || groupsFailed || membersFailed || slotsFailed
           ? labels.common.loadFailed
-          : entryError
+          : undefined
       }
     >
-      <RollCallEntry onError={setEntryError} />
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={labels.emergency.entry}
-        onPress={() => router.push('/urgence')}
-        style={({ pressed }) => [styles.search, pressed && styles.pressed]}
-      >
-        <Icon name="search" />
-        <Text style={styles.searchText}>{labels.emergency.entry}</Text>
-      </Pressable>
       <Section title={t.organisation} />
       <Card>
         <ListRow
@@ -95,25 +77,3 @@ export default function Settings() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  search: {
-    minHeight: theme.minTouchTarget,
-    flexDirection: 'row',
-    alignItems: 'center',
-    columnGap: theme.spacing * 2,
-    paddingHorizontal: theme.spacing * 3,
-    marginVertical: theme.spacing * 1.5,
-    backgroundColor: theme.colors.blanc,
-    borderWidth: 1.5,
-    borderColor: theme.colors.quadrillage,
-    borderRadius: theme.radii.champ,
-  },
-  pressed: { opacity: 0.6 },
-  searchText: {
-    flex: 1,
-    fontFamily: theme.fonts.text,
-    fontSize: 16,
-    color: theme.colors.texteSecondaire,
-  },
-});

@@ -124,4 +124,11 @@ export const sessionsRepo = (db: Db, today: string) => ({
         date,
       ])
     ).length > 0,
+
+  /** EX-17 : séances des créneaux de la saison (créneau, date) ; une seule par créneau et date (RM-05). */
+  slotSessions: async (seasonId: number): Promise<{ slotId: number; date: string }[]> =>
+    db.query<{ slotId: number; date: string }>(
+      'SELECT slot_id AS slotId, date FROM sessions WHERE season_id = ? AND slot_id IS NOT NULL ORDER BY date',
+      [seasonId],
+    ),
 });

@@ -23,6 +23,8 @@ type Props = {
   right?: ReactNode;
   /** Le chevron reçoit `${testID}-chevron`. */
   testID?: string;
+  /** Point Marge devant le titre (maquette Accueil : appel manquant) ; le titre dit déjà pourquoi. */
+  dot?: boolean;
 };
 
 const describe = (title: string, parts: (string | undefined)[]) =>
@@ -32,9 +34,21 @@ const describe = (title: string, parts: (string | undefined)[]) =>
   );
 
 export const ListRow = (props: Props) => {
-  const { title, subtitle, mono, detail, badge, onPress, chevron = true, right, testID } = props;
+  const {
+    title,
+    subtitle,
+    mono,
+    detail,
+    badge,
+    onPress,
+    chevron = true,
+    right,
+    testID,
+    dot,
+  } = props;
   const content = (
     <>
+      {dot && <View style={styles.dot} />}
       <View style={styles.texts}>
         <Text style={styles.title}>{title}</Text>
         {subtitle !== undefined && (
@@ -89,6 +103,13 @@ const rowBase = {
 } as const;
 
 const styles = StyleSheet.create({
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: theme.colors.marge,
+    marginRight: theme.spacing * 2,
+  },
   row: {
     ...rowBase,
     paddingVertical: theme.spacing * 2,

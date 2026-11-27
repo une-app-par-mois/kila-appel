@@ -26,10 +26,10 @@ Relier les écrans : barre d'onglets et accueil (EX-09, EX-17, EX-06).
 
 ## Critères d'acceptation
 
-- [ ] Barre d'onglets : Accueil, Nouvel appel, Paramètres
-- [ ] « Nouvel appel » : appel en cours, séance proposée ou appel sans créneau
-- [ ] Accueil : séance du moment, appels manquants (5 au plus), accès à la recherche d'urgence
-- [ ] Paramètres : organisation et licences, dans son onglet
+- [x] Barre d'onglets : Accueil, Nouvel appel, Paramètres
+- [x] « Nouvel appel » : appel en cours, séance proposée ou appel sans créneau
+- [x] Accueil : séance du moment, appels manquants (5 au plus), accès à la recherche d'urgence
+- [x] Paramètres : organisation et licences, dans son onglet
 
 ## Tests attendus
 

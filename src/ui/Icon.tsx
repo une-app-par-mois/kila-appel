@@ -10,9 +10,11 @@ import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import Clock from 'lucide-react-native/icons/clock';
 import EqualApproximately from 'lucide-react-native/icons/equal-approximately';
 import Grip from 'lucide-react-native/icons/grip-horizontal';
+import House from 'lucide-react-native/icons/house';
 import Phone from 'lucide-react-native/icons/phone';
 import Plus from 'lucide-react-native/icons/plus';
 import Search from 'lucide-react-native/icons/search';
+import Settings from 'lucide-react-native/icons/settings';
 import Trash2 from 'lucide-react-native/icons/trash-2';
 import X from 'lucide-react-native/icons/x';
 import { theme } from '@/config/theme';
@@ -28,6 +30,9 @@ const ICONS = {
   delete: Trash2,
   /** Poignée ≡ pour glisser (maquette Fiche membre). */
   grip: Grip,
+  /** Onglets (maquette : ⌂ et ⚙). */
+  home: House,
+  settings: Settings,
   phone: Phone,
   search: Search,
   unarchive: ArchiveRestore,

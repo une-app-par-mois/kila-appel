@@ -5,8 +5,8 @@ import { fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-li
 import { type Seeded, seed } from '@/__fixtures__/seed';
 import RollCall from '@/app/appel';
 import FreeRollCall from '@/app/appel-libre';
-import Settings from '@/app/index';
 import NewMember from '@/app/membres/nouveau';
+import { tabRoutes } from '@/appTests/tabRoutes';
 import { labels } from '@/config/libelles';
 import type { Db } from '@/data/db';
 import { openNodeDb } from '@/data/nodeDb';
@@ -19,7 +19,7 @@ jest.mock('@/data/log', () => ({ log: jest.fn() }));
 // Pile comme dans l'appli (`_layout.tsx`) : l'appel reste ouvert sous Nouveau membre (EX-12).
 const routes = {
   _layout: () => <Stack screenOptions={{ headerShown: false }} />,
-  index: Settings,
+  ...tabRoutes,
   appel: RollCall,
   'appel-libre': FreeRollCall,
   'membres/nouveau': NewMember,

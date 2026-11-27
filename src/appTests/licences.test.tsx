@@ -1,15 +1,15 @@
 // Écrans des licences (ticket 006e, EX-42), sur le registre généré src/config/licences.json.
 import { fireEvent, renderRouter, screen } from 'expo-router/testing-library';
-import Settings from '@/app/index';
 import Licence from '@/app/licences/[index]';
 import Licences from '@/app/licences/index';
+import { tabRoutes } from '@/appTests/tabRoutes';
 import { labels } from '@/config/libelles';
 import registry from '@/config/licences.json';
 
 jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => null }));
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
 
-const routes = { index: Settings, 'licences/index': Licences, 'licences/[index]': Licence };
+const routes = { ...tabRoutes, 'licences/index': Licences, 'licences/[index]': Licence };
 const open = (initialUrl: string) => renderRouter(routes, { initialUrl });
 const t = labels.licences;
 type Entry = (typeof registry)[number];
@@ -22,7 +22,7 @@ const entryWhere = (test: (e: Entry) => boolean): Entry => {
 
 describe('Licences embarquées (EX-42)', () => {
   it('Paramètres › À propos › Licences mène à la liste', async () => {
-    const router = await open('/');
+    const router = await open('/parametres');
     expect(await screen.findByText(labels.settings.about)).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: labels.settings.licences }));
     expect(router.getPathname()).toBe('/licences');

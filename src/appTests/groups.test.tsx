@@ -5,8 +5,8 @@ import GroupDetail from '@/app/groupes/[id]/index';
 import GroupEdit from '@/app/groupes/[id]/modifier';
 import Groups from '@/app/groupes/index';
 import NewGroup from '@/app/groupes/nouveau';
-import Settings from '@/app/index';
 import Seasons from '@/app/saisons/index';
+import { tabRoutes } from '@/appTests/tabRoutes';
 import { labels } from '@/config/libelles';
 import type { Db } from '@/data/db';
 import { openNodeDb } from '@/data/nodeDb';
@@ -17,7 +17,7 @@ jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => mockDb }));
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
 
 const routes = {
-  index: Settings,
+  ...tabRoutes,
   'saisons/index': Seasons,
   'groupes/index': Groups,
   'groupes/nouveau': NewGroup,
@@ -41,7 +41,7 @@ describe('Écrans des groupes (EX-02)', () => {
   });
 
   it('Paramètres montre le nombre de groupes et mène aux groupes', async () => {
-    const router = await open('/');
+    const router = await open('/parametres');
     await fireEvent.press(
       await screen.findByRole('button', { name: `${t.settings.groups}, 1 groupe` }),
     );

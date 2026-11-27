@@ -5,7 +5,7 @@ import { fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-li
 import { count, type Seeded, seed } from '@/__fixtures__/seed';
 import RollCall from '@/app/appel';
 import FreeRollCall from '@/app/appel-libre';
-import Settings from '@/app/index';
+import { tabRoutes } from '@/appTests/tabRoutes';
 import { labels } from '@/config/libelles';
 import type { Db } from '@/data/db';
 import { openNodeDb } from '@/data/nodeDb';
@@ -17,7 +17,7 @@ jest.mock('@/data/log', () => ({ log: jest.fn() }));
 
 const routes = {
   _layout: () => <Stack screenOptions={{ headerShown: false }} />,
-  index: Settings,
+  ...tabRoutes,
   appel: RollCall,
   'appel-libre': FreeRollCall,
 };
