@@ -24,7 +24,8 @@ Une base illisible au démarrage mène à un écran de récupération, jamais à
 - [ ] Base illisible : écran de récupération, jamais de plantage (EX-22)
 - [ ] « Repartir de zéro » demande une confirmation
 - [ ] Version plus récente que l'appli : message « mettez l'appli à jour », sans « Repartir de zéro » mis en avant
-- [ ] `SECURE_DELETE_OFF` et `FOREIGN_KEYS_OFF` : écran d'erreur avec « Réessayer », sans action destructrice
+- [ ] `SECURE_DELETE_OFF`, `FOREIGN_KEYS_OFF` et `JOURNAL_MODE_OFF` (ticket 015c) : écran d'erreur avec « Réessayer », sans action destructrice
+- [ ] `cache/sauvegardes/` vidé au démarrage de l'appli (layout racine), en cas d'arrêt pendant un partage (revue de sécurité du 014b)
 
 ## Tests attendus
 
