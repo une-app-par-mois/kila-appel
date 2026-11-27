@@ -1,81 +1,46 @@
 // Entrée de l'appel sur l'accueil (maquettes Accueil, Accueil avec un appel interrompu, Abandon) :
 // - un brouillon (EX-14) : carte « Appel en cours », Abandonner (confirmé) ou Reprendre l'appel ;
-//   « Nouvel appel » l'ouvre aussi ;
-// - sinon la séance proposée (EX-09), ou l'appel sans créneau sans séance à faire (EX-39).
+//   elle remplace « Maintenant » ;
+// - sinon « Maintenant » : la séance proposée (EX-09) et « Faire l'appel », « Appel enregistré » si
+//   elle l'est (décision du 2026-11-27), ou « Aucune séance à proposer. ». L'appel sans créneau
+//   s'ouvre par l'onglet « Nouvel appel » (ticket 012).
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
-import { toDisplayDate, toIsoDate, toLocalTime } from '@/domain/formats';
-import { weekdayOfDate } from '@/domain/occurrences';
-import { draftRoute, useDraft, useProposedSession } from '@/hooks/useRollCall';
+import type { LocalNow } from '@/domain/occurrences';
+import { endTime } from '@/domain/slots';
+import { draftRoute, useDraft, useProposedSession, useRoster } from '@/hooks/useRollCall';
 import { Button } from '@/ui/Button';
 import { Card } from '@/ui/Card';
 import { ConfirmDialog } from '@/ui/ConfirmDialog';
 import { errorMessage } from '@/ui/errorMessage';
-import { ListRow } from '@/ui/ListRow';
+import { Section } from '@/ui/Screen';
 
 const d = labels.draft;
+const h = labels.home;
 
-export const RollCallEntry = ({ onError }: { onError: (message: string | undefined) => void }) => {
+type Props = { now: LocalNow; onError: (message: string | undefined) => void };
+
+export const RollCallEntry = ({ now, onError }: Props) => {
   const router = useRouter();
-  // L'heure avance d'elle-même : la séance proposée suit sans autre action (une fois par minute).
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 60_000);
-    return () => clearInterval(timer);
-  }, []);
-  const proposed = useProposedSession({ date: toIsoDate(now), time: toLocalTime(now) });
+  const proposed = useProposedSession(now);
   const { draft, loaded: draftLoaded, loadFailed: draftFailed, discard } = useDraft();
+  const call = proposed.session;
+  const { roster } = useRoster(call?.group.id ?? null, call?.date ?? '');
   const [confirm, setConfirm] = useState(false);
   const failed = proposed.loadFailed || draftFailed;
   useEffect(() => onError(failed ? labels.common.loadFailed : undefined), [failed, onError]);
 
-  const call = proposed.session;
-  const callParts =
-    call &&
-    ([
-      call.group.name,
-      labels.weekdaysAbbr[weekdayOfDate(call.date) - 1] ?? '',
-      toDisplayDate(call.date).slice(0, 5),
-      call.startTime,
-    ] as const);
-  const ready = proposed.loaded && draftLoaded && !failed;
-  const group = draft?.groupName ?? d.removedGroup;
-  const absents = Object.values(draft?.statuses ?? {}).filter((s) => s === 'absent').length;
-  // Un brouillon qui ne peut plus être repris (groupe supprimé ou archivé, saison changée…) ne
-  // peut qu'être abandonné.
-  const resume = draft?.resumable ? () => router.push(draftRoute(draft)) : undefined;
-
-  const entry = draft ? (
-    <ListRow title={labels.rollCall.entry} subtitle={d.entry(group)} onPress={resume} />
-  ) : call && callParts && !call.recorded ? (
-    <ListRow
-      title={labels.rollCall.entry}
-      subtitle={labels.rollCall.proposed(...callParts)}
-      onPress={() =>
-        router.push({ pathname: '/appel', params: { creneau: call.slot.id, date: call.date } })
-      }
-    />
-  ) : (
-    <ListRow
-      title={labels.rollCall.entry}
-      subtitle={
-        callParts
-          ? labels.rollCall.proposedRecorded(...callParts)
-          : proposed.loaded
-            ? labels.rollCall.noSession
-            : undefined
-      }
-      onPress={ready ? () => router.push('/appel-libre') : undefined}
-      chevron={ready}
-    />
-  );
-
-  return (
-    <>
-      {draft && (
+  if (draft) {
+    const group = draft.groupName ?? d.removedGroup;
+    const absents = Object.values(draft.statuses).filter((s) => s === 'absent').length;
+    // Un brouillon qui ne peut plus être repris (groupe supprimé ou archivé, saison changée…) ne
+    // peut qu'être abandonné.
+    const resume = draft.resumable ? () => router.push(draftRoute(draft)) : undefined;
+    return (
+      <>
         <Card warning>
           <Text style={styles.title}>{d.title}</Text>
           <Text style={styles.summary}>
@@ -92,28 +57,76 @@ export const RollCallEntry = ({ onError }: { onError: (message: string | undefin
             {resume && <Button label={d.resume} flex={2} onPress={resume} />}
           </View>
         </Card>
-      )}
-      <Card>{entry}</Card>
-      {confirm && (
-        <ConfirmDialog
-          visible
-          title={d.abandonTitle}
-          message={d.abandonMessage(group)}
-          cancelLabel={d.keep}
-          confirmLabel={d.abandonConfirm}
-          onCancel={() => setConfirm(false)}
-          onConfirm={() => {
-            setConfirm(false);
-            discard().catch((e) => onError(errorMessage(e)));
-          }}
-        />
-      )}
+        {confirm && (
+          <ConfirmDialog
+            visible
+            title={d.abandonTitle}
+            message={d.abandonMessage(group)}
+            cancelLabel={d.keep}
+            confirmLabel={d.abandonConfirm}
+            onCancel={() => setConfirm(false)}
+            onConfirm={() => {
+              setConfirm(false);
+              discard().catch((e) => onError(errorMessage(e)));
+            }}
+          />
+        )}
+      </>
+    );
+  }
+
+  // Rien avant de savoir s'il y a un appel en cours : « Faire l'appel » mènerait à un appel bloqué.
+  if (!proposed.loaded || !draftLoaded) return null;
+  return (
+    <>
+      <Section title={h.now} />
+      <Card>
+        {call ? (
+          <>
+            <Text style={styles.big}>{call.group.name}</Text>
+            {roster && (
+              <Text style={styles.summary}>
+                {h.session(
+                  call.startTime,
+                  endTime(call.startTime, call.slot.durationMin),
+                  call.slot.place,
+                  roster.length,
+                )}
+              </Text>
+            )}
+            {call.recorded ? (
+              <Text style={styles.recorded}>{h.recorded}</Text>
+            ) : (
+              <View style={styles.actions}>
+                <Button
+                  label={h.start}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/appel',
+                      params: { creneau: call.slot.id, date: call.date },
+                    })
+                  }
+                />
+              </View>
+            )}
+          </>
+        ) : (
+          <Text style={styles.summary}>{labels.rollCall.noSession}</Text>
+        )}
+      </Card>
     </>
   );
 };
 
 const styles = StyleSheet.create({
   title: { fontFamily: theme.fonts.textSemi, fontSize: 17, color: theme.colors.texte },
+  big: { fontFamily: theme.fonts.textSemi, fontSize: 20, color: theme.colors.texte },
+  recorded: {
+    fontFamily: theme.fonts.textSemi,
+    fontSize: 15,
+    color: theme.colors.encre,
+    marginTop: theme.spacing * 2,
+  },
   summary: {
     fontFamily: theme.fonts.text,
     fontSize: 14,

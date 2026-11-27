@@ -64,7 +64,7 @@ Hors npm : **Maestro** (parcours de bout en bout, campagne de fin de jalon). Pol
 
 ```
 src/
-  app/            écrans (Expo Router) ; (tabs)/ pour les 5 onglets, le reste empilé
+  app/            écrans (Expo Router) ; (tabs)/ pour les onglets (Accueil et Paramètres ; Historique au 013, Stats au jalon 2), le reste empilé
   hooks/          un hook par préoccupation ; seul accès des écrans aux données
   domain/         fonctions pures : taux, séries, occurrences de créneaux, CSV, exports, règles RM-xx
   data/           base, migrations, dépôts (repositories), sauvegarde, notifications
@@ -173,6 +173,7 @@ Liste fermée de ce qu'un journal peut contenir : code d'erreur, nom de l'opéra
 
 - 2026-11-26 : réglages dans SQLite, état React seul, icônes lucide-react-native, polices en fichiers `.ttf`, schéma complet dès la migration 1, builds sur GitHub Actions seul ; brouillon dans une table à part (`roll_call_drafts`) ; **noms de tables au pluriel** (évite le mot réservé `group`) ; tests de données avec `node:sqlite`, à confirmer au ticket d'outillage ; sauvegarde au format base SQLite brute (`.db`).
 - 2026-11-26 (ticket 001) : dépendances obligatoires d'expo-router et de Jest acceptées ; `react-dom` épinglée en 19.3.0 ; `expo-font` installée au ticket 003 (ABS-07).
+- 2026-11-27 (ticket 012) : onglets `expo-router/js-tabs` (inclus dans Expo Router, aucune dépendance) avec une barre dessinée (`ui/TabBar`) ; le rond « Nouvel appel » n'est pas un onglet : il ouvre l'appel dans la pile racine (`useNewRollCallRoute`) ; appels manquants par `missingRollCalls` et `sessionsRepo.slotSessions`.
 - 2026-11-27 (ticket 011b) : supprimer un groupe efface l'appel en cours qui le concerne (`groupsRepo.remove`, même transaction) ; `deletionImpact` du groupe et du membre annonce l'appel en cours (`rollCallDraft`), comme celui du créneau ; `groupsRepo` et `membersRepo` rejoignent la liste du contrôle EX-14.
 - 2026-11-27 (ticket 011) : `roll_call_drafts.started_at` ajouté à la migration 1, encore corrigeable avant publication (ADR-003, décision du porteur ; l'APK de test installé est à désinstaller) ; `draftsRepo` (seul lecteur du brouillon, vérifié par `staticChecks` avec la liste des fichiers autorisés) : né au premier changement, un seul à la fois (`DRAFT_IN_PROGRESS`), effacé dans la transaction de `sessionsRepo.record` ; `useDraft` n'avertit pas les autres écrans à chaque appui (l'écran d'appel le fait en se fermant) ; `RollCallEntry` sur l'accueil (carte « Appel en cours », abandon confirmé, « Nouvel appel » vers le brouillon).
 - 2026-11-27 (ticket 010c) : écran `/appel-libre` (groupe, date) et `/appel?groupe=&date=` ; `useRollCallTarget` décide quel appel ouvre l'écran et refuse dès l'ouverture ce qui ne s'enregistrerait pas ; `sessionsRepo.record` refuse un appel sans créneau futur ; « Ajouter un membre » ouvre Nouveau membre en version « appel » (`appel=1`), inscrit à la date de la séance ; `isGroupRecorded` prévient d'un appel du groupe déjà fait ce jour-là (`ConfirmDialog harmless`) ; après l'enregistrement, `dismissTo('/')`.

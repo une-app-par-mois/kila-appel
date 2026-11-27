@@ -10,7 +10,10 @@ export const useLoaded = <T>(
   load: (() => Promise<T>) | null,
   failureCode: string,
   details = {},
-  /** Garde la valeur précédente pendant la nouvelle lecture (recherche pendant la frappe). */
+  /**
+   * Garde la valeur précédente, et `loaded`, pendant la nouvelle lecture (recherche pendant la
+   * frappe ; accueil qui suit l'heure sans se vider, ticket 012).
+   */
   keepPrevious = false,
 ) => {
   const [value, setValue] = useState<T | null>(null);
@@ -37,8 +40,10 @@ export const useLoaded = <T>(
   }, [load, failureCode]);
 
   useEffect(() => {
-    if (!keepPrevious) setValue(null);
-    setLoaded(false);
+    if (!keepPrevious) {
+      setValue(null);
+      setLoaded(false);
+    }
     setLoadFailed(false);
     void reload();
     return onDataChanged(() => void reload());

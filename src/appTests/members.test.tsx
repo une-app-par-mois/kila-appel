@@ -1,10 +1,10 @@
 // Écrans des membres (ticket 007b, EX-03), sur une vraie base node:sqlite et le jeu fictif (SEC-13).
 import { fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
 import { count, type Seeded, seed } from '@/__fixtures__/seed';
-import Settings from '@/app/index';
 import Member from '@/app/membres/[id]';
 import Members from '@/app/membres/index';
 import NewMember from '@/app/membres/nouveau';
+import { tabRoutes } from '@/appTests/tabRoutes';
 import { labels } from '@/config/libelles';
 import type { Db } from '@/data/db';
 import { openNodeDb } from '@/data/nodeDb';
@@ -16,7 +16,7 @@ jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => mockDb }));
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
 
 const routes = {
-  index: Settings,
+  ...tabRoutes,
   'membres/index': Members,
   'membres/nouveau': NewMember,
   'membres/[id]': Member,
@@ -39,7 +39,7 @@ describe('Écrans des membres (EX-03)', () => {
   });
 
   it('Paramètres › Membres : nombre de membres, puis la liste avec leurs groupes', async () => {
-    const router = await open('/');
+    const router = await open('/parametres');
     await fireEvent.press(await button(`${t.settings.members}, ${t.settings.memberCount(2)}`));
     expect(router.getPathname()).toBe('/membres');
     expect(await button(`Alix Exemple, Poussins`)).toBeTruthy();

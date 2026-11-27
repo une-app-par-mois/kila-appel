@@ -3,7 +3,8 @@ import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useDatabase } from '@/hooks/useDatabase';
 
-// Navigation racine (Expo Router). La base s'ouvre au démarrage ; les onglets arrivent au ticket 012.
+// Navigation racine (Expo Router). La base s'ouvre au démarrage ; les onglets sont dans
+// `(tabs)/_layout.tsx`, le reste s'ouvre par-dessus, dans cette pile.
 // Racine des gestes : la poignée ≡ des contacts d'urgence (008b).
 export default function RootLayout() {
   useDatabase();

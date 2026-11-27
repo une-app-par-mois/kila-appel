@@ -5,7 +5,7 @@ import { act, fireEvent, renderRouter, screen, waitFor } from 'expo-router/testi
 import { count, type Seeded, seed } from '@/__fixtures__/seed';
 import RollCall from '@/app/appel';
 import FreeRollCall from '@/app/appel-libre';
-import Settings from '@/app/index';
+import { tabRoutes } from '@/appTests/tabRoutes';
 import { labels } from '@/config/libelles';
 import type { Db } from '@/data/db';
 import { openNodeDb } from '@/data/nodeDb';
@@ -15,7 +15,7 @@ let mockDb: Db | null = null;
 jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => mockDb }));
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
 
-const routes = { index: Settings, appel: RollCall, 'appel-libre': FreeRollCall };
+const routes = { ...tabRoutes, appel: RollCall, 'appel-libre': FreeRollCall };
 const open = (initialUrl: string) => renderRouter(routes, { initialUrl });
 const t = labels.rollCall;
 const st = labels.statuses;
@@ -102,11 +102,10 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
       jest.advanceTimersByTime(1500);
     });
     await waitFor(() => expect(screenRouter.getPathname()).toBe('/'));
-    // Retour à l'accueil : la séance est marquée enregistrée, la ligne mène à l'appel sans créneau.
-    expect(
-      await screen.findByText(t.proposedRecorded('Poussins', 'Mer.', '18/11', '17:30')),
-    ).toBeTruthy();
-    await fireEvent.press(screen.getByRole('button', { name: new RegExp(`^${t.entry}`) }));
+    // Retour à l'accueil : la séance est marquée enregistrée, « Nouvel appel » mène à l'appel sans
+    // créneau.
+    expect(await screen.findByText(labels.home.recorded)).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: labels.tabs.newRollCall }));
     expect(screenRouter.getPathname()).toBe('/appel-libre');
   });
 
@@ -203,9 +202,11 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
       avenir,
     ]);
     await open('/');
-    const entry = await screen.findByRole('button', { name: new RegExp(`^${t.entry}`) });
-    expect(screen.getByText(t.proposed('Poussins', 'Mer.', '18/11', '17:30'))).toBeTruthy();
-    await fireEvent.press(entry);
+    const start = await screen.findByRole('button', { name: labels.home.start });
+    // « Poussins » sur la carte « Maintenant » et les appels manquants ; jamais le groupe archivé.
+    expect(screen.getAllByText('Poussins').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Avenir')).toBeNull();
+    await fireEvent.press(start);
     expect(await screen.findByRole('header', { name: 'Poussins' })).toBeTruthy();
   });
 });

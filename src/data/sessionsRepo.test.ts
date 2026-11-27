@@ -181,4 +181,11 @@ describe('Dépôt des séances (EX-15, RM-03, RM-05)', () => {
     await repo.record(call({ slotId: null, date: '2026-11-24', startTime: '10:05' }));
     expect(await repo.isGroupRecorded(s.groupId, '2026-11-24')).toBe(true);
   });
+
+  it('EX-17 séances des créneaux de la saison (pour les appels manquants), sans les appels sans créneau', async () => {
+    const repo = sessionsRepo(db, '2026-11-25');
+    await repo.record(call({ slotId: null, date: '2026-11-24', startTime: '10:05' }));
+    expect(await repo.slotSessions(s.seasonId)).toEqual([{ slotId: s.slotId, date: '2026-11-25' }]);
+    expect(await repo.slotSessions(s.otherSeasonId)).toEqual([]);
+  });
 });

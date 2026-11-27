@@ -2,9 +2,9 @@
 // Les tests d'écrans vivent hors de src/app : Expo Router y prend chaque fichier pour une route.
 import { fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
 import { count, type Seeded, seed } from '@/__fixtures__/seed';
-import Settings from '@/app/index';
 import SeasonForm from '@/app/saisons/[id]';
 import Seasons from '@/app/saisons/index';
+import { tabRoutes } from '@/appTests/tabRoutes';
 import { labels } from '@/config/libelles';
 import type { Db } from '@/data/db';
 import { openNodeDb } from '@/data/nodeDb';
@@ -14,7 +14,7 @@ let mockDb: Db | null = null;
 jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => mockDb }));
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
 
-const routes = { index: Settings, 'saisons/index': Seasons, 'saisons/[id]': SeasonForm };
+const routes = { ...tabRoutes, 'saisons/index': Seasons, 'saisons/[id]': SeasonForm };
 const open = (initialUrl: string) => renderRouter(routes, { initialUrl });
 const t = labels;
 
@@ -32,7 +32,7 @@ describe('Écrans des saisons (EX-01)', () => {
   });
 
   it('Paramètres montre la saison active et mène aux saisons', async () => {
-    const router = await open('/');
+    const router = await open('/parametres');
     await fireEvent.press(
       await screen.findByRole('button', {
         name: `${t.settings.seasons}, Active : Saison 2026-2027`,
