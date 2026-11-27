@@ -1,8 +1,10 @@
 // Paramètres (maquette Paramètres, onglet, ticket 012) : seules les lignes qui mènent à un écran
-// existant (décision du porteur du 2026-11-26). Relance, alertes, données : jalons suivants.
+// existant (décision du porteur du 2026-11-26). Relance, alertes : jalons suivants ; conservation et
+// tout effacer : ticket 015b.
 import { useRouter } from 'expo-router';
 import { labels } from '@/config/libelles';
 import { toIsoDate } from '@/domain/formats';
+import { toLastBackup, useLastBackup } from '@/hooks/useBackupExport';
 import { useGroups } from '@/hooks/useGroups';
 import { useMembers } from '@/hooks/useMembers';
 import { useSeasons } from '@/hooks/useSeasons';
@@ -20,11 +22,12 @@ export default function Settings() {
   const { groups, loadFailed: groupsFailed } = useGroups(active?.id ?? null);
   const { members, loadFailed: membersFailed } = useMembers({ today: toIsoDate(new Date()) });
   const { slots, loadFailed: slotsFailed } = useSlots(active?.id ?? null);
+  const { lastBackup, loaded: backupLoaded, loadFailed: backupFailed } = useLastBackup();
   return (
     <Screen
       title={t.title}
       error={
-        loadFailed || groupsFailed || membersFailed || slotsFailed
+        loadFailed || groupsFailed || membersFailed || slotsFailed || backupFailed
           ? labels.common.loadFailed
           : undefined
       }
@@ -68,6 +71,18 @@ export default function Settings() {
                   : labels.slots.count(slots.length)
           }
           onPress={() => router.push('/creneaux')}
+        />
+      </Card>
+      <Section title={t.data} />
+      <Card>
+        <ListRow
+          title={t.backup}
+          subtitle={
+            backupLoaded
+              ? labels.backup.settingsRow(toLastBackup(lastBackup, toIsoDate(new Date())))
+              : undefined
+          }
+          onPress={() => router.push('/donnees')}
         />
       </Card>
       <Section title={t.about} />

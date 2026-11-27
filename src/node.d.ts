@@ -31,6 +31,11 @@ declare module 'node:fs' {
   // Fichiers piégés des tests de sauvegarde (ticket 014).
   export function writeFileSync(path: string, data: string | Uint8Array): void;
   export function copyFileSync(from: string, to: string): void;
+  // Dossier dédié de la sauvegarde et imitation d'expo-file-system (ticket 014b).
+  export function mkdirSync(path: string, options?: { recursive: boolean }): void;
+  export function existsSync(path: string): boolean;
+  export function readdirSync(path: string): string[];
+  export function statSync(path: string): { size: number; isFile(): boolean };
 }
 
 declare module 'node:os' {
@@ -49,6 +54,8 @@ declare module 'node:crypto' {
 declare module 'node:path' {
   export function join(...parts: string[]): string;
   export function relative(from: string, to: string): string;
+  export function dirname(path: string): string;
+  export function basename(path: string): string;
 }
 
 // Variable globale de Node (CommonJS), utilisée par les tests qui lisent le dépôt.

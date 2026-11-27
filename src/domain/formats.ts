@@ -92,6 +92,20 @@ export const previousDay = (iso: string): string => {
   return toIsoDate(new Date(year ?? 0, (month ?? 1) - 1, (day ?? 1) - 1, 12));
 };
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Jour d'une date stockée compté depuis 1970, en UTC : à l'abri des changements d'heure. */
+const dayNumber = (iso: string): number => {
+  if (!isIsoDate(iso)) {
+    throw new Error('Date stockée invalide (RM-04)');
+  }
+  const [year, month, day] = iso.split('-').map(Number);
+  return Date.UTC(year ?? 0, (month ?? 1) - 1, day ?? 1) / DAY_MS;
+};
+
+/** EX-21 : jours entiers de `from` à `to` (négatif si `from` est après `to`). */
+export const daysSince = (from: string, to: string): number => dayNumber(to) - dayNumber(from);
+
 /** Texte replié pour une recherche : sans accent ni casse (« Élodie » → « elodie »). */
 export const foldText = (text: string): string =>
   text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
