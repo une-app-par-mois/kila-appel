@@ -2,7 +2,7 @@
 
 Statut : à faire · Jalon : 2 · Zone sensible : **oui** (calcul affiché : séries d'absences et alertes, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
 
-Dépend de : aucun · Fichiers touchés : `src/domain/absenceStreak.ts` et son test (nouveaux), `src/data/alertsRepo.ts` et son test (nouveaux), `src/data/settingsRepo.ts`, `src/data/settingsRepo.test.ts`, `src/hooks/useAlerts.ts` et son test (nouveaux) — 8 fichiers
+Dépend de : aucun · Fichiers touchés : `src/domain/absenceStreak.ts` et son test (nouveaux), `src/data/alertsRepo.ts` et son test (nouveaux), `src/data/settingsRepo.ts`, `src/data/settingsRepo.test.ts`, `src/hooks/useAlerts.ts` et son test (nouveaux), `src/data/errors.ts`, `src/data/backupRows.ts` — 13 fichiers avec les tests et les jeux de test (ticket gardé entier, décision du porteur du 2026-11-27)
 
 Découpé le 2026-11-27 (séance de découpage du jalon 2).
 
@@ -72,15 +72,44 @@ Séance de découpage du jalon 2 (2026-11-27), réponses du porteur :
   - ABS-08 : une ligne au journal de `docs/CONFORMITE.md` (alertes traitées stockées sur l'appareil, sauvegardées, effacées avec le membre ; déclarations des stores inchangées ; reprises dans la politique du jalon 6), écrite par l'IA principale à l'intégration ; l'agent ne touche pas CONFORMITE ;
   - fichiers partagés avec 023 : ne pas modifier `src/__fixtures__/seed.ts` ; jeux de scénarios et de volume dans `src/__fixtures__/alertsSeed.ts` (nouveau) ; `ALERT_THRESHOLD_INVALID` est le seul ajout à `src/data/errors.ts`.
 
+- Corrections après revue (2026-11-27), réponses du porteur :
+  - masquage : un traitement ne couvre la série que si sa longueur est au moins celle de la série **et** sa date est celle de la **dernière** absence ou après (et non plus la première) ;
+  - restauration : `backupRows.ts` vérifie aussi `alert_acks.streak_length` (entier ≥ 1), sinon le fichier est refusé ;
+  - 13 fichiers : le ticket reste entier ; `errors.ts` et `backupRows.ts` ajoutés aux fichiers touchés.
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
 | Valeurs du seuil (maquette « 3 ▾ ») | 2 à 5 ; 2 à 10 | 2 à 10, 3 par défaut | Assez large pour un groupe qui se réunit deux fois par semaine ; 1 ferait une alerte à chaque absence | à relire |
+| Séances le même jour à la même heure | ordre d'insertion implicite ; départager par `s.id` | `ORDER BY s.date, s.start_time, s.id` | Ordre stable et reproductible (pré-analyse, décision 1) | à relire |
+| Aucune saison active | liste vide ; dernière saison | liste vide | Le plan ne compte que la saison active (décision 2) | à relire |
+| Inscription courante et inscription à la date d'une séance | bornes incluses ; début inclus, fin exclue | début inclus, fin exclue (`current` d'`enrollmentsRepo`) | Même règle que les inscriptions (décision du porteur du 2026-11-26) (décision 3) | à relire |
+| Séances d'un groupe archivé ou supprimé, appels sans créneau | ignorées ; comptées | comptées | La série porte sur le membre, tous groupes confondus (glossaire) (décision 4) | à relire |
+| Groupe affiché | groupe de la séance la plus récente où le membre était inscrit, sinon l'unique groupe de cette séance, sinon l'inscription courante (première par `e.id`) ; à égalité entre deux groupes inscrits de la même séance, le plus ancien (`g.id`) | cascade de trois niveaux | Plan point 3 précisé pour les séances multi-groupes ou sans inscription (décision 5) | à relire |
+| « Dernières séances » de l'écran d'alerte | toutes saisons ; même périmètre que la série | même périmètre, 6 au plus, la plus récente d'abord | Cohérent avec le chiffre affiché (décision 6) | à relire |
+| Date de traitement | aujourd'hui ; plus tardive entre aujourd'hui et la dernière absence de la série | plus tardive des deux | Une séance datée après aujourd'hui reste couverte (décision 7) | à relire |
+| `acknowledge` avec une longueur invalide | accepter ; refuser | refuser tout ce qui n'est pas un entier ≥ 1 par une `RangeError` (erreur de programmation, aucun nouveau code dans `errors.ts`), puis le hook appelle `notifyDataChanged` après succès | Seul `ALERT_THRESHOLD_INVALID` peut être ajouté à `errors.ts` dans ce lot ; la longueur vient du calcul, pas d'une saisie (décision 8) | à relire |
+| Jeux de test | `seed.ts` ; nouveau fichier | `src/__fixtures__/alertsSeed.ts` (constructeurs et jeu de volume) | `seed.ts` est partagé avec le 023 (décision 9) | à relire |
+| NF-08 | une requête par membre ; une seule requête | une seule requête (CTE, `ROW_NUMBER`) ; groupe et traitements calculés seulement sur la ligne la plus récente de chaque membre ; RM-02 dans le domaine pur | Vérifié par un espion sur `db.query` (1 appel) ; mesuré à environ 55 ms sur 500 membres et 3 saisons en `node:sqlite` (décision 10) | à relire |
+| Tri à série égale | ordre SQL ; nom puis prénom | `Intl.Collator('fr', { sensitivity: 'base' })`, puis l'identifiant en dernier recours | Même comparaison que les autres listes de membres (décision 11) | à relire |
+| Seuil illisible en base | refuser la sauvegarde ; lire 3 | `isValidSetting` n'accepte que `'2'` à `'10'` ; toute autre valeur en base se lit comme 3 ; `ALERT_THRESHOLD_INVALID` à l'écriture | Comme `retention_seasons` (décision 12) | à relire |
+| Risque d'un traitement le jour même | heure de traitement (migration) ; limite acceptée | limite acceptée et documentée par un test : une nouvelle série qui commence le jour du traitement, après un Présent, reste masquée jusqu'à dépasser la longueur traitée | Le plan validé compare des dates ; ajouter l'heure demanderait une migration | à relire |
+| Taille des tests | un fichier de test du dépôt ; trois | `alertsRepo.test.ts` (liste), `alertsAcks.test.ts` (traitements, cascade), `alertsVolume.test.ts` (NF-08) | Limite de 300 lignes ; le ticket passe de 8 à 12 fichiers (fixtures, `errors.ts`, deux tests en plus), sans code de production en plus | à relire |
+| Écran d'alerte d'un membre qui n'en a plus (traitée, série retombée) | `useAlert` rend l'alerte quand même ; rend null | `alert: null`, avec `recent` toujours lu | Les règles de la liste et de l'écran restent les mêmes ; le 022 décide de l'affichage | en attente du porteur |
+| Masquage d'une alerte traitée | date de traitement ≥ première absence ; ≥ dernière absence | ≥ dernière absence (`streak.end`) | Une correction qui coupe la série traitée, puis de nouvelles absences, la faisaient rester masquée ; testé par les scénarios a, b, c | décidée par le porteur le 2026-11-27 |
+| Restauration de `alert_acks.streak_length` | non vérifiée ; entier ≥ 1 | entier ≥ 1 (`isId`), sinon `INVALID_DATA` | Toute entrée est validée ; même règle que les autres colonnes | décidée par le porteur le 2026-11-27 |
+| Taille du ticket (13 fichiers) | découper ; garder entier | garder entier | Fichiers en plus : tests, jeux de test, `errors.ts`, `backupRows.ts` | décidée par le porteur le 2026-11-27 |
+| Longueur passée à `acknowledge` | enregistrer le paramètre ; enregistrer la longueur recalculée dans la transaction | longueur recalculée ; si le paramètre en diffère, `RangeError` (l'écran recharge) | Un écran périmé n'enregistre pas une longueur fausse | à relire |
+| Libellé de `ALERT_THRESHOLD_INVALID` | — | « Choisissez un seuil de 2 à 10 absences. » (`commun.ts`) | Même forme que `RETENTION_INVALID` | à relire |
+| `absenceStreak` | garder ; supprimer | supprimée (code mort), tests RM-02 réécrits sur `currentStreak` | Seul son test l'utilisait | à relire |
+| Test « traitement le jour même » (EX-18 compris) | — | la limite restante ne concerne qu'une série tout entière dans le jour du traitement ; le test EX-18 attend désormais le retour dès la première absence après le traitement | Conséquence directe du nouveau masquage | à relire |
 
 ## Questions pour le porteur
 
 ## À reporter
 
 - CHANGELOG : Assiduité : calcul des séries d'absences et des alertes (F-04, EX-25, EX-26, RM-02).
-- Architecture : `src/domain/absenceStreak.ts`, `src/data/alertsRepo.ts`, `src/hooks/useAlerts.ts` ; réglage `alert_threshold` (2 à 10, 3 par défaut).
+- Architecture : `src/domain/absenceStreak.ts`, `src/data/alertsRepo.ts`, `src/hooks/useAlerts.ts` ; réglage `alert_threshold` (2 à 10, 3 par défaut) ; série calculée en une requête SQL (CTE, `ROW_NUMBER`) puis RM-02 dans le domaine ; `alert_acks` mis à jour sur place (`ON CONFLICT … DO UPDATE SET acked_at = MAX(…)`) ; jeux de test dans `src/__fixtures__/alertsSeed.ts`.
+- Sécurité (`docs/SECURITE.md`, intégration) : cas limite connu, une date de traitement placée dans le futur (séance datée dans le futur par erreur, la date retenue étant la plus tardive entre aujourd'hui et la dernière absence) masque la série jusqu'à cette date tant qu'elle ne s'allonge pas ; la corriger ou supprimer la séance (EX-18) ne recule pas `acked_at`.
+- Conformité (intégration) : ligne ABS-08 au journal de `docs/CONFORMITE.md`, non écrite par l'agent.

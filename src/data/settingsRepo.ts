@@ -11,6 +11,7 @@ export const SETTING_KEYS = {
   lastBackupAt: 'last_backup_at',
   backupInviteSeen: 'backup_invite_seen',
   retentionSeasons: 'retention_seasons',
+  alertThreshold: 'alert_threshold',
 } as const;
 
 type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];
@@ -18,6 +19,10 @@ type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];
 /** EX-24 : nombre de saisons gardées par la purge, de 1 à 3. */
 export const RETENTION_DEFAULT = 3;
 const RETENTION_VALUES = ['1', '2', '3'];
+
+/** EX-25 : seuil de la série d'absences qui lève une alerte, de 2 à 10 (3 par défaut). */
+export const ALERT_THRESHOLD_DEFAULT = 3;
+const ALERT_THRESHOLD_VALUES = ['2', '3', '4', '5', '6', '7', '8', '9', '10'];
 
 /** Réglage connu, avec une valeur que l'appli aurait pu écrire (vérification d'une sauvegarde). */
 export const isValidSetting = (key: string, value: string): boolean => {
@@ -28,6 +33,8 @@ export const isValidSetting = (key: string, value: string): boolean => {
       return value === '1';
     case SETTING_KEYS.retentionSeasons:
       return RETENTION_VALUES.includes(value);
+    case SETTING_KEYS.alertThreshold:
+      return ALERT_THRESHOLD_VALUES.includes(value);
     default:
       return false;
   }
@@ -72,5 +79,19 @@ export const settingsRepo = (db: Db) => ({
   setRetentionSeasons: async (seasons: number): Promise<void> => {
     if (!RETENTION_VALUES.includes(String(seasons))) throw new DataError('RETENTION_INVALID');
     await write(db, SETTING_KEYS.retentionSeasons, String(seasons));
+  },
+
+  /** EX-25 : seuil des alertes ; une valeur illisible (fichier restauré) se lit comme 3. */
+  alertThreshold: async (): Promise<number> => {
+    const value = await read(db, SETTING_KEYS.alertThreshold);
+    return value !== null && ALERT_THRESHOLD_VALUES.includes(value)
+      ? Number(value)
+      : ALERT_THRESHOLD_DEFAULT;
+  },
+
+  setAlertThreshold: async (threshold: number): Promise<void> => {
+    if (!ALERT_THRESHOLD_VALUES.includes(String(threshold)))
+      throw new DataError('ALERT_THRESHOLD_INVALID');
+    await write(db, SETTING_KEYS.alertThreshold, String(threshold));
   },
 });

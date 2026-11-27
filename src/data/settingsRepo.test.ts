@@ -5,7 +5,12 @@
 import type { Db } from '@/data/db';
 import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
-import { RETENTION_DEFAULT, settingsRepo } from '@/data/settingsRepo';
+import {
+  ALERT_THRESHOLD_DEFAULT,
+  isValidSetting,
+  RETENTION_DEFAULT,
+  settingsRepo,
+} from '@/data/settingsRepo';
 
 describe('settingsRepo : réglages de l’appli (ADR-002)', () => {
   let db: Db;
@@ -71,13 +76,50 @@ describe('settingsRepo : réglages de l’appli (ADR-002)', () => {
     },
   );
 
-  it('ABS-08 aucune donnée personnelle : seulement les trois réglages connus', async () => {
+  it('EX-25 seuil des alertes : 3 par défaut, de 2 à 10 ensuite', async () => {
+    const settings = settingsRepo(db);
+    expect(ALERT_THRESHOLD_DEFAULT).toBe(3);
+    expect(await settings.alertThreshold()).toBe(3);
+    for (const n of [2, 5, 10]) {
+      await settings.setAlertThreshold(n);
+      expect(await settings.alertThreshold()).toBe(n);
+    }
+    expect(await db.query("SELECT value FROM settings WHERE key = 'alert_threshold'")).toEqual([
+      { value: '10' },
+    ]);
+  });
+
+  it.each([1, 11, 0, -3, 2.5, Number.NaN])('EX-25 refuse un seuil de %p', async (n) => {
+    await expect(settingsRepo(db).setAlertThreshold(n)).rejects.toMatchObject({
+      code: 'ALERT_THRESHOLD_INVALID',
+    });
+    expect(await settingsRepo(db).alertThreshold()).toBe(ALERT_THRESHOLD_DEFAULT);
+  });
+
+  it.each(['1', '11', 'trois', '3.0', '03', ''])(
+    'EX-25 un seuil illisible en base (%p) se lit comme 3',
+    async (value) => {
+      await db.execute("INSERT INTO settings (key, value) VALUES ('alert_threshold', ?)", [value]);
+      expect(await settingsRepo(db).alertThreshold()).toBe(3);
+    },
+  );
+
+  it('EX-25 une sauvegarde qui contient le seuil reste valide (isValidSetting)', () => {
+    for (let n = 2; n <= 10; n += 1)
+      expect(isValidSetting('alert_threshold', String(n))).toBe(true);
+    for (const value of ['1', '11', '03', 'trois', ''])
+      expect(isValidSetting('alert_threshold', value)).toBe(false);
+  });
+
+  it('ABS-08 aucune donnée personnelle : seulement les réglages connus', async () => {
     const settings = settingsRepo(db);
     await settings.setLastBackupDate('2026-11-27');
     await settings.markBackupInviteSeen();
     await settings.setRetentionSeasons(2);
+    await settings.setAlertThreshold(4);
     const keys = await db.query<{ key: string }>('SELECT key FROM settings ORDER BY key');
     expect(keys.map((row) => row.key)).toEqual([
+      'alert_threshold',
       'backup_invite_seen',
       'last_backup_at',
       'retention_seasons',
