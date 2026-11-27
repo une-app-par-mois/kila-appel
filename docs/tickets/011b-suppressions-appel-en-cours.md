@@ -21,8 +21,8 @@ Note de la revue de sécurité des tickets 006d et 007 : supprimer un groupe ou 
 
 ## Critères d'acceptation
 
-- [ ] Message de suppression d'un groupe qui nomme l'appel en cours, seulement s'il le concerne
-- [ ] Message de suppression d'un membre qui nomme l'appel en cours, seulement s'il le concerne
+- [x] Message de suppression d'un groupe qui nomme l'appel en cours, seulement s'il le concerne
+- [x] Message de suppression d'un membre qui nomme l'appel en cours, seulement s'il le concerne
 
 ## Tests attendus
 

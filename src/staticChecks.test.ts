@@ -246,7 +246,8 @@ describe('Le code du dépôt respecte les contrôles', () => {
 
   // EX-14 (ticket 011) : aucune requête de statistiques ou d'historique ne lit le brouillon. Seuls
   // ces fichiers de l'appli nomment ses tables : schéma, dépôt du brouillon, effacement à
-  // l'enregistrement, et ce que supprimer une saison ou un créneau emporte.
+  // l'enregistrement, et ce que supprimer une saison, un créneau, un groupe ou un membre emporte
+  // (ticket 011b : ces dépôts annoncent l'appel en cours à la confirmation).
   it('EX-14 seuls les fichiers autorisés nomment les tables du brouillon', () => {
     const allowed = [
       'src/data/migrations.ts',
@@ -254,6 +255,8 @@ describe('Le code du dépôt respecte les contrôles', () => {
       'src/data/sessionsRepo.ts',
       'src/data/seasonsRepo.ts',
       'src/data/slotsRepo.ts',
+      'src/data/groupsRepo.ts',
+      'src/data/membersRepo.ts',
     ];
     const naming = walk(join(root, 'src'))
       .map((path) => relative(root, path))

@@ -111,13 +111,14 @@ describe('Écrans des groupes (EX-02)', () => {
     expect(await screen.findByRole('header', { name: 'Supprimer Poussins ?' })).toBeTruthy();
     expect(
       screen.getByText(
-        'Seront effacés définitivement : ses 2 inscriptions et ses liens à 1 créneau et à 1 séance.',
+        'Seront effacés définitivement : ses 2 inscriptions, ses liens à 1 créneau et à 1 séance et l’appel en cours (non enregistré).',
       ),
     ).toBeTruthy();
     expect(screen.getByText(t.groupDeletion.kept)).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: t.common.deleteForever }));
     await waitFor(() => expect(router.getPathname()).toBe('/groupes'));
     expect(await count(db, 'groups', 'id = ?', [s.groupId])).toBe(0);
+    expect(await count(db, 'roll_call_drafts')).toBe(0);
     expect(await count(db, 'sessions', 'id = ?', [s.sessionId])).toBe(1);
     expect(await count(db, 'attendances', 'session_id = ?', [s.sessionId])).toBe(2);
   });

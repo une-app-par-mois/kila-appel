@@ -77,7 +77,12 @@ describe('Dépôt des groupes (EX-02)', () => {
   it('EX-02 annonce ce que la suppression effacera ; séances et présences restent', async () => {
     const s = await seed(db);
     const repo = groupsRepo(db);
-    expect(await repo.deletionImpact(s.groupId)).toEqual({ enrollments: 2, slots: 1, sessions: 1 });
+    expect(await repo.deletionImpact(s.groupId)).toEqual({
+      enrollments: 2,
+      slots: 1,
+      sessions: 1,
+      rollCallDraft: true,
+    });
     await repo.remove(s.groupId);
     expect(await count(db, 'groups', 'id = ?', [s.groupId])).toBe(0);
     expect(await count(db, 'enrollments', 'group_id = ?', [s.groupId])).toBe(0);
@@ -87,6 +92,25 @@ describe('Dépôt des groupes (EX-02)', () => {
     expect(await count(db, 'attendances', 'session_id = ?', [s.sessionId])).toBe(2);
     expect(await count(db, 'slots', 'id = ?', [s.slotId])).toBe(1);
     expect(await count(db, 'members')).toBe(2);
+  });
+
+  it('EX-14 ABS-05 supprimer le groupe de l’appel en cours efface ce brouillon (décision du 2026-11-27)', async () => {
+    const s = await seed(db);
+    await groupsRepo(db).remove(s.groupId);
+    expect(await count(db, 'roll_call_drafts')).toBe(0);
+    expect(await count(db, 'roll_call_draft_statuses')).toBe(0);
+  });
+
+  it('EX-14 un autre groupe ne touche pas à l’appel en cours', async () => {
+    const s = await seed(db);
+    const { lastInsertRowId: other } = await db.execute(
+      "INSERT INTO groups (season_id, name) VALUES (?, 'Seul')",
+      [s.seasonId],
+    );
+    const repo = groupsRepo(db);
+    expect(await repo.deletionImpact(other)).toMatchObject({ rollCallDraft: false });
+    await repo.remove(other);
+    expect(await count(db, 'roll_call_drafts')).toBe(1);
   });
 
   it('EX-02 supprimer un groupe inconnu, ou demander ce qu’il effacerait, est refusé', async () => {

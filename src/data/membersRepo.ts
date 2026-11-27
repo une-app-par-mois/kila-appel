@@ -26,7 +26,13 @@ export type MemberFilter = {
 };
 
 /** ABS-05 : supprimer un membre efface ses contacts, ses présences et ses inscriptions. */
-export type MemberDeletionImpact = { contacts: number; attendances: number; enrollments: number };
+/** `rollCallDraft` : le membre a un statut dans l'appel en cours, effacé avec lui (ticket 011b). */
+export type MemberDeletionImpact = {
+  contacts: number;
+  attendances: number;
+  enrollments: number;
+  rollCallDraft: boolean;
+};
 
 const collator = new Intl.Collator('fr', { sensitivity: 'base' });
 
@@ -161,15 +167,17 @@ export const membersRepo = (db: Db) => ({
   },
 
   deletionImpact: async (id: number): Promise<MemberDeletionImpact> => {
-    const [row] = await db.query<MemberDeletionImpact>(
+    const [row] = await db.query<Omit<MemberDeletionImpact, 'rollCallDraft'> & { drafts: number }>(
       `SELECT
         (SELECT COUNT(*) FROM emergency_contacts WHERE member_id = ?1) AS contacts,
         (SELECT COUNT(*) FROM attendances WHERE member_id = ?1) AS attendances,
-        (SELECT COUNT(*) FROM enrollments WHERE member_id = ?1) AS enrollments
+        (SELECT COUNT(*) FROM enrollments WHERE member_id = ?1) AS enrollments,
+        (SELECT COUNT(*) FROM roll_call_draft_statuses WHERE member_id = ?1) AS drafts
       FROM members WHERE id = ?1`,
       [id],
     );
-    return expectFound(row);
+    const { drafts, ...counts } = expectFound(row);
+    return { ...counts, rollCallDraft: drafts > 0 };
   },
 
   /** ABS-05 : suppression réelle ; contacts, présences, inscriptions, brouillon en cascade. */
