@@ -7,6 +7,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import ts from 'typescript';
+import { scriptKind, TEST_FILE, walkSources as walk } from '@/__fixtures__/sourceFiles';
 
 type Violation = { rule: string; file: string; line: number };
 
@@ -72,9 +73,9 @@ const literalText = (node: ts.Node): string | undefined =>
 
 /** Liste les écarts d'un fichier. `file` est relatif à la racine du dépôt. */
 const check = (file: string, source: string): Violation[] => {
-  const kind = file.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
+  const kind = scriptKind(file);
   const tree = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, kind);
-  const isTest = /\.test\.tsx?$/.test(file);
+  const isTest = TEST_FILE.test(file);
   const found: Violation[] = [];
   const add = (rule: string, node: ts.Node) =>
     found.push({ rule, file, line: tree.getLineAndCharacterOfPosition(node.getStart()).line + 1 });
@@ -228,13 +229,6 @@ describe('SEC-01 aucun appel réseau, SEC-03 aucun jeton de notification', () =>
 
 describe('Le code du dépôt respecte les contrôles', () => {
   const root = join(__dirname, '..');
-  const walk = (dir: string): string[] =>
-    readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-      const path = join(dir, entry.name);
-      if (entry.isDirectory()) return walk(path);
-      return /\.tsx?$/.test(entry.name) && !entry.name.endsWith('.d.ts') ? [path] : [];
-    });
-
   it('aucun écart dans src/', () => {
     const files = walk(join(root, 'src'));
     expect(files.length).toBeGreaterThan(5);
@@ -264,7 +258,7 @@ describe('Le code du dépôt respecte les contrôles', () => {
     ];
     const naming = walk(join(root, 'src'))
       .map((path) => relative(root, path))
-      .filter((file) => !/\.test\.tsx?$/.test(file) && !file.startsWith('src/__fixtures__/'))
+      .filter((file) => !TEST_FILE.test(file) && !file.startsWith('src/__fixtures__/'))
       .filter((file) => /roll_call_draft/.test(readFileSync(join(root, file), 'utf8')));
     expect(naming.sort()).toEqual(allowed.sort());
   });
@@ -282,7 +276,7 @@ describe('Le code du dépôt respecte les contrôles', () => {
     ];
     const reading = walk(join(root, 'src'))
       .map((path) => relative(root, path))
-      .filter((file) => !/\.test\.tsx?$/.test(file) && file !== 'src/data/draftsRepo.ts')
+      .filter((file) => !TEST_FILE.test(file) && file !== 'src/data/draftsRepo.ts')
       .filter((file) =>
         /draftsRepo|useDraft|draftRoute/.test(readFileSync(join(root, file), 'utf8')),
       );

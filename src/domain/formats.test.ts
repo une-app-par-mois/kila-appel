@@ -1,4 +1,5 @@
 import {
+  daysSince,
   isIsoDate,
   parseDisplayDate,
   previousDay,
@@ -136,5 +137,24 @@ describe('EX-09 heure locale', () => {
   it('écrit l’heure locale en HH:MM', () => {
     expect(toLocalTime(new Date(2026, 10, 18, 9, 5))).toBe('09:05');
     expect(toLocalTime(new Date(2026, 10, 18, 23, 59))).toBe('23:59');
+  });
+});
+
+describe('EX-21 jours écoulés depuis la dernière sauvegarde', () => {
+  it.each([
+    ['2026-11-27', '2026-11-27', 0],
+    ['2026-11-26', '2026-11-27', 1],
+    ['2026-10-24', '2026-11-27', 34],
+    // Passage à l'heure d'hiver (25/10/2026) et année bissextile : des jours entiers.
+    ['2026-10-24', '2026-10-26', 2],
+    ['2028-02-28', '2028-03-01', 2],
+    ['2026-11-28', '2026-11-27', -1],
+  ])('du %s au %s : %i', (from, to, days) => {
+    expect(daysSince(from, to)).toBe(days);
+  });
+
+  it('refuse une date stockée invalide, sans la valeur', () => {
+    expect(() => daysSince('27/11/2026', '2026-11-27')).toThrow('Date stockée invalide (RM-04)');
+    expect(() => daysSince('2026-11-27', '2026-02-30')).toThrow('Date stockée invalide (RM-04)');
   });
 });
