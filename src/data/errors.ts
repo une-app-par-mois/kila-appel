@@ -4,6 +4,9 @@ export type DataErrorCode =
   | 'SESSIONS_OUTSIDE_SEASON'
   | 'ENROLLMENTS_OUTSIDE_SEASON'
   | 'ALREADY_ENROLLED'
+  | 'ALREADY_RECORDED'
+  | 'NOT_ENROLLED'
+  | 'NOT_A_SLOT_SESSION'
   | 'DB_NOT_READY';
 
 export class DataError extends Error {

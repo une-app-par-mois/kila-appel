@@ -13,7 +13,10 @@ export type InputErrorCode =
   | 'WEEKDAY_INVALID'
   | 'TIME_INVALID'
   | 'DURATION_INVALID'
-  | 'GROUP_REQUIRED';
+  | 'GROUP_REQUIRED'
+  | 'STATUS_INVALID'
+  | 'SLOT_INVALID'
+  | 'COMMENT_TOO_LONG';
 
 export class InputError extends Error {
   constructor(readonly code: InputErrorCode) {
@@ -99,5 +102,49 @@ export const validateSlot = (input: SlotInput): SlotInput => {
     place: optional(input.place),
     name: optional(input.name),
     groupId: input.groupId,
+  };
+};
+
+/** EX-10 : statuts d'une présence enregistrée. */
+export type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused';
+const STATUSES: readonly string[] = ['present', 'absent', 'late', 'excused'];
+/** EX-13 : 500 caractères au plus (décision du porteur du 2026-11-27). */
+export const COMMENT_MAX = 500;
+
+const isId = (n: number) => Number.isInteger(n) && n >= 1;
+
+/** EX-15 : un appel à enregistrer ; `slotId` nul : appel sans créneau (EX-39). */
+export type RollCallInput = {
+  slotId: number | null;
+  groupId: number;
+  date: string;
+  startTime: string;
+  statuses: { memberId: number; status: AttendanceStatus }[];
+  comment: string | null;
+};
+
+/** EX-15 : date RM-04, heure HH:MM, un groupe, statuts connus sans membre en double, commentaire borné. */
+export const validateRollCall = (input: RollCallInput): RollCallInput => {
+  validateDate(input.date);
+  if (!HHMM.test(input.startTime)) throw new InputError('TIME_INVALID');
+  if (!isId(input.groupId)) throw new InputError('GROUP_REQUIRED');
+  if (input.slotId !== null && !isId(input.slotId)) throw new InputError('SLOT_INVALID');
+  const seen = new Set<number>();
+  for (const { memberId, status } of input.statuses) {
+    if (!isId(memberId) || !STATUSES.includes(status) || seen.has(memberId))
+      throw new InputError('STATUS_INVALID');
+    seen.add(memberId);
+  }
+  const comment = optional(input.comment);
+  // Caractères vus (points de code), pas unités UTF-16 : un émoji compte pour un.
+  if (comment !== null && [...comment].length > COMMENT_MAX)
+    throw new InputError('COMMENT_TOO_LONG');
+  return {
+    slotId: input.slotId,
+    groupId: input.groupId,
+    date: input.date,
+    startTime: input.startTime,
+    statuses: input.statuses.map(({ memberId, status }) => ({ memberId, status })),
+    comment,
   };
 };
