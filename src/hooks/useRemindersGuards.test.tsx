@@ -14,6 +14,15 @@ const mockData = {
   dbState: { status: 'ready', db: {} } as object,
   sessions: [] as { slotId: number; date: string; state: string }[],
   settings: jest.fn(),
+  slots: [] as object[],
+};
+const SLOT = {
+  id: 10,
+  weekday: 3,
+  startTime: '14:00',
+  durationMin: 90,
+  scheduleFrom: '2026-11-18',
+  groups: [{ id: 1, name: 'Poussins mercredi' }],
 };
 jest.mock('@/hooks/useDatabase', () => ({ useDatabaseState: () => mockData.dbState }));
 jest.mock('@/data/seasonsRepo', () => ({
@@ -22,18 +31,7 @@ jest.mock('@/data/seasonsRepo', () => ({
   }),
 }));
 jest.mock('@/data/slotsRepo', () => ({
-  slotsRepo: () => ({
-    listBySeason: async () => [
-      {
-        id: 10,
-        weekday: 3,
-        startTime: '14:00',
-        durationMin: 90,
-        scheduleFrom: '2026-11-18',
-        groups: [{ id: 1, name: 'Poussins mercredi' }],
-      },
-    ],
-  }),
+  slotsRepo: () => ({ listBySeason: async () => mockData.slots }),
 }));
 jest.mock('@/data/groupsRepo', () => ({
   groupsRepo: () => ({ listBySeason: async () => [{ id: 1 }] }),
@@ -66,6 +64,7 @@ beforeEach(() => {
   resetRemindersForTests();
   mockData.dbState = { status: 'ready', db: {} };
   mockData.sessions = [];
+  mockData.slots = [SLOT];
   mockData.settings.mockResolvedValue({ enabled: true, delayMin: 30 });
   jest.spyOn(AppState, 'addEventListener').mockImplementation((_type, listener) => {
     appState = listener;
@@ -160,13 +159,63 @@ describe('useReminders : garde-fous (ADR-007)', () => {
     expect(schedule).not.toHaveBeenCalled();
   });
 
-  it('SEC-11 base effacée, nouvelle base qui ne s’ouvre pas : plus aucune relance', async () => {
+  it.each([
+    { status: 'erased', after: 'startOver', pending: false },
+    { status: 'restoreFailed', db: {}, pending: false },
+  ])('SEC-11 base perdue ($status) : plus aucune relance', async (lost) => {
     const view = await renderHook(() => useReminders());
     await waitFor(() => expect(ids()).toEqual([TODAY]));
-    mockData.dbState = { status: 'erased', after: 'startOver', pending: false };
+    mockData.dbState = lost;
     await view.rerender({});
     await waitFor(() => expect(ids()).toEqual([]));
     await waitFor(() => expect(state.presented).toEqual([]));
+  });
+
+  it('EX-29 listage en échec, relance désactivée : tout est annulé quand même', async () => {
+    mockData.settings.mockResolvedValue({ enabled: false, delayMin: 30 });
+    state.fail.add('getAllScheduledNotificationsAsync');
+    await renderHook(() => useReminders());
+    await waitFor(() => expect(ids()).toEqual([]));
+  });
+
+  it('SEC-03 une notification qui n’est pas une relance n’est jamais annulée', async () => {
+    state.scheduled.push({ identifier: 'autre-1', content: {}, trigger: {} });
+    await renderHook(() => useReminders());
+    await waitFor(() => expect(ids()).toEqual(['autre-1', TODAY]));
+  });
+
+  it('ADR-007 verrou pris pendant la première annulation : la suivante ne part pas', async () => {
+    state.scheduled.push({ identifier: 'relance-10-2026-11-04', content: {}, trigger: {} });
+    const real = fake.cancelScheduledNotificationAsync;
+    const cancel = jest.spyOn(fake, 'cancelScheduledNotificationAsync');
+    cancel.mockImplementationOnce(async (id: string) => {
+      fileLock.acquire('erase');
+      return real(id);
+    });
+    await renderHook(() => useReminders());
+    await waitFor(() => expect(fileLock.holder()).toBe('erase'));
+    await act(async () => undefined);
+    expect(cancel).toHaveBeenCalledTimes(1);
+    expect(ids()).toEqual(['relance-10-2026-11-04']);
+    await act(async () => fileLock.release('erase'));
+    await waitFor(() => expect(ids()).toEqual([TODAY]));
+  });
+
+  it('ADR-007 verrou pris pendant la première programmation : la suivante ne part pas', async () => {
+    mockData.slots = [SLOT, { ...SLOT, id: 11, startTime: '14:15' }];
+    const real = fake.scheduleNotificationAsync;
+    const schedule = jest.spyOn(fake, 'scheduleNotificationAsync');
+    schedule.mockImplementationOnce(async (request) => {
+      fileLock.acquire('erase');
+      return real(request);
+    });
+    await renderHook(() => useReminders());
+    await waitFor(() => expect(fileLock.holder()).toBe('erase'));
+    await act(async () => undefined);
+    expect(schedule).toHaveBeenCalledTimes(1);
+    expect(ids()).toEqual([TODAY]);
+    await act(async () => fileLock.release('erase'));
+    await waitFor(() => expect(ids()).toEqual([TODAY, 'relance-11-2026-12-02']));
   });
 
   it('ADR-007 démonté : plus aucune passe', async () => {

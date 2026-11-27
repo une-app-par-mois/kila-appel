@@ -122,8 +122,14 @@ const sync = async (db: Db): Promise<boolean> => {
   const { input, settings } = read;
   const plan = await keptOf(input, settings, valid);
   if (plan === null || !valid()) return false;
+  const scheduled = await scheduledReminderIds();
+  // Liste illisible et rien à garder (relance désactivée, permission refusée…) : tout annuler.
+  if (scheduled === null && plan.kept.size === 0) {
+    if (!valid()) return false;
+    await cancelAllReminders();
+  }
   // Une annulation en échec est rejouée à la passe suivante : la relance reste hors du plan.
-  for (const id of (await scheduledReminderIds()) ?? []) {
+  for (const id of scheduled ?? []) {
     if (plan.kept.has(id)) continue;
     if (!valid()) return false;
     await cancelReminder(id);
