@@ -53,6 +53,11 @@ Séance de découpage du jalon 2 (2026-11-27), réponses du porteur :
 - Groupes archivés ou d'une autre saison : listés après les autres, avec la mention « Archivé », seulement s'ils ont une séance dans la période ; ils comptent dans la synthèse.
 - RM-01 fait foi : la maquette a été corrigée (58 % → 64 %).
 
+Reports de l'intégration du lot J2-1 (2026-11-27) :
+
+- taux affiché avec l'espace insécable `NBSP` (U+00A0, constante exportée par `src/domain/attendanceRate.ts`) avant « % » : l'utiliser dans `getByText` (`64\u00a0%` ou `` `64${NBSP}%` ``) et dans les parcours Maestro ; un « 64 % » tapé avec une espace simple ne correspond pas (023).
+- `useStats` rend `inputError` (`DATE_INVALID`, `END_BEFORE_START`) pour des dates libres invalides : afficher le message de saisie, pas l'erreur de lecture ; sans saison active, période par défaut « Ce mois » (`season` nul, en attente du porteur) (023).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

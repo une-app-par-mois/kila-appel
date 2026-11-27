@@ -58,6 +58,11 @@ Séance de découpage du jalon 2 (2026-11-27), réponses du porteur :
 - Plan validé par le porteur le 2026-11-27.
 - Autorisation iOS : alerte et son, sans pastille (réponse sur le 026).
 
+Reports de l'intégration du lot J2-1 (2026-11-27) :
+
+- le contrôle statique (SEC-01, SEC-03) refuse, en plus de l'import d'expo-notifications hors de `src/data/expoNotifications.ts` : `getExpoPushTokenAsync`, `getDevicePushTokenAsync`, `subscribeToTopicAsync`, `unsubscribeFromTopicAsync`, `setAutoServerRegistrationEnabledAsync`, `registerTaskAsync`, `setBadgeCountAsync`, `getExactAlarmPermissionsAsync`, `requestExactAlarmPermissionsAsync`, et tout import d'`expo-application` (décision du porteur du 2026-11-27, 026) ;
+- régénérer `src/config/licences.json` (EX-42) quand le paquet entre dans le bundle JavaScript (026).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

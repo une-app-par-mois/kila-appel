@@ -51,6 +51,11 @@ Séance de découpage du jalon 2 (2026-11-27), réponses du porteur :
 - Podium masqué jusqu'au jalon 5.
 - RM-01 fait foi : la maquette « Statistiques d'un membre » affiche 64 % (7 sur 11), et la ligne de Hugo Moreau dans « Statistiques d'un groupe » aussi.
 
+Reports de l'intégration du lot J2-1 (2026-11-27) :
+
+- taux affiché avec l'espace insécable `NBSP` (U+00A0, constante exportée par `src/domain/attendanceRate.ts`) avant « % » : l'utiliser dans `getByText` (`64\u00a0%` ou `` `64${NBSP}%` ``) et dans les parcours Maestro ; un « 64 % » tapé avec une espace simple ne correspond pas (023).
+- séance où le membre était inscrit sans statut : le 023 renvoie `status: null` et `enrolled: true`, l'affichage se décide ici (en attente du porteur, `docs/QUESTIONS.md`) ; `useMemberStats` rend `null` pour un membre hors de la liste du groupe ; `useStats` rend `inputError` pour des dates libres invalides (023).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

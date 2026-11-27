@@ -1,6 +1,6 @@
 # 026 — Relance : expo-notifications et garde-fous du binaire
 
-Statut : à faire (dépendance et permissions acceptées par le porteur le 2026-11-27) · Jalon : 2 · Zone sensible : **oui** (dépendance et permissions : règle « aucun réseau », `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
+Statut : fusionné dans le groupe (PR #69) (dépendance et permissions acceptées par le porteur le 2026-11-27) · Jalon : 2 · Zone sensible : **oui** (dépendance et permissions : règle « aucun réseau », `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
 
 Dépend de : aucun · Fichiers touchés : `package.json`, `package-lock.json`, `app.json`, `plugins/withoutFirebase.js` (nouveau), `config/permissions-attendues.txt`, `scripts/audit-apk.js`, `scripts/audit-apk.test.js`, `README.md` (permissions), `docs/CONFORMITE.md` (§3 permissions, §8 inventaire natif) — 9 fichiers
 
@@ -39,12 +39,12 @@ Relevé du 2026-11-27 (lecture seule, paquets npm et Maven) :
 
 ## Critères d'acceptation
 
-- [ ] Réponse datée du porteur sur la dépendance et les permissions, notée dans `docs/ARCHITECTURE.md` (décisions du porteur) avant l'installation.
-- [ ] APK de la CI : permissions **exactement** celles de `config/permissions-attendues.txt` (SEC-02) ; INTERNET absente (ABS-01, NF-03).
-- [ ] Manifeste compilé sans composant Firebase ni datatransport ; `allowBackup=false` et aucun lien profond toujours vérifiés.
-- [ ] Build iOS : aucune habilitation (`scripts/audit-ios.js` inchangé et vert) ; pas d'`UIBackgroundModes`.
-- [ ] `npm audit` sans vulnérabilité haute ; versions exactes ; licences de toutes les nouvelles dépendances dans la liste acceptée (CONFORMITE §7).
-- [ ] L'appli démarre et fonctionne comme avant sur l'émulateur (aucun écran ne change).
+- [ ] Réponse datée du porteur sur la dépendance et les permissions, notée dans `docs/ARCHITECTURE.md` (décisions du porteur) avant l'installation — décision datée écrite dans cette fiche avant l'installation, mais reportée dans `docs/ARCHITECTURE.md` seulement à l'intégration du lot J2-1 (fichier réservé à l'IA principale) : critère tenu en retard, noté dans l'architecture.
+- [ ] APK de la CI : permissions **exactement** celles de `config/permissions-attendues.txt` (SEC-02) ; INTERNET absente (ABS-01, NF-03) — vérifié sur l'APK construit en local (`aapt2`, voir « À reporter ») ; APK de la CI non vérifié : `builds.yml` tourne sur la PR du jalon vers `main`.
+- [x] Manifeste compilé sans composant Firebase ni datatransport ; `allowBackup=false` et aucun lien profond toujours vérifiés — APK local, audit conforme ; à revoir sur l'APK de la CI.
+- [ ] Build iOS : aucune habilitation (`scripts/audit-ios.js` inchangé et vert) ; pas d'`UIBackgroundModes` — non vérifié : build iOS seulement sur la CI de la PR du jalon.
+- [x] `npm audit` sans vulnérabilité haute ; versions exactes ; licences de toutes les nouvelles dépendances dans la liste acceptée (CONFORMITE §7) — `npm audit` : 0 vulnérabilité (2026-11-27, intégration) ; licences natives hors liste couvertes par la décision du porteur (8 bibliothèques).
+- [x] L'appli démarre et fonctionne comme avant sur l'émulateur (aucun écran ne change) — émulateur seul ; APK avec expo-notifications jamais installé sur le téléphone (A55).
 
 ## Tests attendus
 

@@ -6,6 +6,8 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Ajouté
 
+- Statistiques : calcul des taux de présence par groupe et par membre, sur la saison, le mois ou des dates libres (F-05, EX-27, RM-01, RM-03) — ticket 023.
+- Assiduité : calcul des séries d'absences et des alertes, traitement d'une alerte et seuil réglable de 2 à 10 (F-04, EX-25, EX-26, RM-02) — ticket 021.
 - Tests : campagne Maestro du jalon 1 (`scripts/e2e.sh`, `.maestro/`) : appel de 20 membres chronométré, brouillon après fermeture forcée, sauvegarde puis tout effacer puis restauration d'une sauvegarde fictive générée à chaque lancement — ticket 016.
 - Écran « Base illisible » : « Restaurer une sauvegarde » (bouton principal) ; le fichier est vérifié sur l'écran même, puis résumé avec « Les données abîmées seront effacées définitivement. » ; refus ou Annuler ne touchent pas au fichier abîmé ; après la confirmation, effacement, base neuve et recopie en une transaction, puis l'accueil ; si la recopie échoue, « La restauration n'a pas abouti », base vide ouverte, « Choisir un fichier… » ou « Repartir de zéro » ; si la base neuve ne s'ouvre pas après l'effacement (restauration ou « Repartir de zéro »), « Les données abîmées ont été effacées, mais l'appli n'a pas pu préparer un nouveau fichier de données. Réessayez. », jamais « Rien n'a été effacé » ; retour Android sans effet pendant l'effacement et la recopie (EX-22, EX-20, SEC-10, SEC-11) — ticket 014f.
 - Données : Tout effacer, depuis l'écran Sauvegarde ou Paramètres, après double confirmation (le bouton, puis le mot EFFACER) ; les copies du cache sont vidées juste après, puis Bienvenue recrée la saison comme à une installation neuve (EX-23, SEC-10, SEC-11) — ticket 015f.
@@ -54,6 +56,7 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Sécurité
 
+- Permissions : notifications (demandées seulement à l'activation de la relance) et redémarrage de l'appareil (relances reprogrammées) ; aucune connexion réseau, INTERNET toujours absente ; Firebase retiré du binaire et refusé par l'audit (F-06, ABS-01, ABS-07, SEC-02) — ticket 026.
 - Outillage : minimatch forcé en 11.0.9 sur la plage vulnérable (>= 7.0.0) par `overrides`, alerte Dependabot n° 2 levée ; garde-fou `scripts/minimatch.test.js` — ticket 017.
 - Outillage : glob forcé en 14.0.6 sur la plage vulnérable (>= 9.0.0) par `overrides`, faille GHSA-3g3m-2fjr-6pw4 levée ; garde-fou `scripts/glob.test.js` ; comparaison de versions commune (`scripts/lock-versions.js`) et échec si une dépendance déclare glob >= 15 ou minimatch >= 12 (« ajuster l'override ») — ticket 018.
 - Sécurité : nom d'auteur du registre des licences sans reste de chevron ; test sans RegExp construite (019).

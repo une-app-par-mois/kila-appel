@@ -57,6 +57,10 @@ Séance de découpage du jalon 2 (2026-11-27), réponses du porteur :
 - `alert_acks` ajoutée au tableau « Données manipulées » du cadrage.
 - Destination de « Voir ses contacts d'urgence » : reste à préciser par la pré-analyse (non tranchée au découpage).
 
+Reports de l'intégration du lot J2-1 (2026-11-27) :
+
+- `useAlert` rend `alert: null` quand l'alerte n'est plus montrée (traitée, série retombée), `recent` toujours lu : après « Marquer comme traitée », revenir à l'accueil, sans afficher d'état vide sur l'écran de l'alerte (021 ; décision en attente du porteur, `docs/QUESTIONS.md`).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |
