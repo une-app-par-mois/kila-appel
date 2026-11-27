@@ -1,107 +1,21 @@
 // Restauration d'une sauvegarde pour l'écran Restauration (ticket 014e, EX-20, NF-04, SEC-10 ;
 // zone sensible). Le sélecteur, les fichiers et l'ouverture brute d'une copie sont passés en
 // paramètre (expo dans l'appli, node:fs et node:sqlite dans les tests) : le même cycle est testé
-// et livré. ABS-04 : le journal ne reçoit que des codes.
+// et livré. Le cycle est partagé avec l'écran de récupération (src/hooks/restoreFlow.ts, ticket
+// 014f). ABS-04 : le journal ne reçoit que des codes.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { restoreBackup } from '@/data/backup';
-import { type BackupSummary, type RejectReason, verifyBackup } from '@/data/backupCheck';
-import type { Db } from '@/data/db';
-import { type DraftGroup, draftGroupName } from '@/data/draftGroupName';
+import { draftGroupName } from '@/data/draftGroupName';
 import type { RestoreDeps } from '@/data/expoFiles';
-import { log } from '@/data/log';
-import { toIsoDate } from '@/domain/formats';
 import { notifyDataChanged } from '@/hooks/dataChanged';
 import { fileLock } from '@/hooks/fileLock';
+import { type Outcome, type RestoreState, restoreOnce } from '@/hooks/restoreFlow';
 import { useDatabase } from '@/hooks/useDatabase';
 
-type Notice = { summary: BackupSummary; draft: DraftGroup | null };
-
-export type RestoreState =
-  | { step: 'picking' }
-  | { step: 'verifying' }
-  | ({ step: 'confirm' } & Notice)
-  | ({ step: 'restoring' } & Notice)
-  /** Réussite : l'écran part vers l'accueil (le retour n'est plus bloqué). */
-  | ({ step: 'done' } & Notice)
-  | { step: 'rejected'; reason: RejectReason }
-  /** Sélecteur en échec, ou restauration qui n'a pas abouti : rien n'a été modifié. */
-  | { step: 'failed' };
+export type { RestoreState } from '@/hooks/restoreFlow';
 
 /** Navigation de l'écran : retour (sélecteur annulé) et accueil (après une réussite). */
 export type RestoreNav = { onCancel(): void; onDone(): void };
-
-/**
- * Copies restées d'un arrêt brutal, vidées sous le verrou de la restauration, avant le sélecteur
- * (revue de sécurité du 014c ; le nettoyage au démarrage le fait aussi, ticket 014c).
- */
-const clearDirs = (deps: RestoreDeps) =>
-  Promise.all([deps.files.clear(), deps.clearPicked()]).then(
-    () => undefined,
-    () => log('RESTORE_CLEANUP_FAILED'),
-  );
-
-type Ui = { show(state: RestoreState): void; decide(): Promise<boolean> };
-/**
- * Fin d'une restauration, appliquée une fois les copies effacées et le verrou rendu : sélecteur
- * annulé (retour), confirmation refusée (l'écran part de lui-même), ou état à montrer.
- */
-type Outcome = { kind: 'cancelled' } | { kind: 'declined' } | { kind: 'show'; state: RestoreState };
-
-const removePicked = (deps: RestoreDeps, path: string) =>
-  deps.removePicked(path).catch(() => log('RESTORE_CLEANUP_FAILED'));
-
-/**
- * Choix, vérification sur une copie à part, confirmation, restauration. La copie du sélecteur est
- * effacée dès la vérification faite, et le sous-dossier de la copie vérifiée (avec ses fichiers
- * `-wal`, `-shm`, `-journal`) dans tous les cas, refus, Annuler et écran fermé compris.
- */
-const restoreOnce = async (db: Db, deps: RestoreDeps, ui: Ui): Promise<Outcome> => {
-  await clearDirs(deps);
-  let picked: string | null = null;
-  try {
-    const result = await deps.pick();
-    if (result === null) {
-      log('RESTORE_CANCELLED');
-      return { kind: 'cancelled' };
-    }
-    if ('reason' in result) return { kind: 'show', state: { step: 'rejected', ...result } };
-    picked = result.path;
-  } catch {
-    log('RESTORE_PICK_FAILED');
-    return { kind: 'show', state: { step: 'failed' } };
-  }
-  log('RESTORE_PICKED');
-  let dir: string | null = null;
-  try {
-    ui.show({ step: 'verifying' });
-    dir = await deps.files.newDir();
-    const today = toIsoDate(new Date());
-    const check = await verifyBackup(picked, `${dir}/restauration.db`, { ...deps, today });
-    const done = picked;
-    picked = null;
-    await removePicked(deps, done);
-    if (!check.ok) return { kind: 'show', state: { step: 'rejected', reason: check.reason } };
-    const notice = { summary: check.backup.summary, draft: await draftGroupName(db) };
-    ui.show({ step: 'confirm', ...notice });
-    if (!(await ui.decide())) {
-      log('RESTORE_CANCELLED');
-      return { kind: 'declined' };
-    }
-    ui.show({ step: 'restoring', ...notice });
-    // EX-20 : une seule transaction ; un échec laisse la base intacte (RESTORE_FAILED journalisé).
-    await restoreBackup(db, check.backup);
-    notifyDataChanged();
-    return { kind: 'show', state: { step: 'done', ...notice } };
-  } catch {
-    log('RESTORE_UNEXPECTED');
-    return { kind: 'show', state: { step: 'failed' } };
-  } finally {
-    if (picked !== null) await removePicked(deps, picked);
-    if (dir !== null) {
-      await deps.files.removeDir(dir).catch(() => log('RESTORE_CLEANUP_FAILED'));
-    }
-  }
-};
 
 /**
  * EX-20 : à l'ouverture de l'écran, vide les dossiers des copies et lance le sélecteur. La
@@ -158,7 +72,18 @@ export const useRestore = (deps: RestoreDeps, nav: RestoreNav) => {
     let outcome: Outcome;
     try {
       show({ step: 'picking' });
-      outcome = await restoreOnce(db, depsRef.current, { show, decide });
+      outcome = await restoreOnce(depsRef.current, {
+        show,
+        decide,
+        // EX-14 : seule lecture de l'appel en cours par la restauration.
+        draft: () => draftGroupName(db),
+        apply: async (backup, notice) => {
+          // EX-20 : une seule transaction ; un échec laisse la base intacte (RESTORE_FAILED).
+          await restoreBackup(db, backup);
+          notifyDataChanged();
+          return { step: 'done', ...notice };
+        },
+      });
     } finally {
       fileLock.release('restore');
       busy.current = false;

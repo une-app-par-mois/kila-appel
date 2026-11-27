@@ -2,7 +2,14 @@ import { Stack } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { theme } from '@/config/theme';
-import { resetDatabase, retryDatabase, useDatabaseState } from '@/hooks/useDatabase';
+import { expoRestoreDeps } from '@/data/expoFiles';
+import {
+  acceptEmptyDatabase,
+  resetDatabase,
+  retryDatabase,
+  useDatabaseState,
+} from '@/hooks/useDatabase';
+import { useRecovery } from '@/hooks/useRecovery';
 import { useStartupCleanup } from '@/hooks/useStartupCleanup';
 import { Recovery } from '@/ui/Recovery';
 
@@ -11,20 +18,28 @@ import { Recovery } from '@/ui/Recovery';
 // EX-22 (ticket 014c) : ce layout lance l'ouverture de la base. Tant qu'elle n'est pas prête,
 // une vue neutre vide ; en cas d'échec, l'écran de récupération. La pile n'est montée qu'une fois
 // la base prête et les dossiers temporaires vidés (nettoyage fini, réussi ou non) : aucun écran
-// Export ou Restauration ne s'ouvre pendant ce nettoyage.
+// Export ou Restauration ne s'ouvre pendant ce nettoyage. La restauration depuis l'écran de
+// récupération (ticket 014f) vit ici : son état survit au passage d'une variante à l'autre, et la
+// pile s'affiche d'elle-même (accueil) une fois la base restaurée.
 // Racine des gestes : la poignée ≡ des contacts d'urgence (008b).
 export default function RootLayout() {
   const database = useDatabaseState();
   const cleaned = useStartupCleanup();
+  const recovery = useRecovery(expoRestoreDeps, database.status);
   const content = () => {
-    if (database.status === 'failed') {
+    if (
+      database.status === 'failed' ||
+      database.status === 'restoreFailed' ||
+      database.status === 'erased'
+    ) {
       return (
         <Recovery
-          cause={database.cause}
-          pending={database.pending}
-          resetFailed={database.resetFailed}
+          database={database}
+          restore={recovery}
+          cleaned={cleaned}
           onRetry={retryDatabase}
           onStartOver={() => void resetDatabase()}
+          onAcceptEmpty={acceptEmptyDatabase}
         />
       );
     }
