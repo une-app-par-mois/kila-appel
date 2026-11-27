@@ -106,12 +106,16 @@ describe('EX-28 plannedReminders : relances des 7 jours à venir', () => {
   });
 
   it('EX-28 relance déjà passée (ouverture à 15:00, créneau à 14:00) → non programmée', () => {
-    // Le mercredi suivant (09/12) est hors des 7 jours (02/12 au 08/12).
-    expect(moments({ now: { date: '2026-12-02', time: '15:00' } })).toEqual([]);
+    // Seule reste celle du mercredi suivant (ADR-007 : au plus maintenant + 7 jours).
+    expect(moments({ now: { date: '2026-12-02', time: '15:00' } })).toEqual([
+      '10 2026-12-09 → 2026-12-09 14:30',
+    ]);
   });
 
   it('EX-28 jamais dans le passé : relance à la minute même de maintenant non gardée', () => {
-    expect(moments({ now: { date: '2026-12-02', time: '14:30' } })).toEqual([]);
+    expect(moments({ now: { date: '2026-12-02', time: '14:30' } })).toEqual([
+      '10 2026-12-09 → 2026-12-09 14:30',
+    ]);
     expect(moments({ now: { date: '2026-12-02', time: '14:29' } })).toEqual([
       '10 2026-12-02 → 2026-12-02 14:30',
     ]);
@@ -121,7 +125,6 @@ describe('EX-28 plannedReminders : relances des 7 jours à venir', () => {
     const now = { date: '2026-12-03', time: '00:05' };
     expect(moments({ now, slots: [slot({ startTime: '23:45' })] })).toEqual([
       '10 2026-12-02 → 2026-12-03 00:15',
-      '10 2026-12-09 → 2026-12-10 00:15',
     ]);
     // À 00:15, la relance d'hier tombe à la minute même : plus gardée.
     expect(
@@ -132,7 +135,7 @@ describe('EX-28 plannedReminders : relances des 7 jours à venir', () => {
     ).toEqual(['10 2026-12-09 → 2026-12-10 00:15']);
   });
 
-  it('EX-28 7 jours exactement : de aujourd’hui à aujourd’hui + 6', () => {
+  it('EX-28 7 jours : une occurrence par jour, la suivante au-delà de maintenant + 7 jours', () => {
     const slots = [1, 2, 3, 4, 5, 6, 7].map((weekday) =>
       slot({ id: weekday, weekday: weekday as ReminderSlot['weekday'], startTime: '20:00' }),
     );
@@ -144,6 +147,22 @@ describe('EX-28 plannedReminders : relances des 7 jours à venir', () => {
       '2026-12-04',
       '2026-12-05',
       '2026-12-06',
+    ]);
+  });
+
+  it('EX-28 ADR-007 relance du jour passée → celle du même jour la semaine suivante', () => {
+    // Lundi 08:00, créneau du lundi à 07:00 : la relance d'aujourd'hui (07:30) est passée.
+    expect(moments({ slots: [slot({ weekday: 1, startTime: '07:00' })] })).toEqual([
+      '10 2026-12-07 → 2026-12-07 07:30',
+    ]);
+  });
+
+  it('EX-28 ADR-007 au plus maintenant + 7 jours, à la minute', () => {
+    expect(moments({ slots: [slot({ weekday: 1, startTime: '07:30' })] })).toEqual([
+      '10 2026-12-07 → 2026-12-07 08:00',
+    ]);
+    expect(moments({ slots: [slot({ weekday: 1, startTime: '07:31' })] })).toEqual([
+      '10 2026-11-30 → 2026-11-30 08:01',
     ]);
   });
 
@@ -211,6 +230,14 @@ describe('EX-28 plannedReminders : relances des 7 jours à venir', () => {
     expect(moments({ now, slots: [slot({ weekday: 7, startTime: '02:30' })] })).toEqual([
       '10 2026-10-25 → 2026-10-25 03:00',
     ]);
+  });
+
+  it('EX-29 relance désactivée ou sans saison : aucune erreur, même avec un délai invalide', () => {
+    const delayMin = 25;
+    expect(plannedReminders(input({ settings: { enabled: false, delayMin } }))).toEqual([]);
+    expect(
+      plannedReminders(input({ season: null, settings: { enabled: true, delayMin } })),
+    ).toEqual([]);
   });
 
   it('RM-04 maintenant invalide ou délai non autorisé → erreur sans donnée', () => {

@@ -4,13 +4,18 @@
 // Dates et heures locales en texte, jamais d'horodatage : la conversion vient au 028.
 // ABS-04, SEC-12 : seuls des identifiants, des dates, des heures et des noms de groupes entrent ici.
 
-import { daysSince, isIsoDate } from '@/domain/formats';
+import { isIsoDate } from '@/domain/formats';
 import {
+  DAY_MIN,
+  dayNumber,
   INVALID_NOW,
   type IsoDate,
+  isoFromDay,
   type LocalNow,
+  minutes,
   type Season,
   slotDates,
+  TIME,
   type Time,
   type WeeklySlot,
 } from '@/domain/occurrences';
@@ -47,18 +52,9 @@ export type PlannedReminder = {
   groupNames: string[];
 };
 
-const DAY_MIN = 1440;
-const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+/** ADR-007 : rien au-delà de maintenant + 7 jours. */
+const HORIZON_MIN = 7 * DAY_MIN;
 const pad = (n: number) => String(n).padStart(2, '0');
-const minutes = (time: Time): number => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
-
-/** Date décalée de `days` jours (calendrier, sans fuseau : à l'abri des changements d'heure). */
-const addDays = (date: IsoDate, days: number): IsoDate => {
-  const [year, month, day] = date.split('-').map(Number);
-  return new Date(Date.UTC(year ?? 0, (month ?? 1) - 1, (day ?? 1) + days))
-    .toISOString()
-    .slice(0, 10);
-};
 
 /**
  * EX-36, EX-38 : une séance enregistrée, annulée ou non planifiée n'a pas de relance ; une séance
@@ -72,9 +68,9 @@ const closed = (sessions: ReminderSession[]): Set<string> =>
   );
 
 /**
- * EX-28 : relances à programmer, les plus proches d'abord, 64 au plus. Occurrences d'aujourd'hui
- * à aujourd'hui + 6 (et d'hier, si leur relance est encore à venir), bornées par la saison active
- * et la date d'effet de l'horaire ; moment = début + délai, gardé s'il est strictement à venir.
+ * EX-28 : relances à programmer, les plus proches d'abord, 64 au plus. Occurrences d'hier à
+ * aujourd'hui + 7, bornées par la saison active et la date d'effet de l'horaire ; moment = début
+ * + délai, gardé s'il est strictement après maintenant et au plus maintenant + 7 jours (ADR-007).
  */
 export const plannedReminders = ({
   slots,
@@ -85,14 +81,16 @@ export const plannedReminders = ({
   now,
 }: ReminderInput): PlannedReminder[] => {
   if (!isIsoDate(now.date) || !TIME.test(now.time)) throw new Error(INVALID_NOW);
+  // EX-29 : une relance désactivée ne programme rien, quel que soit le délai enregistré.
+  if (!settings.enabled || !season) return [];
   if (!(REMINDER_DELAYS as readonly number[]).includes(settings.delayMin))
     throw new Error(INVALID_DELAY);
-  if (!settings.enabled || !season) return [];
   const active = new Set(activeGroupIds);
   const done = closed(sessions);
   const nowMin = minutes(now.time);
-  const from = addDays(now.date, -1);
-  const to = addDays(now.date, 6);
+  const today = dayNumber(now.date);
+  const from = isoFromDay(today - 1);
+  const to = isoFromDay(today + 7);
   return slots
     .flatMap((slot) => {
       const groupNames = slot.groups.filter((g) => active.has(g.id)).map((g) => g.name);
@@ -102,7 +100,7 @@ export const plannedReminders = ({
         .map((date) => {
           // Minutes depuis aujourd'hui 00:00 ; négatif pour la veille.
           const fire =
-            daysSince(now.date, date) * DAY_MIN + minutes(slot.startTime) + settings.delayMin;
+            (dayNumber(date) - today) * DAY_MIN + minutes(slot.startTime) + settings.delayMin;
           const dayOffset = Math.floor(fire / DAY_MIN);
           const inDay = fire - dayOffset * DAY_MIN;
           return {
@@ -111,14 +109,14 @@ export const plannedReminders = ({
               slotId: slot.id,
               date,
               startTime: slot.startTime,
-              fireDate: addDays(now.date, dayOffset),
+              fireDate: isoFromDay(today + dayOffset),
               fireTime: `${pad(Math.floor(inDay / 60))}:${pad(inDay % 60)}`,
               groupNames,
             },
           };
         });
     })
-    .filter(({ fire }) => fire > nowMin)
+    .filter(({ fire }) => fire > nowMin && fire <= nowMin + HORIZON_MIN)
     .sort((a, b) => a.fire - b.fire || a.reminder.slotId - b.reminder.slotId)
     .slice(0, MAX_REMINDERS)
     .map(({ reminder }) => reminder);

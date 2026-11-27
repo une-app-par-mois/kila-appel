@@ -22,20 +22,21 @@ export type Occurrence = { slotId: number; date: IsoDate; startTime: Time };
 export type RecordedSession = { slotId: number; date: IsoDate };
 
 const DAY_MS = 86_400_000;
-const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+export const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 export const INVALID_NOW = 'Date ou heure invalide (RM-04)';
 
 /** `now` vient de l'appelant : vérifié (RM-04). Les créneaux viennent de la base, déjà vérifiés. */
 const checkNow = (now: LocalNow): void => {
   if (!isIsoDate(now.date) || !TIME.test(now.time)) throw new Error(INVALID_NOW);
 };
-const DAY_MIN = 1440;
+export const DAY_MIN = 1440;
 
 /** Numéro de jour depuis le 1970-01-01 (calendrier, sans fuseau). */
-const dayNumber = (date: IsoDate): number =>
+export const dayNumber = (date: IsoDate): number =>
   Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10))) /
   DAY_MS;
-const isoFromDay = (day: number): IsoDate => new Date(day * DAY_MS).toISOString().slice(0, 10);
+export const isoFromDay = (day: number): IsoDate =>
+  new Date(day * DAY_MS).toISOString().slice(0, 10);
 // Le 1970-01-01 était un jeudi (4).
 const weekdayOf = (day: number): number => ((((day + 3) % 7) + 7) % 7) + 1;
 
@@ -48,7 +49,8 @@ export const isSlotDate = (
   date: IsoDate,
   today: IsoDate,
 ): boolean => date <= today && date >= slot.scheduleFrom && weekdayOfDate(date) === slot.weekday;
-const minutes = (time: Time): number => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
+export const minutes = (time: Time): number =>
+  Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
 // Dates ISO : l'ordre alphabétique est l'ordre chronologique.
 const later = (a: IsoDate, b: IsoDate): IsoDate => (b.localeCompare(a) > 0 ? b : a);
 const earlier = (a: IsoDate, b: IsoDate): IsoDate => (b.localeCompare(a) < 0 ? b : a);
