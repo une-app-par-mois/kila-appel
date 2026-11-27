@@ -1,6 +1,6 @@
 # 013 — Historique et correction des appels
 
-Statut : en attente du porteur · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : codé, à relire · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Dépend de : aucun ticket à faire · Fichiers touchés : `src/app/(tabs)/historique.tsx`, `src/app/seances/[id].tsx`, `src/data/sessionsRepo.ts`, onglets, `src/app/appel.tsx` (retour après l'enregistrement), libellés
 
@@ -41,7 +41,7 @@ Séance de lancement du 2026-11-27 (réponses du porteur) :
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
-| Nombre de présents d'une ligne (« 19/22 présents ») | Présent + Retard / total ; Présent seul | Présent + Retard sur le total des présences, Excusé compris dans le total ; « présent » au singulier pour 0 ou 1 | RM-01 compte le Retard comme présent ; pré-analyse | à relire |
+| Nombre de présents d'une ligne (« 19/22 présents ») | Présent + Retard / total ; Présent seul | Présent + Retard sur le total des présences, Excusé compris dans le total ; « présent » au singulier pour 0 ou 1 ; le compteur dit le même nombre (« 19 présents dont 2 retards ») | RM-01 ; décision du porteur du 2026-11-27 (question ci-dessous) | répondue par le porteur (2026-11-27) |
 | Séances listées | Toutes ; enregistrées seulement | `state = 'recorded'` seulement | Annulées et non planifiées : jalon 2 (F-13) ; pré-analyse | à relire |
 | Appels manquants dans l'Historique | Calcul de l'accueil ; autre calcul | Même calcul que l'accueil (`loadMissingRollCalls`, partagé), sans exclure la séance de « Maintenant » ; mêlés aux séances par date, soumis aux filtres ; saison active seulement, même avec « Toutes les saisons » | Une seule règle EX-17 ; pré-analyse | à relire |
 | Ordre et format des lignes | — | Date puis heure décroissantes (EX-16) ; « Lun. 24/11 · 18:00 » et « Mer. 19/11 · 19/22 présents » comme la maquette | Maquette ; pré-analyse | à relire |
@@ -65,19 +65,19 @@ Séance de lancement du 2026-11-27 (réponses du porteur) :
 
 ## Questions pour le porteur
 
-- **Nombre de présents** — état : en attente du porteur (remarque du contradicteur). La ligne de l'Historique compte Présent + Retard (« 19/22 présents »), le détail les sépare (« 17 présents · 2 retards »), alors que la maquette montre le même chiffre aux deux endroits. Options :
+- **Nombre de présents** — état : répondue par le porteur (2026-11-27), choix (a) : le compteur de l'appel et du détail affiche « 19 présents dont 2 retards » (sans retard : « 19 présents »), puis les absents et les excusés ; note ajoutée à la maquette Appel. Question d'origine (remarque du contradicteur) : La ligne de l'Historique compte Présent + Retard (« 19/22 présents »), le détail les sépare (« 17 présents · 2 retards »), alors que la maquette montre le même chiffre aux deux endroits. Options :
   - (a) « 19 présents dont 2 retards » dans le détail, ce qui change le compteur de la maquette Appel ;
   - (b) Présent seul dans la ligne de l'Historique ;
   - (c) garder tel quel.
 
-  Appliqué en attendant : (c).
-- **Barre d'onglets** — état : ticket en attente (contradiction avec la maquette et le ticket 012). Avec quatre éléments, le rond « Nouvel appel » n'est plus centré. Options, recommandation en premier :
+  Appliqué en attendant : (c), remplacé par (a).
+- **Barre d'onglets** — état : répondue par le porteur (2026-11-27), choix (a) : cinq places, Accueil, place vide de Stats (ni appuyable ni lue), rond au centre, Historique, Paramètres ; aucun écran Stats. Question d'origine (contradiction avec la maquette et le ticket 012) : Avec quatre éléments, le rond « Nouvel appel » n'est plus centré. Options, recommandation en premier :
   - (a) cinq places, une place vide là où viendra Stats (Accueil, vide, rond, Historique, Paramètres) : le rond reste au centre et ne bougera plus au jalon 2 ;
   - (b) garder l'ordre actuel, décentré.
 
-  Rien n'est appliqué : l'ordre actuel (b) reste en place jusqu'à la réponse.
+  Appliqué : (a).
 
 ## À reporter
 
-- CHANGELOG : « Ajouté : onglet Historique — séances enregistrées et appels manquants, la plus récente en haut, filtres par groupe et par période (30 derniers jours, saison active, toutes les saisons) ; détail d'une séance pour corriger les statuts et le commentaire, ou la supprimer après confirmation. Modifié : après l'enregistrement d'un appel, retour à l'Historique. »
+- CHANGELOG : « Ajouté : onglet Historique — séances enregistrées et appels manquants, la plus récente en haut, filtres par groupe et par période (30 derniers jours, saison active, toutes les saisons) ; détail d'une séance pour corriger les statuts et le commentaire, ou la supprimer après confirmation. Modifié : après l'enregistrement d'un appel, retour à l'Historique ; le compteur de l'appel compte les retards parmi les présents (« 19 présents dont 2 retards ») ; la barre d'onglets garde le rond « Nouvel appel » au centre. »
 - Architecture : « Écrans `(tabs)/historique.tsx` et `seances/[id].tsx` ; hooks `useHistory.ts` (Historique, détail, correction, suppression) et `useSavedReturn.ts` (retour après l'appel) ; `sessionsRepo` : `history`, `hasRecorded`, `get`, `correct`, `remove` ; `groupsRepo.listForHistory` ; domaine `history.ts` (période, ordre) ; `loadMissingRollCalls` (`useRollCall.ts`) partagé par l'accueil et l'Historique. »

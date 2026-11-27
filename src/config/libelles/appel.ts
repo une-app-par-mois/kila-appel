@@ -16,9 +16,16 @@ export const appel = {
     row: (name: string, status: string) => `${name}, ${status}`,
     rowHint: 'Touchez pour passer au statut suivant',
     counter: {
-      present: (n: number) => plural(n, 'présent', 'présents'),
+      /**
+       * RM-01 (décision du porteur du 2026-11-27) : « 19 présents dont 2 retards », retards compris
+       * dans les présents, comme la ligne « 19/22 présents » de l'Historique ; sans retard,
+       * « 19 présents ».
+       */
+      attending: (present: number, late: number) =>
+        late === 0
+          ? plural(present, 'présent', 'présents')
+          : `${plural(present, 'présent', 'présents')} dont ${plural(late, 'retard', 'retards')}`,
       absent: (n: number) => plural(n, 'absent', 'absents'),
-      late: (n: number) => plural(n, 'retard', 'retards'),
       excused: (n: number) => plural(n, 'excusé', 'excusés'),
     },
     search: 'Rechercher un membre',

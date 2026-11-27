@@ -3,7 +3,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
-import { STATUS_CYCLE } from '@/domain/attendance';
 import type { AttendanceStatus } from '@/domain/validation';
 import { Icon } from '@/ui/Icon';
 
@@ -18,17 +17,29 @@ export const StatusPill = ({ status }: { status: AttendanceStatus }) => {
   );
 };
 
-/** Compteur : un carré à la couleur de chaque statut, son nombre et son libellé (Plex Mono). */
-export const AttendanceCounter = ({ counts }: { counts: Record<AttendanceStatus, number> }) => (
-  <View style={styles.counter}>
-    {STATUS_CYCLE.map((status) => (
-      <View key={status} style={styles.count}>
-        <View style={[styles.square, { backgroundColor: theme.statuses[status].fond }]} />
-        <Text style={styles.countText}>{labels.rollCall.counter[status](counts[status])}</Text>
-      </View>
-    ))}
-  </View>
-);
+/**
+ * Compteur : un carré à la couleur de chaque statut, son nombre et son libellé (Plex Mono). RM-01
+ * (décision du porteur du 2026-11-27) : présents, retards compris (« 19 présents dont 2 retards »),
+ * puis absents et excusés.
+ */
+export const AttendanceCounter = ({ counts }: { counts: Record<AttendanceStatus, number> }) => {
+  const c = labels.rollCall.counter;
+  const items: [AttendanceStatus, string][] = [
+    ['present', c.attending(counts.present + counts.late, counts.late)],
+    ['absent', c.absent(counts.absent)],
+    ['excused', c.excused(counts.excused)],
+  ];
+  return (
+    <View style={styles.counter}>
+      {items.map(([status, text]) => (
+        <View key={status} style={styles.count}>
+          <View style={[styles.square, { backgroundColor: theme.statuses[status].fond }]} />
+          <Text style={styles.countText}>{text}</Text>
+        </View>
+      ))}
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   pill: {

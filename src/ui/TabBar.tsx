@@ -1,5 +1,6 @@
-// Barre d'onglets (maquette) : Accueil, « Nouvel appel » en rond, Historique, Paramètres. Seulement
-// les écrans existants (décision du porteur du 2026-11-27) : Stats au jalon 2.
+// Barre d'onglets (maquette) : Accueil, place de Stats, « Nouvel appel » en rond au centre,
+// Historique, Paramètres. Cinq places de même largeur (décision du porteur du 2026-11-27) : la place
+// de Stats reste vide jusqu'au jalon 2, le rond ne bouge plus.
 // Le rond n'est pas un onglet : il ouvre l'appel par-dessus (`useNewRollCallRoute`).
 import { useRouter } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
@@ -48,6 +49,13 @@ export const TabBar = ({ state, navigateToTab, insets }: BottomTabBarProps) => {
       style={[styles.bar, { paddingBottom: Math.max(insets.bottom, theme.spacing) }]}
     >
       {tab(0)}
+      {/* Place de Stats (jalon 2) : vide, ni appuyable ni lue (décision du porteur du 2026-11-27). */}
+      <View
+        testID="tab-placeholder"
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        style={styles.tab}
+      />
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t.newRollCall}
@@ -77,6 +85,7 @@ const styles = StyleSheet.create({
     borderTopColor: theme.colors.quadrillage,
   },
   tab: {
+    flex: 1,
     minWidth: theme.minTouchTarget,
     minHeight: theme.minTouchTarget,
     alignItems: 'center',

@@ -63,8 +63,9 @@ describe('Détail d’une séance (EX-18)', () => {
     expect(
       screen.getByRole('button', { name: labels.rollCall.row('Sam Fictif', st.late) }),
     ).toBeTruthy();
-    expect(screen.getByText(counter.present(1))).toBeTruthy();
-    expect(screen.getByText(counter.late(1))).toBeTruthy();
+    // RM-01 : même nombre que la ligne de l'Historique (« 2/2 présents »), retards compris.
+    expect(screen.getByText('2 présents dont 1 retard')).toBeTruthy();
+    expect(screen.getByText(counter.absent(0))).toBeTruthy();
     expect(screen.getByText(t.help)).toBeTruthy();
     expect(screen.getByLabelText(labels.rollCall.comment)).toBeTruthy();
     expect((await button(t.save)).props.accessibilityState).toMatchObject({ disabled: true });
@@ -75,6 +76,7 @@ describe('Détail d’une séance (EX-18)', () => {
     await fireEvent.press(await row('Sam Fictif', st.late));
     expect(await row('Sam Fictif', st.excused)).toBeTruthy();
     expect(screen.getByText(counter.excused(1))).toBeTruthy();
+    expect(screen.getByText(counter.attending(1, 0))).toBeTruthy();
     await fireEvent.changeText(screen.getByLabelText(labels.rollCall.comment), '  Pluie  ');
     const save = await button(t.save);
     expect(save.props.accessibilityState).toMatchObject({ disabled: false });

@@ -58,7 +58,7 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
     expect(screen.getByRole('button', { name: t.row('Sam Fictif', st.present) })).toBeTruthy();
     const names = screen.getAllByTestId('roll-call-name').map((n) => n.props.children);
     expect(names).toEqual(['Alix Exemple', 'Sam Fictif']);
-    expect(screen.getByText(t.counter.present(2))).toBeTruthy();
+    expect(screen.getByText(t.counter.attending(2, 0))).toBeTruthy();
     expect(screen.getByText(t.counter.absent(0))).toBeTruthy();
     // EX-11 : la recherche n'apparaît qu'au-delà de 20 membres.
     expect(screen.queryByLabelText(t.search)).toBeNull();
@@ -69,8 +69,9 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
     await fireEvent.press(await row('Alix Exemple', st.present));
     await fireEvent.press(await row('Alix Exemple', st.absent));
     expect(await row('Alix Exemple', st.late)).toBeTruthy();
-    expect(screen.getByText(t.counter.present(1))).toBeTruthy();
-    expect(screen.getByText(t.counter.late(1))).toBeTruthy();
+    // RM-01 (décision du porteur du 2026-11-27) : retards comptés dans les présents.
+    expect(screen.getByText(t.counter.attending(2, 1))).toBeTruthy();
+    expect(screen.getByText('2 présents dont 1 retard')).toBeTruthy();
     await fireEvent.press(await row('Alix Exemple', st.late));
     await fireEvent.press(await row('Alix Exemple', st.excused));
     expect(await row('Alix Exemple', st.present)).toBeTruthy();
@@ -149,7 +150,8 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
     expect(await row('Zoé Exemple', st.present)).toBeTruthy();
     expect(screen.queryByRole('button', { name: t.row('Sam Fictif', st.present) })).toBeNull();
     // Le compteur compte tout le groupe, pas seulement les membres affichés.
-    expect(screen.getByText(t.counter.present(22))).toBeTruthy();
+    expect(screen.getByText(t.counter.attending(22, 0))).toBeTruthy();
+    expect(screen.getByText('22 présents')).toBeTruthy();
     // P1 NF-06 : sans résultat, le texte de la maquette.
     await fireEvent.changeText(search, 'xyz');
     expect(await screen.findByText(labels.members.noMatch('xyz'))).toBeTruthy();
