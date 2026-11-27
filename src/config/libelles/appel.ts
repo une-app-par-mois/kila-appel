@@ -44,5 +44,10 @@ export const appel = {
     date: 'Date',
     noSeason: 'Aucune saison active : créez-en une dans Saisons.',
     noGroup: 'Aucun groupe dans la saison active.',
+    /** Un appel du groupe existe déjà ce jour-là : prévenir, laisser choisir (décision du 2026-11-27). */
+    duplicateTitle: 'Appel déjà fait ce jour-là',
+    duplicateMessage: (group: string, date: string) =>
+      `Un appel de ${group} est déjà enregistré le ${date}. En faire un autre ?`,
+    duplicateConfirm: 'Faire un autre appel',
   },
 } as const;

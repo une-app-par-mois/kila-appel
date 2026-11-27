@@ -8,8 +8,11 @@ import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
 import { parseDisplayDate, toDisplayDate, toIsoDate } from '@/domain/formats';
 import { useGroups } from '@/hooks/useGroups';
+import { useRollCall } from '@/hooks/useRollCall';
 import { useSeasons } from '@/hooks/useSeasons';
 import { Card } from '@/ui/Card';
+import { ConfirmDialog } from '@/ui/ConfirmDialog';
+import { errorMessage } from '@/ui/errorMessage';
 import { ListRow } from '@/ui/ListRow';
 import { Screen, Section } from '@/ui/Screen';
 import { TextField } from '@/ui/TextField';
@@ -24,21 +27,35 @@ export default function FreeRollCallScreen() {
   const { groups, loadFailed: groupsFailed } = useGroups(season?.id ?? null);
   const [date, setDate] = useState(() => toDisplayDate(today));
   const [dateError, setDateError] = useState<string | undefined>();
+  const [formError, setFormError] = useState<string | undefined>();
+  const { isGroupRecorded } = useRollCall();
+  const [duplicate, setDuplicate] = useState<{ id: number; name: string; date: string } | null>(
+    null,
+  );
 
-  const start = (groupId: number) => {
+  const go = (groupId: number, iso: string) =>
+    router.push({ pathname: '/appel', params: { groupe: groupId, date: iso } });
+
+  const start = async (groupId: number, name: string) => {
     const iso = parseDisplayDate(date);
     if (iso === null) return setDateError(labels.errors.DATE_INVALID);
     if (iso > today) return setDateError(labels.errors.DATE_IN_FUTURE);
     if (season && (iso < season.startDate || iso > season.endDate))
       return setDateError(labels.errors.DATE_OUTSIDE_SEASON);
-    router.push({ pathname: '/appel', params: { groupe: groupId, date: iso } });
+    try {
+      // Deux vraies séances le même jour existent (stage) : prévenir, laisser choisir.
+      if (await isGroupRecorded(groupId, iso)) setDuplicate({ id: groupId, name, date: iso });
+      else go(groupId, iso);
+    } catch (e) {
+      setFormError(errorMessage(e));
+    }
   };
 
   return (
     <Screen
       title={t.title}
       onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))}
-      error={loadFailed || groupsFailed ? labels.common.loadFailed : undefined}
+      error={loadFailed || groupsFailed ? labels.common.loadFailed : formError}
     >
       <Text style={styles.help}>{t.help}</Text>
       <Section title={t.group} />
@@ -47,7 +64,7 @@ export default function FreeRollCallScreen() {
       {groups !== null && groups.length > 0 && (
         <Card>
           {groups.map((g) => (
-            <ListRow key={g.id} title={g.name} onPress={() => start(g.id)} />
+            <ListRow key={g.id} title={g.name} onPress={() => void start(g.id, g.name)} />
           ))}
         </Card>
       )}
@@ -64,6 +81,21 @@ export default function FreeRollCallScreen() {
         }}
         error={dateError}
       />
+      {duplicate && (
+        <ConfirmDialog
+          visible
+          harmless
+          title={t.duplicateTitle}
+          message={t.duplicateMessage(duplicate.name, toDisplayDate(duplicate.date))}
+          cancelLabel={labels.common.cancel}
+          confirmLabel={t.duplicateConfirm}
+          onCancel={() => setDuplicate(null)}
+          onConfirm={() => {
+            setDuplicate(null);
+            go(duplicate.id, duplicate.date);
+          }}
+        />
+      )}
     </Screen>
   );
 }

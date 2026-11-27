@@ -76,7 +76,12 @@ export default function Settings() {
                   ? labels.rollCall.noSession
                   : undefined
             }
-            onPress={() => router.push('/appel-libre')}
+            onPress={
+              proposed.loaded && !proposed.loadFailed
+                ? () => router.push('/appel-libre')
+                : undefined
+            }
+            chevron={proposed.loaded && !proposed.loadFailed}
           />
         )}
       </Card>

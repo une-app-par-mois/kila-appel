@@ -99,6 +99,16 @@ export const sessionsRepo = (db: Db, today: string) => ({
     });
   },
 
+  /** EX-39 : un appel du groupe est déjà enregistré ce jour-là, avec ou sans créneau. */
+  isGroupRecorded: async (groupId: number, date: string): Promise<boolean> =>
+    (
+      await db.query<{ id: number }>(
+        `SELECT s.id FROM sessions s JOIN session_groups sg ON sg.session_id = s.id
+         WHERE sg.group_id = ? AND s.date = ? AND s.state = 'recorded'`,
+        [groupId, date],
+      )
+    ).length > 0,
+
   /** RM-05 : une séance existe déjà pour ce créneau à cette date (l'écran le dit avant l'appel). */
   isRecorded: async (slotId: number, date: string): Promise<boolean> =>
     (

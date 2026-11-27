@@ -19,6 +19,7 @@ Découpé le 2026-11-27 (décision du porteur) depuis le ticket 010.
   - « Nouvel appel » ouvre l'appel sans créneau quand aucune séance n'est à faire (aucune proposée, ou la proposée déjà enregistrée) ;
   - date d'un appel sans créneau jamais future (`DATE_IN_FUTURE`), dans la saison active ;
   - membre ajouté pendant l'appel inscrit à la date de la séance (« à partir d'aujourd'hui » ou « à partir du JJ/MM/AAAA »)
+- Revue (décision du porteur du 2026-11-27) : un appel du groupe déjà enregistré ce jour-là → confirmation « En faire un autre ? », sans refus
 
 ## Critères d'acceptation
 

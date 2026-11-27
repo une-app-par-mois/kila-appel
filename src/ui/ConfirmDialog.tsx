@@ -21,6 +21,8 @@ type Props = {
   confirmLabel: string;
   onConfirm: () => void;
   onCancel: () => void;
+  /** Confirmation sans effacement (« Faire un autre appel ») : bouton principal, pas rouge. */
+  harmless?: boolean;
 };
 
 export const ConfirmDialog = ({
@@ -32,6 +34,7 @@ export const ConfirmDialog = ({
   confirmLabel,
   onConfirm,
   onCancel,
+  harmless = false,
 }: Props) => {
   const confirmed = useRef(false);
   useEffect(() => {
@@ -53,7 +56,12 @@ export const ConfirmDialog = ({
           </Card>
           <View style={styles.actions}>
             <Button label={cancelLabel} variant="secondary" flex={1} onPress={onCancel} />
-            <Button label={confirmLabel} variant="destructive" flex={2} onPress={confirmOnce} />
+            <Button
+              label={confirmLabel}
+              variant={harmless ? 'primary' : 'destructive'}
+              flex={2}
+              onPress={confirmOnce}
+            />
           </View>
         </Screen>
       </SafeAreaProvider>

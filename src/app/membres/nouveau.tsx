@@ -97,7 +97,9 @@ export default function NewMember() {
     <Screen
       title={t.createTitle}
       onBack={() => (router.canGoBack() ? router.back() : router.replace('/membres'))}
-      error={formError}
+      error={
+        fromRollCall && groups !== null && groupId === null ? labels.errors.NOT_FOUND : formError
+      }
     >
       <TextField
         label={t.firstName}

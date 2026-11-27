@@ -173,6 +173,24 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
     expect(screen.queryByTestId('roll-call-name')).toBeNull();
   });
 
+  it('EX-09 créneau d’une saison qui n’est pas active : refusé dès l’ouverture', async () => {
+    const [benjamins] = await db.query<{ id: number }>(
+      'SELECT id FROM groups WHERE season_id = ?',
+      [s.otherSeasonId],
+    );
+    const { lastInsertRowId: old } = await db.execute(
+      "INSERT INTO slots (season_id, weekday, start_time, duration_min, schedule_from) VALUES (?, 3, '17:30', 90, '2025-09-01')",
+      [s.otherSeasonId],
+    );
+    await db.execute('INSERT INTO slot_groups (slot_id, group_id) VALUES (?, ?)', [
+      old,
+      benjamins?.id ?? 0,
+    ]);
+    await open(`/appel?creneau=${old}&date=2026-11-18`);
+    expect(await screen.findByText(labels.errors.NOT_FOUND)).toBeTruthy();
+    expect(screen.queryByTestId('roll-call-name')).toBeNull();
+  });
+
   it('EX-09 créneau lié aussi à un groupe archivé : l’appel et l’accueil prennent le groupe actif', async () => {
     const { lastInsertRowId: avenir } = await db.execute(
       "INSERT INTO groups (season_id, name, archived_at) VALUES (?, 'Avenir', '2026-10-01')",

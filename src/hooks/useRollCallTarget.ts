@@ -1,7 +1,7 @@
 // Quel appel ouvre l'écran (EX-09, EX-17, EX-39) : `?creneau=&date=` (séance d'un créneau) ou
 // `?groupe=&date=` (appel sans créneau, à l'heure d'ouverture : décision du porteur du 2026-11-27).
 // Ce qui ne peut pas s'enregistrer est refusé dès l'ouverture, pas après l'appel.
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { isIsoDate, toIsoDate, toLocalTime } from '@/domain/formats';
 import { isSlotDate } from '@/domain/occurrences';
 import { useGroups } from '@/hooks/useGroups';
@@ -52,10 +52,12 @@ export const useRollCallTarget = (params: { creneau?: string; groupe?: string; d
   if (!date || (slotId === 0 && groupId === 0)) problem = 'NOT_FOUND';
   else if (slotId > 0) {
     if (slotLoaded && slot === null) problem = 'NOT_FOUND';
+    // L'enregistrement exige la saison active : refusé ici plutôt qu'après l'appel.
+    else if (slot && seasons !== null && slot.seasonId !== season?.id) problem = 'NOT_FOUND';
     else if (slot && !isSlotDate(slot, date, today)) problem = 'NOT_A_SLOT_SESSION';
     else if (slot && groups !== null && !group) problem = 'NOT_FOUND';
     else if (recorded) problem = 'ALREADY_RECORDED';
-    else pending = !slot || groups === null || recorded === null;
+    else pending = !slot || seasons === null || groups === null || recorded === null;
   } else if (seasons !== null && season === null) problem = 'NOT_FOUND';
   else if (groups !== null && !group) problem = 'NOT_FOUND';
   else if (date > today) problem = 'DATE_IN_FUTURE';
@@ -63,12 +65,17 @@ export const useRollCallTarget = (params: { creneau?: string; groupe?: string; d
     problem = 'DATE_OUTSIDE_SEASON';
   else pending = groups === null;
 
-  // RM-05 : vérifié une fois par séance ; après l'enregistrement, le rechargement ne le refait pas.
-  const checkSlot = slot && !problem ? slot.id : null;
+  // RM-05 : vérifié une fois par séance (créneau, date) ; après l'enregistrement, les rechargements
+  // ne le refont pas, sinon « déjà enregistrée » remplacerait « Appel enregistré ».
+  const checkId = slot && date && isSlotDate(slot, date, today) ? slot.id : null;
+  const checked = useRef<string | null>(null);
   useEffect(() => {
-    if (checkSlot === null) return;
-    isRecorded(checkSlot, date).then(setRecorded, () => setCheckFailed(true));
-  }, [checkSlot, date, isRecorded]);
+    const key = `${checkId}|${date}`;
+    if (checkId === null || checked.current === key) return;
+    checked.current = key;
+    setRecorded(null);
+    isRecorded(checkId, date).then(setRecorded, () => setCheckFailed(true));
+  }, [checkId, date, isRecorded]);
 
   const target: RollCallTarget | null =
     !problem && !pending && group

@@ -47,7 +47,8 @@ export default function RollCallScreen() {
   useEffect(() => {
     if (!saved) return;
     const timer = setTimeout(
-      () => (router.canGoBack() ? router.back() : router.replace('/')),
+      // Accueil, même depuis l'appel sans créneau (pile : accueil → choix → appel).
+      () => (router.canDismiss() ? router.dismissTo('/') : router.replace('/')),
       SAVED_DELAY_MS,
     );
     return () => clearTimeout(timer);
@@ -100,6 +101,8 @@ export default function RollCallScreen() {
   // EX-12 : nouveau membre inscrit au groupe à la date de la séance, puis retour à l'appel.
   const addMember = () => {
     if (!target) return;
+    // Le nouveau membre doit apparaître au retour : la recherche est vidée.
+    setQuery('');
     router.push({
       pathname: '/membres/nouveau',
       params: { groupe: target.group.id, debut: target.date, retour: '1', appel: '1' },

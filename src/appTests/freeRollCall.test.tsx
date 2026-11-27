@@ -59,6 +59,8 @@ describe('Appel sans créneau, ajout pendant l’appel (EX-12, EX-39)', () => {
     await fireEvent.press(await row('Sam Fictif', st.present));
     await fireEvent.press(screen.getByRole('button', { name: t.save }));
     expect(await screen.findByText(t.saved)).toBeTruthy();
+    // Retour à l'accueil, pas au choix du groupe (décision du 2026-11-27).
+    await waitFor(() => expect(router.getPathname()).toBe('/'), { timeout: 3000 });
     const sessions = await db.query<{ id: number; slot_id: number | null; start_time: string }>(
       "SELECT id, slot_id, start_time FROM sessions WHERE date = '2026-11-16'",
     );
@@ -120,5 +122,30 @@ describe('Appel sans créneau, ajout pendant l’appel (EX-12, EX-39)', () => {
     await open(`/appel?groupe=${s.groupId}&date=2026-11-17`);
     await fireEvent.press(await screen.findByRole('button', { name: t.addMember }));
     expect(await screen.findByText(labels.memberForm.rollCallNote('Poussins', null))).toBeTruthy();
+  });
+
+  it('EX-39 un appel du groupe existe déjà ce jour-là : prévenir, laisser choisir (décision du 2026-11-27)', async () => {
+    const router = await open('/appel-libre');
+    await db.execute(
+      "INSERT INTO sessions (season_id, date, start_time, state) VALUES (?, '2026-11-11', '09:00', 'recorded')",
+      [s.seasonId],
+    );
+    await db.execute(
+      'INSERT INTO session_groups (session_id, group_id) SELECT max(id), ? FROM sessions',
+      [s.groupId],
+    );
+    await fireEvent.changeText(await screen.findByLabelText(f.date), '11/11/2026');
+    await fireEvent.press(await screen.findByRole('button', { name: 'Poussins' }));
+    expect(await screen.findByText(f.duplicateMessage('Poussins', '11/11/2026'))).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: labels.common.cancel }));
+    expect(router.getPathname()).toBe('/appel-libre');
+    await fireEvent.press(await screen.findByRole('button', { name: 'Poussins' }));
+    await fireEvent.press(await screen.findByRole('button', { name: f.duplicateConfirm }));
+    expect(router.getPathname()).toBe('/appel');
+  });
+
+  it('EX-12 groupe de l’appel introuvable dans Nouveau membre : dit, pas un bouton grisé muet', async () => {
+    await open('/membres/nouveau?groupe=9999&debut=2026-11-16&retour=1&appel=1');
+    expect(await screen.findByText(labels.errors.NOT_FOUND)).toBeTruthy();
   });
 });

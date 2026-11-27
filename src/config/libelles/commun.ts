@@ -22,6 +22,7 @@ export const commun = {
     back: 'Retour',
     save: 'Enregistrer',
     keep: 'Garder',
+    cancel: 'Annuler',
     deleteForever: 'Supprimer définitivement',
     loadFailed: 'Les données n’ont pas pu être lues. Fermez puis rouvrez l’appli.',
   },
