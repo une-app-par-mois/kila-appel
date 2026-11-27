@@ -12,8 +12,8 @@ Réévaluation (PLAN §6) : moins de 2 h de porteur pour 6 h prévues ; 1,5 h pa
 
 ## Prochaines étapes
 
-1. **Lots 013-014-015 et 014b-015c fusionnés dans le groupe** (PR #37 à #43 ; 978 tests). Travail par lot en place (`CLAUDE.md` § « Travail par lot »). Export vérifié sur l'A55 (Gmail, Drive) ; mode de journal accepté sur l'A55 (`DB_READY`). Prochain lot : **014e** (restauration, expo-document-picker accepté), puis 014c (base illisible : `JOURNAL_MODE_OFF`, vider `cache/sauvegardes/` au démarrage), 014d (rappels), 015b (Conservation, Tout effacer ; saisons commencées seulement), enfin 016 (Maestro) et la PR du jalon vers `main`. PR méthode n° 1 sur `une-app-par-mois/methode-vibe-coding` à relire par le porteur, app-template à suivre.
-   - Non vérifié sur l'appareil : restauration (`ATTACH`), `useNewConnection` ; iPhone : aucun lien dans `Caches/expo-sharing-tmp/`.
+1. **Lots 013-014-015, 014b-015c et 014e fusionnés dans le groupe** (PR #37 à #46 ; 1068 tests). Restauration vérifiée sur l'A55 (export, désinstallation, restauration identique). Travail par lot en place (`CLAUDE.md` § « Travail par lot »). Export vérifié sur l'A55 (Gmail, Drive) ; mode de journal accepté sur l'A55 (`DB_READY`). Prochain lot : 014c (base illisible : `JOURNAL_MODE_OFF`, vider `cache/sauvegardes/` au démarrage), 014d (rappels), 015b (Conservation, Tout effacer ; saisons commencées seulement), enfin 016 (Maestro) et la PR du jalon vers `main`. PR méthode n° 1 sur `une-app-par-mois/methode-vibe-coding` à relire par le porteur, app-template à suivre.
+   - iPhone (avant toute publication iOS) : restauration réelle puis `tmp/` vide ; aucun lien dans `Caches/expo-sharing-tmp/` ; préfixe du cache identique entre expo-file-system et expo-modules-core.
    - Branche locale `essai/lot-2-apk` (APK d'essai 014b + 015c), non poussée, gardée (pas de suppression de branche).
    - `@expo/devtools` est dans le bundle de production : client WebSocket d'expo-sqlite, appelé seulement si `__DEV__` (jamais en production) ; INTERNET absente du binaire. Pas une violation d'ABS-01.
 2. Fin du jalon 1 : bilan des décisions automatiques annulées (0 à ce jour).
