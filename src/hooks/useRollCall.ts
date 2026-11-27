@@ -194,8 +194,8 @@ export const useMissingRollCalls = (now: LocalNow) => {
 
 /**
  * « Nouvel appel » (onglet central, décision du 2026-11-27) : l'appel en cours (EX-14), sinon la
- * séance proposée (EX-09), sinon l'appel sans créneau (EX-39). `null` tant que ce n'est pas connu. Un appel en cours qui
- * ne peut plus être repris mène à l'accueil, où il s'abandonne.
+ * séance proposée (EX-09), sinon l'appel sans créneau (EX-39). `null` tant que ce n'est pas
+ * connu. Un appel en cours qui ne peut plus être repris mène à l'accueil, où il s'abandonne.
  */
 export const useNewRollCallRoute = (now: LocalNow) => {
   const { draft, loaded: draftLoaded } = useDraft();
