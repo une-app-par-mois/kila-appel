@@ -1,12 +1,12 @@
 # 017 — minimatch 11 forcé (alerte Dependabot n° 2)
 
-Statut : à faire · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : fusionné dans le groupe (PR #55, 2026-11-27) · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Dépend de : — · Fichiers touchés : `package.json` (`overrides`), `package-lock.json`, `scripts/minimatch.test.js`
 
 ## Contexte
 
-Dependabot signale une faille modérée (déni de service par motifs de fichiers) dans minimatch `>= 7.0.0, < 11.0.1`. Le paquet n'arrive que par l'outillage de test (jest, par expo-router et @testing-library/react-native) ; il n'est pas embarqué dans l'appli.
+Dependabot signale une faille modérée (déni de service par motifs de fichiers) dans minimatch `>= 7.0.0, < 11.0.1`. Le paquet arrive par l'outillage de test (jest, par expo-router et @testing-library/react-native) et par l'outillage de build (`@expo/fingerprint`, installé aussi avec `--omit=dev`) ; rien n'est embarqué dans l'appli (corrigé à l'intégration du lot 5).
 
 ## Ce qui change
 
@@ -14,10 +14,10 @@ Dependabot signale une faille modérée (déni de service par motifs de fichiers
 
 ## Critères d'acceptation
 
-- [ ] Aucune version de minimatch dans la plage vulnérable (>= 7.0.0, < 11.0.1)
-- [ ] `./scripts/test.sh` vert ; `npm audit` sans l'alerte minimatch
-- [ ] APK de production construit et audité (`scripts/audit-apk.js`) sans changement de permissions
-- [ ] Si une dépendance casse avec minimatch 11 : ne rien forcer, revenir en arrière et le dire (pas de contournement)
+- [x] Aucune version de minimatch dans la plage vulnérable (>= 7.0.0, < 11.0.1) ; minimatch 3.1.5, hors de la plage, reste sous `test-exclude@6`
+- [x] `./scripts/test.sh` vert ; `npm audit` sans l'alerte minimatch
+- [x] APK de production construit et audité (`scripts/audit-apk.js`) sans changement de permissions
+- [x] Si une dépendance casse avec minimatch 11 : ne rien forcer, revenir en arrière et le dire (pas de contournement) — `test-exclude@6` cassait : override limité à la plage vulnérable, validé par le porteur le 2026-11-27
 
 ## Questions prévues
 

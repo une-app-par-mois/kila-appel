@@ -6,6 +6,8 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Ajouté
 
+- Écran « Base illisible » : « Restaurer une sauvegarde » (bouton principal) ; le fichier est vérifié sur l'écran même, puis résumé avec « Les données abîmées seront effacées définitivement. » ; refus ou Annuler ne touchent pas au fichier abîmé ; après la confirmation, effacement, base neuve et recopie en une transaction, puis l'accueil ; si la recopie échoue, « La restauration n'a pas abouti », base vide ouverte, « Choisir un fichier… » ou « Repartir de zéro » ; si la base neuve ne s'ouvre pas après l'effacement (restauration ou « Repartir de zéro »), « Les données abîmées ont été effacées, mais l'appli n'a pas pu préparer un nouveau fichier de données. Réessayez. », jamais « Rien n'a été effacé » ; retour Android sans effet pendant l'effacement et la recopie (EX-22, EX-20, SEC-10, SEC-11) — ticket 014f.
+- Données : Tout effacer, depuis l'écran Sauvegarde ou Paramètres, après double confirmation (le bouton, puis le mot EFFACER) ; les copies du cache sont vidées juste après, puis Bienvenue recrée la saison comme à une installation neuve (EX-23, SEC-10, SEC-11) — ticket 015f.
 - Base illisible au démarrage : écran de récupération au lieu d'un plantage, en trois variantes (base abîmée : « Réessayer », ou « Repartir de zéro » après confirmation, puis Bienvenue ; réglage refusé ou erreur passagère : « Réessayer », rien n'est effacé ; version plus récente : « mettez l'appli à jour », sans action) ; dossiers temporaires des sauvegardes et restaurations vidés au démarrage (EX-22, SEC-10, SEC-11) — ticket 014c.
 - Données : conservation de 1 à 3 saisons (3 par défaut) et purge des anciennes saisons depuis l'écran Sauvegarde, confirmation chiffrée membres compris ; seules les saisons commencées comptent parmi les gardées ; ligne Conservation dans Paramètres (EX-24, SEC-11) — ticket 015b.
 - Rappels de sauvegarde : invitation unique après le premier appel enregistré, et bandeau sur l'accueil après 30 jours sans sauvegarde (depuis la plus ancienne séance s'il n'y en a jamais eu) (EX-21) — ticket 014d.
@@ -44,6 +46,14 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - Dates : années acceptées de 1900 à 2100 (RM-04).
 - Socle Expo SDK 58 (React Native 0.88.1, Expo Router) et outillage de test : Biome 2.6.9, TypeScript 6.0.3, Jest (jest-expo) — ticket 001.
 - Dépendances : liste et versions exactes dans `docs/ARCHITECTURE.md` §2.
+
+### Modifié
+
+- Sauvegarde : le dossier d'export est vidé au début de chaque export, sous le verrou commun, et plus à l'ouverture de l'écran (SEC-10) — ticket 014g.
+
+### Sécurité
+
+- Outillage : minimatch forcé en 11.0.9 sur la plage vulnérable (>= 7.0.0) par `overrides`, alerte Dependabot n° 2 levée ; garde-fou `scripts/minimatch.test.js` — ticket 017.
 
 ### Corrigé
 
