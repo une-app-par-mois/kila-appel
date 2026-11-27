@@ -6,7 +6,7 @@ import {
   STATUS_CYCLE,
 } from '@/domain/attendance';
 import { foldText } from '@/domain/formats';
-import { weekdayOfDate } from '@/domain/occurrences';
+import { isSlotDate, weekdayOfDate } from '@/domain/occurrences';
 
 describe('Présences (EX-10, EX-11)', () => {
   it('EX-10 cycle Présent → Absent → Retard → Excusé → Présent : Absent en 1 appui, Retard en 2', () => {
@@ -38,6 +38,20 @@ describe('Présences (EX-10, EX-11)', () => {
 
   it('EX-11 texte replié : sans accent ni casse', () => {
     expect(foldText('Élodie Çelik')).toBe('elodie celik');
+  });
+
+  it('EX-17 une date de créneau : son jour, depuis sa date d’effet, jamais future', () => {
+    const slot = {
+      id: 1,
+      weekday: 3 as const,
+      startTime: '17:30',
+      durationMin: 90,
+      scheduleFrom: '2026-11-04',
+    };
+    expect(isSlotDate(slot, '2026-11-18', '2026-11-18')).toBe(true);
+    expect(isSlotDate(slot, '2026-11-25', '2026-11-18')).toBe(false);
+    expect(isSlotDate(slot, '2026-11-16', '2026-11-18')).toBe(false);
+    expect(isSlotDate(slot, '2026-10-28', '2026-11-18')).toBe(false);
   });
 
   it('EX-09 jour de la semaine d’une date (1 = lundi)', () => {

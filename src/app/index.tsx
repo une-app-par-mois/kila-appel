@@ -3,6 +3,7 @@
 // l'entrée de la recherche d'un contact d'urgence, à sa place dans l'accueil du 012 (EX-06), et
 // « Nouvel appel » vers la séance proposée (EX-09) ; sans séance, grisé avec la raison.
 import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
@@ -27,9 +28,22 @@ export default function Settings() {
   const { groups, loadFailed: groupsFailed } = useGroups(active?.id ?? null);
   const { members, loadFailed: membersFailed } = useMembers({ today: toIsoDate(new Date()) });
   const { slots, loadFailed: slotsFailed } = useSlots(active?.id ?? null);
-  const now = new Date();
+  // L'heure avance d'elle-même : la séance proposée suit sans autre action (une fois par minute).
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
   const proposed = useProposedSession({ date: toIsoDate(now), time: toLocalTime(now) });
   const call = proposed.session;
+  const callParts =
+    call &&
+    ([
+      call.group.name,
+      labels.weekdaysAbbr[weekdayOfDate(call.date) - 1] ?? '',
+      toDisplayDate(call.date).slice(0, 5),
+      call.startTime,
+    ] as const);
   return (
     <Screen
       title={t.title}
@@ -40,15 +54,10 @@ export default function Settings() {
       }
     >
       <Card>
-        {call ? (
+        {call && callParts && !call.recorded ? (
           <ListRow
             title={labels.rollCall.entry}
-            subtitle={labels.rollCall.proposed(
-              call.slot.groups[0]?.name ?? '',
-              labels.weekdaysAbbr[weekdayOfDate(call.date) - 1] ?? '',
-              toDisplayDate(call.date).slice(0, 5),
-              call.startTime,
-            )}
+            subtitle={labels.rollCall.proposed(...callParts)}
             onPress={() =>
               router.push({
                 pathname: '/appel',
@@ -59,7 +68,13 @@ export default function Settings() {
         ) : (
           <ListRow
             title={labels.rollCall.entry}
-            subtitle={proposed.loaded ? labels.rollCall.noSession : undefined}
+            subtitle={
+              callParts
+                ? labels.rollCall.proposedRecorded(...callParts)
+                : proposed.loaded
+                  ? labels.rollCall.noSession
+                  : undefined
+            }
             chevron={false}
           />
         )}

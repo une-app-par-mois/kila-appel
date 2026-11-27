@@ -12,7 +12,9 @@ export const appel = {
     /** Accueil : séance proposée (EX-09). */
     proposed: (group: string, day: string, date: string, time: string) =>
       `${group} · ${day} ${date} ${time}`,
-    noSession: 'Aucun créneau.',
+    proposedRecorded: (group: string, day: string, date: string, time: string) =>
+      `${group} · ${day} ${date} ${time} · appel enregistré`,
+    noSession: 'Aucune séance à proposer.',
     subtitle: (day: string, date: string, time: string, place: string | null) =>
       [`${day} ${date}`, time, place].filter(Boolean).join(' · '),
     /** Lecteur d'écran : nom et statut, puis ce que fait un appui. */

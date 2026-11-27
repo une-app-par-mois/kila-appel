@@ -41,6 +41,13 @@ const weekdayOf = (day: number): number => ((((day + 3) % 7) + 7) % 7) + 1;
 
 /** Jour de la semaine d'une date, 1 = lundi … 7 = dimanche (en-tête de l'appel). */
 export const weekdayOfDate = (date: IsoDate): number => weekdayOf(dayNumber(date));
+
+/** EX-17 : `date` est un jour du créneau, depuis sa date d'effet, jamais future (décision du 2026-11-27). */
+export const isSlotDate = (
+  slot: { weekday: number; scheduleFrom: IsoDate },
+  date: IsoDate,
+  today: IsoDate,
+): boolean => date <= today && date >= slot.scheduleFrom && weekdayOfDate(date) === slot.weekday;
 const minutes = (time: Time): number => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
 // Dates ISO : l'ordre alphabétique est l'ordre chronologique.
 const later = (a: IsoDate, b: IsoDate): IsoDate => (b.localeCompare(a) > 0 ? b : a);

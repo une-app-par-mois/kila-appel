@@ -30,8 +30,11 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
     db = await prepareDatabase(openNodeDb());
     s = await seed(db);
     mockDb = db;
+    // Horloge figée : mercredi 18/11/2026 18:00, pendant la séance du jeu fictif.
+    jest.useFakeTimers({ advanceTimers: true, now: new Date(2026, 10, 18, 18, 0) });
   });
   afterEach(async () => {
+    jest.useRealTimers();
     mockDb = null;
     await db.close();
   });
@@ -67,7 +70,6 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
   });
 
   it('EX-13 EX-15 enregistrer : séance, présences et commentaire écrits, « Appel enregistré », retour', async () => {
-    jest.useFakeTimers();
     const screenRouter = await open('/');
     await act(async () => {
       router.push(`/appel?creneau=${s.slotId}&date=${DATE}`);
@@ -76,6 +78,8 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
     await fireEvent.changeText(screen.getByLabelText(t.comment), '  Gymnase froid  ');
     await fireEvent.press(screen.getByRole('button', { name: t.save }));
     expect(await screen.findByText(t.saved)).toBeTruthy();
+    // Plus rien ne change pendant et après l'écriture, commentaire compris.
+    expect(screen.getByLabelText(t.comment).props.editable).toBe(false);
     const [session] = await db.query<{ id: number; comment: string; start_time: string }>(
       'SELECT id, comment, start_time FROM sessions WHERE slot_id = ? AND date = ?',
       [s.slotId, DATE],
@@ -95,14 +99,23 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
       jest.advanceTimersByTime(1500);
     });
     await waitFor(() => expect(screenRouter.getPathname()).toBe('/'));
-    jest.useRealTimers();
+    // Retour à l'accueil : la séance est marquée enregistrée, la ligne ne s'ouvre plus.
+    expect(
+      await screen.findByText(t.proposedRecorded('Poussins', 'Mer.', '18/11', '17:30')),
+    ).toBeTruthy();
+    expect(screen.queryByRole('button', { name: new RegExp(`^${t.entry}`) })).toBeNull();
   });
 
   it('EX-15 séance déjà enregistrée (RM-05) : le message, sans bouton d’enregistrement', async () => {
-    await open(`/appel?creneau=${s.slotId}&date=2026-11-25`);
+    // Le 25/11 du jeu fictif est futur pour l'horloge figée : une séance du 11/11 est ajoutée.
+    await db.execute(
+      "INSERT INTO sessions (season_id, slot_id, date, start_time, state) VALUES (?, ?, '2026-11-11', '17:30', 'recorded')",
+      [s.seasonId, s.slotId],
+    );
+    await open(`/appel?creneau=${s.slotId}&date=2026-11-11`);
     expect(await screen.findByText(labels.errors.ALREADY_RECORDED)).toBeTruthy();
     expect(screen.queryByRole('button', { name: t.save })).toBeNull();
-    expect(await count(db, 'sessions')).toBe(1);
+    expect(await count(db, 'sessions')).toBe(2);
   });
 
   it('EX-11 au-delà de 20 membres, la recherche filtre sans accent ni casse', async () => {
@@ -132,7 +145,7 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
     expect(screen.queryByRole('button', { name: t.save })).toBeNull();
   });
 
-  it('EX-09 accueil : « Nouvel appel » ouvre la séance proposée ; sans créneau, ligne grisée', async () => {
+  it('EX-09 accueil : « Nouvel appel » ouvre la séance proposée', async () => {
     const router = await open('/');
     const entry = await screen.findByRole('button', { name: new RegExp(`^${t.entry}`) });
     await fireEvent.press(entry);
@@ -145,5 +158,31 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
     await open('/');
     expect(await screen.findByText(t.noSession)).toBeTruthy();
     expect(screen.queryByRole('button', { name: new RegExp(`^${t.entry}`) })).toBeNull();
+  });
+
+  it.each([
+    ['future', '2026-11-25'],
+    ['un autre jour que celui du créneau', '2026-11-16'],
+  ])('EX-17 date %s : refusée dès l’ouverture, sans liste', async (_case, date) => {
+    await open(`/appel?creneau=${s.slotId}&date=${date}`);
+    expect(await screen.findByText(labels.errors.NOT_A_SLOT_SESSION)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: t.save })).toBeNull();
+    expect(screen.queryByTestId('roll-call-name')).toBeNull();
+  });
+
+  it('EX-09 créneau lié aussi à un groupe archivé : l’appel et l’accueil prennent le groupe actif', async () => {
+    const { lastInsertRowId: avenir } = await db.execute(
+      "INSERT INTO groups (season_id, name, archived_at) VALUES (?, 'Avenir', '2026-10-01')",
+      [s.seasonId],
+    );
+    await db.execute('INSERT INTO slot_groups (slot_id, group_id) VALUES (?, ?)', [
+      s.slotId,
+      avenir,
+    ]);
+    await open('/');
+    const entry = await screen.findByRole('button', { name: new RegExp(`^${t.entry}`) });
+    expect(screen.getByText(t.proposed('Poussins', 'Mer.', '18/11', '17:30'))).toBeTruthy();
+    await fireEvent.press(entry);
+    expect(await screen.findByRole('header', { name: 'Poussins' })).toBeTruthy();
   });
 });

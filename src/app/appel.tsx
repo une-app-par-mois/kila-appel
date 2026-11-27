@@ -7,9 +7,10 @@ import { Pressable, StyleSheet, Text } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
 import { countStatuses, matchesName, nextStatus, SEARCH_FROM } from '@/domain/attendance';
-import { isIsoDate, toDisplayDate } from '@/domain/formats';
-import { weekdayOfDate } from '@/domain/occurrences';
+import { isIsoDate, toDisplayDate, toIsoDate } from '@/domain/formats';
+import { isSlotDate, weekdayOfDate } from '@/domain/occurrences';
 import type { AttendanceStatus } from '@/domain/validation';
+import { useGroups } from '@/hooks/useGroups';
 import { useRollCall, useRoster } from '@/hooks/useRollCall';
 import { useSlot } from '@/hooks/useSlots';
 import { AttendanceCounter, StatusPill } from '@/ui/Attendance';
@@ -29,8 +30,15 @@ export default function RollCallScreen() {
   const slotId = /^\d+$/.test(params.creneau ?? '') ? Number(params.creneau) : 0;
   const date = isIsoDate(params.date ?? '') ? (params.date ?? '') : '';
   const { slot, loaded, loadFailed } = useSlot(slotId);
-  const group = slot?.groups[0] ?? null;
-  const { roster, loadFailed: rosterFailed } = useRoster(date ? (group?.id ?? null) : null, date);
+  // Le groupe actif du créneau, comme à l'accueil (un groupe archivé refuserait l'enregistrement).
+  const { groups, loadFailed: groupsFailed } = useGroups(slot?.seasonId ?? null);
+  const group = slot?.groups.find((g) => groups?.some((x) => x.id === g.id)) ?? null;
+  // EX-17 : un jour du créneau, jamais futur ; sinon refusé dès l'ouverture, pas après l'appel.
+  const validDate = slot !== null && date !== '' && isSlotDate(slot, date, toIsoDate(new Date()));
+  const { roster, loadFailed: rosterFailed } = useRoster(
+    validDate ? (group?.id ?? null) : null,
+    date,
+  );
   const { record, isRecorded } = useRollCall();
 
   const [statuses, setStatuses] = useState<Record<number, AttendanceStatus>>({});
@@ -47,9 +55,9 @@ export default function RollCallScreen() {
   // Vérifié une fois par séance : après l'enregistrement, le rechargement ne le refait pas.
   const foundSlotId = slot?.id ?? null;
   useEffect(() => {
-    if (foundSlotId === null || !date) return;
+    if (foundSlotId === null || !validDate) return;
     isRecorded(foundSlotId, date).then(setAlreadyRecorded, (e) => setFormError(errorMessage(e)));
-  }, [foundSlotId, date, isRecorded]);
+  }, [foundSlotId, validDate, date, isRecorded]);
 
   // « Appel enregistré », puis retour à l'accueil (décision du porteur du 2026-11-27).
   useEffect(() => {
@@ -90,16 +98,19 @@ export default function RollCallScreen() {
     }
   };
 
-  const notFound = (loaded && !group) || !date || slotId === 0;
+  const notFound =
+    (loaded && slot === null) || (groups !== null && !group) || !date || slotId === 0;
   const error =
-    loadFailed || rosterFailed
+    loadFailed || rosterFailed || groupsFailed
       ? labels.common.loadFailed
       : notFound
         ? labels.errors.NOT_FOUND
-        : alreadyRecorded
-          ? labels.errors.ALREADY_RECORDED
-          : formError;
-  const ready = slot && group && roster && alreadyRecorded === false && !notFound;
+        : slot && !validDate
+          ? labels.errors.NOT_A_SLOT_SESSION
+          : alreadyRecorded
+            ? labels.errors.ALREADY_RECORDED
+            : formError;
+  const ready = validDate && group && roster && alreadyRecorded === false && !notFound;
   const subtitle =
     slot && date
       ? t.subtitle(
@@ -160,6 +171,7 @@ export default function RollCallScreen() {
             label={t.comment}
             hint={t.optional}
             multiline
+            editable={!busy && !saved}
             value={comment}
             onChangeText={(v) => {
               setComment(v);

@@ -23,6 +23,8 @@ type Props = {
   autoFocus?: boolean;
   /** Plusieurs lignes (commentaire de la séance, EX-13). */
   multiline?: boolean;
+  /** Faux pendant et après un enregistrement (rien ne change plus). */
+  editable?: boolean;
 };
 
 export const TextField = ({
@@ -38,6 +40,7 @@ export const TextField = ({
   phone = false,
   autoFocus = false,
   multiline = false,
+  editable = true,
 }: Props) => (
   <View style={styles.field}>
     {!labelHidden && <FieldLabel label={label} hint={hint} />}
@@ -49,6 +52,7 @@ export const TextField = ({
       keyboardType={phone ? 'phone-pad' : 'default'}
       autoFocus={autoFocus}
       multiline={multiline}
+      editable={editable}
       placeholder={placeholder}
       placeholderTextColor={theme.colors.texteSecondaire}
       style={[

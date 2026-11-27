@@ -19,6 +19,7 @@ Découpé le 2026-11-27 (décision du porteur) depuis le ticket 010.
 - Plan validé le 2026-11-27 : sans chronomètre (démo de la maquette) ; la ligne « Brouillon enregistré à chaque appui » arrive au 011 ; quitter sans enregistrer perd l'appel jusqu'au 011 ; sans séance proposée, « Nouvel appel » est grisé avec la raison
 
 - Décision du porteur du 2026-11-27 : la séance proposée n'est jamais d'un jour à venir (EX-09)
+- Revue (décisions du porteur du 2026-11-27) : séance proposée déjà enregistrée → « … · appel enregistré », sans action ; sans séance : « Aucune séance à proposer. »
 
 ## Critères d'acceptation
 
