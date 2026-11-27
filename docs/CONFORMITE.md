@@ -107,7 +107,7 @@ Relevé le 2026-11-27 sur le binaire Android construit (`gradlew :app:dependenci
 | `firebase-datatransport`, `firebase-encoders`, `-json`, `-proto` | 18.2.0, 17.0.0, 18.0.0, 16.0.0 | Apache-2.0 | Envoi de mesures : inactif |
 | `com.google.android.datatransport:transport-api`, `transport-runtime`, `transport-backend-cct` | 3.1.0, 3.1.9, 3.1.9 | Apache-2.0 | Datatransport : services et récepteur retirés ; INTERNET absente |
 | `firebase-iid-interop`, `firebase-measurement-connector` | 17.1.0, 19.0.0 | Android SDK License (§7) | Interfaces internes de Firebase |
-| `com.google.android.gms:play-services-base`, `-basement`, `-tasks`, `-stats`, `-cloud-messaging` | 18.1.0, 18.3.0, 18.1.0, 17.0.2, 17.2.0 | Android SDK License (§7) | Google Play services : seule `GoogleApiActivity` reste, non exportée |
+| `com.google.android.gms:play-services-base`, `-basement`, `-tasks`, `-stats`, `-cloud-messaging` | 18.1.0, 18.3.0, 18.1.0, 17.0.2, 17.2.0 | Android SDK License (§7) | Google Play services : seule `GoogleApiActivity` reste, non exportée (liste figée `config/composants-google-attendus.txt`) |
 | `com.android.installreferrer:installreferrer` | 2.2 | Android SDK License (§7) | Référent d'installation (expo-application) : permission bloquée, jamais appelé |
 | `me.leolin:ShortcutBadger` | 1.1.22 | Apache-2.0 | Pastilles des lanceurs : ses 16 permissions bloquées, pastille jamais posée |
 

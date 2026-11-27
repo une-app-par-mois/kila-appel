@@ -2,6 +2,8 @@
  * @jest-environment node
  */
 // Tests de l'audit du binaire Android (SEC-02, ABS-01, ABS-07), sur des sorties aapt2 fictives.
+const { readFileSync } = require('node:fs');
+const { join } = require('node:path');
 const { auditPermissions, auditManifest, latestVersion, parseExpected } = require('./audit-apk');
 
 const dump = (...names) =>
@@ -122,9 +124,14 @@ describe('latestVersion : choix des build-tools', () => {
 
 describe('ABS-01 composants Firebase et datatransport refusés dans le binaire', () => {
   const ANDROID = 'http://schemas.android.com/apk/res/android';
-  const component = (tag, name, { exported, action } = {}) => [
+  // `name` commençant par @ : référence à une ressource, comme l'écrit aapt2 (=@0x7f…).
+  const value = (v) => (String(v).startsWith('@') ? v : `"${v}" (Raw: "${v}")`);
+  const component = (tag, name, { exported, action, target } = {}) => [
     `      E: ${tag} (line=30)`,
-    `        A: ${ANDROID}:name(0x01010003)="${name}" (Raw: "${name}")`,
+    `        A: ${ANDROID}:name(0x01010003)=${value(name)}`,
+    ...(target === undefined
+      ? []
+      : [`        A: ${ANDROID}:targetActivity(0x01010202)=${value(target)}`]),
     ...(exported === undefined ? [] : [`        A: ${ANDROID}:exported(0x01010010)=${exported}`]),
     ...(action
       ? [
@@ -158,16 +165,68 @@ describe('ABS-01 composants Firebase et datatransport refusés dans le binaire',
     ]);
   });
 
-  it('refuse un composant com.google.android.gms. exporté', () => {
-    const name = 'com.google.android.gms.Y';
-    expect(auditManifest(tree(component('receiver', name, { exported: true })))).toEqual([
-      `Composant Google Play services exporté : ${name}`,
+  const GOOGLE_API = 'com.google.android.gms.common.api.GoogleApiActivity';
+  const ALLOWED = [GOOGLE_API];
+
+  it('accepte GoogleApiActivity non exportée, inscrite dans la liste figée', () => {
+    const activity = component('activity', GOOGLE_API, { exported: false });
+    expect(auditManifest(tree(activity), ALLOWED)).toEqual([]);
+  });
+
+  it('refuse un composant gms inscrit dans la liste mais exporté', () => {
+    const activity = component('activity', GOOGLE_API, { exported: true });
+    expect(auditManifest(tree(activity), ALLOWED)).toEqual([
+      `Composant Google Play services exporté : ${GOOGLE_API}`,
     ]);
   });
 
-  it('accepte GoogleApiActivity non exportée', () => {
-    const name = 'com.google.android.gms.common.api.GoogleApiActivity';
-    expect(auditManifest(tree(component('activity', name, { exported: false })))).toEqual([]);
+  it.each([true, false])('refuse un composant gms hors de la liste (exporté : %s)', (exported) => {
+    const name = 'com.google.android.gms.Y';
+    expect(auditManifest(tree(component('receiver', name, { exported })), ALLOWED)).toEqual([
+      `Composant Google Play services non attendu : ${name}`,
+    ]);
+  });
+
+  it('liste figée du dépôt : GoogleApiActivity seulement', () => {
+    const file = join(__dirname, '..', 'config', 'composants-google-attendus.txt');
+    expect(parseExpected(readFileSync(file, 'utf8'))).toEqual(ALLOWED);
+  });
+
+  it('refuse GoogleApiActivity sans liste figée (échec fermé)', () => {
+    expect(auditManifest(tree(component('activity', GOOGLE_API, { exported: false })))).toEqual([
+      `Composant Google Play services non attendu : ${GOOGLE_API}`,
+    ]);
+  });
+
+  it('applique les refus à la cible d’un activity-alias', () => {
+    const firebase = component('activity-alias', 'com.jitavision.kila.Alias', {
+      target: 'com.google.firebase.X',
+    });
+    const gms = component('activity-alias', 'com.jitavision.kila.Alias2', {
+      target: 'com.google.android.gms.Y',
+    });
+    expect(auditManifest(tree(firebase, gms), ALLOWED)).toEqual([
+      'Composant Firebase ou datatransport : com.google.firebase.X',
+      'Composant Google Play services non attendu : com.google.android.gms.Y',
+    ]);
+  });
+
+  it('refuse une référence de ressource pour android:name ou android:exported', () => {
+    const byName = component('service', '@0x7f0e0012');
+    const byExported = component('receiver', 'expo.modules.R', { exported: '@0x7f050001' });
+    expect(auditManifest(tree(byName, byExported), ALLOWED)).toEqual([
+      'Référence de ressource refusée : android:name d’un service',
+      'Référence de ressource refusée : android:exported de expo.modules.R',
+    ]);
+  });
+
+  it('refuse une référence de ressource pour la cible d’un activity-alias', () => {
+    const alias = component('activity-alias', 'com.jitavision.kila.Alias', {
+      target: '@0x7f0e0013',
+    });
+    expect(auditManifest(tree(alias), ALLOWED)).toEqual([
+      'Référence de ressource refusée : android:targetActivity de com.jitavision.kila.Alias',
+    ]);
   });
 
   it.each(['com.google.firebase.MESSAGING_EVENT', 'com.google.android.c2dm.intent.RECEIVE'])(
