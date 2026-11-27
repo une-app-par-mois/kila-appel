@@ -1,0 +1,11 @@
+# Campagne Maestro du jalon 1 (ticket 016, docs/CONVENTIONS.md §5.2). Lancée par scripts/e2e.sh,
+# qui installe l'APK et dépose la sauvegarde fictive. Chaque parcours repart d'une appli vierge.
+# Les sous-parcours (sous-parcours/) ne sont pas lancés seuls.
+flows:
+  - '*'
+executionOrder:
+  continueOnFailure: true
+  flowsOrder:
+    - appel-20-membres
+    - brouillon-fermeture-forcee
+    - sauvegarde-restauration

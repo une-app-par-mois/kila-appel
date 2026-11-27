@@ -1,0 +1,48 @@
+# Sous-parcours (ticket 016) : appli vierge, puis, depuis Bienvenue, un groupe « Groupe E2E » et
+# ses 20 membres fictifs « Membre 01 » à « Membre 20 », créés par l'interface (EX-02, EX-03, EX-04).
+# La saison est celle que Bienvenue crée à la première ouverture. Finit sur Bienvenue (étape 4).
+appId: com.jitavision.kila
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: 'Bienvenue'
+    timeout: 15000
+- assertVisible: 'Saison .*, créée automatiquement'
+# « Créer un groupe » est à la fois le titre de l'étape et son bouton, qui vient après.
+- tapOn:
+    text: 'Créer un groupe'
+    index: 1
+- tapOn: 'Nom du groupe'
+- inputText: 'Groupe E2E'
+- hideKeyboard
+- tapOn: 'Créer le groupe'
+- extendedWaitUntil:
+    visible: 'Groupe E2E'
+    timeout: 5000
+- back
+- extendedWaitUntil:
+    visible: 'Ajouter des membres'
+    timeout: 5000
+- tapOn: 'Ajouter des membres'
+- evalScript: ${output.member = 0}
+- repeat:
+    times: 20
+    commands:
+      - evalScript: ${output.member = output.member + 1}
+      - evalScript: "${output.number = (output.member < 10 ? '0' : '') + output.member}"
+      - tapOn: 'Nouveau membre'
+      - tapOn: 'Prénom'
+      - inputText: 'Membre'
+      - tapOn: 'Nom'
+      - inputText: ${output.number}
+      - hideKeyboard
+      - tapOn: 'Créer le membre'
+      - extendedWaitUntil:
+          visible: 'Ajouter à Groupe E2E'
+          timeout: 5000
+- assertVisible: 'Tous les membres sont déjà inscrits à ce groupe.'
+- back
+- extendedWaitUntil:
+    visible: 'Déclarer les créneaux'
+    timeout: 5000

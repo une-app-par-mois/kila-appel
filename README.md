@@ -81,6 +81,23 @@ Codée avec Claude et Claude Code, en [X] heures, ticket par ticket. Cadrage dan
 
 Les règles du projet pour l'IA sont dans [`CLAUDE.md`](CLAUDE.md), ses garde-fous dans [`.claude/settings.json`](.claude/settings.json), les conventions et la Definition of Done dans [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md), les mots de la méthode dans [`docs/GLOSSAIRE-METHODE.md`](docs/GLOSSAIRE-METHODE.md).
 
+### Tests de bout en bout
+
+> **Attention : la campagne efface toutes les données de l'appli sur l'appareil** (désinstallation, puis réinstallation de l'APK). Elle ne tourne que sur un émulateur : un téléphone branché est refusé, sauf option explicite `--appareil-reel`, à réserver à un téléphone de test sans vraies données.
+
+Parcours [Maestro](https://maestro.dev) (`.maestro/`), lancés en fin de jalon : appel de 20 membres chronométré, brouillon retrouvé après une fermeture forcée, sauvegarde puis tout effacer puis restauration.
+
+Prérequis : Node 22 et `npm ci` ; Maestro 2.12.0 (`~/.maestro/bin/maestro` ou dans le `PATH`) ; `adb` ; un émulateur Android démarré, et un seul appareil branché (sinon `ANDROID_SERIAL=<numéro>`).
+
+```bash
+# APK de version, construit en local (ou l'artefact de la CI de la PR du jalon)
+npx expo prebuild --platform android --no-install --clean
+(cd android && ./gradlew assembleRelease --no-daemon)
+./scripts/e2e.sh android/app/build/outputs/apk/release/app-release.apk
+```
+
+Le script désactive les statistiques de Maestro (`MAESTRO_CLI_NO_ANALYTICS=1`), installe l'APK, génère une sauvegarde fictive avec le code de `src/data/` (aucun fichier binaire dans le dépôt) et la dépose dans `Téléchargements` de l'appareil, puis lance `maestro test .maestro`.
+
 ## Licence
 
 [MIT](LICENSE) © 2026 Dimitri Lefebvre
