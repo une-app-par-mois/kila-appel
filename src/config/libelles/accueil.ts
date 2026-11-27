@@ -6,6 +6,7 @@ export const accueil = {
   tabs: {
     label: 'Navigation',
     home: 'Accueil',
+    stats: 'Stats',
     newRollCall: 'Nouvel appel',
     history: 'Historique',
     settings: 'Paramètres',

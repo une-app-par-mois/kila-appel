@@ -1,6 +1,6 @@
-// Barre d'onglets (maquette) : Accueil, place de Stats, « Nouvel appel » en rond au centre,
-// Historique, Paramètres. Cinq places de même largeur (décision du porteur du 2026-11-27) : la place
-// de Stats reste vide jusqu'au jalon 2, le rond ne bouge plus.
+// Barre d'onglets (maquette) : Accueil, Stats, « Nouvel appel » en rond au centre, Historique,
+// Paramètres. Cinq places de même largeur (décision du porteur du 2026-11-27) : Stats (ticket 024)
+// occupe la place gardée, le rond ne bouge pas.
 // Le rond n'est pas un onglet : il ouvre l'appel par-dessus (`useNewRollCallRoute`).
 import { useRouter } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
@@ -14,6 +14,7 @@ import { Icon } from '@/ui/Icon';
 const t = labels.tabs;
 const TABS = {
   index: { label: t.home, icon: 'home' },
+  stats: { label: t.stats, icon: 'stats' },
   historique: { label: t.history, icon: 'list' },
   parametres: { label: t.settings, icon: 'settings' },
 } as const;
@@ -49,13 +50,7 @@ export const TabBar = ({ state, navigateToTab, insets }: BottomTabBarProps) => {
       style={[styles.bar, { paddingBottom: Math.max(insets.bottom, theme.spacing) }]}
     >
       {tab(0)}
-      {/* Place de Stats (jalon 2) : vide, ni appuyable ni lue (décision du porteur du 2026-11-27). */}
-      <View
-        testID="tab-placeholder"
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-        style={styles.tab}
-      />
+      {tab(1)}
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t.newRollCall}
@@ -68,8 +63,8 @@ export const TabBar = ({ state, navigateToTab, insets }: BottomTabBarProps) => {
         </View>
         <Text style={styles.label}>{t.newRollCall}</Text>
       </Pressable>
-      {tab(1)}
       {tab(2)}
+      {tab(3)}
     </View>
   );
 };
