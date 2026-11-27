@@ -1,6 +1,6 @@
 # 015 — Tout effacer et purge : données
 
-Statut : codé, à relire (zone sensible : /security-review et relecture du porteur) · Jalon : 1 · Zone sensible : oui · Trivial : non
+Statut : fusionné dans le groupe (PR #37, relu et accepté par le porteur le 2026-11-27) · Jalon : 1 · Zone sensible : oui · Trivial : non
 
 Dépend de : aucun ticket à faire · Fichiers touchés : `src/data/eraseAll.ts`, `src/data/purge.ts` et leurs tests ; `src/data/errors.ts` (trois codes)
 
@@ -62,5 +62,5 @@ Séance de lancement du 2026-11-27 (réponses du porteur) : découpage en 015 do
 ## À reporter
 
 - CHANGELOG : Données : tout effacer (`eraseAll`, 16 tables, une transaction) et purge des anciennes saisons (`purgeCandidates`, `purgeImpact`, `purge`), membres sans saison gardée compris (EX-23, EX-24, SEC-11).
-- Pour 015b (en attente du porteur, remarque du contradicteur) : avec « Garder les N dernières saisons », une saison à venir encore vide compte parmi les gardées ; créer la saison suivante en juin fait donc proposer la purge d'une saison un an plus tôt. Options : (1) une saison à venir compte (plan validé, appliqué en attendant) ; (2) ne compter que les saisons commencées ; (3) ne compter qu'une saison à venir qui a une séance. État : en attente du porteur.
+- Pour 015b (en attente du porteur, remarque du contradicteur) : avec « Garder les N dernières saisons », une saison à venir encore vide compte parmi les gardées ; créer la saison suivante en juin fait donc proposer la purge d'une saison un an plus tôt. Options : (1) une saison à venir compte (plan validé, appliqué en attendant) ; (2) ne compter que les saisons commencées ; (3) ne compter qu'une saison à venir qui a une séance. **Réponse du porteur (2026-11-27) : (2)**, à faire dans 015b.
 - Architecture : couche données, `src/data/eraseAll.ts` (liste fixe `ERASE_STATEMENTS`, à compléter à chaque nouvelle table : un test la compare au schéma) et `src/data/purge.ts` (saisons au-delà de la durée de conservation, saison active exclue et revérifiée dans la transaction ; cascades de `seasonsRepo.remove`). Codes `DataError` ajoutés : `ACTIVE_SEASON`, `RETENTION_INVALID`, `NOT_PURGEABLE`. `purge(db, ids, retention)` revérifie les candidates dans sa transaction ; l'appel en cours est vidé par la cascade depuis `seasons`.

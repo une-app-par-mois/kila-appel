@@ -6,6 +6,8 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Ajouté
 
+- Données : sauvegarde de la base (copie datée), vérification d'un fichier avant tout remplacement (cause précise, dont « version plus récente »), restauration en une seule transaction ; réglages de l'appli (EX-19, EX-20, NF-04) — ticket 014.
+- Données : tout effacer (une transaction) et purge des anciennes saisons, membres qui ne figurent plus dans aucune saison gardée compris (EX-23, EX-24, SEC-11) — ticket 015.
 - États vides de la maquette : recherche sans résultat (saisie rappelée et conseil) dans les membres, le contact d'urgence et l'appel ; carte « Aucun membre » avec « Nouveau membre » ; appel d'un groupe vide — ticket 012c.
 - Bienvenue : à la première ouverture, saison créée automatiquement sur une base vide (1er septembre au 31 août, celle de la rentrée dès le 1er juillet) ; quatre étapes et un seul bouton, sur la première qui reste, tant que la mise en route n'est pas finie et qu'aucun appel n'est fait — ticket 012b.
 - Barre d'onglets (Accueil, « Nouvel appel » au centre, Paramètres) ; accueil : date du jour, recherche d'un contact d'urgence, appel en cours ou séance du moment avec « Faire l'appel », appels manquants (5 au plus, « et N autres ») — ticket 012.

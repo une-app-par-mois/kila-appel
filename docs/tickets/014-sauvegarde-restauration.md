@@ -1,6 +1,6 @@
 # 014 — Sauvegarde et restauration : données
 
-Statut : en attente du porteur (branche `ticket/014-sauvegarde-donnees`, codé) · Jalon : 1 · Zone sensible : oui · Trivial : non
+Statut : fusionné dans le groupe (PR #39, relu et accepté par le porteur le 2026-11-27) · Jalon : 1 · Zone sensible : oui · Trivial : non
 
 Dépend de : aucun ticket à faire · Fichiers touchés : `src/data/backup.ts`, `src/data/settingsRepo.ts` et leurs tests, `src/staticChecks.test.ts` si besoin
 
@@ -90,6 +90,8 @@ Séance de lancement du 2026-11-27 (réponses du porteur) :
 | Fermeture de la copie | Erreur relayée ; ignorée | `close()` de la copie et de la base en mémoire : erreur ignorée | Une fermeture ratée ne change ni le résultat ni la cause (revue de code) | changée après revue |
 
 ## Questions pour le porteur
+
+Répondues à la séance de clôture du 2026-11-27 : fichiers hors du plan acceptés (`backupCheck.ts`, `backupRows.ts`, tests découpés) ; ajout de `src/data/backupRows.ts` à la liste du contrôle EX-14 accepté.
 
 - Ajout de `src/data/backupRows.ts` à la liste du contrôle EX-14 (lecture des tables du brouillon pour les valider) — ticket en attente ; revue de sécurité : borné et justifié. Options : 1. garder l'ajout (recommandé : `backupRows.ts` n'exporte que `BACKUP_ALIAS` et `checkRows`, qui ne renvoie que `INVALID_DATA` ou `null`) ; 2. ne pas valider les tables du brouillon dans une sauvegarde.
 
