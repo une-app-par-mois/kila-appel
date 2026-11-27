@@ -6,17 +6,12 @@
 // on teste le code de l'adaptateur, pas le module natif (ADR-008).
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import {
-  expoBackupDeps,
-  expoBackupStorage,
-  pathToUri,
-  shareBackup,
-  uriToPath,
-} from '@/data/expoFiles';
+import { expoBackupDeps, expoStorage, pathToUri, shareBackup, uriToPath } from '@/data/expoFiles';
 
 jest.mock('expo-sqlite', () => ({ openDatabaseAsync: jest.fn() }));
 jest.mock('expo-sharing', () => ({ shareAsync: jest.fn(async () => undefined) }));
 jest.mock('expo-file-system', () => require('@/__fixtures__/expoModules').fakeFileSystem());
+jest.mock('expo-document-picker', () => ({ getDocumentAsync: jest.fn() }));
 
 const { shareAsync } = jest.requireMock('expo-sharing') as { shareAsync: jest.Mock };
 const fsMock = jest.requireMock('expo-file-system') as { Paths: { root: string } };
@@ -59,7 +54,7 @@ describe('EX-19 chemins : URI d’expo-file-system et chemins du système (sans 
 });
 
 describe('EX-19 dossier dédié de la sauvegarde, dans le cache', () => {
-  const files = expoBackupStorage;
+  const files = expoStorage('sauvegardes');
   afterEach(() => rmSync(cache, { recursive: true, force: true }));
 
   it('crée un sous-dossier neuf à chaque export, dans le dossier dédié du cache', async () => {
@@ -130,8 +125,10 @@ describe('EX-19 partage par le système', () => {
     );
   });
 
-  it('rassemble le dossier, le partage et l’ouverture brute d’une copie', () => {
-    expect(expoBackupDeps.files).toBe(expoBackupStorage);
+  it('rassemble le dossier, le partage et l’ouverture brute d’une copie', async () => {
+    const dir = await expoBackupDeps.files.newDir();
+    expect(dir.startsWith(`${backups}/`)).toBe(true);
+    await expoBackupDeps.files.removeDir(dir);
     expect(expoBackupDeps.share).toBe(shareBackup);
     expect(typeof expoBackupDeps.open).toBe('function');
   });

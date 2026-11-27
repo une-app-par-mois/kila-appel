@@ -37,6 +37,28 @@ export const nodeStorage = (dir: string): BackupStorage => {
   };
 };
 
+/**
+ * Sélecteur de fichiers sur node:fs (ticket 014e) : ce que fait expo-document-picker, une copie du
+ * fichier choisi dans `dir` (cache/DocumentPicker/). `next` : prochain choix ; null : annulé.
+ */
+export const nodePicker = (dir: string) => {
+  let n = 0;
+  const picker = {
+    next: null as string | null,
+    pick: async (): Promise<string | null> => {
+      if (picker.next === null) return null;
+      mkdirSync(dir, { recursive: true });
+      n += 1;
+      const path = join(dir, `${n}-choisi.db`);
+      copyFileSync(picker.next, path);
+      return path;
+    },
+    removePicked: async (path: string) => rmSync(path, { recursive: true, force: true }),
+    clearPicked: async () => rmSync(dir, { recursive: true, force: true }),
+  };
+  return picker;
+};
+
 /** Dossier temporaire effacé à la fin du test. */
 export const tempDir = () => {
   const dir = mkdtempSync(join(tmpdir(), 'kila-sauvegarde-'));

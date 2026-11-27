@@ -1,8 +1,8 @@
 /**
  * @jest-environment node
  */
-// ABS-01, SEC-01 (ticket 014b, décision du porteur du 2026-11-27) : expo-file-system et
-// expo-sharing ne sont importés que par l'adaptateur src/data/expoFiles.ts ;
+// ABS-01, SEC-01 (tickets 014b et 014e, décisions du porteur du 2026-11-27) : expo-file-system,
+// expo-sharing et expo-document-picker ne sont importés que par l'adaptateur src/data/expoFiles.ts ;
 // leurs sous-chemins (legacy, next, build), leurs fonctions réseau et l'accès direct aux modules
 // natifs (requireNativeModule) sont refusés partout (revue de sécurité du 014b).
 // Contrôle sur l'arbre syntaxique de TypeScript, comme src/staticChecks.test.ts. Limite connue :
@@ -13,11 +13,11 @@ import ts from 'typescript';
 import { tempDir } from '@/__fixtures__/backupFiles';
 import { scriptKind, TEST_FILE, walkSources } from '@/__fixtures__/sourceFiles';
 
-/** Seul fichier autorisé à importer expo-file-system et expo-sharing (liste testée). */
+/** Seul fichier autorisé à importer ces modules de fichiers (liste testée). */
 const FILE_MODULE_OWNERS = ['src/data/expoFiles.ts'];
-const FILE_MODULES = /^(expo-file-system|expo-sharing)$/;
+const FILE_MODULES = /^(expo-file-system|expo-sharing|expo-document-picker)$/;
 // Sous-chemin d'un de ces modules (legacy, next, build/…) : refusé partout, adaptateur compris.
-const SUBPATH = /^(expo-file-system|expo-sharing)\//;
+const SUBPATH = /^(expo-file-system|expo-sharing|expo-document-picker)\//;
 // Accès direct à un module natif, qui contournerait l'adaptateur et ce contrôle.
 const NATIVE_ACCESS = new Set(['requireNativeModule', 'requireOptionalNativeModule']);
 // Téléchargement et envoi d'expo-file-system (nouvelle API et legacy), et résolution d'un contenu
@@ -88,7 +88,7 @@ const check = (file: string, source: string): Violation[] => {
 
 const rules = (file: string, source: string) => check(file, source).map((v) => v.rule);
 
-describe('ABS-01 expo-file-system et expo-sharing seulement dans src/data/expoFiles.ts', () => {
+describe('ABS-01 modules de fichiers seulement dans src/data/expoFiles.ts', () => {
   it.each([
     "import { File } from 'expo-file-system';",
     "import * as Sharing from 'expo-sharing';",
@@ -97,6 +97,10 @@ describe('ABS-01 expo-file-system et expo-sharing seulement dans src/data/expoFi
     "const fs = require('expo-file-system');",
     "const fs = await import('expo-file-system');",
     "type F = import('expo-file-system').File;",
+    "import { getDocumentAsync } from 'expo-document-picker';",
+    "const picker = require('expo-document-picker');",
+    "const picker = await import('expo-document-picker');",
+    "export * from 'expo-document-picker';",
   ])('repère hors de l’adaptateur : %s', (source) => {
     expect(rules('src/hooks/useBackupExport.ts', source)).toEqual([
       'ABS-01 import hors de expoFiles.ts',
@@ -105,9 +109,11 @@ describe('ABS-01 expo-file-system et expo-sharing seulement dans src/data/expoFi
 
   it('autorise l’adaptateur, et lui seul', () => {
     const source =
-      "import { File } from 'expo-file-system'; import { shareAsync } from 'expo-sharing';";
+      "import { File } from 'expo-file-system'; import { shareAsync } from 'expo-sharing';" +
+      " import { getDocumentAsync } from 'expo-document-picker';";
     expect(rules('src/data/expoFiles.ts', source)).toEqual([]);
     expect(rules('src/data/expoFiles.test.ts', source)).toEqual([
+      'ABS-01 import hors de expoFiles.ts',
       'ABS-01 import hors de expoFiles.ts',
       'ABS-01 import hors de expoFiles.ts',
     ]);
@@ -120,6 +126,9 @@ describe('ABS-01 expo-file-system et expo-sharing seulement dans src/data/expoFi
     "import { File } from 'expo-file-system/build/File';",
     "const n = require('expo-file-system/build/ExpoFileSystem');",
     "import { shareAsync } from 'expo-sharing/build/Sharing';",
+    "import { getDocumentAsync } from 'expo-document-picker/build/index';",
+    "const m = require('expo-document-picker/build/ExpoDocumentPicker');",
+    "const m = await import('expo-document-picker/src/index');",
   ])('refuse partout, adaptateur compris : %s', (source) => {
     expect(rules('src/data/expoFiles.ts', source)).toEqual(['ABS-01 sous-chemin']);
   });
@@ -179,10 +188,12 @@ describe('Le code du dépôt respecte le contrôle des fichiers', () => {
     expect(violations).toEqual([]);
   });
 
-  it('seul src/data/expoFiles.ts importe expo-file-system et expo-sharing', () => {
+  it('seul src/data/expoFiles.ts importe les modules de fichiers', () => {
     const importing = files
       .filter((file) => !TEST_FILE.test(file))
-      .filter((file) => /['"](expo-file-system|expo-sharing)/.test(read(file)));
+      .filter((file) =>
+        /['"](expo-file-system|expo-sharing|expo-document-picker)/.test(read(file)),
+      );
     expect(importing).toEqual(FILE_MODULE_OWNERS);
   });
 

@@ -263,16 +263,16 @@ describe('Le code du dépôt respecte les contrôles', () => {
     expect(naming.sort()).toEqual(allowed.sort());
   });
 
-  // EX-14 (revue de sécurité du ticket 011) : seuls l'appel et l'accueil lisent le brouillon par
-  // son dépôt ou son hook ; une statistique qui l'importerait ferait échouer ce test.
+  // EX-14 (revue de sécurité du 011) : une statistique qui lirait le brouillon ferait échouer ceci.
   it('EX-14 seuls l’appel et l’accueil lisent le brouillon (draftsRepo, useDraft)', () => {
     const allowed = [
       'src/hooks/useRollCall.ts',
       'src/hooks/useRollCallTarget.ts',
       'src/app/appel.tsx',
       'src/ui/RollCallEntry.tsx',
-      // Ticket 012b : seulement l'existence d'un appel en cours (pas de Bienvenue pendant un appel).
+      // 012b : existence d'un appel en cours (Bienvenue) ; 014e : son groupe, avant de restaurer.
       'src/app/(tabs)/index.tsx',
+      'src/hooks/useRestore.ts',
     ];
     const reading = walk(join(root, 'src'))
       .map((path) => relative(root, path))

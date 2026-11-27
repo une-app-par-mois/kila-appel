@@ -46,6 +46,12 @@ class FakeFile {
     if (existsSync(pathOf(destination.uri))) throw new Error('DestinationAlreadyExists');
     copyFileSync(pathOf(this.uri), pathOf(destination.uri));
   }
+  get exists() {
+    return existsSync(pathOf(this.uri));
+  }
+  delete() {
+    rmSync(pathOf(this.uri), { recursive: true });
+  }
 }
 
 class FakeDirectory {
@@ -72,6 +78,33 @@ export const fakeFileSystem = () => {
     Directory: FakeDirectory,
     FileMode: { ReadOnly: 'r' },
     Paths: { cache: new FakeDirectory(`file://${root}/cache dir/`), root },
+  };
+};
+
+/**
+ * expo-document-picker (ticket 014e) : comme le module natif avec `copyToCacheDirectory`, copie
+ * le fichier que rend `choose()` dans `<cache>/DocumentPicker/<n>.<ext>` ; `null` : annulé.
+ * `choose` peut lever une erreur (sélecteur en échec). Options relevées par `options`.
+ */
+export const fakeDocumentPicker = (
+  cacheRoot: () => string,
+  choose: () => string | null,
+  options: (o: object) => void,
+) => {
+  let next = 0;
+  return {
+    getDocumentAsync: async (o: object) => {
+      options(o);
+      const source = choose();
+      if (source === null) return { canceled: true, assets: null };
+      const dir = join(cacheRoot(), 'DocumentPicker');
+      mkdirSync(dir, { recursive: true });
+      next += 1;
+      const path = join(dir, `${next}-choisi.db`);
+      copyFileSync(source, path);
+      const uri = `file://${path.split('/').map(encodeURIComponent).join('/')}`;
+      return { canceled: false, assets: [{ name: 'choisi.db', uri, lastModified: 0 }] };
+    },
   };
 };
 

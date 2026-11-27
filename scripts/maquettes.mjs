@@ -328,10 +328,12 @@ ecran('suppression-seance', 1, "Suppression d'une séance", 'EX-18', 'historique
 
 ecran('restauration', 1, "Restauration d'une sauvegarde", 'EX-20', 'parametres', `
 ${titre('Restaurer ?', 'donnees')}
-${carte(`<div class="l-titre">Sauvegarde du 22/10/2026</div><div class="l-sous mono">65 membres · 3 groupes · 112 séances</div><p>Toutes les données actuelles de l'appareil seront <b>remplacées</b> par celles de ce fichier.</p>`, 'bandeau')}
+${carte(`<div class="l-titre">Sauvegarde du 22/10/2026</div><div class="l-sous mono">65 membres · 3 groupes · 112 séances</div><p>Toutes les données actuelles de l'appareil seront <b>remplacées</b> par celles de ce fichier.</p><p>L'appel en cours (Poussins mercredi) sera aussi remplacé.</p>`, 'bandeau')}
 <div class="duo">${go('donnees', 'Annuler', 'btn-s tiers')}${go('accueil', 'Remplacer mes données', 'btn-p deuxtiers fond-marge')}</div>
 ${section('Si le fichier est invalide')}
-${carte(`<div class="l-titre">Ce fichier n'est pas une sauvegarde Ki&La</div><p class="l-sous">Rien n'a été modifié. Choisissez un autre fichier.</p>`)}`);
+${carte(`<div class="l-titre">Ce fichier n'est pas une sauvegarde Ki&La</div><p class="l-sous">Rien n'a été modifié. Choisissez un autre fichier.</p>`)}
+${go('restauration', 'Choisir un fichier…', 'btn-s')}
+<p class="note">Décisions du porteur du 2026-11-27 (tickets 014b et 014e) : « Choisir un fichier… » de l'écran Sauvegarde ouvre cet écran, qui lance le sélecteur ; sélecteur annulé = retour à Sauvegarde. La ligne de l'appel en cours n'apparaît que s'il y en a un ; sans groupe connu : « L'appel en cours sera aussi remplacé. ». Sans date dans le fichier : « Sauvegarde ». Messages d'un refus, chacun suivi de « Rien n'a été modifié. Choisissez un autre fichier. » et du bouton « Choisir un fichier… » : « Ce fichier n'est pas une sauvegarde Ki&La » ; « Cette sauvegarde est abîmée ou a été modifiée » ; « Cette sauvegarde vient d'une version plus récente de l'appli : mettez l'appli à jour » ; « La restauration n'a pas abouti » (échec du sélecteur ou de la restauration). Après une réussite : l'accueil, sans message.</p>`);
 
 ecran('purge', 1, 'Purge des anciennes saisons', 'EX-24, ABS-05', 'parametres', confirmer('Purger 2023-2024 ?', 'donnees',
   `<p>Seront effacés <b>définitivement</b> : la saison 2023-2024, ses groupes, créneaux, séances et présences.</p><p class="l-sous">Les membres qui ne figurent plus dans aucune saison conservée sont aussi effacés.</p>`, 'Purger', 'donnees'));
