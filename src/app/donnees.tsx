@@ -66,7 +66,7 @@ const Retention = ({ locked }: { locked: boolean }) => {
   return (
     <Card>
       <View style={styles.keep}>
-        <Text style={styles.keepText}>{k.keepBefore}</Text>
+        <Text style={styles.keepText}>{k.keepBefore(retention)}</Text>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={k.accessibility(retention)}
@@ -77,7 +77,7 @@ const Retention = ({ locked }: { locked: boolean }) => {
           <Text style={styles.choiceValue}>{retention}</Text>
           <Icon name="choices" />
         </Pressable>
-        <Text style={styles.keepText}>{k.keepAfter}</Text>
+        <Text style={styles.keepText}>{k.keepAfter(retention)}</Text>
       </View>
       <Text style={styles.note}>{names.length === 0 ? k.none : k.over(names)}</Text>
       {names.length > 0 && (

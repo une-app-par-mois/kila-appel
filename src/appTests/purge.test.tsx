@@ -64,6 +64,10 @@ describe('EX-24 écran Sauvegarde : conservation et purge', () => {
     ).toBeTruthy();
     expect(button('Purger 2 saisons…')).toBeTruthy();
     expect(await settingsRepo(db).retentionSeasons()).toBe(1);
+    // Ticket 020 : pour 1, « Garder la [1 ▾] dernière saison », lu sans le chiffre.
+    expect(screen.getByText('Garder la')).toBeTruthy();
+    expect(screen.getByText('dernière saison')).toBeTruthy();
+    expect(button('Garder la dernière saison')).toBeTruthy();
     expect({ ...(await counts(db)), settings: 0 }).toEqual({ ...before, settings: 0 });
   });
 
@@ -76,7 +80,7 @@ describe('EX-24 écran Sauvegarde : conservation et purge', () => {
     expect(await screen.findByRole('header', { name: 'Purger 2023-2024 ?' })).toBeTruthy();
     expect(
       screen.getByText(
-        'Seront effacés définitivement : la saison 2023-2024, ses 1 groupe, 1 créneau, 1 séance et 3 présences.',
+        'Seront effacés définitivement : la saison 2023-2024, son groupe, son créneau, sa séance et ses 3 présences.',
       ),
     ).toBeTruthy();
     expect(screen.getByText('définitivement')).toHaveStyle({ fontFamily: 'IBMPlexSans-Bold' });
