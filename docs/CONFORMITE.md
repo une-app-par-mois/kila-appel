@@ -24,7 +24,7 @@ Données personnelles, règles des stores, droit de l'UE, licences, et liste des
 | Obligation du club ou de l'encadrant | Ce que fait l'appli |
 | --- | --- |
 | Minimisation | Nom et prénom seuls obligatoires ; aucun champ de santé ni commentaire par membre (ABS-03) |
-| Durée de conservation (CNIL, sport amateur : 3 ans au plus après la fin de l'adhésion) | Conservation réglable, 3 saisons par défaut, purge (EX-24) |
+| Durée de conservation (CNIL, sport amateur : 3 ans au plus après la fin de l'adhésion) | Conservation réglable de 1 à 3 saisons, 3 par défaut ; la purge efface aussi les membres qui ne figurent plus dans aucune saison gardée (EX-24, décisions du porteur du 2026-11-27) |
 | Droit d'accès d'une famille | Export CSV filtrable (EX-31) |
 | Droit de rectification | Fiche membre modifiable (EX-03) |
 | Droit à l'effacement | Suppression réelle d'un membre et de ses présences (ABS-05, EX-03) ; valeurs effacées aussi dans le fichier de base (`secure_delete`, ticket 007d) |

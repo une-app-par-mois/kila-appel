@@ -120,7 +120,7 @@ ${ligne('Benjamins lundi', 'Lun. 17/11 · <span class="mono">16/18</span> prése
 ${ligne('<span class="gris">Annulée</span> · Poussins mercredi', 'Mer. 12/11', '')}
 ${ligne('<span class="gris">Non planifiée</span> · Adultes jeudi', 'Jeu. 30/10 · vacances', '')}
 `)}
-<p class="note">Annulée et Non planifiée viennent du lot 2 (F-13) : montrées ici pour le rendu.</p>`);
+<p class="note">Annulée et Non planifiée viennent du lot 2 (F-13) : montrées ici pour le rendu. Décision du porteur du 2026-11-27 : la période propose aussi « Toutes les saisons », pour consulter les saisons passées.</p>`);
 
 // 08 — Détail et correction d'une séance (EX-18)
 ecran('seance', 1, "Détail d'une séance", 'EX-18, EX-13', 'historique', `
@@ -129,7 +129,8 @@ ${titre('Poussins mercredi', 'historique')}
 <div class="carte compteur mono"><span><i class="carre s-present"></i>19 présents</span><span><i class="carre s-absent"></i>2 absents</span><span><i class="carre s-excused"></i>1 excusé</span></div>
 ${carte(membres.slice(0, 5).map((p, i) => `<div class="rang"><span class="nom">${p.prenom} ${p.nom}</span>${pastille(['present', 'absent', 'present', 'excused', 'present'][i])}</div>`).join(''))}
 <p class="aide">Touchez un statut pour le corriger.</p>
-<div class="duo">${go('suppression-seance', 'Supprimer la séance', 'btn-s tiers danger')}${go('historique', 'Enregistrer les corrections', 'btn-p deuxtiers')}</div>`);
+<div class="duo">${go('suppression-seance', 'Supprimer la séance', 'btn-s tiers danger')}${go('historique', 'Enregistrer les corrections', 'btn-p deuxtiers')}</div>
+<p class="note">Décision du porteur du 2026-11-27 (EX-18) : champ « Commentaire de la séance (facultatif) », comme à l'appel, entre la liste et les boutons.</p>`);
 
 // 09 — Paramètres
 ecran('parametres', 1, 'Paramètres', 'EX-01 à EX-07, EX-19 à EX-24', 'parametres', `
@@ -242,7 +243,7 @@ ${titre('Vos données ne peuvent pas être ouvertes')}
 ${carte(`<p>Le fichier de données de l'appli est abîmé. Rien n'a été effacé pour l'instant.</p><p>Vous pouvez restaurer votre dernière sauvegarde, ou repartir de zéro.</p>`)}
 ${go('accueil', 'Restaurer une sauvegarde')}
 ${go('bienvenue', 'Repartir de zéro', 'btn-s')}
-<p class="note">Jamais de message technique ni de plantage.</p>`);
+<p class="note">Jamais de message technique ni de plantage. Décisions du porteur du 2026-11-27 : « Repartir de zéro » demande une confirmation (« Les données abîmées seront effacées définitivement. ») ; des données d'une version plus récente de l'appli ont leur propre message (« mettez l'appli à jour »), sans « Repartir de zéro » mis en avant.</p>`);
 
 // ---------- Écrans ajoutés à la deuxième passe ----------
 const confirmer = (t, retour, corps, oui, ouiVers, non = 'Garder') => `${titre(t, retour)}${carte(corps, 'bandeau')}<div class="duo">${go(retour, non, 'btn-s tiers')}${go(ouiVers, oui, 'btn-p deuxtiers fond-marge')}</div>`;
