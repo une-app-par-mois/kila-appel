@@ -47,7 +47,7 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 011b | [Suppressions et appel en cours](011b-suppressions-appel-en-cours.md) | 1 | F-02 | oui | fusionné dans le groupe |
 | 012 | [Onglets et accueil](012-accueil-navigation.md) | 1 | F-01, F-02, F-03 | non | fusionné dans le groupe |
 | 012b | [Bienvenue](012b-bienvenue.md) | 1 | F-01 | non | fusionné dans le groupe |
-| 012c | [États vides](012c-etats-vides.md) | 1 | F-01, F-02, F-03 | non | en cours |
+| 012c | [États vides](012c-etats-vides.md) | 1 | F-01, F-02, F-03 | non | fusionné dans le groupe |
 | 013 | [Historique et correction des appels](013-historique.md) | 1 | F-03 | non | fusionné dans le groupe |
 | 014 | [Sauvegarde et restauration : données](014-sauvegarde-restauration.md) | 1 | F-03 | oui | fusionné dans le groupe |
 | 014b | [Écran Sauvegarde : export](014b-ecrans-sauvegarde.md) | 1 | F-03 | oui | fusionné dans le groupe |
