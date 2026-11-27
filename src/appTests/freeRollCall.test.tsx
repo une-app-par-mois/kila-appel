@@ -39,6 +39,9 @@ describe('Appel sans créneau, ajout pendant l’appel (EX-12, EX-39)', () => {
     s = await seed(db);
     // Le brouillon du jeu fictif bloquerait tout autre appel (ticket 011) : chaque test part sans.
     await db.execute('DELETE FROM roll_call_drafts');
+    // Invitation à sauvegarder déjà vue : l'enregistrement revient à l'Historique (ticket 014d,
+    // invitation testée dans backupReminder.test.tsx).
+    await db.execute("INSERT INTO settings (key, value) VALUES ('backup_invite_seen', '1')");
     mockDb = db;
     // Horloge figée : mardi 17/11/2026 10:05, aucun créneau ce jour-là.
     jest.useFakeTimers({ advanceTimers: true, now: new Date(2026, 10, 17, 10, 5) });

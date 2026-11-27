@@ -212,6 +212,14 @@ export const sessionsRepo = (db: Db, today: string) => ({
     (await db.query<{ id: number }>("SELECT id FROM sessions WHERE state = 'recorded' LIMIT 1"))
       .length > 0,
 
+  /** EX-21 : date de la plus ancienne séance enregistrée (bandeau sans sauvegarde) ; null si aucune. */
+  firstRecordedDate: async (): Promise<string | null> =>
+    (
+      await db.query<{ date: string | null }>(
+        "SELECT MIN(date) AS date FROM sessions WHERE state = 'recorded'",
+      )
+    )[0]?.date ?? null,
+
   /** EX-18 : détail d'une séance enregistrée ; `null` si elle n'existe pas (ou plus). */
   get: async (id: number): Promise<SessionDetail | null> => {
     // Identifiant venu de l'adresse (`/seances/[id]`) : validé avant la requête.

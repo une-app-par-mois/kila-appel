@@ -133,6 +133,21 @@ describe('Historique des séances (EX-16 à EX-18)', () => {
     expect(await repo().hasRecorded()).toBe(false);
   });
 
+  it('EX-21 plus ancienne séance enregistrée (bandeau de sauvegarde), annulées ignorées', async () => {
+    expect(await repo().firstRecordedDate()).toBe('2026-11-25');
+    await db.execute(
+      "INSERT INTO sessions (season_id, date, start_time, state) VALUES (?, '2025-10-01', '10:00', 'cancelled')",
+      [s.otherSeasonId],
+    );
+    await db.execute(
+      "INSERT INTO sessions (season_id, date, start_time, state) VALUES (?, '2026-09-14', '10:00', 'recorded')",
+      [s.seasonId],
+    );
+    expect(await repo().firstRecordedDate()).toBe('2026-09-14');
+    await db.execute('DELETE FROM sessions');
+    expect(await repo().firstRecordedDate()).toBeNull();
+  });
+
   it('EX-16 groupes du filtre : ceux de la saison, archivés compris ; toutes saisons, l’active d’abord', async () => {
     const { lastInsertRowId: archived } = await db.execute(
       "INSERT INTO groups (season_id, name, archived_at) VALUES (?, 'Adultes', '2026-10-01')",
