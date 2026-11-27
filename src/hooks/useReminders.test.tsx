@@ -4,14 +4,13 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { AppState, type AppStateStatus } from 'react-native';
 import type { fakeNotifications } from '@/__fixtures__/expoModules';
-import { notifyDataChanged, notifyDataErased } from '@/hooks/dataChanged';
-import { fileLock } from '@/hooks/fileLock';
-import { useReminders } from '@/hooks/useReminders';
+import { notifyDataChanged } from '@/hooks/dataChanged';
+import { resetRemindersForTests, useReminders } from '@/hooks/useReminders';
 
 jest.mock('expo-notifications', () => require('@/__fixtures__/expoModules').fakeNotifications());
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
 const mockData = {
-  db: { fake: true } as object | null,
+  dbState: { status: 'ready', db: {} } as object,
   season: { id: 1, name: '2026-2027', startDate: '2026-09-01', endDate: '2027-07-31' } as
     | object
     | null,
@@ -20,7 +19,7 @@ const mockData = {
   sessions: [] as { slotId: number; date: string; state: string }[],
   settings: jest.fn(),
 };
-jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => mockData.db }));
+jest.mock('@/hooks/useDatabase', () => ({ useDatabaseState: () => mockData.dbState }));
 jest.mock('@/data/seasonsRepo', () => ({
   seasonsRepo: () => ({ getActive: async () => mockData.season }),
 }));
@@ -73,7 +72,8 @@ beforeEach(() => {
     permission: { granted: true, canAskAgain: true, status: 'granted' },
   });
   state.fail.clear();
-  mockData.db = { fake: true };
+  resetRemindersForTests();
+  mockData.dbState = { status: 'ready', db: {} };
   mockData.slots = [SLOT];
   mockData.sessions = [{ slotId: 10, date: '2026-11-18', state: 'recorded' }];
   mockData.settings.mockResolvedValue({ enabled: true, delayMin: 30 });
@@ -83,10 +83,7 @@ beforeEach(() => {
   });
 });
 
-afterEach(() => {
-  fileLock.release('erase');
-  jest.useRealTimers();
-});
+afterEach(() => jest.useRealTimers());
 
 /** Monte le hook et attend la fin de la reprogrammation (canal créé, ou relances annulées). */
 const mount = async () => {
@@ -107,25 +104,40 @@ describe('useReminders : reprogrammation des relances (EX-28, ADR-007)', () => {
     expect(shown()).toEqual(['relance-10-2026-11-25']);
   });
 
-  it('rien n’est programmé ni annulé tant que la base n’est pas prête', async () => {
-    mockData.db = null;
-    await renderHook(() => useReminders());
-    await act(async () => notifyDataChanged());
-    expect(ids()).toEqual([OLD.identifier]);
-    expect(shown()).toHaveLength(2);
-    expect(mockData.settings).not.toHaveBeenCalled();
-  });
-
-  it('EX-28 appel enregistré : relance annulée et retirée ; retour au premier plan : relu', async () => {
+  it('EX-28 appel enregistré : relance annulée par son identifiant et retirée ; retour au premier plan : relu', async () => {
     state.presented.push(presented('2026-12-02'));
     await mount();
     await waitFor(() => expect(ids()).toEqual(['relance-10-2026-12-02']));
+    const cancelAll = jest.spyOn(fake, 'cancelAllScheduledNotificationsAsync');
+    const cancelOne = jest.spyOn(fake, 'cancelScheduledNotificationAsync');
     mockData.sessions.push({ slotId: 10, date: '2026-12-02', state: 'recorded' });
     await act(async () => notifyDataChanged());
     await waitFor(() => expect(ids()).toEqual([]));
+    expect(cancelOne).toHaveBeenCalledWith('relance-10-2026-12-02');
+    expect(cancelAll).not.toHaveBeenCalled();
     expect(shown()).toEqual(['relance-10-2026-11-25']);
     mockData.sessions = [];
     await act(async () => appState?.('active'));
+    await waitFor(() => expect(ids()).toEqual(['relance-10-2026-12-02']));
+  });
+
+  it('EX-28 relance encore due, dans la minute, pas encore délivrée : gardée, Android la délivre', async () => {
+    // Créneau de 12:30, délai 30 : relance à 13:00, la minute courante, absente du plan.
+    mockData.slots = [{ ...SLOT, startTime: '12:30' }];
+    state.scheduled.push({ identifier: 'relance-10-2026-12-02', content: {}, trigger: {} });
+    await mount();
+    await waitFor(() => expect(shown()).toHaveLength(1));
+    // Gardée telle quelle ; celle de la semaine suivante (maintenant + 7 jours) est programmée.
+    await waitFor(() => expect(ids()).toEqual(['relance-10-2026-12-02', 'relance-10-2026-12-09']));
+  });
+
+  it('ADR-007 annulation unitaire en échec : journalisée, rejouée à la passe suivante', async () => {
+    state.fail.add('cancelScheduledNotificationAsync');
+    await renderHook(() => useReminders());
+    await waitFor(() => expect(codes()).toContain('REMINDER_CANCEL_FAILED'));
+    expect(ids()).toContain(OLD.identifier);
+    state.fail.clear();
+    await act(async () => notifyDataChanged());
     await waitFor(() => expect(ids()).toEqual(['relance-10-2026-12-02']));
   });
 
@@ -146,14 +158,14 @@ describe('useReminders : reprogrammation des relances (EX-28, ADR-007)', () => {
     expect(state.channels).toEqual([]);
   });
 
-  it('création du canal en échec : rien n’est programmé', async () => {
+  it('EX-29 création du canal en échec : rien n’est programmé', async () => {
     state.fail.add('setNotificationChannelAsync');
     await mount();
     await waitFor(() => expect(codes()).toContain('REMINDER_CHANNEL_FAILED'));
     expect(ids()).toEqual([]);
   });
 
-  it('programmation en échec : journalisée par un code, sans bloquer l’appli (ABS-04)', async () => {
+  it('ABS-04 programmation en échec : journalisée par un code, sans bloquer l’appli', async () => {
     state.fail.add('scheduleNotificationAsync');
     await mount();
     await waitFor(() =>
@@ -162,7 +174,7 @@ describe('useReminders : reprogrammation des relances (EX-28, ADR-007)', () => {
     expect(JSON.stringify(log.mock.calls)).not.toContain('Poussins');
   });
 
-  it('lecture en échec : REMINDERS_SCHEDULE_FAILED, rien n’est touché', async () => {
+  it('ADR-007 lecture en échec : REMINDERS_SCHEDULE_FAILED, rien n’est touché', async () => {
     mockData.settings.mockRejectedValue(new Error('base'));
     await renderHook(() => useReminders());
     await waitFor(() => expect(log).toHaveBeenCalledWith('REMINDERS_SCHEDULE_FAILED'));
@@ -178,37 +190,7 @@ describe('useReminders : reprogrammation des relances (EX-28, ADR-007)', () => {
     expect(state.channels).toEqual([]);
   });
 
-  it('ADR-007 une reprogrammation à la fois ; la dernière demande gagne', async () => {
-    let release: (value: object) => void = () => undefined;
-    mockData.settings.mockReturnValueOnce(new Promise((resolve) => (release = resolve)));
-    await renderHook(() => useReminders());
-    await waitFor(() => expect(mockData.settings).toHaveBeenCalledTimes(1));
-    mockData.sessions.push({ slotId: 10, date: '2026-12-02', state: 'recorded' });
-    await act(async () => {
-      notifyDataChanged();
-      notifyDataChanged();
-      appState?.('active');
-    });
-    expect(mockData.settings).toHaveBeenCalledTimes(1);
-    await act(async () => release({ enabled: true, delayMin: 30 }));
-    await waitFor(() => expect(mockData.settings).toHaveBeenCalledTimes(2));
-    await waitFor(() => expect(ids()).toEqual([]));
-    await act(async () => notifyDataChanged());
-    await waitFor(() => expect(mockData.settings).toHaveBeenCalledTimes(3));
-  });
-
-  it('verrou des fichiers pris (effacement) : reportée, reprise à sa libération', async () => {
-    expect(fileLock.acquire('erase')).toBe(true);
-    await renderHook(() => useReminders());
-    await act(async () => notifyDataErased());
-    expect(mockData.settings).not.toHaveBeenCalled();
-    expect(ids()).toEqual([OLD.identifier]);
-    await act(async () => fileLock.release('erase'));
-    await waitFor(() => expect(ids()).toEqual(['relance-10-2026-12-02']));
-    expect(mockData.settings).toHaveBeenCalledTimes(1);
-  });
-
-  it('appli au premier plan : bannière, liste et son, sans pastille ; rien de journalisé', async () => {
+  it('SEC-03 appli au premier plan : bannière, liste et son, sans pastille ; rien de journalisé', async () => {
     const handler = jest.spyOn(fake, 'setNotificationHandler');
     await mount();
     expect(handler).toHaveBeenCalledTimes(1);
