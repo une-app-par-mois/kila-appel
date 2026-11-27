@@ -62,6 +62,7 @@ export const commun = {
     GROUP_REQUIRED: 'Choisissez un groupe.',
     STATUS_INVALID: 'Statut de présence inconnu.',
     COMMENT_TOO_LONG: '500 caractères au plus.',
+    RETENTION_INVALID: 'Choisissez de garder 1, 2 ou 3 saisons.',
     ALREADY_RECORDED: 'L’appel de cette séance est déjà enregistré.',
     SLOT_INVALID: 'Créneau introuvable.',
     NOT_A_SLOT_SESSION: 'Ce créneau n’a pas lieu à cette date et à cette heure.',

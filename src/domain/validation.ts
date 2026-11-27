@@ -16,7 +16,8 @@ export type InputErrorCode =
   | 'GROUP_REQUIRED'
   | 'STATUS_INVALID'
   | 'SLOT_INVALID'
-  | 'COMMENT_TOO_LONG';
+  | 'COMMENT_TOO_LONG'
+  | 'RETENTION_INVALID';
 
 export class InputError extends Error {
   constructor(readonly code: InputErrorCode) {

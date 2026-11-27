@@ -8,7 +8,8 @@ export type DataErrorCode =
   | 'NOT_ENROLLED'
   | 'NOT_A_SLOT_SESSION'
   | 'DRAFT_IN_PROGRESS'
-  | 'DB_NOT_READY';
+  | 'DB_NOT_READY'
+  | 'RESTORE_FAILED';
 
 export class DataError extends Error {
   constructor(readonly code: DataErrorCode) {
