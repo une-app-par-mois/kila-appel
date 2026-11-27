@@ -84,53 +84,73 @@ describe('EX-03 validateMember', () => {
       validateMember({ firstName: 'A', lastName: 'B', birthDate: today }, today).birthDate,
     ).toBe(today);
   });
+});
 
-  describe('EX-07 créneau hebdomadaire', () => {
-    const slot = {
+describe('EX-07 créneau hebdomadaire', () => {
+  const slot = {
+    weekday: 3,
+    startTime: '14:00',
+    durationMin: 90,
+    place: '  Gymnase  ',
+    name: '   ',
+    groupId: 4,
+  };
+
+  it('EX-07 accepte un créneau valide ; lieu nettoyé, nom vide → aucun', () => {
+    expect(validateSlot(slot)).toEqual({
       weekday: 3,
       startTime: '14:00',
       durationMin: 90,
-      place: '  Gymnase  ',
-      name: '   ',
+      place: 'Gymnase',
+      name: null,
       groupId: 4,
-    };
-
-    it('EX-07 accepte un créneau valide ; lieu nettoyé, nom vide → aucun', () => {
-      expect(validateSlot(slot)).toEqual({
-        weekday: 3,
-        startTime: '14:00',
-        durationMin: 90,
-        place: 'Gymnase',
-        name: null,
-        groupId: 4,
-      });
-      expect(validateSlot({ ...slot, place: null, name: 'Technique' })).toMatchObject({
-        place: null,
-        name: 'Technique',
-      });
     });
+    expect(validateSlot({ ...slot, place: null, name: 'Technique' })).toMatchObject({
+      place: null,
+      name: 'Technique',
+    });
+  });
 
-    it.each([0, 8, 2.5, Number.NaN])('EX-07 refuse le jour %p', (weekday) => {
-      expect(() => validateSlot({ ...slot, weekday })).toThrow(
-        expect.objectContaining({ code: 'WEEKDAY_INVALID' }),
+  it.each([0, 8, 2.5, Number.NaN])('EX-07 refuse le jour %p', (weekday) => {
+    expect(() => validateSlot({ ...slot, weekday })).toThrow(
+      expect.objectContaining({ code: 'WEEKDAY_INVALID' }),
+    );
+  });
+
+  it.each(['24:00', '9:00', '14:60', '14h00', ''])('EX-07 refuse l’heure %j', (startTime) => {
+    expect(() => validateSlot({ ...slot, startTime })).toThrow(
+      expect.objectContaining({ code: 'TIME_INVALID' }),
+    );
+  });
+
+  it.each([0, 1441, 30.5, Number.NaN])('EX-07 refuse la durée %p', (durationMin) => {
+    expect(() => validateSlot({ ...slot, durationMin })).toThrow(
+      expect.objectContaining({ code: 'DURATION_INVALID' }),
+    );
+  });
+
+  it.each([0, -1, 1.5, Number.NaN])(
+    'EX-07 refuse le groupe %p (aucun groupe choisi)',
+    (groupId) => {
+      expect(() => validateSlot({ ...slot, groupId })).toThrow(
+        expect.objectContaining({ code: 'GROUP_REQUIRED' }),
       );
-    });
+    },
+  );
 
-    it.each(['24:00', '9:00', '14:60', '14h00', ''])('EX-07 refuse l’heure %j', (startTime) => {
-      expect(() => validateSlot({ ...slot, startTime })).toThrow(
-        expect.objectContaining({ code: 'TIME_INVALID' }),
-      );
-    });
+  it('EX-07 ne garde que les champs du créneau', () => {
+    expect(Object.keys(validateSlot({ ...slot, extra: 1 } as typeof slot)).sort()).toEqual([
+      'durationMin',
+      'groupId',
+      'name',
+      'place',
+      'startTime',
+      'weekday',
+    ]);
+  });
 
-    it.each([0, 1441, 30.5, Number.NaN])('EX-07 refuse la durée %p', (durationMin) => {
-      expect(() => validateSlot({ ...slot, durationMin })).toThrow(
-        expect.objectContaining({ code: 'DURATION_INVALID' }),
-      );
-    });
-
-    it('EX-07 durées limites : 1 min et 24 h', () => {
-      expect(validateSlot({ ...slot, durationMin: 1 }).durationMin).toBe(1);
-      expect(validateSlot({ ...slot, durationMin: 1440 }).durationMin).toBe(1440);
-    });
+  it('EX-07 durées limites : 1 min et 24 h', () => {
+    expect(validateSlot({ ...slot, durationMin: 1 }).durationMin).toBe(1);
+    expect(validateSlot({ ...slot, durationMin: 1440 }).durationMin).toBe(1440);
   });
 });

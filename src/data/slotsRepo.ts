@@ -54,13 +54,13 @@ const withGroups = async (db: Db, rows: SlotRow[]): Promise<Slot[]> => {
   }));
 };
 
-/** Le groupe est de la saison ; non archivé, sauf s'il reste celui du créneau. */
-const expectGroup = async (tx: Db, seasonId: number, groupId: number, keptGroup?: number) => {
+/** Le groupe est de la saison ; non archivé, sauf s'il est déjà lié au créneau. */
+const expectGroup = async (tx: Db, seasonId: number, groupId: number, linked: number[] = []) => {
   const [group] = await tx.query<{ archived_at: string | null }>(
     'SELECT archived_at FROM groups WHERE id = ? AND season_id = ?',
     [groupId, seasonId],
   );
-  if (!group || (group.archived_at !== null && groupId !== keptGroup))
+  if (!group || (group.archived_at !== null && !linked.includes(groupId)))
     throw new DataError('NOT_FOUND');
 };
 
@@ -101,20 +101,24 @@ export const slotsRepo = (db: Db) => ({
 
   /**
    * EX-07 : un nouveau jour ou une nouvelle heure prennent effet `today` (date d'effet avancée,
-   * jamais reculée : le passé n'est pas recalculé avec le nouvel horaire, ticket 005).
+   * jamais reculée : le passé n'est pas recalculé avec le nouvel horaire, ticket 005). Un appel
+   * interrompu sur ce créneau est gardé tel quel (décision du porteur du 2026-11-27).
    */
   update: async (id: number, input: SlotInput, today: string): Promise<void> => {
     const s = validateSlot(input);
     validateDate(today);
     await db.transaction(async (tx) => {
-      const [current] = await tx.query<SlotRow & { group_id: number | null }>(
-        `SELECT s.season_id, s.weekday, s.start_time, s.schedule_from,
-           (SELECT group_id FROM slot_groups WHERE slot_id = s.id LIMIT 1) AS group_id
-         FROM slots s WHERE s.id = ? AND s.weekday IS NOT NULL`,
-        [id],
-      );
+      const [current] = await tx.query<SlotRow>(`${SELECT} WHERE id = ? AND weekday IS NOT NULL`, [
+        id,
+      ]);
       if (!current) throw new DataError('NOT_FOUND');
-      await expectGroup(tx, current.season_id, s.groupId, current.group_id ?? undefined);
+      // Tous les groupes liés (F-11 : le schéma en permet plusieurs) ; le lot 1 en garde un.
+      const linked = (
+        await tx.query<{ group_id: number }>('SELECT group_id FROM slot_groups WHERE slot_id = ?', [
+          id,
+        ])
+      ).map((r) => r.group_id);
+      await expectGroup(tx, current.season_id, s.groupId, linked);
       const moved = s.weekday !== current.weekday || s.startTime !== current.start_time;
       const scheduleFrom = moved && today > current.schedule_from ? today : current.schedule_from;
       expectChanged(
@@ -124,7 +128,7 @@ export const slotsRepo = (db: Db) => ({
           [s.weekday, s.startTime, s.durationMin, s.place, s.name, scheduleFrom, id],
         ),
       );
-      if (s.groupId !== current.group_id) {
+      if (linked.length !== 1 || linked[0] !== s.groupId) {
         await tx.execute('DELETE FROM slot_groups WHERE slot_id = ?', [id]);
         await tx.execute('INSERT INTO slot_groups (slot_id, group_id) VALUES (?, ?)', [
           id,
@@ -136,6 +140,6 @@ export const slotsRepo = (db: Db) => ({
 
   /** EX-07 : les séances restent, sans créneau ; un appel interrompu sur ce créneau est effacé. */
   remove: async (id: number): Promise<void> => {
-    expectChanged(await db.execute('DELETE FROM slots WHERE id = ?', [id]));
+    expectChanged(await db.execute('DELETE FROM slots WHERE id = ? AND weekday IS NOT NULL', [id]));
   },
 });

@@ -107,6 +107,10 @@ describe('Dépôt des créneaux (EX-07)', () => {
     await repo.update(s.slotId, input({ weekday: 4, startTime: '18:00' }), '2026-12-01');
     expect((await repo.get(s.slotId))?.scheduleFrom).toBe('2026-12-01');
     expect(await session()).toEqual(before);
+    // Appel interrompu gardé tel quel (décision du porteur du 2026-11-27).
+    expect(
+      await count(db, 'roll_call_drafts', 'slot_id = ? AND date = ?', [s.slotId, '2026-12-02']),
+    ).toBe(1);
   });
 
   it('EX-07 la date d’effet ne recule jamais, même si l’horloge de l’appareil recule', async () => {
@@ -124,14 +128,22 @@ describe('Dépôt des créneaux (EX-07)', () => {
     expect(await count(db, 'attendances', 'session_id = ?', [s.sessionId])).toBe(2);
   });
 
-  it('créneau inconnu : lu comme absent ; modifier ou supprimer est refusé', async () => {
+  it('EX-07 créneau inconnu ou ponctuel : lu comme absent ; modifier ou supprimer est refusé', async () => {
     const repo = slotsRepo(db);
     expect(await repo.get(9999)).toBeNull();
     await expect(repo.update(9999, input(), TODAY)).rejects.toMatchObject({ code: 'NOT_FOUND' });
     await expect(repo.remove(9999)).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    // Ponctuel (F-10, lot 2) : hors de ce dépôt, même pour la suppression.
+    const { lastInsertRowId: oneOff } = await db.execute(
+      "INSERT INTO slots (season_id, start_time, duration_min, schedule_from) VALUES (?, '10:00', 60, ?)",
+      [s.seasonId, TODAY],
+    );
+    expect(await repo.get(oneOff)).toBeNull();
+    await expect(repo.remove(oneOff)).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    expect(await count(db, 'slots', 'id = ?', [oneOff])).toBe(1);
   });
 
-  it('modifier : le groupe doit être de la saison du créneau et non archivé', async () => {
+  it('EX-07 modifier : le groupe doit être de la saison du créneau et non archivé', async () => {
     const repo = slotsRepo(db);
     const [other] = await db.query<{ id: number }>('SELECT id FROM groups WHERE season_id = ?', [
       s.otherSeasonId,
@@ -144,5 +156,20 @@ describe('Dépôt des créneaux (EX-07)', () => {
     await db.execute('UPDATE groups SET archived_at = ? WHERE id = ?', [TODAY, s.groupId]);
     await repo.update(s.slotId, input({ weekday: 3, startTime: '17:30', place: 'Dojo' }), TODAY);
     expect((await repo.get(s.slotId))?.place).toBe('Dojo');
+  });
+
+  it('EX-07 F-11 créneau déjà lié à plusieurs groupes : en choisir un remplace tous les liens', async () => {
+    const repo = slotsRepo(db);
+    const { lastInsertRowId: lundi } = await db.execute(
+      "INSERT INTO groups (season_id, name, archived_at) VALUES (?, 'Benjamins lundi', ?)",
+      [s.seasonId, TODAY],
+    );
+    await db.execute('INSERT INTO slot_groups (slot_id, group_id) VALUES (?, ?)', [
+      s.slotId,
+      lundi,
+    ]);
+    // Un groupe archivé déjà lié reste choisissable, quel que soit l'ordre des liens.
+    await repo.update(s.slotId, input({ weekday: 3, startTime: '17:30', groupId: lundi }), TODAY);
+    expect((await repo.get(s.slotId))?.groups).toEqual([{ id: lundi, name: 'Benjamins lundi' }]);
   });
 });

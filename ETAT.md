@@ -12,7 +12,7 @@ Réévaluation (PLAN §6) : moins de 2 h de porteur pour 6 h prévues ; 1,5 h pa
 
 ## Prochaines étapes
 
-1. **Ticket 009** (créneaux : données et hooks) sur `ticket/009-creneaux-donnees`, puis 009b (écrans). 006f fusionné dans le groupe (PR #22) après relecture du porteur. APK local de 008b audité conforme (SHA-256 `976feabc…`, aucune permission nouvelle) ; **à installer sur l'A55** : glisser la poignée ≡, « Appeler », et secure_delete à vérifier.
+1. **Ticket 009b** (créneaux : écrans) à démarrer. 009 (données et hooks) terminé, PR vers le groupe. 006f fusionné dans le groupe (PR #22) après relecture du porteur. APK local de 008b audité conforme (SHA-256 `976feabc…`, aucune permission nouvelle) ; **à installer sur l'A55** : glisser la poignée ≡, « Appeler », et secure_delete à vérifier.
    - `@expo/devtools` est dans le bundle de production : client WebSocket d'expo-sqlite, appelé seulement si `__DEV__` (jamais en production) ; INTERNET absente du binaire. Pas une violation d'ABS-01.
 2. Tickets 010 à 016 du jalon 1, puis PR du jalon vers `main`.
 
