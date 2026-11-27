@@ -5,12 +5,14 @@ import { appel } from './appel';
 import { commun } from './commun';
 import { creneaux } from './creneaux';
 import { donnees } from './donnees';
+import { effacement } from './effacement';
 import { historique } from './historique';
 import { membres } from './membres';
 import { organisation } from './organisation';
 import { recuperation } from './recuperation';
 
 export type { LastBackup } from './donnees';
+export type { PurgeCounts } from './effacement';
 export type { MemberDeletionCounts } from './membres';
 export type { GroupDeletionCounts, SeasonDeletionCounts } from './organisation';
 
@@ -24,4 +26,5 @@ export const labels = {
   ...historique,
   ...donnees,
   ...recuperation,
+  ...effacement,
 } as const;
