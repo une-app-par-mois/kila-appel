@@ -1,10 +1,10 @@
 # 014c — Base illisible au démarrage
 
-Statut : à faire · Jalon : 1 · Zone sensible : oui · Trivial : non
+Statut : à faire · Jalon : 1 · Zone sensible : oui (plan validé par le porteur le 2026-11-27) · Trivial : non
 
-Dépend de : 014, 014b, 014e, 015c · Fichiers touchés : `src/hooks/useDatabase.ts`, `src/data/open.ts`, `src/app/_layout.tsx`, `src/ui/Recovery.tsx`
+Dépend de : 014, 014b, 014e, 015c · Fichiers touchés : `src/data/open.ts`, `src/data/expoDb.ts` (`deleteAppDatabase`), `src/hooks/useDatabase.ts`, `src/hooks/fileLock.ts` (tâche `'cleanup'`), `src/app/_layout.tsx`, `src/ui/Recovery.tsx`, `src/config/libelles/recuperation.ts` (et `index.ts`), `scripts/maquettes.mjs`, tests
 
-Découpé le 2026-11-27 (décision du porteur) depuis le ticket 014.
+Découpé le 2026-11-27 (décision du porteur) depuis le ticket 014, puis en 014c et 014f (restaurer depuis l'écran de récupération) le même jour.
 
 ## Contexte
 
@@ -17,7 +17,10 @@ Une base illisible au démarrage mène à un écran de récupération, jamais à
 
 ## Ce qui change
 
-- État d'échec et réouverture dans `useDatabase` ; écran de récupération : restaurer une sauvegarde, repartir de zéro
+- Détection à l'ouverture (`open.ts`) : lecture d'essai de `sqlite_schema`, puis `PRAGMA quick_check`, avant les réglages ; échec ou erreur non reconnue = cause `DATABASE_DAMAGED` ; classement pur : réglages refusés (`FOREIGN_KEYS_OFF`, `SECURE_DELETE_OFF`, `JOURNAL_MODE_OFF`) / version plus récente / abîmée
+- `useDatabase` : signature inchangée ; état partagé (ouverture, prête, échec et cause), `retryDatabase()`, `resetDatabase()` (fichier supprimé par `deleteDatabaseAsync`, avec `-journal`, `-wal`, `-shm`, puis base neuve)
+- Layout racine : écran de récupération à la place de la pile en cas d'échec ; nettoyage des dossiers temporaires une fois au démarrage, sous le verrou commun
+- Écran de récupération : trois variantes (ci-dessous) ; le bouton « Restaurer une sauvegarde » de la variante abîmée arrive avec 014f
 
 ## Critères d'acceptation
 
@@ -29,15 +32,23 @@ Une base illisible au démarrage mène à un écran de récupération, jamais à
 
 ## Tests attendus
 
-- Tests : base abîmée, version future, réglage SQLite refusé ; restauration depuis l'écran de récupération
+- Tests de données : fichier texte, fichier tronqué, page corrompue, version future, réglage refusé simulé, aucun nom dans le journal ; tests d'écran : chaque cause donne sa variante, Réessayer rouvre, Repartir de zéro seulement après confirmation puis Bienvenue ; nettoyage au démarrage sauté pendant une opération ; à la main sur l'A55 : base volontairement abîmée (APK de debug, `run-as`)
 
 ## Hors périmètre
 
-- Rappels (014d)
+- Restaurer depuis l'écran de récupération (014f) ; rappels (014d)
 
 ## Questions prévues
 
 Séance du 2026-11-27 : « Repartir de zéro » confirmé (« Les données abîmées seront effacées définitivement. »), maquette annotée ; version plus récente : message à part.
+
+- Séance de lancement du lot 014c-014d-015b (2026-11-27), réponses du porteur :
+  - découpage en 014c et 014f ;
+  - détection : lecture d'essai + `quick_check` ; toute erreur non reconnue mène à l'écran « abîmée » (un fichier illisible n'est plus pris pour `JOURNAL_MODE_OFF`) ;
+  - « Repartir de zéro » : suppression du fichier par expo-sqlite, puis base neuve ; limite ajoutée à SEC-11 (octets non écrasés, dans le stockage privé chiffré par le système) ;
+  - version plus récente : le message seul (« Vos données viennent d'une version plus récente de l'appli : mettez l'appli à jour. Rien n'a été effacé. »), sans aucune action ;
+  - maquette : une seule, trois variantes annotées — abîmée (actuelle), réglage refusé (« L'appli n'a pas pu préparer le fichier de données. Rien n'a été effacé. » et « Réessayer »), version plus récente (message seul) ;
+  - plan validé.
 
 ## Décisions
 

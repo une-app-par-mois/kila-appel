@@ -2,7 +2,7 @@
 
 Statut : à faire · Jalon : 1 · Zone sensible : non · Trivial : non
 
-Dépend de : 014, 014b, 013 · Fichiers touchés : `src/app/appel.tsx`, `src/app/appel-libre.tsx`, `src/app/(tabs)/index.tsx`, libellés
+Dépend de : 014, 014b, 013 · Fichiers touchés : `src/app/invitation-sauvegarde.tsx` (nouveau), `src/hooks/useBackupReminder.ts` (nouveau), `src/hooks/useSavedReturn.ts`, `src/app/(tabs)/index.tsx`, `src/data/sessionsRepo.ts` (`firstRecordedDate`), `src/config/libelles/accueil.ts`, tests
 
 Découpé le 2026-11-27 (décision du porteur) depuis le ticket 014.
 
@@ -33,7 +33,7 @@ Inviter à sauvegarder après le premier appel, et rappeler après 30 jours sans
 
 ## Questions prévues
 
-Aucune pour l'instant.
+- Séance de lancement du lot 014c-014d-015b (2026-11-27), réponses du porteur : sans aucune sauvegarde, les 30 jours du bandeau comptent depuis la plus ancienne séance enregistrée (nouvelle requête `firstRecordedDate`) ; texte de la maquette (« Pas de sauvegarde depuis N jours ») ; aucun réglage nouveau.
 
 ## Décisions
 
