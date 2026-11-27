@@ -8,6 +8,7 @@ import { donnees } from './donnees';
 import { historique } from './historique';
 import { membres } from './membres';
 import { organisation } from './organisation';
+import { recuperation } from './recuperation';
 
 export type { LastBackup } from './donnees';
 export type { MemberDeletionCounts } from './membres';
@@ -22,4 +23,5 @@ export const labels = {
   ...accueil,
   ...historique,
   ...donnees,
+  ...recuperation,
 } as const;

@@ -1,11 +1,50 @@
 // Préparation de la base à chaque ouverture (docs/ARCHITECTURE.md §4.1).
 import type { Db } from '@/data/db';
 import { log } from '@/data/log';
-import { migrate } from '@/data/migrations';
+import { migrate, UNKNOWN_VERSION } from '@/data/migrations';
 
 export const FOREIGN_KEYS_OFF = 'Clés étrangères inactives';
 export const SECURE_DELETE_OFF = 'Effacement des données supprimées inactif';
 export const JOURNAL_MODE_OFF = 'Mode de journal de la base non fixé';
+/** EX-22 (ticket 014c) : fichier illisible, ou toute erreur non reconnue à l'ouverture. */
+export const DATABASE_DAMAGED = 'Fichier de données abîmé';
+
+/**
+ * Cause d'un échec d'ouverture (EX-22, écran de récupération) : réglage refusé (fichier sain,
+ * « Réessayer »), version plus récente que l'appli (« mettez l'appli à jour »), ou base abîmée.
+ */
+export type OpenFailure = 'settings' | 'newer' | 'damaged';
+
+const SETTINGS_REFUSED = [FOREIGN_KEYS_OFF, SECURE_DELETE_OFF, JOURNAL_MODE_OFF];
+
+/** Classe une erreur d'ouverture par son texte fixe ; tout le reste est une base abîmée. */
+export const classifyOpenError = (error: unknown): OpenFailure => {
+  const message = error instanceof Error ? error.message : null;
+  if (message !== null && SETTINGS_REFUSED.includes(message)) return 'settings';
+  if (message === UNKNOWN_VERSION) return 'newer';
+  return 'damaged';
+};
+
+/** Erreur au texte fixe de sa cause : le message de SQLite ne sort jamais (ABS-04). */
+const fixedError = (error: unknown): Error =>
+  classifyOpenError(error) === 'damaged' ? new Error(DATABASE_DAMAGED) : (error as Error);
+
+/**
+ * EX-22 (ticket 014c) : lecture d'essai de `sqlite_schema`, puis `quick_check`, avant tout
+ * réglage. Un fichier qui n'est pas une base échoue ici, au lieu de passer pour un réglage refusé.
+ */
+const checkReadable = async (db: Db): Promise<void> => {
+  let readable = false;
+  try {
+    // `main.` : sans lui, quick_check parcourt aussi la base `temp`, et la crée.
+    await db.query('SELECT count(*) AS tables FROM main.sqlite_schema');
+    const rows = await db.query<{ quick_check: string }>('PRAGMA main.quick_check');
+    readable = rows.length === 1 && rows[0]?.quick_check === 'ok';
+  } catch {
+    readable = false;
+  }
+  if (!readable) throw new Error(DATABASE_DAMAGED);
+};
 
 /**
  * SEC-11 (ticket 015c) : fixe le mode de journal à `delete`, puis le relit. En WAL, d'anciennes
@@ -34,10 +73,12 @@ const setJournalMode = async (db: Db): Promise<void> => {
 };
 
 /**
- * Active les clés étrangères (hors transaction, sinon SQLite l'ignore) et l'effacement des données
- * supprimées dans le fichier, fixe le mode de journal, puis applique les migrations.
+ * Vérifie que le fichier se lit, active les clés étrangères (hors transaction, sinon SQLite
+ * l'ignore) et l'effacement des données supprimées dans le fichier, fixe le mode de journal, puis
+ * applique les migrations.
  */
 export const prepareDatabase = async (db: Db): Promise<Db> => {
+  await checkReadable(db);
   await db.execute('PRAGMA foreign_keys = ON');
   const rows = await db.query<{ foreign_keys: number }>('PRAGMA foreign_keys');
   if (rows[0]?.foreign_keys !== 1) {
@@ -54,18 +95,25 @@ export const prepareDatabase = async (db: Db): Promise<Db> => {
   return db;
 };
 
-/** Ouverture au démarrage de l'appli : base prête, version écrite dans le journal (ADR-008). */
+/**
+ * Ouverture au démarrage de l'appli : base prête, version écrite dans le journal (ADR-008). En cas
+ * d'échec, la connexion est fermée et l'erreur porte le texte fixe de sa cause (classifyOpenError).
+ */
 export const openAppDatabase = async (open: () => Promise<Db>): Promise<Db> => {
-  const raw = await open();
-  let db: Db;
+  let raw: Db;
   try {
-    db = await prepareDatabase(raw);
+    raw = await open();
+  } catch (error) {
+    throw fixedError(error);
+  }
+  try {
+    const db = await prepareDatabase(raw);
+    const rows = await db.query<{ user_version: number }>('PRAGMA user_version');
+    log('DB_READY', { version: rows[0]?.user_version ?? 0 });
+    return db;
   } catch (error) {
     // Ne pas garder le fichier ouvert : l'écran de récupération (EX-22) doit pouvoir le remplacer.
     await raw.close().catch(() => undefined);
-    throw error;
+    throw fixedError(error);
   }
-  const rows = await db.query<{ user_version: number }>('PRAGMA user_version');
-  log('DB_READY', { version: rows[0]?.user_version ?? 0 });
-  return db;
 };

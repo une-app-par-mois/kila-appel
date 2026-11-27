@@ -243,7 +243,10 @@ ${titre('Vos données ne peuvent pas être ouvertes')}
 ${carte(`<p>Le fichier de données de l'appli est abîmé. Rien n'a été effacé pour l'instant.</p><p>Vous pouvez restaurer votre dernière sauvegarde, ou repartir de zéro.</p>`)}
 ${go('accueil', 'Restaurer une sauvegarde')}
 ${go('bienvenue', 'Repartir de zéro', 'btn-s')}
-<p class="note">Jamais de message technique ni de plantage. Décisions du porteur du 2026-11-27 : « Repartir de zéro » demande une confirmation (« Les données abîmées seront effacées définitivement. ») ; des données d'une version plus récente de l'appli ont leur propre message (« mettez l'appli à jour »), sans « Repartir de zéro » mis en avant.</p>`);
+<p class="note">Jamais de message technique ni de plantage. Décisions du porteur du 2026-11-27 : « Repartir de zéro » demande une confirmation (« Repartir de zéro ? », « Les données abîmées seront effacées définitivement. », « Garder » et « Effacer et repartir de zéro »), puis Bienvenue. Une seule maquette, trois variantes (ticket 014c) :</p>
+<p class="note"><b>Abîmée</b> (fichier illisible, ou toute erreur non reconnue) : cet écran. « Restaurer une sauvegarde » arrive avec le ticket 014f.</p>
+<p class="note"><b>Réglage refusé</b> (fichier sain) : « L'appli n'a pas pu préparer le fichier de données. Rien n'a été effacé. » et un seul bouton, « Réessayer ».</p>
+<p class="note"><b>Version plus récente</b> : « Vos données viennent d'une version plus récente de l'appli : mettez l'appli à jour. Rien n'a été effacé. », sans aucun bouton.</p>`);
 
 // ---------- Écrans ajoutés à la deuxième passe ----------
 const confirmer = (t, retour, corps, oui, ouiVers, non = 'Garder') => `${titre(t, retour)}${carte(corps, 'bandeau')}<div class="duo">${go(retour, non, 'btn-s tiers')}${go(ouiVers, oui, 'btn-p deuxtiers fond-marge')}</div>`;
