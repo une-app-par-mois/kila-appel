@@ -241,13 +241,5 @@ describe('EX-21 rappels de sauvegarde', () => {
       expect(await screen.findByRole('header', { name: labels.welcome.title })).toBeTruthy();
       expect(screen.queryByText(h.backupBannerText)).toBeNull();
     });
-
-    it('EX-21 date illisible : le message d’erreur de l’accueil', async () => {
-      await oldSession('2026-01-05');
-      await db.execute('DROP TABLE settings');
-      await open('/');
-      expect(await screen.findByText(labels.common.loadFailed)).toBeTruthy();
-      expect(screen.queryByText(h.backupBannerText)).toBeNull();
-    });
   });
 });

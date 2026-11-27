@@ -5,12 +5,12 @@ import { useMemo } from 'react';
 import type { Db } from '@/data/db';
 import { sessionsRepo } from '@/data/sessionsRepo';
 import { settingsRepo } from '@/data/settingsRepo';
-import { daysSince } from '@/domain/formats';
+import { daysSince, isIsoDate } from '@/domain/formats';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useLoaded } from '@/hooks/useLoaded';
 
 /** EX-21 : jours sans sauvegarde à partir desquels l'accueil montre le bandeau. */
-export const BACKUP_BANNER_DAYS = 30;
+const BACKUP_BANNER_DAYS = 30;
 
 /** EX-21 : l'invitation n'a jamais été montrée et aucune sauvegarde n'a été faite. */
 export const needsBackupInvite = async (db: Db): Promise<boolean> => {
@@ -24,7 +24,9 @@ export const needsBackupInvite = async (db: Db): Promise<boolean> => {
 
 /**
  * EX-21 : jours sans sauvegarde à afficher dans le bandeau, ou null (pas de bandeau, ou date pas
- * encore lue). Une date future (horloge de l'appareil reculée) ne montre rien.
+ * encore lue). Une date future (horloge de l'appareil reculée) ou mal formée ne montre rien. Une
+ * lecture impossible cache le bandeau, avec un code au journal, sans message sur l'accueil (revue
+ * du 014d).
  */
 export const useBackupBanner = (today: string) => {
   const db = useDatabase();
@@ -39,6 +41,7 @@ export const useBackupBanner = (today: string) => {
   );
   // Relue au changement de jour sans que le bandeau clignote.
   const { value: since, loadFailed } = useLoaded(load, 'BACKUP_BANNER_LOAD_FAILED', {}, true);
-  const days = since === null ? null : daysSince(since, today);
-  return { days: days !== null && days >= BACKUP_BANNER_DAYS ? days : null, loadFailed };
+  if (loadFailed || since === null || !isIsoDate(since) || !isIsoDate(today)) return null;
+  const days = daysSince(since, today);
+  return days >= BACKUP_BANNER_DAYS ? days : null;
 };

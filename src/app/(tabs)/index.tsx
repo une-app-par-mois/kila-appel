@@ -1,9 +1,10 @@
-// Accueil (maquettes Accueil et Accueil avec un appel interrompu, ticket 012) : date du jour, recherche
-// d'un contact d'urgence (EX-06), appel en cours ou séance du moment (EX-09, EX-14), appels
-// manquants (EX-17), bandeau de sauvegarde en bas (EX-21, ticket 014d), même pendant un appel en
-// cours. Hors de ce ticket : « Annuler » une séance (jalon 2) ; décisions du porteur du 2026-11-27. Bienvenue (P1, ticket 012b) remplace l'accueil
-// tant qu'une étape reste et qu'aucun appel n'est fait, jamais pendant un appel en cours ; si
-// l'avancement ne se lit pas, l'accueil s'affiche avec l'erreur (rien n'y est caché).
+// Accueil (maquettes Accueil et Accueil avec un appel interrompu, ticket 012) : date du jour,
+// recherche d'un contact d'urgence (EX-06), appel en cours ou séance du moment (EX-09, EX-14),
+// appels manquants (EX-17), bandeau de sauvegarde en bas (EX-21, ticket 014d), même pendant un
+// appel en cours. Hors de ce ticket : « Annuler » une séance (jalon 2) ; décisions du porteur du
+// 2026-11-27. Bienvenue (P1, ticket 012b) remplace l'accueil tant qu'une étape reste et qu'aucun
+// appel n'est fait, jamais pendant un appel en cours ; si l'avancement ne se lit pas, l'accueil
+// s'affiche avec l'erreur (rien n'y est caché).
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
@@ -32,7 +33,8 @@ export default function Home() {
   const [, month, day] = now.date.split('-').map(Number);
   const { missing, loadFailed } = useMissingRollCalls(now);
   const setup = useSetupProgress(now.date);
-  const backup = useBackupBanner(now.date);
+  // Bandeau illisible : caché, sans message (revue du 014d).
+  const backupDays = useBackupBanner(now.date);
   // Seule l'existence d'un appel en cours compte ici (pas de Bienvenue pendant un appel).
   const { draft, loaded: draftLoaded } = useDraft();
   const [entryError, setEntryError] = useState<string | undefined>();
@@ -52,9 +54,7 @@ export default function Home() {
   return (
     <Screen
       title={title}
-      error={
-        loadFailed || setup.loadFailed || backup.loadFailed ? labels.common.loadFailed : entryError
-      }
+      error={loadFailed || setup.loadFailed ? labels.common.loadFailed : entryError}
     >
       <Pressable
         accessibilityRole="button"
@@ -67,9 +67,9 @@ export default function Home() {
       </Pressable>
       <RollCallEntry now={now} onError={setEntryError} />
       <MissingCalls missing={missing} />
-      {backup.days !== null && (
+      {backupDays !== null && (
         <Card warning>
-          <Text style={styles.bannerTitle}>{h.backupBanner(backup.days)}</Text>
+          <Text style={styles.bannerTitle}>{h.backupBanner(backupDays)}</Text>
           <Text style={styles.bannerText}>{h.backupBannerText}</Text>
           <Button label={h.backupNow} variant="secondary" onPress={() => router.push('/donnees')} />
         </Card>

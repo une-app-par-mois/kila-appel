@@ -148,6 +148,11 @@ describe('Historique des séances (EX-16 à EX-18)', () => {
     expect(await repo().firstRecordedDate()).toBeNull();
   });
 
+  it('EX-21 plus ancienne séance mal formée (base abîmée) : null, pas d’erreur', async () => {
+    const broken = { ...db, query: async () => [{ date: '2026-13-45' }] } as unknown as Db;
+    expect(await sessionsRepo(broken, TODAY).firstRecordedDate()).toBeNull();
+  });
+
   it('EX-16 groupes du filtre : ceux de la saison, archivés compris ; toutes saisons, l’active d’abord', async () => {
     const { lastInsertRowId: archived } = await db.execute(
       "INSERT INTO groups (season_id, name, archived_at) VALUES (?, 'Adultes', '2026-10-01')",

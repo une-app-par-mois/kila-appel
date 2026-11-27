@@ -4,6 +4,7 @@
 import type { Db } from '@/data/db';
 import { current } from '@/data/enrollmentsRepo';
 import { DataError, expectChanged } from '@/data/errors';
+import { isIsoDate } from '@/domain/formats';
 import { slotDates, type WeeklySlot } from '@/domain/occurrences';
 import {
   type AttendanceStatus,
@@ -212,13 +213,13 @@ export const sessionsRepo = (db: Db, today: string) => ({
     (await db.query<{ id: number }>("SELECT id FROM sessions WHERE state = 'recorded' LIMIT 1"))
       .length > 0,
 
-  /** EX-21 : date de la plus ancienne séance enregistrée (bandeau sans sauvegarde) ; null si aucune. */
-  firstRecordedDate: async (): Promise<string | null> =>
-    (
-      await db.query<{ date: string | null }>(
-        "SELECT MIN(date) AS date FROM sessions WHERE state = 'recorded'",
-      )
-    )[0]?.date ?? null,
+  /** EX-21 : plus ancienne séance enregistrée (bandeau sans sauvegarde) ; null si aucune ou illisible. */
+  firstRecordedDate: async (): Promise<string | null> => {
+    const [row] = await db.query<{ date: string | null }>(
+      "SELECT MIN(date) AS date FROM sessions WHERE state = 'recorded'",
+    );
+    return row?.date != null && isIsoDate(row.date) ? row.date : null;
+  },
 
   /** EX-18 : détail d'une séance enregistrée ; `null` si elle n'existe pas (ou plus). */
   get: async (id: number): Promise<SessionDetail | null> => {
