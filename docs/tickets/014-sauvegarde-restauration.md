@@ -1,6 +1,6 @@
 # 014 — Sauvegarde et restauration : données
 
-Statut : codé, à relire (branche `ticket/014-sauvegarde-donnees`) · Jalon : 1 · Zone sensible : oui · Trivial : non
+Statut : en attente du porteur (branche `ticket/014-sauvegarde-donnees`, codé) · Jalon : 1 · Zone sensible : oui · Trivial : non
 
 Dépend de : aucun ticket à faire · Fichiers touchés : `src/data/backup.ts`, `src/data/settingsRepo.ts` et leurs tests, `src/staticChecks.test.ts` si besoin
 
@@ -74,7 +74,7 @@ Séance de lancement du 2026-11-27 (réponses du porteur) :
 | Ordre des contrôles | Ordre de la fiche ; version, schéma, puis intégrité | Taille et en-tête, ouverture, version, schéma exact, `integrity_check`, `foreign_key_check`, migrations, `checkRows`, résumé | Version avant schéma pour isoler `NEWER_VERSION` ; schéma avant `integrity_check`, qui évalue les `CHECK` du fichier : aucune expression inconnue n'est évaluée | à relire |
 | `schedule_from` invalide | Compter sur `integrity_check` ; contrôle explicite | Les deux : `integrity_check` vérifie les `CHECK` (refus `DAMAGED`) ; `checkRows` le revérifie (`INVALID_DATA`) si une version de SQLite ne le faisait pas | Prévu par le plan ; ne dépend pas d'un comportement de SQLite | à relire |
 | Lecture du fichier sans dépendance | Taille et en-tête passés en valeurs ; petite interface | Interface `BackupFiles` (`size`, `readHead`) et ouverture `OpenDb` passées par l'appelant ; node:fs et node:sqlite dans les tests, expo en 014b | Aucune dépendance (décision du porteur) ; même code testé et livré | à relire |
-| Copie vérifiée | Copiée par `verifyBackup` ; copiée par l'appelant | `verifyBackup(fichier, copie, deps)` copie elle-même le fichier choisi (`BackupFiles.copy`) après le contrôle de taille et d'en-tête, recontrôle la copie, puis n'ouvre et ne migre que la copie ; le fichier choisi n'est jamais ouvert (octets inchangés, testé) | Contradicteur : l'appelant pouvait oublier la copie et faire migrer l'original | changée après contradiction |
+| Copie vérifiée | Copiée par `verifyBackup` ; copiée par l'appelant | `verifyBackup(fichier, copie, deps)` copie elle-même le fichier choisi (`BackupFiles.copy`) après le contrôle de taille et d'en-tête, recontrôle la copie, puis n'ouvre et ne migre que la copie ; le fichier choisi n'est jamais ouvert (octets inchangés, testé) ; `copyPath === sourcePath` est refusé dès le début (erreur `SAME_PATH`) ; un échec de `files.copy` donne `DAMAGED` | Contradicteur : l'appelant pouvait oublier la copie et faire migrer l'original | changée après contradiction |
 | Liste des tables recopiées | Liste écrite dans le code ; lue dans le schéma de l'appli | Lue dans `main.sqlite_schema` et `pragma_table_info`, noms contrôlés (`[a-z_]`), `PRAGMA defer_foreign_keys` pour l'ordre | Aucune table oubliée si le schéma change ; le contrôle EX-14 (tables du brouillon nommées) reste inchangé | à relire |
 | Erreur de restauration | Relayer l'erreur de SQLite ; un code | `DataError('RESTORE_FAILED')`, journal `RESTORE_FAILED` | ABS-04 : rien du fichier ne sort | à relire |
 | Forme du journal | `RESTORE_REJECTED { reason }` ; code avec la cause | `RESTORE_REJECTED_<CAUSE>`, puis `RESTORE_VERIFIED { version }`, `RESTORE_DONE { memberCount }`, `BACKUP_EXPORTED` | `log` n'accepte que des nombres et des booléens (liste blanche SEC-12) : l'élargir toucherait à la sécurité | à relire |
@@ -84,14 +84,14 @@ Séance de lancement du 2026-11-27 (réponses du porteur) :
 | Fichiers touchés au-delà de la liste | Découper ; garder | Gardé : `backupRows.ts` (règles des lignes) et les tests en quatre fichiers (`backup`, `backupExport`, `backupCheck`, `backupRows`) pour rester sous 300 lignes ; ajouts d'une ou deux lignes dans `errors.ts`, `validation.ts`, `libelles/commun.ts`, `node.d.ts` (`writeFileSync`, `copyFileSync`), `staticChecks.test.ts` ; fixture `__fixtures__/backupFiles.ts` | Ajouts mécaniques ; une seule session | à relire |
 | Marque de `VerifiedBackup` | Facultative ; obligatoire | Obligatoire (`readonly [verifiedBrand]: true`, symbole non exporté), posée par conversion de type dans `verifyBackup` seulement ; test `@ts-expect-error` | Revue de code, revue de sécurité et contradicteur : un objet littéral passait | changée après contradiction |
 | Copie modifiée entre la vérification et la restauration | Faire confiance ; recontrôler | Dans la transaction, avant d'écrire : schéma de la copie attachée identique à celui de la base (type, name, tbl_name, sql), même `user_version`, `checkRows` sur la copie attachée ; sinon `RESTORE_FAILED`, rien de changé | Revue de sécurité (SEC-10) | changée après revue |
-| Règles des lignes (`checkRows`, `backupRows.ts`) | Contacts et `schedule_from` ; toutes les règles de l'appli | Toutes : saisons (`validateSeason`), membres (`validateMember`, date de naissance bornée à 2100-12-31 : la sauvegarde peut venir d'un autre jour), contacts, groupes, inscriptions, créneaux, dates ponctuelles, séances (dates, heures, `validateComment`), présences, brouillon (date, `started_at`, `updated_at` `AAAA-MM-JJTHH:MM` avec secondes tolérées, commentaire, statuts), alertes, réglages (clés de `SETTING_KEYS` et valeurs valides, `isValidSetting`) ; toute ligne refusée = `INVALID_DATA` | Revue : « toute entrée est validée », ABS-03 | changée après revue |
+| Règles des lignes (`checkRows`, `backupRows.ts`) | Contacts et `schedule_from` ; toutes les règles de l'appli ; seulement les lignes que l'appli écrirait | Seules passent les lignes que l'appli écrirait : sortie des validateurs égale à la valeur stockée (noms de saison, de membre, de groupe et de contact nettoyés, téléphone normalisé, commentaires nettoyés ; commentaire vide ou fait d'espaces refusé, l'appli écrit NULL) ; `isId` sur chaque colonne `id` et `*_id` (NULL seulement pour `slot_id`, EX-39), liste testée contre le schéma ; date de naissance bornée au `today` passé à `verifyBackup` (nouveau paramètre, gardé dans `VerifiedBackup` pour le recontrôle de la restauration) ; `slots.place` et `slots.name` nettoyés non vides ou NULL ; dates, heures, statuts, brouillon (`updated_at` `AAAA-MM-JJTHH:MM`, secondes tolérées), alertes, réglages (`isValidSetting`) ; toute ligne refusée = `INVALID_DATA` | Revues de sécurité : « toute entrée est validée », ABS-03 | changée après revue |
 | Contrôle EX-14 (fichiers qui nomment les tables du brouillon) | Ne pas valider le brouillon ; ajouter `backupRows.ts` à la liste | `src/data/backupRows.ts` ajouté à la liste de `staticChecks.test.ts`, avec son motif | Il lit le brouillon pour le valider, jamais pour une statistique ; le contrôle garde son sens | à relire |
 | Motif des noms SQL | `[a-z_]` ; `[a-z0-9_]` | `/^[a-z][a-z0-9_]*$/`, testé sur chaque table et colonne du schéma | Revue de code | changée après revue |
 | Fermeture de la copie | Erreur relayée ; ignorée | `close()` de la copie et de la base en mémoire : erreur ignorée | Une fermeture ratée ne change ni le résultat ni la cause (revue de code) | changée après revue |
 
 ## Questions pour le porteur
 
-Aucune.
+- Ajout de `src/data/backupRows.ts` à la liste du contrôle EX-14 (lecture des tables du brouillon pour les valider) — ticket en attente ; revue de sécurité : borné et justifié. Options : 1. garder l'ajout (recommandé : `backupRows.ts` n'exporte que `BACKUP_ALIAS` et `checkRows`, qui ne renvoie que `INVALID_DATA` ou `null`) ; 2. ne pas valider les tables du brouillon dans une sauvegarde.
 
 ## À reporter
 
@@ -102,7 +102,8 @@ Aucune.
   - `OpenDb` ouvre la copie **telle quelle**, sans `prepareDatabase` ni migrations (sinon une base en version 0 serait migrée puis acceptée) ; 014b ajoute un test de bout en bout qui attend `NOT_A_BACKUP` sur un fichier en version 0 ;
   - `BackupFiles.copy(from, to)` copie octet pour octet vers un chemin temporaire neuf ;
   - si l'export échoue après `VACUUM INTO`, l'appelant supprime le fichier ; il utilise un chemin neuf à chaque essai ;
-  - l'appelant supprime les copies temporaires et leurs fichiers `-wal`, `-shm` et `-journal`.
+  - l'appelant efface la copie temporaire et ses fichiers `-wal`, `-shm` et `-journal` dans un `finally` qui couvre la vérification et la restauration ; la copie se fait dans le dossier cache, exclu de la sauvegarde du système, avec un nom unique à chaque fois ; un test du 014b le vérifie ;
+  - `verifyBackup` reçoit `today` (AAAA-MM-JJ, date locale) : borne de la date de naissance ; un chemin de copie égal au fichier choisi est refusé (`SAME_PATH`).
 - Pour le porteur et 014b :
   - l'export n'est pas plafonné, alors qu'une base de plus de 50 Mio donnerait une sauvegarde refusée à la restauration ;
   - un fichier tronqué à moins de 512 octets est annoncé « pas une sauvegarde » (`NOT_SQLITE`), pas « abîmé » ;

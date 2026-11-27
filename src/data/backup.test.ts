@@ -17,7 +17,7 @@ import { settingsRepo } from '@/data/settingsRepo';
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
 const { log } = jest.requireMock('@/data/log') as { log: jest.Mock };
 
-const deps = { files: nodeFiles, open: openNode };
+const deps = { files: nodeFiles, open: openNode, today: '2026-11-27' };
 
 const tableNames = async (db: Db) =>
   (

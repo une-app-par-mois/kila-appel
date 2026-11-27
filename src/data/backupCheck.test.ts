@@ -7,7 +7,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { nodeFiles, openNode, tempDir } from '@/__fixtures__/backupFiles';
 import { seed } from '@/__fixtures__/seed';
 import { exportBackup } from '@/data/backup';
-import { MAX_BACKUP_BYTES, verifyBackup } from '@/data/backupCheck';
+import { MAX_BACKUP_BYTES, SAME_PATH, verifyBackup } from '@/data/backupCheck';
 import type { Db } from '@/data/db';
 import { MIGRATIONS, type Migration } from '@/data/migrations';
 import { openNodeDb } from '@/data/nodeDb';
@@ -16,7 +16,7 @@ import { prepareDatabase } from '@/data/open';
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
 const { log } = jest.requireMock('@/data/log') as { log: jest.Mock };
 
-const deps = { files: nodeFiles, open: openNode };
+const deps = { files: nodeFiles, open: openNode, today: '2026-11-27' };
 
 // Chaque vérification copie le fichier choisi dans un chemin temporaire neuf.
 let copies = 0;
@@ -57,6 +57,7 @@ describe('EX-20 SEC-10 vérification d’une sauvegarde', () => {
       backup: {
         path: copyPath,
         summary: { members: 2, groups: 2, recordedSessions: 1, backupDate: '2026-10-22' },
+        today: '2026-11-27',
       },
     });
     expect(log).toHaveBeenCalledWith('RESTORE_VERIFIED', { version: 1 });
@@ -101,7 +102,7 @@ describe('EX-20 SEC-10 vérification d’une sauvegarde', () => {
   it('refuse un fichier trop gros sans l’ouvrir (TOO_LARGE)', async () => {
     const open = jest.fn(openNode);
     const files = { ...nodeFiles, size: async () => MAX_BACKUP_BYTES + 1 };
-    expect(await verify(backup, { files, open })).toEqual({
+    expect(await verify(backup, { ...deps, files, open })).toEqual({
       ok: false,
       reason: 'TOO_LARGE',
     });
@@ -201,9 +202,9 @@ describe('EX-20 SEC-10 vérification d’une sauvegarde', () => {
       closes.push(close);
       return { ...db, close };
     };
-    await verify(backup, { files: nodeFiles, open });
+    await verify(backup, { ...deps, open });
     await trapped((copy) => copy.execute('PRAGMA user_version = 99').then(() => undefined));
-    await verify(backup, { files: nodeFiles, open });
+    await verify(backup, { ...deps, open });
     expect(closes.length).toBeGreaterThan(0);
     for (const close of closes) expect(close).toHaveBeenCalledTimes(1);
   });
@@ -214,19 +215,46 @@ describe('EX-20 SEC-10 vérification d’une sauvegarde', () => {
       const close = () => db.close().then(() => Promise.reject(new Error('fermeture')));
       return { ...db, close };
     };
-    expect((await verify(backup, { files: nodeFiles, open })).ok).toBe(true);
+    expect((await verify(backup, { ...deps, open })).ok).toBe(true);
     await trapped((copy) => copy.execute('PRAGMA user_version = 99').then(() => undefined));
-    expect(await verify(backup, { files: nodeFiles, open })).toEqual({
+    expect(await verify(backup, { ...deps, open })).toEqual({
       ok: false,
       reason: 'NEWER_VERSION',
     });
+  });
+
+  it('refuse dès le début une copie au même chemin que le fichier choisi', async () => {
+    const original = readFileSync(backup);
+    await expect(verifyBackup(backup, backup, deps)).rejects.toThrow(SAME_PATH);
+    expect(readFileSync(backup)).toEqual(original);
+  });
+
+  it('refuse un jour de vérification qui n’est pas AAAA-MM-JJ', async () => {
+    await expect(verify(backup, { ...deps, today: '27/11/2026' })).rejects.toMatchObject({
+      code: 'DATE_INVALID',
+    });
+  });
+
+  it('une copie impossible à faire est abîmée (DAMAGED)', async () => {
+    const files = {
+      ...nodeFiles,
+      copy: async () => {
+        throw new Error('copie impossible');
+      },
+    };
+    expect(await verify(backup, { ...deps, files })).toEqual({ ok: false, reason: 'DAMAGED' });
+  });
+
+  it('EX-03 la date de naissance est bornée au jour passé par l’appelant', async () => {
+    expect((await verify(backup, { ...deps, today: '2015-03-13' })).ok).toBe(false);
+    expect((await verify(backup, { ...deps, today: '2015-03-14' })).ok).toBe(true);
   });
 
   it('une copie qui ne s’ouvre pas est abîmée (DAMAGED)', async () => {
     const open = async () => {
       throw new Error('ouverture impossible');
     };
-    expect(await verify(backup, { files: nodeFiles, open })).toEqual({
+    expect(await verify(backup, { ...deps, open })).toEqual({
       ok: false,
       reason: 'DAMAGED',
     });

@@ -76,11 +76,11 @@ const userVersion = async (tx: Db, schema: string) =>
  * SEC-10 : la copie a pu changer depuis sa vérification. Dans la transaction, avant d'écrire :
  * même schéma et même version que la base de l'appareil, et chaque ligne valide.
  */
-const recheck = async (tx: Db) => {
+const recheck = async (tx: Db, today: string) => {
   const same = JSON.stringify(await schemaOf(tx, ALIAS)) === JSON.stringify(await schemaOf(tx));
   if (!same || (await userVersion(tx, ALIAS)) !== (await userVersion(tx, 'main')))
     throw new DataError('RESTORE_FAILED');
-  if ((await checkRows(tx, ALIAS)) !== null) throw new DataError('RESTORE_FAILED');
+  if ((await checkRows(tx, today, ALIAS)) !== null) throw new DataError('RESTORE_FAILED');
 };
 
 /**
@@ -88,8 +88,8 @@ const recheck = async (tx: Db) => {
  * tables vidées puis remplies, colonne par colonne selon le schéma de l'appli. Aucun objet de la
  * copie (déclencheur, vue) n'entre ; les clés étrangères sont contrôlées à la validation.
  */
-const copyAll = async (tx: Db) => {
-  await recheck(tx);
+const copyAll = async (tx: Db, today: string) => {
+  await recheck(tx, today);
   // Valable jusqu'à la fin de la transaction : l'ordre de recopie des tables n'importe plus.
   await tx.execute('PRAGMA defer_foreign_keys = ON');
   const tables = await mainTables(tx);
@@ -112,7 +112,7 @@ export const restoreBackup = async (db: Db, backup: VerifiedBackup): Promise<voi
   try {
     await attach(db, backup.path);
     try {
-      memberCount = await db.transaction(copyAll);
+      memberCount = await db.transaction((tx) => copyAll(tx, backup.today));
     } finally {
       await detach(db);
     }

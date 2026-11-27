@@ -9,6 +9,7 @@ import type { Db } from '@/data/db';
 import { log } from '@/data/log';
 import { MIGRATIONS, type Migration, migrate } from '@/data/migrations';
 import { settingsRepo } from '@/data/settingsRepo';
+import { validateDate } from '@/domain/validation';
 
 /** Accès aux fichiers sans les ouvrir comme base (014b : expo-file-system ; tests : node:fs). */
 export type BackupFiles = {
@@ -57,12 +58,16 @@ declare const verifiedBrand: unique symbol;
 export type VerifiedBackup = {
   readonly path: string;
   readonly summary: BackupSummary;
+  /** Jour de la vérification (AAAA-MM-JJ), repris par le recontrôle de la restauration. */
+  readonly today: string;
   readonly [verifiedBrand]: true;
 };
 
 export type Verification =
   | { ok: true; backup: VerifiedBackup }
   | { ok: false; reason: RejectReason };
+
+export const SAME_PATH = 'La copie à vérifier doit avoir son propre chemin';
 
 /** Environ 50 Mo : bien au-delà d'une base réelle, refusé avant toute ouverture. */
 export const MAX_BACKUP_BYTES = 50 * 1024 * 1024;
@@ -124,7 +129,7 @@ const summarize = async (db: Db): Promise<BackupSummary> => ({
 
 // Ordre voulu : la version avant le schéma (une version future a un autre schéma, cause à part),
 // le schéma avant integrity_check (aucune expression du fichier n'est évaluée avant d'être connue).
-const inspect = async (copy: Db, open: OpenDb, migrations: Migration[]) => {
+const inspect = async (copy: Db, open: OpenDb, migrations: Migration[], today: string) => {
   const [row] = await copy.query<{ user_version: number }>('PRAGMA user_version');
   const version = row?.user_version ?? 0;
   if (version > migrations.length) reject('NEWER_VERSION');
@@ -136,7 +141,7 @@ const inspect = async (copy: Db, open: OpenDb, migrations: Migration[]) => {
   if (integrity.length !== 1 || integrity[0]?.integrity_check !== 'ok') reject('DAMAGED');
   if ((await copy.query('PRAGMA foreign_key_check')).length > 0) reject('DAMAGED');
   await migrate(copy, migrations);
-  const invalid = await checkRows(copy);
+  const invalid = await checkRows(copy, today);
   if (invalid) reject(invalid);
   return version;
 };
@@ -150,12 +155,16 @@ const inspect = async (copy: Db, open: OpenDb, migrations: Migration[]) => {
 export const verifyBackup = async (
   sourcePath: string,
   copyPath: string,
-  deps: { files: BackupFiles; open: OpenDb; migrations?: Migration[] },
+  deps: { files: BackupFiles; open: OpenDb; today: string; migrations?: Migration[] },
 ): Promise<Verification> => {
   const { files, open, migrations = MIGRATIONS } = deps;
+  // Erreurs de l'appelant, levées avant tout : le fichier choisi ne doit jamais être la copie.
+  if (copyPath === sourcePath) throw new Error(SAME_PATH);
+  const today = validateDate(deps.today);
   try {
     // Un fichier trop gros ou étranger n'est même pas copié ; la copie est recontrôlée ensuite.
     await checkFile(files, sourcePath);
+    // Une copie impossible (place, droits) est rapportée comme un fichier abîmé (DAMAGED).
     await files.copy(sourcePath, copyPath);
     await checkFile(files, copyPath);
     let copy: Db;
@@ -165,11 +174,11 @@ export const verifyBackup = async (
       return reject('DAMAGED');
     }
     try {
-      const version = await inspect(copy, open, migrations);
+      const version = await inspect(copy, open, migrations, today);
       const summary = await summarize(copy);
       log('RESTORE_VERIFIED', { version });
       // Seul endroit où la marque d'une copie vérifiée est posée.
-      return { ok: true, backup: { path: copyPath, summary } as VerifiedBackup };
+      return { ok: true, backup: { path: copyPath, summary, today } as VerifiedBackup };
     } finally {
       // Une fermeture qui échoue ne change ni le résultat ni la cause d'un refus.
       await copy.close().catch(() => undefined);

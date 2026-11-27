@@ -8,6 +8,41 @@ import type { Db } from '@/data/db';
 import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
 
+// Jour de la vérification : borne de la date de naissance (EX-03).
+const TODAY = '2026-11-27';
+
+const ID_COLUMNS: [string, string][] = [
+  ['seasons', 'id'],
+  ['members', 'id'],
+  ['emergency_contacts', 'id'],
+  ['emergency_contacts', 'member_id'],
+  ['groups', 'id'],
+  ['groups', 'season_id'],
+  ['enrollments', 'id'],
+  ['enrollments', 'member_id'],
+  ['enrollments', 'group_id'],
+  ['slots', 'id'],
+  ['slots', 'season_id'],
+  ['slot_dates', 'slot_id'],
+  ['slot_groups', 'slot_id'],
+  ['slot_groups', 'group_id'],
+  ['sessions', 'id'],
+  ['sessions', 'season_id'],
+  ['sessions', 'slot_id'],
+  ['session_groups', 'session_id'],
+  ['session_groups', 'group_id'],
+  ['attendances', 'session_id'],
+  ['attendances', 'member_id'],
+  ['roll_call_drafts', 'id'],
+  ['roll_call_drafts', 'season_id'],
+  ['roll_call_drafts', 'slot_id'],
+  ['roll_call_draft_groups', 'draft_id'],
+  ['roll_call_draft_groups', 'group_id'],
+  ['roll_call_draft_statuses', 'draft_id'],
+  ['roll_call_draft_statuses', 'member_id'],
+  ['alert_acks', 'member_id'],
+];
+
 describe('checkRows : toute ligne de la copie passe les règles de l’appli', () => {
   let db: Db;
   beforeEach(async () => {
@@ -19,13 +54,14 @@ describe('checkRows : toute ligne de la copie passe les règles de l’appli', (
     await db.execute("UPDATE sessions SET comment = 'Séance fictive'");
     // Les contraintes de la base sont contournées : seule checkRows doit refuser.
     await db.execute('PRAGMA ignore_check_constraints = ON');
+    await db.execute('PRAGMA foreign_keys = OFF');
   });
   afterEach(async () => {
     await db.close();
   });
 
   it('accepte le jeu fictif', async () => {
-    expect(await checkRows(db)).toBeNull();
+    expect(await checkRows(db, TODAY)).toBeNull();
   });
 
   const long = 'x'.repeat(501);
@@ -71,13 +107,89 @@ describe('checkRows : toute ligne de la copie passe les règles de l’appli', (
       'EX-24 conservation invalide',
       "UPDATE settings SET value = '7' WHERE key = 'retention_seasons'",
     ],
+    // Les lignes acceptées sont celles que l'appli écrirait : valeurs nettoyées et normalisées.
+    [
+      'EX-03 date de naissance après le jour de la vérification',
+      "UPDATE members SET birth_date = '2026-11-28'",
+    ],
+    ['EX-01 nom de saison avec des espaces autour', "UPDATE seasons SET name = ' Saison '"],
+    ['EX-03 nom de membre avec des espaces autour', "UPDATE members SET last_name = 'Exemple '"],
+    ['EX-03 prénom de membre avec des espaces autour', "UPDATE members SET first_name = ' Alix'"],
+    [
+      'ticket 008 téléphone non normalisé',
+      "UPDATE emergency_contacts SET phone = '06 00 00 00 00'",
+    ],
+    [
+      'ticket 008 nom de contact avec des espaces autour',
+      "UPDATE emergency_contacts SET label = 'Parent '",
+    ],
+    ['EX-02 nom de groupe avec des espaces autour', "UPDATE groups SET name = ' Poussins'"],
+    ['EX-07 lieu de créneau vide', "UPDATE slots SET place = ''"],
+    ['EX-07 lieu de créneau fait d’espaces', "UPDATE slots SET place = '   '"],
+    ['EX-07 lieu de créneau avec des espaces autour', "UPDATE slots SET place = 'Gymnase '"],
+    ['EX-07 nom de créneau fait d’espaces', "UPDATE slots SET name = ' '"],
+    ['EX-07 nom de créneau avec des espaces autour', "UPDATE slots SET name = ' Mercredi'"],
+    ['EX-13 commentaire de séance vide', "UPDATE sessions SET comment = ''"],
+    ['EX-13 commentaire de séance fait d’espaces', "UPDATE sessions SET comment = '  '"],
+    [
+      'EX-13 commentaire de séance avec des espaces autour',
+      "UPDATE sessions SET comment = 'Séance '",
+    ],
+    ['EX-13 commentaire du brouillon fait d’espaces', "UPDATE roll_call_drafts SET comment = ' '"],
+    [
+      'EX-13 commentaire du brouillon avec des espaces autour',
+      "UPDATE roll_call_drafts SET comment = ' Note'",
+    ],
   ])('refuse : %s (INVALID_DATA)', async (_rule, sql) => {
     await db.execute(sql);
-    expect(await checkRows(db)).toBe('INVALID_DATA');
+    expect(await checkRows(db, TODAY)).toBe('INVALID_DATA');
   });
 
   it('EX-14 accepte un updated_at avec ou sans secondes', async () => {
     await db.execute("UPDATE roll_call_drafts SET updated_at = '2026-12-02T17:35'");
-    expect(await checkRows(db)).toBeNull();
+    expect(await checkRows(db, TODAY)).toBeNull();
+  });
+
+  it('EX-03 accepte une date de naissance le jour même de la vérification', async () => {
+    await db.execute("UPDATE members SET birth_date = '2026-11-27'");
+    expect(await checkRows(db, TODAY)).toBeNull();
+  });
+
+  it('EX-07 accepte un lieu et un nom de créneau nettoyés, ou absents', async () => {
+    await db.execute("UPDATE slots SET place = NULL, name = 'Mercredi soir'");
+    expect(await checkRows(db, TODAY)).toBeNull();
+  });
+
+  it('EX-39 accepte une séance et un brouillon sans créneau (slot_id nul)', async () => {
+    await db.execute('UPDATE sessions SET slot_id = NULL');
+    await db.execute('UPDATE roll_call_drafts SET slot_id = NULL');
+    expect(await checkRows(db, TODAY)).toBeNull();
+  });
+
+  // Chaque colonne id et *_id : un entier de 1 ou plus (isId).
+  it.each(ID_COLUMNS)(
+    'refuse un identifiant invalide : %s.%s (INVALID_DATA)',
+    async (table, column) => {
+      // Une seule ligne modifiée (rowid le plus petit) : 0 puis -1 refusés.
+      for (const value of [0, -1]) {
+        await db.execute(
+          `UPDATE ${table} SET ${column} = ? WHERE rowid = (SELECT min(rowid) FROM ${table})`,
+          [value],
+        );
+        expect(await checkRows(db, TODAY)).toBe('INVALID_DATA');
+      }
+    },
+  );
+
+  it('chaque colonne id et *_id du schéma est dans la liste', async () => {
+    const columns = await db.query<{ t: string; c: string }>(
+      `SELECT m.name AS t, p.name AS c FROM sqlite_schema m, pragma_table_info(m.name) p
+       WHERE m.type = 'table'`,
+    );
+    const found = columns
+      .filter(({ c }) => c === 'id' || c.endsWith('_id'))
+      .map(({ t, c }) => `${t}.${c}`)
+      .sort();
+    expect(found).toEqual(ID_COLUMNS.map(([t, c]) => `${t}.${c}`).sort());
   });
 });

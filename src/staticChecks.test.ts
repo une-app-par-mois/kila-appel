@@ -258,6 +258,8 @@ describe('Le code du dépôt respecte les contrôles', () => {
       'src/data/groupsRepo.ts',
       'src/data/membersRepo.ts',
       // Ticket 014 : validation des lignes d'une sauvegarde (brouillon compris), sans statistique.
+      // backupRows.ts n'exporte que BACKUP_ALIAS et checkRows, qui ne renvoie que INVALID_DATA ou
+      // null : il ne doit rien exporter d'autre (aucune donnée du brouillon n'en sort).
       'src/data/backupRows.ts',
     ];
     const naming = walk(join(root, 'src'))
