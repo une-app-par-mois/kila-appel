@@ -62,7 +62,9 @@ Chacune a un identifiant, cité dans le code, les tests et les tickets. Le motif
 
 ## Arrête-toi et demande
 
-Ces cas attendent toujours la réponse du porteur, même avec une recommandation nette :
+Ces cas attendent toujours la réponse du porteur, même avec une recommandation nette. Ils sont posés à la séance de questions suivante (voir « Travail par lot »), et le ticket concerné attend : il n'est pas fusionné avant la réponse.
+
+Seule exception : une action irréversible ou extérieure est posée sur le moment.
 
 - Contradiction avec un document validé (cadrage, PRD, architecture, ADR, sécurité, conformité, charte, maquette).
 - Besoin d'une nouvelle dépendance ou d'une dépense.
@@ -82,9 +84,7 @@ Pose chaque décision sous forme de choix (options, avec ta recommandation en pr
 
 Il faut qu'elles soient faciles à défaire et qu'elles ne relèvent d'aucun autre cas de la liste ci-dessus. Facile à défaire veut dire : aucune donnée effacée ni réécrite, pas de migration, pas de texte légal ni de déclaration aux stores.
 
-Pour ces questions, l'IA applique l'option qu'elle préfère. Elle ajoute la ligne dans `docs/DECISIONS.md` avec l'état « en attente du porteur », puis continue. La PR du ticket les liste en tête. À la fin du jalon, avant la PR vers `main`, l'IA pose toute la file d'un coup, en QCM. Une réponse différente de son choix se corrige sur un ticket.
-
-Le reste de la liste (écart avec la maquette compris) est toujours posé sur le moment.
+Pour ces questions, l'IA applique l'option qu'elle préfère. Elle note la décision avec l'état « en attente du porteur », puis continue. La PR du ticket les liste en tête, et elles sont posées à la séance de clôture du lot. Une réponse différente de son choix se corrige sur un ticket.
 
 ## Décisions automatiques
 
@@ -97,6 +97,31 @@ Décision du porteur du 2026-11-27 (« projet puis méthode ») : hors des cas c
 - sinon : l'IA garde et note « contestée, maintenue : <raison> ».
 
 La PR liste les décisions contestées en premier.
+
+## Travail par lot
+
+Décision du porteur du 2026-11-27 : les tickets avancent par lots de 2 à 4, et les questions sont posées en séances, pas au fil de l'eau.
+
+1. **Séance de lancement.**
+   - L'IA choisit les tickets du lot : sans dépendance entre eux, et avec le moins de fichiers communs possible (champs « Dépend de » et « Fichiers touchés » du ticket).
+   - Le sous-agent `pre-analyse` (`.claude/agents/pre-analyse.md`) lit chaque ticket et sort ses questions prévisibles.
+   - L'IA pose toutes ces questions d'un coup, en QCM. Les plans de zone sensible y sont validés aussi.
+2. **Développement en parallèle.**
+   - Au plus **3 agents de code** (`.claude/agents/codeur.md`) tournent en même temps, chacun dans son worktree et sur sa branche `ticket/…`.
+   - Chaque agent applique le « Cycle d'un ticket » jusqu'à un commit poussé et des tests verts. Il ne fusionne pas, ne crée pas de PR et ne pose aucune question.
+   - Une question qui surgit est notée dans la fiche du ticket : soit appliquée et « en attente du porteur » (file du porteur), soit « ticket en attente » (cas réservé).
+3. **Intégration** (l'IA principale seule).
+   - L'IA lance `/code-review`, le contradicteur, et `/security-review` en zone sensible. Elle renvoie les corrections à l'agent du ticket.
+   - Elle ouvre les PR et les fusionne une par une dans la branche du jalon. Après chaque fusion, les branches restantes récupèrent la branche du jalon par une fusion, jamais par un rebase, puis `./scripts/test.sh` repasse.
+   - Un ticket en attente d'une réponse, ou en zone sensible sans la relecture du porteur, n'est pas fusionné.
+4. **Séance de clôture.**
+   - L'IA pose la file de questions (`docs/QUESTIONS.md`), présente les décisions à relire et liste ce qui est à vérifier sur le téléphone.
+   - Les corrections vont dans le lot suivant.
+
+**Fichiers partagés.** Pour éviter les conflits entre agents :
+
+- un agent de code n'écrit que dans la fiche de son ticket, sections « Décisions », « Questions pour le porteur » et « À reporter », avec la ligne du CHANGELOG et celle de l'architecture ;
+- `ETAT.md`, `CHANGELOG.md`, `docs/tickets/README.md`, `docs/DECISIONS.md`, `docs/QUESTIONS.md`, `docs/ARCHITECTURE.md` et `PROMPTS.md` ne sont modifiés qu'à l'intégration, par l'IA principale.
 
 ## Mode de CI
 
@@ -112,14 +137,14 @@ La branche de groupe ou de jalon part de `main`. Seule exception, décidée par 
 
 ## Cycle d'un ticket
 
-1. **Plan validé** (ci-dessus), puis une branche `ticket/<numéro>-<intitulé-court>`, partie de `main` (mode par ticket) ou de la branche de groupe. Jamais de commit sur `main`.
+1. **Plan validé** (ci-dessus, ou à la séance de lancement d'un lot), puis une branche `ticket/<numéro>-<intitulé-court>`, partie de `main` (mode par ticket) ou de la branche de groupe. Jamais de commit sur `main`.
 2. **Test d'abord** : écrire le test, le lancer, le voir échouer, puis coder jusqu'au vert. Un bogue corrigé commence par un test qui le reproduit.
 3. **Vérifications** : `./scripts/test.sh` passe ; `/code-review` lancé, et `/security-review` en zone sensible.
 4. **PR** avec le modèle : ce qui change, tests, zone sensible oui/non, Definition of Done cochée, **ce qui n'a pas été vérifié**.
 5. **Fusion par l'IA** (jamais `--admin`, jamais de suppression de branche ; en zone sensible, seulement après la relecture du porteur) :
    - **vers une branche de groupe** : après `./scripts/test.sh` et `/code-review`, sans CI, en gardant les commits pour que gitleaks les parcoure tous : `gh pr merge <n> --merge --match-head-commit <sha>` ;
    - **vers `main`** (ticket seul ou groupe complet) : seulement quand **tous les travaux de la CI sont verts** sur le dernier commit et que la branche contient le `main` actuel (`git merge-base --is-ancestor origin/main <sha>` ; sinon `main` y est fusionné, jamais de rebase d'une branche poussée) : `gh pr merge <n> --squash --match-head-commit <sha>`. Un échec se corrige sur une branche de ticket ou sur la branche de groupe, puis la CI repart.
-6. **Journal** : `ETAT.md` à jour ; entrée dans `PROMPTS.md` si l'étape est importante.
+6. **Journal** : `ETAT.md` à jour ; entrée dans `PROMPTS.md` si l'étape est importante. Dans un lot, c'est l'intégration qui le fait (voir « Travail par lot »).
 
 Messages de commit en français, « `Domaine : ce qui change` », 72 caractères au plus en première ligne (vérifié par le hook `commit-msg`).
 
