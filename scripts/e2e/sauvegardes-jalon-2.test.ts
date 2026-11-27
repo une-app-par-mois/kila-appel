@@ -118,26 +118,50 @@ describe('030 sauvegardes fictives de la campagne du jalon 2', () => {
     );
   });
 
-  it('NF-08 volume : 500 membres, 30 groupes (3 saisons), 1 200 séances, accepté', async () => {
+  // Saison active (2026-09-01) : 40 semaines prévues, arrêtées au jour de l'appareil. Le
+  // 2026-11-27 : 13 séances par groupe (dernière le 2026-11-24), soit 130, plus les 800 des deux
+  // saisons passées.
+  it('NF-08 volume : 500 membres, 30 groupes, aucune séance après le jour, accepté', async () => {
     const path = dir.path('volume.db');
     await writeVolumeBackup(path, '2026-11-27');
     const result = await verify(path, '2026-11-27');
     expect(result.ok && result.backup.summary).toEqual({
       members: 500,
       groups: 30,
-      recordedSessions: 1200,
+      recordedSessions: 930,
       backupDate: '2026-11-27',
     });
+    const db = openNodeDb(path);
+    const [last] = await db.query<{ date: string }>('SELECT max(date) AS date FROM sessions');
+    const [orphans] = await db.query<{ n: number }>(
+      `SELECT (SELECT count(*) FROM attendances WHERE session_id NOT IN (SELECT id FROM sessions))
+        + (SELECT count(*) FROM session_groups WHERE session_id NOT IN (SELECT id FROM sessions))
+        AS n`,
+    );
+    await db.close();
+    expect(last?.date).toBe('2026-11-24');
+    expect(orphans?.n).toBe(0);
   });
 
   it('écrit les quatre sauvegardes de la campagne, jalon 1 compris, sous leurs noms', async () => {
-    await writeE2eBackups(dir.path('.'), '2026-11-27');
+    expect(await writeE2eBackups(dir.path('.'), '2026-11-27')).toEqual(Object.values(E2E_FILES));
     expect(readdirSync(dir.path('.')).sort()).toEqual(Object.values(E2E_FILES).sort());
     expect(E2E_FILES.milestone1).toBe('kila-e2e-sauvegarde-fictive.db');
   });
 
-  it('hors du jeu du 023, n’écrit aucune des quatre sauvegardes', async () => {
-    await expect(writeE2eBackups(dir.path('.'), '2026-11-20')).rejects.toThrow(/hors du jeu/);
-    expect(readdirSync(dir.path('.'))).toEqual([]);
-  });
+  // Hors du jeu du 023, seule la sauvegarde des statistiques manque : le reste de la campagne,
+  // jalon 1 compris, tourne à n'importe quelle date.
+  it.each(['2026-11-20', '2027-08-15'])(
+    'le %s, les sauvegardes sont écrites et passent, sauf celle des statistiques',
+    async (today) => {
+      const written = await writeE2eBackups(dir.path('.'), today);
+      const expected = [E2E_FILES.milestone1, E2E_FILES.alerts, E2E_FILES.volume];
+      expect(written).toEqual(expected);
+      expect(readdirSync(dir.path('.')).sort()).toEqual([...expected].sort());
+      for (const name of expected) {
+        const result = await verify(dir.path(name), today);
+        expect(result.ok).toBe(true);
+      }
+    },
+  );
 });

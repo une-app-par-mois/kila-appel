@@ -89,7 +89,7 @@ Les règles du projet pour l'IA sont dans [`CLAUDE.md`](CLAUDE.md), ses garde-fo
 
 Parcours [Maestro](https://maestro.dev) (`.maestro/`), lancés en fin de jalon : appel de 20 membres chronométré, brouillon retrouvé après une fermeture forcée, sauvegarde puis tout effacer puis restauration (jalon 1) ; alerte traitée puis revenue, statistiques du jeu vérifié à la main, réglage de la relance avec le dialogue de permission du système, durées indicatives de NF-08 sur une sauvegarde de volume (jalon 2).
 
-Prérequis : Node 22.15 ou plus récent (le générateur des sauvegardes fictives utilise `module.registerHooks`) et `npm ci` ; Maestro 2.12.0 (`~/.maestro/bin/maestro` ou dans le `PATH`) ; `adb` ; un émulateur Android démarré, et un seul appareil branché (sinon `ANDROID_SERIAL=<numéro>`). Sélecteur de fichiers du système en anglais ou en français. Date de l'appareil entre le 25/11/2026 et le 31/07/2027 (jeu des statistiques), sinon le script refuse.
+Prérequis : Node 22.15 ou plus récent (le générateur des sauvegardes fictives utilise `module.registerHooks`) et `npm ci` ; Maestro 2.12.0 (`~/.maestro/bin/maestro` ou dans le `PATH`) ; `adb` ; un émulateur Android API 33 ou plus démarré (Android 13 : la permission de notification se demande ; vérifié par le script), et un seul appareil branché (sinon `ANDROID_SERIAL=<numéro>`). Sélecteur de fichiers du système en anglais ou en français. Hors du 25/11/2026 au 31/07/2027 (jeu des statistiques), le parcours `statistiques` n'est pas joué, avec un avertissement ; les autres tournent à n'importe quelle date.
 
 ```bash
 # APK de version, construit en local (ou l'artefact de la CI de la PR du jalon)

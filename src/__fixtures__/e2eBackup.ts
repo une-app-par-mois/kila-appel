@@ -64,8 +64,11 @@ export const ALERTS_BACKUP: SmallBackup = {
  */
 export const STATS_DAYS = { first: '2026-11-25', last: '2027-07-31' } as const;
 
+/** Jour de l'appareil où les taux du jeu du 023 tiennent (période « Saison »). */
+export const isStatsDay = (today: string) => today >= STATS_DAYS.first && today <= STATS_DAYS.last;
+
 const checkStatsDay = (today: string) => {
-  if (today < STATS_DAYS.first || today > STATS_DAYS.last)
+  if (!isStatsDay(today))
     throw new Error(
       `Jour de l'appareil ${today} hors du jeu des statistiques (du ${STATS_DAYS.first} au ${STATS_DAYS.last}) : ` +
         'régler la date de l’émulateur.',
@@ -154,15 +157,33 @@ export const writeStatsBackup = async (path: string, today: string) => {
   await writeBackup(path, today, statsSeed);
 };
 
-/** Sauvegarde de NF-08 : `volumeSeed` tel quel (500 membres, 3 saisons). */
+/**
+ * Sauvegarde de NF-08 : `volumeSeed` (500 membres, 3 saisons), sans aucune séance après `today`
+ * (l'appli n'en enregistre jamais) : la mesure ne dépend pas de la date au-delà du volume réel.
+ */
 export const writeVolumeBackup = (path: string, today: string) =>
-  writeBackup(path, today, (db) => volumeSeed(db));
+  writeBackup(path, today, async (db) => {
+    await volumeSeed(db);
+    const later = 'SELECT id FROM sessions WHERE date > ?';
+    await db.execute(`DELETE FROM attendances WHERE session_id IN (${later})`, [today]);
+    await db.execute(`DELETE FROM session_groups WHERE session_id IN (${later})`, [today]);
+    await db.execute('DELETE FROM sessions WHERE date > ?', [today]);
+  });
 
-/** Les quatre sauvegardes de la campagne dans `dir` ; aucune si le jour est refusé. */
-export const writeE2eBackups = async (dir: string, today: string): Promise<void> => {
-  checkStatsDay(today);
-  await writeE2eBackup(join(dir, E2E_FILES.milestone1), today);
-  await writeAlertsBackup(join(dir, E2E_FILES.alerts), today);
-  await writeStatsBackup(join(dir, E2E_FILES.stats), today);
-  await writeVolumeBackup(join(dir, E2E_FILES.volume), today);
+/**
+ * Les sauvegardes de la campagne dans `dir`, rend les noms écrits. Hors de `STATS_DAYS`, celle
+ * des statistiques n'est pas écrite (scripts/e2e.sh ne joue alors pas `statistiques.yaml`) ; les
+ * autres le sont à n'importe quelle date.
+ */
+export const writeE2eBackups = async (dir: string, today: string): Promise<string[]> => {
+  const written: string[] = [];
+  const write = async (name: string, writer: (path: string, today: string) => Promise<void>) => {
+    await writer(join(dir, name), today);
+    written.push(name);
+  };
+  await write(E2E_FILES.milestone1, writeE2eBackup);
+  await write(E2E_FILES.alerts, writeAlertsBackup);
+  if (isStatsDay(today)) await write(E2E_FILES.stats, writeStatsBackup);
+  await write(E2E_FILES.volume, writeVolumeBackup);
+  return written;
 };

@@ -1,6 +1,7 @@
 // Sauvegardes fictives des parcours de bout en bout (tickets 016 et 030), lancées par scripts/e2e.sh :
 //   node --experimental-transform-types scripts/e2e/sauvegarde-fictive.mjs <dossier> [AAAA-MM-JJ]
-// Écrit dans <dossier> les quatre sauvegardes de la campagne (E2E_FILES de e2eBackup.ts).
+// Écrit dans <dossier> les sauvegardes de la campagne (E2E_FILES de e2eBackup.ts) ; celle des
+// statistiques seulement du 2026-11-25 au 2027-07-31 (STATS_DAYS), sinon un avertissement.
 // Elle réutilise le code de src/data/ tel quel (node:sqlite, comme les tests, ADR-008) : Node 22
 // traduit le TypeScript (l'option est nécessaire : src/ a des propriétés de paramètre), et ce
 // crochet de résolution traduit l'alias « @/ » vers src/.
@@ -47,13 +48,12 @@ if (!/^\d{4}-\d{2}-\d{2}$/.test(today)) {
   process.exit(2);
 }
 
-const { E2E_FILES, writeE2eBackups } = await import('@/__fixtures__/e2eBackup');
-try {
-  await writeE2eBackups(resolve(target), today);
-} catch (error) {
-  // Refus attendu (jour hors du jeu des statistiques) : le message seul, sans pile.
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exit(1);
-}
+const { E2E_FILES, STATS_DAYS, writeE2eBackups } = await import('@/__fixtures__/e2eBackup');
+const written = await writeE2eBackups(resolve(target), today);
 console.log(`Sauvegardes fictives écrites dans ${target} (${today}) :`);
-for (const name of Object.values(E2E_FILES)) console.log(`  ${name}`);
+for (const name of written) console.log(`  ${name}`);
+if (!written.includes(E2E_FILES.stats))
+  console.warn(
+    `Attention : ${E2E_FILES.stats} non écrite, jour ${today} hors du jeu des statistiques ` +
+      `(du ${STATS_DAYS.first} au ${STATS_DAYS.last}).`,
+  );

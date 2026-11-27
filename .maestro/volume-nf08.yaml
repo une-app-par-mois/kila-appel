@@ -1,6 +1,6 @@
 # NF-08 à titre indicatif (ticket 030, décision du porteur du 2026-11-27) : sauvegarde de volume
-# `kila-e2e-volume.db` (`volumeSeed` : 500 membres, 3 saisons, 1 200 séances, 60 000 présences),
-# restaurée, puis deux durées relevées sur l'émulateur, sans seuil : accueil (alertes) après un
+# `kila-e2e-volume.db` (`volumeSeed` : 500 membres, 3 saisons ; séances arrêtées au jour de
+# l'appareil, 930 le 2026-11-27), restaurée, puis deux durées relevées sur l'émulateur, sans seuil : accueil (alertes) après un
 # lancement à froid, et onglet Stats. Elles comprennent le temps propre de Maestro ; le porteur
 # juge à l'œil sur l'A55.
 appId: com.jitavision.kila
@@ -9,7 +9,7 @@ appId: com.jitavision.kila
     file: sous-parcours/restaurer.yaml
     env:
       FICHIER: 'kila-e2e-volume.db'
-      RESUME: '500 membres · 30 groupes · 1200 séances'
+      RESUME: '500 membres · 30 groupes · \d+ séances'
 - extendedWaitUntil:
     visible: 'Alertes d’assiduité'
     timeout: 30000

@@ -79,6 +79,12 @@ else
   echo "Émulateur : $serial"
 fi
 adb_() { adb -s "$serial" "$@"; }
+# Android 13 (API 33) au moins : la permission de notification se demande (parcours de la relance).
+sdk="$(adb_ shell getprop ro.build.version.sdk | tr -d '\r')"
+if [[ ! "$sdk" =~ ^[0-9]+$ ]] || [ "$sdk" -lt 33 ]; then
+  echo "::error::Android API 33 ou plus nécessaire (appareil : « $sdk »)." >&2
+  exit 1
+fi
 
 echo "== Installation (efface les données de l'appli)"
 adb_ uninstall "$PACKAGE" >/dev/null 2>&1 || true
@@ -87,8 +93,9 @@ adb_ install "$apk"
 echo "== Sauvegardes fictives dans Téléchargements (aucun binaire versionné, SEC-13)"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
-# Le jour de l'appareil : les séances fictives tombent dans ses 30 derniers jours ; le jeu des
-# statistiques (ticket 030) n'est valable que du 2026-11-25 au 2027-07-31, sinon refus.
+# Le jour de l'appareil : les séances fictives tombent dans ses 30 derniers jours. Le jeu des
+# statistiques (ticket 030) ne vaut que du 2026-11-25 au 2027-07-31 : sinon sa sauvegarde n'est pas
+# écrite et le parcours `statistiques` (tag `statistiques`) n'est pas joué.
 today="$(adb_ shell date +%F | tr -d '\r')"
 if [[ ! "$today" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
   echo "::error::Date de l'appareil illisible : « $today » (attendu : AAAA-MM-JJ)." >&2
@@ -104,4 +111,9 @@ for backup in "$work/$BACKUP_PREFIX"*.db; do
 done
 
 echo "== Parcours Maestro"
-"$maestro" --device "$serial" test .maestro
+skip=()
+if [ ! -f "$work/${BACKUP_PREFIX}statistiques.db" ]; then
+  echo "::warning::Parcours statistiques non joué : jour de l'appareil $today hors du jeu du 023." >&2
+  skip=(--exclude-tags statistiques)
+fi
+"$maestro" --device "$serial" test "${skip[@]}" .maestro
