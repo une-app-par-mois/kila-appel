@@ -6,6 +6,7 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Ajouté
 
+- Écran Restauration : choix d'un fichier par le sélecteur du système, vérification sur une copie à part (« Vérification du fichier… »), résumé et appel en cours remplacé annoncés, confirmation « Remplacer mes données », puis accueil ; quatre messages de refus clairs, rien n'est modifié ; l'écran ne se quitte pas pendant la restauration ; export et restauration jamais en même temps ; copies temporaires effacées dans tous les cas (EX-20, NF-04, SEC-10) — ticket 014e.
 - Écran Sauvegarde : export d'une copie datée de la base par le partage du système, avertissement complet « fichier non protégé » avant l'export, date de la dernière sauvegarde notée à la fin du partage et affichée dans l'écran et dans Paramètres ; copie effacée dès la fin du partage (EX-19, EX-21, SEC-09, ABS-06) — ticket 014b.
 - Sécurité : le mode de journal de la base est fixé à `delete` et vérifié à chaque ouverture ; sinon la base n'est pas ouverte (SEC-11, ABS-05) — ticket 015c.
 - Onglet Historique : séances enregistrées et appels manquants, la plus récente en haut, filtres par groupe et par période (30 derniers jours, saison active, toutes les saisons) ; détail d'une séance pour corriger les statuts et le commentaire, ou la supprimer après confirmation (EX-16 à EX-18). Après l'enregistrement d'un appel, retour à l'Historique ; le compteur compte les retards parmi les présents (« 19 présents dont 2 retards ») ; barre d'onglets à cinq places, le rond « Nouvel appel » au centre — ticket 013.

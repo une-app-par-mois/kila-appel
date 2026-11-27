@@ -1,6 +1,6 @@
 # 014e — Écran Restauration
 
-Statut : prêt pour l’intégration (questions répondues par le porteur le 2026-11-27, corrections des revues faites ; code poussé sur `ticket/014e-restauration`) · Jalon : 1 · Zone sensible : oui (plan validé par le porteur le 2026-11-27) · Trivial : non
+Statut : fusionné dans le groupe (PR #46, relu et accepté par le porteur le 2026-11-27 ; recette sur l'A55 : export, désinstallation, restauration identique) · Jalon : 1 · Zone sensible : oui (plan validé par le porteur le 2026-11-27) · Trivial : non
 
 Dépend de : 014, 014b · Fichiers touchés : `src/data/expoFiles.ts`, `src/staticChecksFiles.test.ts`, `scripts/maquettes.mjs`, `package.json`, `package-lock.json`, `src/config/licences.json`, `src/hooks/useRestore.ts` (nouveau), `src/app/restauration.tsx` (nouveau), `src/app/donnees.tsx`, libellés, `jest.setup.js`, tests
 

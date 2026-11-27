@@ -25,7 +25,7 @@ Une base illisible au démarrage mène à un écran de récupération, jamais à
 - [ ] « Repartir de zéro » demande une confirmation
 - [ ] Version plus récente que l'appli : message « mettez l'appli à jour », sans « Repartir de zéro » mis en avant
 - [ ] `SECURE_DELETE_OFF`, `FOREIGN_KEYS_OFF` et `JOURNAL_MODE_OFF` (ticket 015c) : écran d'erreur avec « Réessayer », sans action destructrice
-- [ ] `cache/sauvegardes/` vidé au démarrage de l'appli (layout racine), en cas d'arrêt pendant un partage (revue de sécurité du 014b)
+- [ ] Au démarrage de l'appli (layout racine), jamais pendant une opération (`fileLock`) : `cache/sauvegardes/`, `cache/restauration/`, `cache/DocumentPicker/` et, sur iOS, `tmp/com.jitavision.kila-Inbox/` vidés (arrêt brutal pendant un partage ou une restauration ; revues de sécurité du 014b et du 014e) ; `expoStorage(…).clear()` et `expoPicker(Platform.OS).clearPicked()` existent
 
 ## Tests attendus
 
