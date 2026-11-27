@@ -4,7 +4,7 @@
 // Adaptateur expo-file-system et expo-sharing de la sauvegarde (ticket 014b, EX-19). Le module
 // natif est imité sur node:fs, dans un dossier temporaire qui tient lieu de cache de l'appareil :
 // on teste le code de l'adaptateur, pas le module natif (ADR-008).
-import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   expoBackupDeps,
@@ -16,63 +16,7 @@ import {
 
 jest.mock('expo-sqlite', () => ({ openDatabaseAsync: jest.fn() }));
 jest.mock('expo-sharing', () => ({ shareAsync: jest.fn(async () => undefined) }));
-jest.mock('expo-file-system', () => {
-  const fs = require('node:fs');
-  const { join: joinPath } = require('node:path');
-  const { tmpdir } = require('node:os');
-  const root: string = fs.mkdtempSync(joinPath(tmpdir(), 'kila-expo-fs-'));
-  type MockPart = string | { uri: string };
-  const uriOf = (parts: MockPart[]) =>
-    parts
-      .map((p) => (typeof p === 'string' ? p : p.uri))
-      .reduce((a, b) => `${a.replace(/\/+$/, '')}/${b.replace(/^\/+/, '')}`);
-  const pathOf = (uri: string) => decodeURIComponent(uri.replace(/^file:\/\//, ''));
-  class FakeFile {
-    uri: string;
-    constructor(...parts: MockPart[]) {
-      this.uri = uriOf(parts);
-    }
-    get size() {
-      return fs.existsSync(pathOf(this.uri)) ? fs.statSync(pathOf(this.uri)).size : 0;
-    }
-    open() {
-      const fd = fs.openSync(pathOf(this.uri), 'r');
-      return {
-        readBytes: async (length: number) => {
-          const buffer = new Uint8Array(length);
-          const read = fs.readSync(fd, buffer, 0, length, 0);
-          return buffer.slice(0, read);
-        },
-        close: () => fs.closeSync(fd),
-      };
-    }
-    async copy(destination: FakeFile) {
-      if (fs.existsSync(pathOf(destination.uri))) throw new Error('DestinationAlreadyExists');
-      fs.copyFileSync(pathOf(this.uri), pathOf(destination.uri));
-    }
-  }
-  class FakeDirectory {
-    uri: string;
-    constructor(...parts: MockPart[]) {
-      this.uri = `${uriOf(parts).replace(/\/+$/, '')}/`;
-    }
-    get exists() {
-      return fs.existsSync(pathOf(this.uri));
-    }
-    create(options?: { intermediates?: boolean }) {
-      fs.mkdirSync(pathOf(this.uri), { recursive: options?.intermediates === true });
-    }
-    delete() {
-      fs.rmSync(pathOf(this.uri), { recursive: true });
-    }
-  }
-  return {
-    File: FakeFile,
-    Directory: FakeDirectory,
-    FileMode: { ReadOnly: 'r' },
-    Paths: { cache: new FakeDirectory(`file://${root}/cache dir/`), root },
-  };
-});
+jest.mock('expo-file-system', () => require('@/__fixtures__/expoModules').fakeFileSystem());
 
 const { shareAsync } = jest.requireMock('expo-sharing') as { shareAsync: jest.Mock };
 const fsMock = jest.requireMock('expo-file-system') as { Paths: { root: string } };
@@ -165,6 +109,15 @@ describe('EX-19 dossier dédié de la sauvegarde, dans le cache', () => {
     }
     expect(existsSync(dir)).toBe(true);
     expect(readFileSync(join(cache, 'autre.txt'), 'utf8')).toBe('gardé');
+  });
+
+  it('refuse un sous-dossier imbriqué (a/b) : seul un sous-dossier direct s’efface', async () => {
+    const dir = await files.newDir();
+    const nested = join(dir, 'b');
+    mkdirSync(nested);
+    writeFileSync(join(nested, 'copie.db'), 'x');
+    await expect(files.removeDir(nested)).rejects.toThrow('Chemin de fichier refusé');
+    expect(readFileSync(join(nested, 'copie.db'), 'utf8')).toBe('x');
   });
 });
 

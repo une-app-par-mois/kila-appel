@@ -34,14 +34,18 @@ export const checkSystemPath = (path: string): string => {
   return path;
 };
 
+// Chaque copie a sa propre connexion : expo-sqlite ne la confond pas avec celle de la base de
+// l'appli, même à nom égal (revue de sécurité du 014b).
+const OWN_CONNECTION = { useNewConnection: true };
+
 /**
  * Ouvre une copie de sauvegarde par son chemin **telle quelle** (contrat de verifyBackup, ticket
  * 014) : ni prepareDatabase ni migrations, sinon une base en version 0 serait migrée puis acceptée.
  * ':memory:' ouvre une base vide en mémoire (schéma attendu).
  */
 export const openExpoCopy = async (path: string): Promise<Db> => {
-  if (path === ':memory:') return wrap(await openDatabaseAsync(path));
+  if (path === ':memory:') return wrap(await openDatabaseAsync(path, OWN_CONNECTION));
   checkSystemPath(path);
   const cut = path.lastIndexOf('/');
-  return wrap(await openDatabaseAsync(path.slice(cut + 1), undefined, path.slice(0, cut)));
+  return wrap(await openDatabaseAsync(path.slice(cut + 1), OWN_CONNECTION, path.slice(0, cut)));
 };

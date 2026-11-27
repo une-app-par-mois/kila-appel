@@ -3,16 +3,23 @@
  */
 // ABS-01, SEC-01 (ticket 014b, décision du porteur du 2026-11-27) : expo-file-system et
 // expo-sharing ne sont importés que par l'adaptateur src/data/expoFiles.ts ;
-// expo-file-system/legacy et les fonctions réseau de ces modules sont refusés partout.
-// Contrôle sur l'arbre syntaxique de TypeScript, comme src/staticChecks.test.ts.
-import { readdirSync, readFileSync } from 'node:fs';
+// leurs sous-chemins (legacy, next, build), leurs fonctions réseau et l'accès direct aux modules
+// natifs (requireNativeModule) sont refusés partout (revue de sécurité du 014b).
+// Contrôle sur l'arbre syntaxique de TypeScript, comme src/staticChecks.test.ts. Limite connue :
+// un nom calculé (obj[a + b], obj[nom]) n'est pas vu ; la revue et l'audit de l'APK le complètent.
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import ts from 'typescript';
+import { tempDir } from '@/__fixtures__/backupFiles';
+import { scriptKind, TEST_FILE, walkSources } from '@/__fixtures__/sourceFiles';
 
 /** Seul fichier autorisé à importer expo-file-system et expo-sharing (liste testée). */
 const FILE_MODULE_OWNERS = ['src/data/expoFiles.ts'];
-const FILE_MODULES = /^(expo-file-system|expo-sharing)(\/|$)/;
-const LEGACY = /^expo-file-system\/(legacy|next)(\/|$)/;
+const FILE_MODULES = /^(expo-file-system|expo-sharing)$/;
+// Sous-chemin d'un de ces modules (legacy, next, build/…) : refusé partout, adaptateur compris.
+const SUBPATH = /^(expo-file-system|expo-sharing)\//;
+// Accès direct à un module natif, qui contournerait l'adaptateur et ce contrôle.
+const NATIVE_ACCESS = new Set(['requireNativeModule', 'requireOptionalNativeModule']);
 // Téléchargement et envoi d'expo-file-system (nouvelle API et legacy), et résolution d'un contenu
 // partagé par expo-sharing (« peut demander une connexion au réseau »).
 const FILE_NETWORK = new Set([
@@ -56,22 +63,23 @@ const moduleName = (node: ts.Node): string | undefined => {
 
 /** Écarts d'un fichier (`file` relatif à la racine du dépôt). */
 const check = (file: string, source: string): Violation[] => {
-  const kind = file.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
-  const tree = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, kind);
+  const tree = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, scriptKind(file));
   const found: Violation[] = [];
   const add = (rule: string, node: ts.Node) =>
     found.push({ rule, line: tree.getLineAndCharacterOfPosition(node.getStart()).line + 1 });
   const visit = (node: ts.Node) => {
     const name = moduleName(node);
-    if (name !== undefined && LEGACY.test(name)) add('ABS-01 expo-file-system/legacy', node);
+    if (name !== undefined && SUBPATH.test(name)) add('ABS-01 sous-chemin', node);
     else if (name !== undefined && FILE_MODULES.test(name) && !FILE_MODULE_OWNERS.includes(file)) {
       add('ABS-01 import hors de expoFiles.ts', node);
     }
-    if (ts.isIdentifier(node) && FILE_NETWORK.has(node.text)) add('ABS-01 réseau', node);
-    if (ts.isElementAccessExpression(node)) {
-      const key = literalText(node.argumentExpression);
-      if (key !== undefined && FILE_NETWORK.has(key)) add('ABS-01 réseau', node);
-    }
+    const key = ts.isElementAccessExpression(node)
+      ? literalText(node.argumentExpression)
+      : ts.isIdentifier(node)
+        ? node.text
+        : undefined;
+    if (key !== undefined && FILE_NETWORK.has(key)) add('ABS-01 réseau', node);
+    if (key !== undefined && NATIVE_ACCESS.has(key)) add('ABS-01 module natif', node);
     ts.forEachChild(node, visit);
   };
   visit(tree);
@@ -89,7 +97,6 @@ describe('ABS-01 expo-file-system et expo-sharing seulement dans src/data/expoFi
     "const fs = require('expo-file-system');",
     "const fs = await import('expo-file-system');",
     "type F = import('expo-file-system').File;",
-    "import { x } from 'expo-file-system/build/File';",
   ])('repère hors de l’adaptateur : %s', (source) => {
     expect(rules('src/hooks/useBackupExport.ts', source)).toEqual([
       'ABS-01 import hors de expoFiles.ts',
@@ -110,8 +117,28 @@ describe('ABS-01 expo-file-system et expo-sharing seulement dans src/data/expoFi
     "import { getInfoAsync } from 'expo-file-system/legacy';",
     "const legacy = require('expo-file-system/legacy');",
     "import { File } from 'expo-file-system/next';",
+    "import { File } from 'expo-file-system/build/File';",
+    "const n = require('expo-file-system/build/ExpoFileSystem');",
+    "import { shareAsync } from 'expo-sharing/build/Sharing';",
   ])('refuse partout, adaptateur compris : %s', (source) => {
-    expect(rules('src/data/expoFiles.ts', source)).toEqual(['ABS-01 expo-file-system/legacy']);
+    expect(rules('src/data/expoFiles.ts', source)).toEqual(['ABS-01 sous-chemin']);
+  });
+
+  it.each([
+    "import { requireNativeModule } from 'expo-modules-core';",
+    "const m = requireOptionalNativeModule('FileSystem');",
+    "const m = expo['requireNativeModule']('FileSystem');",
+  ])('refuse l’accès direct à un module natif, partout : %s', (source) => {
+    expect(rules('src/data/expoFiles.ts', source)).toEqual(['ABS-01 module natif']);
+  });
+
+  it('analyse aussi le JavaScript (.js, .jsx, .mjs, .cjs)', () => {
+    for (const file of ['src/a.js', 'src/a.jsx', 'src/a.mjs', 'src/a.cjs']) {
+      expect(rules(file, "const fs = require('expo-file-system'); fs.upload(u);")).toEqual([
+        'ABS-01 import hors de expoFiles.ts',
+        'ABS-01 réseau',
+      ]);
+    }
   });
 
   it.each([
@@ -140,13 +167,7 @@ describe('ABS-01 expo-file-system et expo-sharing seulement dans src/data/expoFi
 
 describe('Le code du dépôt respecte le contrôle des fichiers', () => {
   const root = join(__dirname, '..');
-  const walk = (dir: string): string[] =>
-    readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-      const path = join(dir, entry.name);
-      if (entry.isDirectory()) return walk(path);
-      return /\.tsx?$/.test(entry.name) && !entry.name.endsWith('.d.ts') ? [path] : [];
-    });
-  const files = walk(join(root, 'src')).map((path) => relative(root, path));
+  const files = walkSources(join(root, 'src')).map((path) => relative(root, path));
   const read = (file: string) => readFileSync(join(root, file), 'utf8');
   // Ce fichier-ci nomme ces modules et ces fonctions pour les contrôler.
   const SELF = 'src/staticChecksFiles.test.ts';
@@ -160,8 +181,28 @@ describe('Le code du dépôt respecte le contrôle des fichiers', () => {
 
   it('seul src/data/expoFiles.ts importe expo-file-system et expo-sharing', () => {
     const importing = files
-      .filter((file) => !/\.test\.tsx?$/.test(file))
+      .filter((file) => !TEST_FILE.test(file))
       .filter((file) => /['"](expo-file-system|expo-sharing)/.test(read(file)));
     expect(importing).toEqual(FILE_MODULE_OWNERS);
+  });
+
+  it('staticChecks.test.ts parcourt src/ avec le même parcours et la même grammaire', () => {
+    const source = read('src/staticChecks.test.ts');
+    expect(source).toContain("from '@/__fixtures__/sourceFiles'");
+    expect(source).toContain('walkSources');
+    expect(source).toContain('scriptKind(file)');
+  });
+
+  it('le parcours de src/ (les deux contrôles) prend tous les fichiers de code, sous-dossiers compris', () => {
+    const dir = tempDir();
+    try {
+      mkdirSync(dir.path('sous'), { recursive: true });
+      const names = ['a.ts', 'b.tsx', 'c.js', 'd.jsx', 'e.mjs', 'sous/f.cjs', 'g.d.ts', 'h.json'];
+      for (const name of names) writeFileSync(dir.path(name), '');
+      const found = walkSources(dir.path('')).map((path) => relative(dir.path(''), path));
+      expect(found.sort()).toEqual(['a.ts', 'b.tsx', 'c.js', 'd.jsx', 'e.mjs', 'sous/f.cjs']);
+    } finally {
+      dir.remove();
+    }
   });
 });

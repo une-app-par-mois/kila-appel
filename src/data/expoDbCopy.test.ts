@@ -13,25 +13,15 @@ import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
 
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
-jest.mock('expo-sqlite', () => {
-  const { DatabaseSync } = require('node:sqlite');
-  const { join } = require('node:path');
-  return {
-    openDatabaseAsync: jest.fn(async (name: string, _options?: object, directory?: string) => {
-      const raw = new DatabaseSync(name === ':memory:' ? name : join(directory ?? '', name));
-      return {
-        runAsync: async (sql: string, params: unknown[]) => {
-          const r = raw.prepare(sql).run(...params);
-          return { changes: Number(r.changes), lastInsertRowId: Number(r.lastInsertRowid) };
-        },
-        getAllAsync: async (sql: string, params: unknown[]) => raw.prepare(sql).all(...params),
-        execAsync: async (sql: string) => raw.exec(sql),
-        closeAsync: async () => raw.close(),
-      };
-    }),
-  };
-});
-const { openDatabaseAsync } = jest.requireMock('expo-sqlite') as { openDatabaseAsync: jest.Mock };
+const mockOpened = jest.fn();
+jest.mock('expo-sqlite', () =>
+  require('@/__fixtures__/expoModules').fakeSqlite(
+    (name: string, options?: object, directory?: string) => mockOpened(name, options, directory),
+  ),
+);
+const openDatabaseAsync = mockOpened;
+// Connexion à part pour chaque copie (revue de sécurité du 014b), jamais celle de la base de l'appli.
+const OWN = { useNewConnection: true };
 
 describe('EX-19 EX-20 ouverture brute d’une copie (openExpoCopy)', () => {
   let dir: ReturnType<typeof tempDir>;
@@ -47,7 +37,7 @@ describe('EX-19 EX-20 ouverture brute d’une copie (openExpoCopy)', () => {
     await plain.execute('CREATE TABLE autre (x INTEGER)');
     await plain.close();
     const copy = await openExpoCopy(path);
-    expect(openDatabaseAsync).toHaveBeenCalledWith('copie.db', undefined, path.slice(0, -9));
+    expect(openDatabaseAsync).toHaveBeenCalledWith('copie.db', OWN, path.slice(0, -9));
     expect(await copy.query('PRAGMA user_version')).toEqual([{ user_version: 0 }]);
     expect(await copy.query("SELECT name FROM sqlite_schema WHERE type = 'table'")).toEqual([
       { name: 'autre' },
@@ -57,7 +47,7 @@ describe('EX-19 EX-20 ouverture brute d’une copie (openExpoCopy)', () => {
 
   it('ouvre une base vide en mémoire', async () => {
     const memory = await openExpoCopy(':memory:');
-    expect(openDatabaseAsync).toHaveBeenCalledWith(':memory:');
+    expect(openDatabaseAsync).toHaveBeenCalledWith(':memory:', OWN, undefined);
     expect(await memory.query('PRAGMA user_version')).toEqual([{ user_version: 0 }]);
     await memory.close();
   });

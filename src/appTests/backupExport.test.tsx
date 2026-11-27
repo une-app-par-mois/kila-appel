@@ -4,7 +4,7 @@
 // vendredi 27/11/2026.
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
+import { act, fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
 import { nodeStorage, tempDir } from '@/__fixtures__/backupFiles';
 import { seed } from '@/__fixtures__/seed';
 import Backup from '@/app/donnees';
@@ -186,4 +186,22 @@ describe('Paramètres › Données › Sauvegarde et restauration', () => {
     await open('/parametres');
     expect(await screen.findByText('Aucune sauvegarde')).toBeTruthy();
   });
+
+  it.each([
+    ['/donnees', 'Dernière sauvegarde : aujourd’hui.', 'Dernière sauvegarde : hier.'],
+    ['/parametres', 'Dernière : aujourd’hui', 'Dernière : hier'],
+  ])(
+    'EX-21 %s ouvert après minuit : « aujourd’hui » devient « hier »',
+    async (url, before, after) => {
+      jest.setSystemTime(new Date(2026, 10, 27, 23, 59, 30));
+      await settingsRepo(db).setLastBackupDate('2026-11-27');
+      await open(url);
+      expect(await screen.findByText(before)).toBeTruthy();
+      // L'horloge partagée (ticket 012) relit l'heure toutes les 15 s.
+      await act(async () => {
+        jest.advanceTimersByTime(45_000);
+      });
+      expect(await screen.findByText(after)).toBeTruthy();
+    },
+  );
 });

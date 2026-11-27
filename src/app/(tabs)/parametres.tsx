@@ -6,6 +6,7 @@ import { labels } from '@/config/libelles';
 import { toIsoDate } from '@/domain/formats';
 import { toLastBackup, useLastBackup } from '@/hooks/useBackupExport';
 import { useGroups } from '@/hooks/useGroups';
+import { useLocalNow } from '@/hooks/useLocalNow';
 import { useMembers } from '@/hooks/useMembers';
 import { useSeasons } from '@/hooks/useSeasons';
 import { useSlots } from '@/hooks/useSlots';
@@ -23,6 +24,8 @@ export default function Settings() {
   const { members, loadFailed: membersFailed } = useMembers({ today: toIsoDate(new Date()) });
   const { slots, loadFailed: slotsFailed } = useSlots(active?.id ?? null);
   const { lastBackup, loaded: backupLoaded, loadFailed: backupFailed } = useLastBackup();
+  // Horloge partagée (ticket 012) : « aujourd'hui » devient « hier » après minuit, page ouverte.
+  const now = useLocalNow();
   return (
     <Screen
       title={t.title}
@@ -78,9 +81,7 @@ export default function Settings() {
         <ListRow
           title={t.backup}
           subtitle={
-            backupLoaded
-              ? labels.backup.settingsRow(toLastBackup(lastBackup, toIsoDate(new Date())))
-              : undefined
+            backupLoaded ? labels.backup.settingsRow(toLastBackup(lastBackup, now.date)) : undefined
           }
           onPress={() => router.push('/donnees')}
         />

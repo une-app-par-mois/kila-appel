@@ -6,8 +6,8 @@ import { StyleSheet, Text } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
 import { expoBackupDeps } from '@/data/expoFiles';
-import { toIsoDate } from '@/domain/formats';
 import { toLastBackup, useBackupExport, useLastBackup } from '@/hooks/useBackupExport';
+import { useLocalNow } from '@/hooks/useLocalNow';
 import { Button } from '@/ui/Button';
 import { Card } from '@/ui/Card';
 import { Screen } from '@/ui/Screen';
@@ -18,6 +18,8 @@ export default function Backup() {
   const router = useRouter();
   const { exportNow, busy, failed } = useBackupExport(expoBackupDeps);
   const { lastBackup, loaded, loadFailed } = useLastBackup();
+  // Horloge partagée (ticket 012) : « aujourd'hui » devient « hier » après minuit, page ouverte.
+  const now = useLocalNow();
   return (
     <Screen
       title={t.title}
@@ -34,9 +36,7 @@ export default function Backup() {
       </Card>
       <Button label={t.export} onPress={() => void exportNow()} disabled={busy} />
       {failed && <Text style={styles.error}>{t.exportFailed}</Text>}
-      {loaded && (
-        <Text style={styles.note}>{t.last(toLastBackup(lastBackup, toIsoDate(new Date())))}</Text>
-      )}
+      {loaded && <Text style={styles.note}>{t.last(toLastBackup(lastBackup, now.date))}</Text>}
     </Screen>
   );
 }

@@ -6,7 +6,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { LastBackup } from '@/config/libelles';
 import { exportBackup } from '@/data/backup';
 import { verifyBackup } from '@/data/backupCheck';
-import type { BackupDeps } from '@/data/expoFiles';
+import type { Db } from '@/data/db';
+import type { BackupDeps, BackupStorage } from '@/data/expoFiles';
 import { log } from '@/data/log';
 import { settingsRepo } from '@/data/settingsRepo';
 import { daysSince, toDisplayDate, toIsoDate } from '@/domain/formats';
@@ -26,54 +27,78 @@ export const useLastBackup = () => {
   return { lastBackup: value, loaded, loadFailed };
 };
 
+// Un seul export à la fois dans l'appli, au niveau du module (revue du 014b) : un second écran
+// Sauvegarde, monté pendant un partage, ne vide pas le dossier et ne lance pas un autre export.
+let exporting: Promise<boolean> | null = null;
+// Vidage du dossier dédié : un export attend qu'il soit fini avant d'y écrire.
+let clearing: Promise<void> = Promise.resolve();
+
+/** Copies restées d'un arrêt brutal pendant un partage ; rien pendant un export en cours. */
+const clearDir = (files: BackupStorage) => {
+  if (exporting) return;
+  clearing = clearing.then(() => files.clear()).catch(() => log('BACKUP_CLEAR_FAILED'));
+};
+
+/** Rend faux si aucun fichier n'a été partagé. */
+const exportOnce = async (db: Db, deps: BackupDeps): Promise<boolean> => {
+  await clearing;
+  const today = toIsoDate(new Date());
+  let dir: string | null = null;
+  try {
+    dir = await deps.files.newDir();
+    const path = `${dir}/kila-sauvegarde-${today}.db`;
+    await exportBackup(db, path, today);
+    // La copie produite doit pouvoir être restaurée : vérifiée sur une seconde copie.
+    const check = await verifyBackup(path, `${dir}/verification.db`, { ...deps, today });
+    if (!check.ok) throw new Error('Sauvegarde refusée par la vérification');
+    await deps.share(path);
+    log('BACKUP_SHARED');
+  } catch {
+    log('BACKUP_EXPORT_FAILED');
+    return false;
+  } finally {
+    if (dir !== null) {
+      await deps.files.removeDir(dir).catch(() => log('BACKUP_CLEANUP_FAILED'));
+    }
+  }
+  // Le fichier est parti : un échec ici n'annonce pas une sauvegarde manquée.
+  try {
+    await settingsRepo(db).setLastBackupDate(today);
+    notifyDataChanged();
+  } catch {
+    log('LAST_BACKUP_SAVE_FAILED');
+  }
+  return true;
+};
+
 /**
  * EX-19 : copie datée dans un sous-dossier neuf du dossier dédié, vérifiée, partagée ; la date
  * est notée quand la feuille de partage se ferme sans erreur (un partage annulé ne se détecte
  * pas : décision du porteur du 2026-11-27). Le sous-dossier est effacé dès la fin, réussite ou
- * échec ; le dossier dédié est vidé à chaque ouverture de l'écran.
+ * échec ; le dossier dédié est vidé une fois à chaque ouverture de l'écran.
  */
 export const useBackupExport = (deps: BackupDeps) => {
   const db = useDatabase();
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
-  const running = useRef(false);
-  const cleared = useRef<Promise<void>>(Promise.resolve());
+  const depsRef = useRef(deps);
+  depsRef.current = deps;
 
-  useEffect(() => {
-    // Copies restées d'un arrêt brutal de l'appli pendant un partage.
-    cleared.current = deps.files.clear().catch(() => log('BACKUP_CLEAR_FAILED'));
-  }, [deps]);
+  useEffect(() => clearDir(depsRef.current.files), []);
 
   const exportNow = useCallback(async () => {
-    if (!db || running.current) return;
-    running.current = true;
+    if (!db || exporting) return;
+    const run = exportOnce(db, depsRef.current);
+    exporting = run;
     setBusy(true);
     setFailed(false);
-    let dir: string | null = null;
     try {
-      await cleared.current;
-      const today = toIsoDate(new Date());
-      dir = await deps.files.newDir();
-      const path = `${dir}/kila-sauvegarde-${today}.db`;
-      await exportBackup(db, path, today);
-      // La copie produite doit pouvoir être restaurée : vérifiée sur une seconde copie.
-      const check = await verifyBackup(path, `${dir}/verification.db`, { ...deps, today });
-      if (!check.ok) throw new Error('Sauvegarde refusée par la vérification');
-      await deps.share(path);
-      log('BACKUP_SHARED');
-      await settingsRepo(db).setLastBackupDate(today);
-      notifyDataChanged();
-    } catch {
-      log('BACKUP_EXPORT_FAILED');
-      setFailed(true);
+      if (!(await run)) setFailed(true);
     } finally {
-      if (dir !== null) {
-        await deps.files.removeDir(dir).catch(() => log('BACKUP_CLEANUP_FAILED'));
-      }
-      running.current = false;
+      exporting = null;
       setBusy(false);
     }
-  }, [db, deps]);
+  }, [db]);
 
   return { exportNow, busy, failed };
 };
