@@ -18,11 +18,13 @@ const quoted = (name: string) => {
 };
 
 // Un DETACH qui échoue est ignoré : l'erreur d'origine reste celle qui remonte, et l'ATTACH
-// suivant détache d'abord l'alias resté en place.
-const detach = (db: Db) =>
+// suivant détache d'abord l'alias resté en place. `code` : écrit dans le journal en cas d'échec.
+const detach = (db: Db, code?: string) =>
   db.execute(`DETACH DATABASE ${ALIAS}`).then(
     () => undefined,
-    () => undefined,
+    () => {
+      if (code !== undefined) log(code);
+    },
   );
 
 const attach = async (db: Db, path: string) => {
@@ -114,7 +116,9 @@ export const restoreBackup = async (db: Db, backup: VerifiedBackup): Promise<voi
     try {
       memberCount = await db.transaction((tx) => copyAll(tx, backup.today));
     } finally {
-      await detach(db);
+      // Après une transaction validée, un DETACH en échec n'est pas un échec de la restauration
+      // (revue du 014f) : un code à part ; l'ATTACH suivant détache l'alias resté en place.
+      await detach(db, 'RESTORE_DETACH_FAILED');
     }
   } catch {
     // L'erreur de SQLite n'est pas relayée : un code seul (ABS-04).

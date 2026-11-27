@@ -3,6 +3,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import { labels } from '@/config/libelles';
 import type { OpenFailure } from '@/data/open';
+import type { ErasedBy } from '@/hooks/useDatabase';
 import type { RecoveryControls, RecoveryState } from '@/hooks/useRecovery';
 import { Recovery, type RecoveryDatabase } from '@/ui/Recovery';
 
@@ -14,6 +15,7 @@ const onAcceptEmpty = jest.fn();
 const controls = (state: RecoveryState): RecoveryControls => ({
   state,
   choose: jest.fn(async () => undefined),
+  dismiss: jest.fn(),
   confirm: jest.fn(),
   cancel: jest.fn(),
 });
@@ -44,13 +46,13 @@ const names = () =>
   screen.getAllByRole('button').map((b) => within(b).getByText(/./).props.children as string);
 const summary = { members: 3, groups: 2, recordedSessions: 1, backupDate: '2026-10-22' };
 
-describe('EX-22 Recovery (ticket 014c)', () => {
-  beforeEach(() => {
-    onRetry.mockClear();
-    onStartOver.mockClear();
-    onAcceptEmpty.mockClear();
-  });
+beforeEach(() => {
+  onRetry.mockClear();
+  onStartOver.mockClear();
+  onAcceptEmpty.mockClear();
+});
 
+describe('EX-22 Recovery (ticket 014c)', () => {
   it('pendant un nouvel essai, les trois boutons de la variante abîmée sont désactivés', async () => {
     await show('damaged', true);
     const retry = screen.getByRole('button', { name: r.retry });
@@ -132,7 +134,7 @@ describe('EX-22 Recovery, restaurer une sauvegarde (ticket 014f)', () => {
   });
 
   it('confirmation : résumé avec l’effacement annoncé, Annuler et Remplacer', async () => {
-    const restore = controls({ step: 'confirm', summary, draft: null });
+    const restore = controls({ step: 'confirm', summary, draft: null, erase: true });
     await render_(failed('damaged'), restore);
     expect(screen.getByText(r.restoreErase)).toBeTruthy();
     expect(screen.getByText(t.backupOf('22/10/2026'))).toBeTruthy();
@@ -144,7 +146,7 @@ describe('EX-22 Recovery, restaurer une sauvegarde (ticket 014f)', () => {
   });
 
   it('pendant la recopie : Annuler et Remplacer désactivés', async () => {
-    const restore = controls({ step: 'restoring', summary, draft: null });
+    const restore = controls({ step: 'restoring', summary, draft: null, erase: true });
     await render_(failed('damaged', true), restore);
     expect(screen.getByRole('button', { name: t.cancel })).toBeDisabled();
     expect(screen.getByRole('button', { name: t.confirm })).toBeDisabled();
@@ -154,18 +156,20 @@ describe('EX-22 Recovery, restaurer une sauvegarde (ticket 014f)', () => {
     const restore = controls({ step: 'idle' });
     await render_({ status: 'restoreFailed', pending: false }, restore);
     expect(screen.getByText(r.restoreFailed)).toBeTruthy();
+    expect(screen.getByRole('header', { name: r.restoreFailedTitle })).toBeTruthy();
     expect(names()).toEqual([t.choose, r.startOver]);
     await fireEvent.press(screen.getByRole('button', { name: t.choose }));
     expect(restore.choose).toHaveBeenCalledTimes(1);
     await fireEvent.press(screen.getByRole('button', { name: r.startOver }));
     expect(onAcceptEmpty).toHaveBeenCalledTimes(1);
+    expect(restore.dismiss).toHaveBeenCalledTimes(1);
     expect(screen.queryByText(r.confirmMessage)).toBeNull();
   });
 
   it('recopie en échec, nouvelle confirmation : sans la phrase des données abîmées', async () => {
     await render_(
       { status: 'restoreFailed', pending: false },
-      controls({ step: 'confirm', summary, draft: null }),
+      controls({ step: 'confirm', summary, draft: null, erase: false }),
     );
     expect(screen.queryByText(r.restoreErase)).toBeNull();
     expect(screen.getByRole('button', { name: t.confirm })).toBeEnabled();
@@ -175,5 +179,34 @@ describe('EX-22 Recovery, restaurer une sauvegarde (ticket 014f)', () => {
     await render_({ status: 'restoreFailed', pending: true });
     expect(screen.getByRole('button', { name: t.choose })).toBeDisabled();
     expect(screen.getByRole('button', { name: r.startOver })).toBeDisabled();
+  });
+
+  it('« Réessayer » efface d’abord la carte du refus', async () => {
+    const restore = controls({ step: 'rejected', reason: 'NOT_SQLITE' });
+    await render_(failed('damaged'), restore);
+    await fireEvent.press(screen.getByRole('button', { name: r.retry }));
+    expect(restore.dismiss).toHaveBeenCalledTimes(1);
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it.each<[ErasedBy, string]>([
+    ['restore', r.restoreFailedTitle],
+    ['startOver', r.title],
+  ])(
+    'base effacée, base neuve pas ouverte (%s) : message, titre, « Réessayer » seul',
+    async (after, title) => {
+      await render_({ status: 'erased', after, pending: false });
+      expect(screen.getByRole('header', { name: title })).toBeTruthy();
+      expect(screen.getByText(r.erasedOpenFailed)).toBeTruthy();
+      expect(screen.queryByText(/Rien n’a été effacé/)).toBeNull();
+      expect(names()).toEqual([r.retry]);
+      await fireEvent.press(screen.getByRole('button', { name: r.retry }));
+      expect(onRetry).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it('base effacée, nouvel essai en cours : « Réessayer » désactivé', async () => {
+    await render_({ status: 'erased', after: 'restore', pending: true });
+    expect(screen.getByRole('button', { name: r.retry })).toBeDisabled();
   });
 });

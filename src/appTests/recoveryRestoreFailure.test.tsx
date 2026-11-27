@@ -2,7 +2,7 @@
 // récupération. Effacement en échec : rien n'est modifié. Recopie en échec après l'effacement :
 // base neuve vide ouverte, « Choisir un fichier… » ou « Repartir de zéro ». Même environnement
 // que recoveryRestore.test.tsx.
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fireEvent, renderRouter, screen, waitFor, within } from 'expo-router/testing-library';
@@ -34,6 +34,15 @@ const button = (name: string) => screen.getByRole('button', { name });
 /** Libellés des boutons, dans l'ordre de l'écran. */
 const names = () =>
   screen.getAllByRole('button').map((b) => within(b).getByText(/./).props.children as string);
+// « Rien n'a été effacé » (variantes du 014c) ne doit jamais suivre un effacement (SEC-11).
+const NOTHING_ERASED = /Rien n’a été effacé/;
+/** Ni copie du sélecteur ni copie vérifiée (SEC-10). */
+const noCopyLeft = () => {
+  for (const name of ['restauration', 'DocumentPicker']) {
+    const path = join(env.dir, name);
+    expect(existsSync(path) ? readdirSync(path) : []).toEqual([]);
+  }
+};
 const DAMAGED = 'Ceci est un fichier texte, pas une base de données. '.repeat(40);
 
 const openDamaged = async () => {
@@ -70,14 +79,17 @@ describe('EX-22 échecs de la restauration depuis l’écran de récupération (
     rmSync(dir, { recursive: true, force: true });
   });
 
-  it('effacement en échec : message, fichier intact, aucune recopie', async () => {
+  it('effacement en échec : « La restauration n’a pas abouti », rien modifié, aucune recopie', async () => {
     await openDamaged();
     const before = fileBytes();
     env.deleteFails = 1;
     env.picker.next = await backupFile(join(dir, 'choisi.db'));
     await fireEvent.press(button(r.restore));
     await fireEvent.press(await screen.findByRole('button', { name: t.confirm }));
-    expect(await screen.findByText(r.resetFailed)).toBeTruthy();
+    // Réponse 3 du porteur : la carte d'échec de l'écran Restauration, au-dessus des trois boutons.
+    expect(await screen.findByText(t.failed)).toBeTruthy();
+    expect(screen.getByText(t.nothingChanged)).toBeTruthy();
+    expect(screen.queryByText(r.resetFailed)).toBeNull();
     expect(unchangedSince(before)).toBe(true);
     expect(names()).toEqual([r.restore, r.retry, r.startOver]);
     expect(log).not.toHaveBeenCalledWith('RESTORE_DONE');
@@ -88,7 +100,9 @@ describe('EX-22 échecs de la restauration depuis l’écran de récupération (
     const router = await openDamaged();
     await restoreThatFails();
     expect(names()).toEqual([t.choose, r.startOver]);
+    expect(screen.getByRole('header', { name: r.restoreFailedTitle })).toBeTruthy();
     expect(screen.queryByText(r.damaged)).toBeNull();
+    noCopyLeft();
     // La base abîmée a été effacée : une base neuve, vide, est ouverte.
     const emptied = openNodeDb(env.file);
     expect(await rowCounts(emptied)).toMatchObject({ members: 0, groups: 0, sessions: 0 });
@@ -132,5 +146,39 @@ describe('EX-22 échecs de la restauration depuis l’écran de récupération (
     expect(await screen.findByText(r.restoreFailed)).toBeTruthy();
     expect(names()).toEqual([t.choose, r.startOver]);
     expect(env.deletes).toBe(1);
+  });
+
+  it('restauration : base neuve qui ne s’ouvre pas après l’effacement, jamais « Rien n’a été effacé »', async () => {
+    await openDamaged();
+    env.picker.next = await backupFile(join(dir, 'choisi.db'));
+    env.openFails = 2;
+    await fireEvent.press(button(r.restore));
+    await fireEvent.press(await screen.findByRole('button', { name: t.confirm }));
+    expect(await screen.findByText(r.erasedOpenFailed)).toBeTruthy();
+    expect(screen.getByRole('header', { name: r.restoreFailedTitle })).toBeTruthy();
+    expect(screen.queryByText(NOTHING_ERASED)).toBeNull();
+    expect(names()).toEqual([r.retry]);
+    noCopyLeft();
+    // Nouvel échec : même écran ; puis une base vide s'ouvre et mène à Bienvenue.
+    await fireEvent.press(button(r.retry));
+    await waitFor(() => expect(button(r.retry)).toBeEnabled());
+    expect(screen.getByText(r.erasedOpenFailed)).toBeTruthy();
+    expect(screen.queryByText(NOTHING_ERASED)).toBeNull();
+    await fireEvent.press(button(r.retry));
+    expect(await screen.findByRole('header', { name: labels.welcome.title })).toBeTruthy();
+    expect(env.deletes).toBe(1);
+  });
+
+  it('« Repartir de zéro » : base neuve qui ne s’ouvre pas après l’effacement, jamais « Rien n’a été effacé »', async () => {
+    await openDamaged();
+    env.openFails = 1;
+    await fireEvent.press(button(r.startOver));
+    await fireEvent.press(await screen.findByRole('button', { name: r.confirm }));
+    expect(await screen.findByText(r.erasedOpenFailed)).toBeTruthy();
+    // Décision automatique : le titre de l'écran reste celui de la récupération.
+    expect(screen.getByRole('header', { name: r.title })).toBeTruthy();
+    expect(screen.queryByText(NOTHING_ERASED)).toBeNull();
+    await fireEvent.press(button(r.retry));
+    expect(await screen.findByRole('header', { name: labels.welcome.title })).toBeTruthy();
   });
 });

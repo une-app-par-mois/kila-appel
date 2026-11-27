@@ -25,9 +25,13 @@ import { Recovery } from '@/ui/Recovery';
 export default function RootLayout() {
   const database = useDatabaseState();
   const cleaned = useStartupCleanup();
-  const recovery = useRecovery(expoRestoreDeps);
+  const recovery = useRecovery(expoRestoreDeps, database.status);
   const content = () => {
-    if (database.status === 'failed' || database.status === 'restoreFailed') {
+    if (
+      database.status === 'failed' ||
+      database.status === 'restoreFailed' ||
+      database.status === 'erased'
+    ) {
       return (
         <Recovery
           database={database}

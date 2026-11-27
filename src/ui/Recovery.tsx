@@ -12,6 +12,7 @@ import { StyleSheet, Text } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
 import type { OpenFailure } from '@/data/open';
+import type { ErasedBy } from '@/hooks/useDatabase';
 import type { RecoveryControls } from '@/hooks/useRecovery';
 import { Button } from '@/ui/Button';
 import { Card } from '@/ui/Card';
@@ -30,7 +31,8 @@ const t = labels.recovery;
 /** État de la base vu par cet écran (src/hooks/useDatabase.ts). */
 export type RecoveryDatabase =
   | { status: 'failed'; cause: OpenFailure; pending: boolean; resetFailed: boolean }
-  | { status: 'restoreFailed'; pending: boolean };
+  | { status: 'restoreFailed'; pending: boolean }
+  | { status: 'erased'; after: ErasedBy; pending: boolean };
 
 type Props = {
   database: RecoveryDatabase;
@@ -52,9 +54,22 @@ const RestoreStatus = ({ restore }: { restore: RecoveryControls }) => {
 };
 
 export const Recovery = (props: Props) => {
-  const { database, restore, cleaned, onRetry, onStartOver, onAcceptEmpty } = props;
+  const { database, restore, cleaned } = props;
   const [confirming, setConfirming] = useState(false);
   const { state } = restore;
+  // Revue du 014f : un refus affiché disparaît dès que l'on choisit une autre voie.
+  const onRetry = () => {
+    restore.dismiss();
+    props.onRetry();
+  };
+  const onStartOver = () => {
+    restore.dismiss();
+    props.onStartOver();
+  };
+  const onAcceptEmpty = () => {
+    restore.dismiss();
+    props.onAcceptEmpty();
+  };
   const notice =
     state.step === 'confirm' || state.step === 'restoring' || state.step === 'done' ? state : null;
   // Toute la séquence (sélecteur, vérification, confirmation, recopie) : boutons désactivés.
@@ -62,7 +77,8 @@ export const Recovery = (props: Props) => {
   const locked = database.pending || running;
 
   if (notice !== null) {
-    const erasing = database.status === 'failed';
+    // Décidé à l'entrée dans la confirmation (revue du 014f), pas relu pendant la recopie.
+    const erasing = notice.erase === true;
     return (
       <Screen title={t.title}>
         <RestoreSummary
@@ -78,9 +94,22 @@ export const Recovery = (props: Props) => {
       </Screen>
     );
   }
+  if (database.status === 'erased') {
+    // Réponse 1 du porteur : jamais « Rien n'a été effacé » après un effacement. Titre propre au
+    // parcours de restauration ; celui de l'écran après « Repartir de zéro » (décision du 014f).
+    const restoring = database.after === 'restore';
+    return (
+      <Screen title={restoring ? t.restoreFailedTitle : t.title}>
+        <Card>
+          <Text style={styles.text}>{t.erasedOpenFailed}</Text>
+        </Card>
+        <Button label={t.retry} onPress={onRetry} disabled={database.pending} />
+      </Screen>
+    );
+  }
   if (database.status === 'restoreFailed') {
     return (
-      <Screen title={t.title}>
+      <Screen title={t.restoreFailedTitle}>
         <Card>
           <Text style={styles.text}>{t.restoreFailed}</Text>
         </Card>

@@ -11,9 +11,20 @@ export const recuperation = {
     restore: 'Restaurer une sauvegarde',
     /** Carte de résumé de la confirmation, variante abîmée (réponse du porteur du 2026-11-27). */
     restoreErase: 'Les données abîmées seront effacées définitivement.',
-    /** Recopie en échec après l'effacement : base neuve vide (réponse du porteur du 2026-11-27). */
+    /**
+     * Titre de l'écran après une recopie en échec, ou une base neuve qui ne s'ouvre pas après
+     * l'effacement d'une restauration (réponses 1 et 2 du porteur du 2026-11-27).
+     */
+    restoreFailedTitle: 'La restauration n’a pas abouti',
+    /** Recopie en échec après l'effacement : base neuve vide (réponse 2 du porteur). */
     restoreFailed:
-      'La restauration n’a pas abouti. Les données abîmées ont été effacées. Choisissez un autre fichier, ou repartez de zéro.',
+      'Les données abîmées ont été effacées. Choisissez un autre fichier, ou repartez de zéro.',
+    /**
+     * Base abîmée effacée (« Repartir de zéro » ou restauration), mais la base neuve ne s'ouvre
+     * pas (réponse 1 du porteur du 2026-11-27) : jamais « Rien n'a été effacé ».
+     */
+    erasedOpenFailed:
+      'Les données abîmées ont été effacées, mais l’appli n’a pas pu préparer un nouveau fichier de données. Réessayez.',
     startOver: 'Repartir de zéro',
     confirmTitle: 'Repartir de zéro ?',
     confirmMessage: 'Les données abîmées seront effacées définitivement.',

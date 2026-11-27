@@ -19,6 +19,8 @@ export const env = {
   deletes: 0,
   /** Prochaines suppressions qui échouent. */
   deleteFails: 0,
+  /** Prochaines ouvertures de la base de l'appli qui échouent (erreur non reconnue). */
+  openFails: 0,
   /** Prochains ATTACH de la base de l'appli qui échouent (recopie en échec). */
   attachFails: 0,
   /** Attendu avant chaque ATTACH de la base de l'appli. */
@@ -32,6 +34,7 @@ export const env = {
     env.file = join(dir, 'kila.db');
     env.deletes = 0;
     env.deleteFails = 0;
+    env.openFails = 0;
     env.attachFails = 0;
     env.attachGate = Promise.resolve();
     env.clearGate = Promise.resolve();
@@ -62,7 +65,13 @@ const wrap = (db: Db): Db => ({
 });
 
 export const fakeExpoDb = () => ({
-  openExpoDb: async () => wrap(openNodeDb(env.file)),
+  openExpoDb: async () => {
+    if (env.openFails > 0) {
+      env.openFails -= 1;
+      throw new Error('Unable to open the database file');
+    }
+    return wrap(openNodeDb(env.file));
+  },
   deleteAppDatabase: async () => {
     env.deletes += 1;
     if (env.deleteFails > 0) {

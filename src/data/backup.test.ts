@@ -211,8 +211,12 @@ describe('EX-20 NF-04 restauration par recopie en une transaction', () => {
 
   it('un DETACH qui a échoué ne bloque pas la restauration suivante', async () => {
     const backup = await verified(backupPath);
+    log.mockClear();
     await restoreBackup(failingDetach(target), backup);
     expect(await target.query('PRAGMA database_list')).toHaveLength(2);
+    // Transaction validée : pas un échec de restauration, mais un code à part (revue du 014f).
+    expect(log).toHaveBeenCalledWith('RESTORE_DETACH_FAILED');
+    expect(log).not.toHaveBeenCalledWith('RESTORE_FAILED');
     await restoreBackup(target, await verified(backupPath));
     expect(await target.query('PRAGMA database_list')).toHaveLength(1);
   });

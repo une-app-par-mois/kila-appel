@@ -2,18 +2,10 @@
 // récupération. Vrai layout racine, vraie ouverture, vraie vérification et vraie restauration sur
 // node:sqlite ; seuls les modules expo sont imités (src/__fixtures__/recoveryEnv.ts). Horloge
 // figée au 27/11/2026.
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import {
-  act,
-  fireEvent,
-  renderHook,
-  renderRouter,
-  screen,
-  waitFor,
-  within,
-} from 'expo-router/testing-library';
+import { act, fireEvent, renderRouter, screen, waitFor, within } from 'expo-router/testing-library';
 import { BackHandler } from 'react-native';
 import { env, fileBytes, gate, unchangedSince } from '@/__fixtures__/recoveryEnv';
 import { backupFile, dump, refusedFiles } from '@/__fixtures__/restoreFiles';
@@ -21,9 +13,9 @@ import RootLayout from '@/app/_layout';
 import { tabRoutes } from '@/appTests/tabRoutes';
 import { labels } from '@/config/libelles';
 import { openNodeDb } from '@/data/nodeDb';
+import { onDataChanged } from '@/hooks/dataChanged';
 import { fileLock } from '@/hooks/fileLock';
 import { resetDatabaseForTests } from '@/hooks/useDatabase';
-import { useRecovery } from '@/hooks/useRecovery';
 import { resetStartupCleanupForTests } from '@/hooks/useStartupCleanup';
 
 jest.mock('@/data/expoDb', () => require('@/__fixtures__/recoveryEnv').fakeExpoDb());
@@ -55,6 +47,13 @@ const openDamaged = async () => {
   return router;
 };
 const sameBytes = (before: Uint8Array) => expect(unchangedSince(before)).toBe(true);
+/** Ni copie du sélecteur ni copie vérifiée (SEC-10). */
+const noCopyLeft = () => {
+  for (const name of ['restauration', 'DocumentPicker']) {
+    const path = join(env.dir, name);
+    expect(existsSync(path) ? readdirSync(path) : []).toEqual([]);
+  }
+};
 const expectIdle = () => {
   expect(screen.getByText(r.damaged)).toBeTruthy();
   expect(button(r.restore)).toBeEnabled();
@@ -117,6 +116,24 @@ describe('EX-22 restaurer depuis l’écran de récupération (ticket 014f)', ()
     expect(button(r.restore)).toBeEnabled();
     sameBytes(before);
     expect(env.deletes).toBe(0);
+    // « Réessayer » efface la carte du refus (revue du 014f) ; la base reste abîmée.
+    await fireEvent.press(button(r.retry));
+    await waitFor(() => expect(screen.queryByText(t.notABackup)).toBeNull());
+    expect(await screen.findByText(r.damaged)).toBeTruthy();
+    sameBytes(before);
+  });
+
+  it('refus, puis « Repartir de zéro » confirmé : la carte du refus disparaît', async () => {
+    await openDamaged();
+    env.picker.next = join(dir, 'texte.db');
+    await refusedFiles['fichier texte'].write(env.picker.next);
+    await fireEvent.press(button(r.restore));
+    expect(await screen.findByText(t.notABackup)).toBeTruthy();
+    env.deleteFails = 1;
+    await fireEvent.press(button(r.startOver));
+    await fireEvent.press(await screen.findByRole('button', { name: r.confirm }));
+    expect(await screen.findByText(r.resetFailed)).toBeTruthy();
+    expect(screen.queryByText(t.notABackup)).toBeNull();
   });
 
   it('Annuler à la confirmation : retour sans message, fichier intact', async () => {
@@ -136,13 +153,16 @@ describe('EX-22 restaurer depuis l’écran de récupération (ticket 014f)', ()
     expect(env.deletes).toBe(0);
   });
 
-  it('réussite : données de la sauvegarde, puis l’accueil ; verrou et retour bloqué jusqu’au bout', async () => {
+  it('réussite : données de la sauvegarde, puis l’accueil ; verrou et retour rendus avant', async () => {
     const backHandlers: (() => boolean | null | undefined)[] = [];
     const removed = jest.fn();
     jest.spyOn(BackHandler, 'addEventListener').mockImplementation((_, handler) => {
       backHandlers.push(handler as () => boolean);
       return { remove: removed };
     });
+    const release = jest.spyOn(fileLock, 'release');
+    const changed = jest.fn();
+    const off = onDataChanged(changed);
     const router = await openDamaged();
     const backup = await backupFile(join(dir, 'choisi.db'));
     const saved = openNodeDb(backup);
@@ -166,7 +186,19 @@ describe('EX-22 restaurer depuis l’écran de récupération (ticket 014f)', ()
     await waitFor(() => expect(screen.queryByText(r.title)).toBeNull());
     expect(screen.queryByRole('header', { name: labels.welcome.title })).toBeNull();
     expect(router.getPathname()).toBe('/');
-    expect(removed).toHaveBeenCalled();
+    off();
+    // Copies effacées, verrou rendu et retour libéré avant la publication de la base (revue du
+    // 014f) : l'accueil ne s'affiche jamais pendant l'opération.
+    noCopyLeft();
+    const published = log.mock.invocationCallOrder[
+      log.mock.calls.findIndex(([code]) => code === 'RECOVERY_RESTORE_DONE')
+    ] as number;
+    const released = release.mock.calls.findIndex(([task]) => task === 'restore');
+    expect(release.mock.invocationCallOrder[released]).toBeLessThan(published);
+    expect(removed.mock.invocationCallOrder[0]).toBeLessThan(published);
+    // Les écrans qui écoutent rechargent (notifyDataChanged, après la publication).
+    expect(changed).toHaveBeenCalled();
+    expect(changed.mock.invocationCallOrder[0]).toBeGreaterThan(published);
     const restored = openNodeDb(env.file);
     expect(await dump(restored)).toEqual(expected);
     await restored.close();
@@ -176,38 +208,6 @@ describe('EX-22 restaurer depuis l’écran de récupération (ticket 014f)', ()
       expect(call[0]).toMatch(/^[A-Z_]+$/);
       expect(JSON.stringify(call)).not.toMatch(/Exemple|Camille|Poussins/);
     }
-  });
-
-  it('double appui : un seul sélecteur (verrou commun pris par le premier)', async () => {
-    const pick = jest.fn(async () => null);
-    const deps = { ...jest.requireMock('@/data/expoFiles').expoRestoreDeps, pick };
-    const { result } = await renderHook(() => useRecovery(deps));
-    await act(async () => {
-      void result.current.choose();
-      void result.current.choose();
-    });
-    await waitFor(() => expect(result.current.state).toEqual({ step: 'idle' }));
-    expect(pick).toHaveBeenCalledTimes(1);
-  });
-
-  it('un appel pendant le nettoyage du démarrage attend sa fin, puis ouvre le sélecteur', async () => {
-    const cleaning = gate();
-    env.clearGate = cleaning.wait;
-    const pick = jest.fn(async () => null);
-    const deps = { ...jest.requireMock('@/data/expoFiles').expoRestoreDeps, pick };
-    const { result } = await renderHook(() => useRecovery(deps));
-    let done: Promise<void> = Promise.resolve();
-    // Le nettoyage n'est lancé ici que par useRecovery (pas de layout monté).
-    await act(async () => {
-      done = result.current.choose();
-    });
-    expect(fileLock.holder()).toBe('cleanup');
-    expect(pick).not.toHaveBeenCalled();
-    await act(async () => {
-      cleaning.release();
-      await done;
-    });
-    expect(pick).toHaveBeenCalledTimes(1);
   });
 
   it('pendant le sélecteur, tous les boutons sont désactivés', async () => {
