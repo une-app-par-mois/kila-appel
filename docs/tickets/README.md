@@ -63,3 +63,4 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 016 | [Campagne Maestro du jalon 1](016-maestro-jalon-1.md) | 1 | F-01 à F-03 | non | fusionné dans le groupe |
 | 017 | [minimatch 11 forcé (Dependabot n° 2)](017-minimatch-overrides.md) | 1 | — | non | fusionné dans le groupe |
 | 018 | [Faille modérée de glob (GHSA-3g3m-2fjr-6pw4) dans l'outillage](018-glob-ghsa-3g3m.md) | 1 | — | non | fusionné dans le groupe |
+| 019 | [Alertes Semgrep et CodeQL de la PR du jalon 1](019-alertes-ci-jalon-1.md) | 1 | SEC | non | en cours |

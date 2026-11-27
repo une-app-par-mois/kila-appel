@@ -204,10 +204,18 @@ describe('Registre', () => {
       license: 'MIT',
       author: { name: 'Expo' },
     });
-    const { entries } = buildRegistry(root, ['node_modules/m', 'node_modules/n']);
+    // Chevrons imbriqués : rien après le premier « < » n'est gardé (alerte CodeQL, ticket 019).
+    pkg('node_modules/o', {
+      name: 'o',
+      version: '1.0.0',
+      license: 'MIT',
+      author: 'Alix Exemple <a<b>c> (https://exemple.invalid)',
+    });
+    const { entries } = buildRegistry(root, ['node_modules/m', 'node_modules/n', 'node_modules/o']);
     expect(entries).toEqual([
       { name: 'm', version: '1.0.0', license: 'MIT', text: null, author: 'Meta Platforms' },
       { name: 'n', version: '1.0.0', license: 'MIT', text: null, author: 'Expo' },
+      { name: 'o', version: '1.0.0', license: 'MIT', text: null, author: 'Alix Exemple' },
     ]);
   });
 });

@@ -116,12 +116,13 @@ const repositoryOf = (json) => {
     .replace(/\.git$/, '');
 };
 
-/** Nom seul : l'adresse et le site du champ « author » de npm ne sont pas repris. */
+/**
+ * Nom seul : le champ « author » de npm s'écrit « Nom <adresse> (site) », et rien après le premier
+ * « < » ou « ( » n'est repris (aucun reste de chevron, alerte CodeQL, ticket 019).
+ */
 const authorOf = (json) =>
-  (typeof json.author === 'string' ? json.author : json.author?.name)
-    ?.replace(/\s*<[^>]*>/g, '')
-    .replace(/\s*\([^)]*\)/g, '')
-    .trim() || undefined;
+  (typeof json.author === 'string' ? json.author : json.author?.name)?.split(/[<(]/)[0].trim() ||
+  undefined;
 
 /** Entrées triées par nom (sans tenir compte de la casse), dédoublonnées, et refus. */
 const buildRegistry = (root, dirs, extra = []) => {
