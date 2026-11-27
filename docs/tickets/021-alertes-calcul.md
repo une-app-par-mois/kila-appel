@@ -77,10 +77,26 @@ Séance de découpage du jalon 2 (2026-11-27), réponses du porteur :
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
 | Valeurs du seuil (maquette « 3 ▾ ») | 2 à 5 ; 2 à 10 | 2 à 10, 3 par défaut | Assez large pour un groupe qui se réunit deux fois par semaine ; 1 ferait une alerte à chaque absence | à relire |
+| Séances le même jour à la même heure | ordre d'insertion implicite ; départager par `s.id` | `ORDER BY s.date, s.start_time, s.id` | Ordre stable et reproductible (pré-analyse, décision 1) | à relire |
+| Aucune saison active | liste vide ; dernière saison | liste vide | Le plan ne compte que la saison active (décision 2) | à relire |
+| Inscription courante et inscription à la date d'une séance | bornes incluses ; début inclus, fin exclue | début inclus, fin exclue (`current` d'`enrollmentsRepo`) | Même règle que les inscriptions (décision du porteur du 2026-11-26) (décision 3) | à relire |
+| Séances d'un groupe archivé ou supprimé, appels sans créneau | ignorées ; comptées | comptées | La série porte sur le membre, tous groupes confondus (glossaire) (décision 4) | à relire |
+| Groupe affiché | groupe de la séance la plus récente où le membre était inscrit, sinon l'unique groupe de cette séance, sinon l'inscription courante (première par `e.id`) ; à égalité entre deux groupes inscrits de la même séance, le plus ancien (`g.id`) | cascade de trois niveaux | Plan point 3 précisé pour les séances multi-groupes ou sans inscription (décision 5) | à relire |
+| « Dernières séances » de l'écran d'alerte | toutes saisons ; même périmètre que la série | même périmètre, 6 au plus, la plus récente d'abord | Cohérent avec le chiffre affiché (décision 6) | à relire |
+| Date de traitement | aujourd'hui ; plus tardive entre aujourd'hui et la dernière absence de la série | plus tardive des deux | Une séance datée après aujourd'hui reste couverte (décision 7) | à relire |
+| `acknowledge` avec une longueur invalide | accepter ; refuser | refuser tout ce qui n'est pas un entier ≥ 1 par une `RangeError` (erreur de programmation, aucun nouveau code dans `errors.ts`), puis le hook appelle `notifyDataChanged` après succès | Seul `ALERT_THRESHOLD_INVALID` peut être ajouté à `errors.ts` dans ce lot ; la longueur vient du calcul, pas d'une saisie (décision 8) | à relire |
+| Jeux de test | `seed.ts` ; nouveau fichier | `src/__fixtures__/alertsSeed.ts` (constructeurs et jeu de volume) | `seed.ts` est partagé avec le 023 (décision 9) | à relire |
+| NF-08 | une requête par membre ; une seule requête | une seule requête (CTE, `ROW_NUMBER`) ; groupe et traitements calculés seulement sur la ligne la plus récente de chaque membre ; RM-02 dans le domaine pur | Vérifié par un espion sur `db.query` (1 appel) ; mesuré à environ 55 ms sur 500 membres et 3 saisons en `node:sqlite` (décision 10) | à relire |
+| Tri à série égale | ordre SQL ; nom puis prénom | `Intl.Collator('fr', { sensitivity: 'base' })`, puis l'identifiant en dernier recours | Même comparaison que les autres listes de membres (décision 11) | à relire |
+| Seuil illisible en base | refuser la sauvegarde ; lire 3 | `isValidSetting` n'accepte que `'2'` à `'10'` ; toute autre valeur en base se lit comme 3 ; `ALERT_THRESHOLD_INVALID` à l'écriture | Comme `retention_seasons` (décision 12) | à relire |
+| Risque d'un traitement le jour même | heure de traitement (migration) ; limite acceptée | limite acceptée et documentée par un test : une nouvelle série qui commence le jour du traitement, après un Présent, reste masquée jusqu'à dépasser la longueur traitée | Le plan validé compare des dates ; ajouter l'heure demanderait une migration | à relire |
+| Taille des tests | un fichier de test du dépôt ; trois | `alertsRepo.test.ts` (liste), `alertsAcks.test.ts` (traitements, cascade), `alertsVolume.test.ts` (NF-08) | Limite de 300 lignes ; le ticket passe de 8 à 12 fichiers (fixtures, `errors.ts`, deux tests en plus), sans code de production en plus | à relire |
+| Écran d'alerte d'un membre qui n'en a plus (traitée, série retombée) | `useAlert` rend l'alerte quand même ; rend null | `alert: null`, avec `recent` toujours lu | Les règles de la liste et de l'écran restent les mêmes ; le 022 décide de l'affichage | en attente du porteur |
 
 ## Questions pour le porteur
 
 ## À reporter
 
 - CHANGELOG : Assiduité : calcul des séries d'absences et des alertes (F-04, EX-25, EX-26, RM-02).
-- Architecture : `src/domain/absenceStreak.ts`, `src/data/alertsRepo.ts`, `src/hooks/useAlerts.ts` ; réglage `alert_threshold` (2 à 10, 3 par défaut).
+- Architecture : `src/domain/absenceStreak.ts`, `src/data/alertsRepo.ts`, `src/hooks/useAlerts.ts` ; réglage `alert_threshold` (2 à 10, 3 par défaut) ; série calculée en une requête SQL (CTE, `ROW_NUMBER`) puis RM-02 dans le domaine ; `alert_acks` mis à jour sur place (`ON CONFLICT … DO UPDATE SET acked_at = MAX(…)`) ; jeux de test dans `src/__fixtures__/alertsSeed.ts`.
+- Conformité (intégration) : ligne ABS-08 au journal de `docs/CONFORMITE.md`, non écrite par l'agent.
