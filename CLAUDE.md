@@ -2,7 +2,7 @@
 
 Ce fichier est lu par Claude Code à chaque session. Il fixe le contexte et les règles non négociables. Le compléter avant la première génération de code. Réponds en français.
 
-**Rôles** : l'IA écrit le code, les tests et la documentation, signale ses doutes et ce qu'elle n'a pas vérifié. Le porteur décide du produit, valide les plans, teste l'app et relit les zones sensibles. L'IA ne décide jamais seule d'un choix de produit, d'architecture, de sécurité ou de dépense.
+**Rôles** : l'IA écrit le code, les tests et la documentation, signale ses doutes et ce qu'elle n'a pas vérifié. Le porteur décide du produit, teste l'app, relit les zones sensibles et les décisions automatiques. Depuis le 2026-11-27 (décision du porteur), l'IA applique sa recommandation sans attendre quand elle est nette, et la note dans `docs/DECISIONS.md` (voir « Décisions automatiques ») ; elle ne décide jamais seule de sécurité, de dépense, ni de ce que la liste « Arrête-toi et demande » réserve au porteur.
 
 ## Contexte
 
@@ -30,7 +30,7 @@ Ce fichier est lu par Claude Code à chaque session. Il fixe le contexte et les 
 
 1. Lis `ETAT.md` (ticket en cours, prochaines étapes, points d'attention).
 2. Lis le ticket (`docs/tickets/`) et les documents qu'il cite.
-3. Propose un plan court (fichiers, approche, tests prévus, risques) et **attends sa validation** avant de coder, sauf ticket marqué « trivial ».
+3. Annonce un plan court (fichiers, approche, tests prévus, risques), puis commence. Le plan **attend la validation** du porteur seulement pour une zone sensible ou un cas de « Arrête-toi et demande ».
 
 ## Règles non négociables
 
@@ -62,15 +62,66 @@ Chacune a un identifiant, cité dans le code, les tests et les tickets. Le motif
 
 ## Arrête-toi et demande
 
-- Spécification absente, ambiguë ou contradictoire avec un document.
-- Besoin d'une nouvelle dépendance ou d'un nouveau terme (absent du glossaire du cadrage).
-- Choix de produit, d'architecture, de sécurité ou de données non tranché dans les documents.
-- Modification d'une zone sensible que le ticket ne prévoit pas.
+Ces cas attendent toujours la réponse du porteur, même avec une recommandation nette. Ils sont posés à la séance de questions suivante (voir « Travail par lot »), et le ticket concerné attend : il n'est pas fusionné avant la réponse.
+
+Seule exception : une action irréversible ou extérieure est posée sur le moment.
+
+- Contradiction avec un document validé (cadrage, PRD, architecture, ADR, sécurité, conformité, charte, maquette).
+- Besoin d'une nouvelle dépendance ou d'une dépense.
+- Ce qui touche aux règles absolues ABS-xx, à la sécurité (SEC-xx), aux données personnelles ou à la conformité (stores, RGPD, licences).
+- Modification d'une zone sensible que le ticket ne prévoit pas ; plan d'un ticket en zone sensible.
+- Choix sans recommandation nette (options équivalentes, ou information qui manque), sauf s'il va dans la file du porteur (ci-dessous).
 - Test existant qui échoue sans rapport avec le ticket.
-- Ticket plus gros que prévu (plus de 10 fichiers, plus d'une session) : on le découpe **avant**.
+- Ticket plus gros que prévu (plus de 10 fichiers, plus d'une session) : on le découpe **avant** ; le découpage suit la recommandation et se note dans `docs/DECISIONS.md`, sauf en zone sensible.
 - Toute action irréversible ou extérieure au dépôt (publication, tag, réglages GitHub).
 
 Pose chaque décision sous forme de choix (options, avec ta recommandation en premier).
+
+**File du porteur** (décision du porteur du 2026-11-27) : deux sortes de questions ne bloquent plus le ticket :
+
+- un choix sans recommandation nette ;
+- un cas limite qui demande d'ajuster une décision que le porteur a prise dans un ticket.
+
+Il faut qu'elles soient faciles à défaire et qu'elles ne relèvent d'aucun autre cas de la liste ci-dessus. Facile à défaire veut dire : aucune donnée effacée ni réécrite, pas de migration, pas de texte légal ni de déclaration aux stores.
+
+Pour ces questions, l'IA applique l'option qu'elle préfère. Elle note la décision avec l'état « en attente du porteur », puis continue. La PR du ticket les liste en tête, et elles sont posées à la séance de clôture du lot. Une réponse différente de son choix se corrige sur un ticket.
+
+## Décisions automatiques
+
+Décision du porteur du 2026-11-27 (« projet puis méthode ») : hors des cas ci-dessus, une question qui a une recommandation nette (spécification absente ou ambiguë, texte, affichage, découpage d'un ticket, cas limite, choix d'architecture interne) n'est pas posée. L'IA applique sa recommandation, continue, et ajoute une ligne à `docs/DECISIONS.md` : date, ticket, question, options, choix, raison. Chaque PR liste ses décisions automatiques dans « Décisions automatiques à relire ». Le porteur en annule une quand il veut : la correction se fait sur un ticket, et la ligne est marquée « annulée ». À chaque fin de jalon, l'IA compte les décisions annulées et le dit au porteur.
+
+**Contradicteur** (décision du porteur du 2026-11-27) : avant la PR d'un ticket qui a des décisions automatiques, l'IA lance le sous-agent `contradicteur` (`.claude/agents/contradicteur.md`) avec le numéro du ticket, ses lignes de `docs/DECISIONS.md` et la branche, sans son propre raisonnement. Pour chaque décision contestée :
+
+- contradiction avec un document validé ou décision qui aurait dû être réservée : la question est posée au porteur ;
+- argument qui convainc : l'IA change et note « changée après contradiction » ;
+- sinon : l'IA garde et note « contestée, maintenue : <raison> ».
+
+La PR liste les décisions contestées en premier.
+
+## Travail par lot
+
+Décision du porteur du 2026-11-27 : les tickets avancent par lots de 2 à 4, et les questions sont posées en séances, pas au fil de l'eau.
+
+1. **Séance de lancement.**
+   - L'IA choisit les tickets du lot : sans dépendance entre eux, et avec le moins de fichiers communs possible (champs « Dépend de » et « Fichiers touchés » du ticket).
+   - Le sous-agent `pre-analyse` (`.claude/agents/pre-analyse.md`) lit chaque ticket et sort ses questions prévisibles.
+   - L'IA pose toutes ces questions d'un coup, en QCM. Les plans de zone sensible y sont validés aussi.
+2. **Développement en parallèle.**
+   - Au plus **3 agents de code** (`.claude/agents/codeur.md`) tournent en même temps, chacun dans son worktree et sur sa branche `ticket/…`.
+   - Chaque agent applique le « Cycle d'un ticket » jusqu'à un commit poussé et des tests verts. Il ne fusionne pas, ne crée pas de PR et ne pose aucune question.
+   - Une question qui surgit est notée dans la fiche du ticket : soit appliquée et « en attente du porteur » (file du porteur), soit « ticket en attente » (cas réservé).
+3. **Intégration** (l'IA principale seule).
+   - L'IA lance `/code-review`, le contradicteur, et `/security-review` en zone sensible. Elle renvoie les corrections à l'agent du ticket.
+   - Elle ouvre les PR et les fusionne une par une dans la branche du jalon. Après chaque fusion, les branches restantes récupèrent la branche du jalon par une fusion, jamais par un rebase, puis `./scripts/test.sh` repasse.
+   - Un ticket en attente d'une réponse, ou en zone sensible sans la relecture du porteur, n'est pas fusionné.
+4. **Séance de clôture.**
+   - L'IA pose la file de questions (`docs/QUESTIONS.md`), présente les décisions à relire et liste ce qui est à vérifier sur le téléphone.
+   - Les corrections vont dans le lot suivant.
+
+**Fichiers partagés.** Pour éviter les conflits entre agents :
+
+- un agent de code n'écrit que dans la fiche de son ticket, sections « Décisions », « Questions pour le porteur » et « À reporter », avec la ligne du CHANGELOG et celle de l'architecture ;
+- `ETAT.md`, `CHANGELOG.md`, `docs/tickets/README.md`, `docs/DECISIONS.md`, `docs/QUESTIONS.md`, `docs/ARCHITECTURE.md` et `PROMPTS.md` ne sont modifiés qu'à l'intégration, par l'IA principale.
 
 ## Mode de CI
 
@@ -86,14 +137,14 @@ La branche de groupe ou de jalon part de `main`. Seule exception, décidée par 
 
 ## Cycle d'un ticket
 
-1. **Plan validé** (ci-dessus), puis une branche `ticket/<numéro>-<intitulé-court>`, partie de `main` (mode par ticket) ou de la branche de groupe. Jamais de commit sur `main`.
+1. **Plan validé** (ci-dessus, ou à la séance de lancement d'un lot), puis une branche `ticket/<numéro>-<intitulé-court>`, partie de `main` (mode par ticket) ou de la branche de groupe. Jamais de commit sur `main`.
 2. **Test d'abord** : écrire le test, le lancer, le voir échouer, puis coder jusqu'au vert. Un bogue corrigé commence par un test qui le reproduit.
 3. **Vérifications** : `./scripts/test.sh` passe ; `/code-review` lancé, et `/security-review` en zone sensible.
 4. **PR** avec le modèle : ce qui change, tests, zone sensible oui/non, Definition of Done cochée, **ce qui n'a pas été vérifié**.
 5. **Fusion par l'IA** (jamais `--admin`, jamais de suppression de branche ; en zone sensible, seulement après la relecture du porteur) :
    - **vers une branche de groupe** : après `./scripts/test.sh` et `/code-review`, sans CI, en gardant les commits pour que gitleaks les parcoure tous : `gh pr merge <n> --merge --match-head-commit <sha>` ;
    - **vers `main`** (ticket seul ou groupe complet) : seulement quand **tous les travaux de la CI sont verts** sur le dernier commit et que la branche contient le `main` actuel (`git merge-base --is-ancestor origin/main <sha>` ; sinon `main` y est fusionné, jamais de rebase d'une branche poussée) : `gh pr merge <n> --squash --match-head-commit <sha>`. Un échec se corrige sur une branche de ticket ou sur la branche de groupe, puis la CI repart.
-6. **Journal** : `ETAT.md` à jour ; entrée dans `PROMPTS.md` si l'étape est importante.
+6. **Journal** : `ETAT.md` à jour ; entrée dans `PROMPTS.md` si l'étape est importante. Dans un lot, c'est l'intégration qui le fait (voir « Travail par lot »).
 
 Messages de commit en français, « `Domaine : ce qui change` », 72 caractères au plus en première ligne (vérifié par le hook `commit-msg`).
 

@@ -1,4 +1,13 @@
-import { isIsoDate, parseDisplayDate, toDisplayDate } from '@/domain/formats';
+import {
+  daysSince,
+  isIsoDate,
+  parseDisplayDate,
+  previousDay,
+  startInSeason,
+  toDisplayDate,
+  toIsoDate,
+  toLocalTime,
+} from '@/domain/formats';
 
 describe('RM-04 : dates stockées en AAAA-MM-JJ, affichées en JJ/MM/AAAA', () => {
   describe('isIsoDate', () => {
@@ -85,5 +94,67 @@ describe('RM-04 : dates stockées en AAAA-MM-JJ, affichées en JJ/MM/AAAA', () =
     it('RM-04 aller-retour : afficher puis relire redonne la date stockée', () => {
       expect(parseDisplayDate(toDisplayDate('2026-07-31'))).toBe('2026-07-31');
     });
+  });
+
+  describe('toIsoDate', () => {
+    it('RM-04 date locale du jour (pas UTC), sur deux chiffres', () => {
+      // 1er mars 2026 à 0 h 30, heure locale : la date reste le 1er mars quel que soit le fuseau.
+      expect(toIsoDate(new Date(2026, 2, 1, 0, 30))).toBe('2026-03-01');
+      expect(toIsoDate(new Date(2026, 10, 26, 23, 59))).toBe('2026-11-26');
+    });
+  });
+});
+
+describe('previousDay : dernier jour d’une inscription dont la fin est exclue (EX-04)', () => {
+  it('recule d’un jour, à travers mois, années et 29 février', () => {
+    expect(previousDay('2026-12-01')).toBe('2026-11-30');
+    expect(previousDay('2027-01-01')).toBe('2026-12-31');
+    expect(previousDay('2028-03-01')).toBe('2028-02-29');
+    expect(previousDay('2026-03-30')).toBe('2026-03-29');
+  });
+
+  it('refuse une date mal écrite (RM-04)', () => {
+    expect(() => previousDay('01/12/2026')).toThrow();
+  });
+
+  describe('EX-04 date de début proposée : aujourd’hui, ramené dans la saison', () => {
+    const season = { startDate: '2026-09-01', endDate: '2027-07-31' };
+    it.each([
+      ['2026-11-26', '2026-11-26'],
+      ['2026-07-15', '2026-09-01'],
+      ['2027-08-10', '2027-07-31'],
+      ['2027-07-31', '2027-07-31'],
+    ])('EX-04 le %s donne %s', (today, expected) => {
+      expect(startInSeason(today, season)).toBe(expected);
+    });
+    it('sans saison active : aujourd’hui', () => {
+      expect(startInSeason('2026-11-26', null)).toBe('2026-11-26');
+    });
+  });
+});
+
+describe('EX-09 heure locale', () => {
+  it('écrit l’heure locale en HH:MM', () => {
+    expect(toLocalTime(new Date(2026, 10, 18, 9, 5))).toBe('09:05');
+    expect(toLocalTime(new Date(2026, 10, 18, 23, 59))).toBe('23:59');
+  });
+});
+
+describe('EX-21 jours écoulés depuis la dernière sauvegarde', () => {
+  it.each([
+    ['2026-11-27', '2026-11-27', 0],
+    ['2026-11-26', '2026-11-27', 1],
+    ['2026-10-24', '2026-11-27', 34],
+    // Passage à l'heure d'hiver (25/10/2026) et année bissextile : des jours entiers.
+    ['2026-10-24', '2026-10-26', 2],
+    ['2028-02-28', '2028-03-01', 2],
+    ['2026-11-28', '2026-11-27', -1],
+  ])('du %s au %s : %i', (from, to, days) => {
+    expect(daysSince(from, to)).toBe(days);
+  });
+
+  it('refuse une date stockée invalide, sans la valeur', () => {
+    expect(() => daysSince('27/11/2026', '2026-11-27')).toThrow('Date stockée invalide (RM-04)');
+    expect(() => daysSince('2026-11-27', '2026-02-30')).toThrow('Date stockée invalide (RM-04)');
   });
 });

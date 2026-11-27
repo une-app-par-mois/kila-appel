@@ -44,11 +44,11 @@ describe('Migration 1 (ADR-003)', () => {
     await db.close();
   });
 
-  it('crée les 16 tables du schéma sur une base vide et pose user_version = 1', async () => {
+  it('crée les 16 tables du schéma sur une base vide et pose la dernière version', async () => {
     await prepareDatabase(db);
     expect(await tableNames(db)).toEqual(TABLES);
-    expect(await userVersion(db)).toBe(1);
-    expect(LATEST_VERSION).toBe(1);
+    expect(await userVersion(db)).toBe(LATEST_VERSION);
+    expect(LATEST_VERSION).toBe(MIGRATIONS.length);
   });
 
   it('active les clés étrangères à l’ouverture', async () => {
@@ -70,7 +70,7 @@ describe('Migration 1 (ADR-003)', () => {
     await prepareDatabase(db);
     await db.execute('INSERT INTO settings (key, value) VALUES (?, ?)', ['retention', '3']);
     await prepareDatabase(db);
-    expect(await userVersion(db)).toBe(1);
+    expect(await userVersion(db)).toBe(LATEST_VERSION);
     expect(await db.query('SELECT key, value FROM settings')).toEqual([
       { key: 'retention', value: '3' },
     ]);
@@ -117,7 +117,9 @@ describe('Migration 1 (ADR-003)', () => {
     const noForeignKeys: Db = {
       ...db,
       execute: async () => ({ changes: 0, lastInsertRowId: 0 }),
-      query: async <T>() => [{ foreign_keys: 0 }] as T[],
+      // Lecture d'essai du fichier (EX-22, ticket 014c) laissée à la vraie base.
+      query: async <T>(sql: string, params: (string | number | null)[] = []) =>
+        sql === 'PRAGMA foreign_keys' ? ([{ foreign_keys: 0 }] as T[]) : db.query<T>(sql, params),
     };
     await expect(prepareDatabase(noForeignKeys)).rejects.toThrow(FOREIGN_KEYS_OFF);
   });
@@ -138,5 +140,32 @@ describe('Migration 1 (ADR-003)', () => {
     };
     await migrate(noVersion, [{ version: 1, statements: ['SELECT 1'] }]);
     expect(applied).toEqual(['SELECT 1', 'PRAGMA user_version = 1']);
+  });
+});
+
+describe('Brouillon : heure de début (ticket 011, ADR-003 : migration 1 corrigée avant publication)', () => {
+  let db: Db;
+  beforeEach(async () => {
+    db = await prepareDatabase(openNodeDb());
+    await db.execute(
+      "INSERT INTO seasons (name, start_date, end_date, is_active) VALUES ('S', '2026-09-01', '2027-07-31', 1)",
+    );
+  });
+  afterEach(async () => {
+    await db.close();
+  });
+
+  it('EX-14 l’heure de début est obligatoire et écrite HH:MM', async () => {
+    const insert = (startedAt: string | null) =>
+      db.execute(
+        "INSERT INTO roll_call_drafts (id, season_id, date, started_at, updated_at) VALUES (1, 1, '2026-11-18', ?, '2026-11-18T10:05')",
+        [startedAt],
+      );
+    await expect(insert(null)).rejects.toThrow();
+    await expect(insert('9:05')).rejects.toThrow();
+    await insert('09:05');
+    expect(await db.query('SELECT started_at FROM roll_call_drafts')).toEqual([
+      { started_at: '09:05' },
+    ]);
   });
 });

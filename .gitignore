@@ -46,3 +46,5 @@ Thumbs.db
 # Projets natifs : régénérés par expo prebuild à chaque build (ADR-009)
 /android/
 /ios/
+# Worktrees des agents de code (travail par lot)
+.claude/worktrees/

@@ -36,6 +36,195 @@ Démarre le ticket 001 (docs/tickets/001-socle-expo.md), le premier du jalon 0, 
 
 **Ce que j'ai corrigé ou décidé** : branche du jalon 0 partie de `ticket/000` (`main` vide), PR n°1 fermée au profit de la PR du jalon ; `react-dom` épinglé en 19.3.0 ; années bornées de 1900 à 2100 ; scheme `kila://` retiré. L'IA avait affirmé à tort que pousser la branche du jalon passerait « vraiment » le hook : corrigé avant le push, limite notée.
 
+### Ticket 002 : couche données et migration 1 — 2026-11-26 (zone sensible)
+
+**Prompt**
+
+```text
+démarre le ticket 002
+```
+
+**Ce que l'IA a fait** : interface `Db` commune à `expo-sqlite` (appli) et `node:sqlite` (tests, ADR-008) ; migration 1 (16 tables `STRICT`, contraintes, cascades) ; deux `/code-review` et `/security-review`. La première revue a trouvé un défaut grave : `withExclusiveTransactionAsync` ouvre une nouvelle connexion sans clés étrangères, si bien que les cascades ne s'appliquaient pas dans les transactions. L'IA l'a reproduit par une imitation fidèle avant de le corriger (file de transactions sur la connexion principale). La deuxième revue a trouvé un ROLLBACK avalé et une poignée de transaction réutilisable.
+
+**Ce que j'ai corrigé ou décidé** : séances gardées à la suppression d'un créneau ; brouillon d'appel en tables filles plutôt qu'en JSON, rattaché à sa saison ; relecture de la zone sensible avant fusion.
+
+### Ticket 003 : garde-fous, thème et polices — 2026-11-26
+
+**Prompt**
+
+```text
+démarre le ticket 003
+```
+
+**Ce que l'IA a fait** : thème lu dans `jetons.json` ; journal unique ; contrôles CONV-03, CONV-16, SEC-01 et SEC-03 par l'arbre syntaxique de TypeScript ; polices IBM Plex avec empreintes. La revue a trouvé que 3 polices sur 4 seraient introuvables sur iOS, parce que leur nom PostScript diffère du nom de fichier : confirmé avec `fc-scan`, fichiers renommés, et un test lit maintenant le nom dans chaque police.
+
+**Ce que j'ai corrigé ou décidé** : j'ai lancé moi-même le téléchargement des polices (`!`), car l'IA n'en avait pas la permission ; journal sans erreur levée (`LOG_REFUSED`) et clés en liste blanche ; `expo-font` accepté pour son extension de build seulement, `loadAsync` et `useFonts` interdits.
+
+### Ticket 004 : builds sur la CI et audit des permissions — 2026-11-26 (zone sensible)
+
+**Prompt**
+
+```text
+démarre le ticket 004
+```
+
+**Ce que l'IA a fait** : APK de version construit en local puis par la CI ; `scripts/audit-apk.js` (permissions égales à une liste figée, sans INTERNET, sans sauvegarde système, sans lien profond) et `audit-ios.js` ; base ouverte au démarrage. Constats : Expo ajoute 4 permissions par défaut malgré `permissions: []`, et un scheme d'URL iOS dans tous les cas. L'audit a échoué quand une permission (`CAMERA`) a été ajoutée exprès, puis est repassé une fois celle-ci retirée. Sur mon Galaxy A55 : `DB_READY { version: 1 }` dans `adb logcat`. La revue a trouvé que la base pouvait être ouverte deux fois en parallèle, d'où une ouverture partagée.
+
+**Ce que j'ai corrigé ou décidé** : binaire de test = APK de version avec la clé de débogage, et non `expo-dev-client` (qui exige INTERNET) ; migration vérifiée par `adb logcat` plutôt qu'à l'écran ; liste de permissions validée ; scheme iOS retiré par un plugin local.
+
+### Fin du jalon 0 — 2026-11-26
+
+**Prompt**
+
+```text
+tu peux fusionner la PR #5 (puis : « Vas y » pour la PR du jalon vers main)
+```
+
+**Ce que l'IA a fait** : PR du jalon vers `main`, la première exécution de la CI. Semgrep a refusé un gabarit placé en premier argument de `console.log` : faux positif en pratique, mais corrigé dans le code plutôt que masqué. Le build Android (17 min) et le build iOS sur `macos-26` (27 min) ont réussi dès le premier essai ; fusion en `--squash` une fois tout vert. Prétest : APK de la CI téléchargé (empreinte vérifiée), installé et relancé après une fermeture forcée sur l'émulateur Android 16.
+
+**Ce que j'ai corrigé ou décidé** : l'IA a fusionné la PR #8 (correction Semgrep) sans `/code-review` préalable, contrairement à `CLAUDE.md` ; elle l'a signalé d'elle-même et lancé la revue après coup (aucune remarque). Réévaluation : moins de 2 h réelles pour 6 h prévues ; estimation de 1,5 h par ticket gardée, l'avance d'une semaine sert de marge.
+
+### Décisions automatiques — 2026-11-27
+
+**Prompt**
+
+```text
+Pour une très importante partie (très majoritaire) quand tu poses des questions, je ne fais que valider ta recommandation. [...] si lorsque je dois choisir par qcm on met en place la validation automatique de ta recommandation, on gagnerait du temps. [...] faire une note dans un document qui mémorise tes choix pour pouvoir à la fin remonter sur une potentielle erreur si nécessaire. On pourrait intégrer ce point au skill de vibe coding, qu'en penses-tu ?
+```
+
+**Ce que l'IA a fait** : `CLAUDE.md` (rôles, plan annoncé, « Arrête-toi et demande » resserré, § « Décisions automatiques »), `docs/DECISIONS.md`, section du modèle de PR. Exceptions gardées : sécurité, ABS, données et conformité, dépendance ou dépense, contradiction avec un document validé, zone sensible, action irréversible ou extérieure, choix sans recommandation nette.
+
+**Ce que j'ai corrigé ou refusé** : rien.
+
+**Décision** : « projet puis méthode » : Ki&La d'abord, puis une PR sur `une-app-par-mois/methode-vibe-coding`, relue par le porteur. Bilan au jalon : nombre de décisions annulées.
+
+### Contradicteur — 2026-11-27
+
+**Prompt**
+
+```text
+On peut ajouter un sous agent autonome pour être le contradicteur ?
+```
+
+**Ce que l'IA a fait** : sous-agent `.claude/agents/contradicteur.md` (lecture seule, sans le raisonnement de l'IA), lancé une fois par ticket avant la PR sur ses décisions automatiques ; suites selon le verdict dans `CLAUDE.md` ; états dans `docs/DECISIONS.md` ; modèle de PR.
+
+**Ce que j'ai corrigé ou refusé** : rien.
+
+**Décision** : premier usage sur le ticket 012b.
+
+### File du porteur — 2026-11-27
+
+**Prompt**
+
+```text
+Pour éviter de me demander trop souvent des décisions, est-ce pertinent d'ajouter un agent de décision ? Et / ou un agent médiateur ?
+```
+
+**Ce que l'IA a fait** :
+- Elle a déconseillé les deux agents : les questions qui remontent sont celles réservées au porteur, et aucun agent ne peut les trancher.
+- Elle a proposé deux règles : écarts mineurs avec la maquette en décision automatique, et file du porteur.
+- Le porteur a choisi la file seule. Les choix sans recommandation nette et les ajustements de ses décisions, s'ils sont faciles à défaire, sont appliqués et posés en fin de jalon.
+
+**Ce que j'ai corrigé ou refusé** : les écarts avec la maquette restent posés sur le moment.
+
+### Travail par lot — 2026-11-27
+
+**Prompt**
+
+```text
+Avant de passer aux tickets suivants, je veux voir avec toi comment optimiser le skill et le process de vibe coding. L'objectif est de réduire le temps de développement, pouvoir au maximum lancer des agents de code en parallèle pour plusieurs tickets. Avoir les questions par séance de questions, c'est-à-dire garder les questions en mémoire pour avoir des questions posées à un moment donné et pas sans arrêt.
+```
+
+**Ce que l'IA a fait** :
+- Elle a mis en place le travail par lot : séance de lancement avec pré-analyse, au plus 3 agents de code en parallèle dans des worktrees, intégration par l'IA principale, séance de clôture.
+- Elle a ajouté la file `docs/QUESTIONS.md`, un modèle de ticket avec les dépendances, les fichiers touchés et les sections tenues par l'agent, et les agents `pre-analyse` et `codeur`.
+
+**Ce que j'ai corrigé ou refusé** : rien. Choix du porteur : dès maintenant ; cas réservés repoussés à la séance suivante, avec le ticket mis de côté ; 3 agents au plus.
+
+### Premier lot en parallèle (013, 014, 015) — 2026-11-27
+
+**Prompt** : « Vas-y » (après la mise en place du travail par lot).
+
+**Ce que l'IA a fait** :
+- **Séance de lancement** : trois pré-analyses, puis 11 questions posées en une fois. Résultat : découpage de 014 et 015, restauration par recopie, expo-file-system accepté, purge des membres.
+- **Développement** : trois agents de code dans des worktrees.
+- **Intégration** :
+  - revue de code, contradicteur, et revue de sécurité pour 014 et 015 ;
+  - corrections renvoyées aux agents (5 décisions changées) ;
+  - fusions une par une, avec la branche du jalon fusionnée dans chaque branche suivante.
+- **Séance de clôture** : 6 questions (barre d'onglets à 5 places, « dont N retards », mode de journal, saisons commencées, écarts du 014).
+
+**Ce que j'ai corrigé ou refusé** : rien. Les questions venaient des contradicteurs et des revues, pas d'erreurs de l'IA.
+
+**Leçons** :
+- Les pré-analyses trouvent la plupart des questions avant le code.
+- Deux agents ont créé le même code d'erreur sous deux types : conflit résolu à l'intégration.
+- Un agent a élargi un contrôle « si besoin » : le contradicteur l'a fait remonter au porteur.
+
+### Lot 4 (014c, 014d, 015b) — 2026-11-27
+
+**Prompt clé** : séance de lancement en 4 séries de QCM (découpages en 014c/014f et 015b/015f, détection d'une base abîmée, « Repartir de zéro », texte chiffré de la purge, plans de zone sensible), puis 3 agents de code en parallèle.
+
+**Ce que l'IA a fait** :
+- **Développement** : trois agents dans leurs worktrees, un par ticket.
+- **Intégration** : revue de code, contradicteur, revue de sécurité pour 014c et 015b ; corrections renvoyées aux agents ; fusions une par une (PR #49 à #51), la branche du jalon fusionnée dans chaque branche suivante ; 1197 tests.
+- **Suites** : nouveau ticket 014g (vidage du dossier d'export sous le verrou), notes reportées dans les fiches 014f et 015f, limite de « Repartir de zéro » dans SEC-11, nettoyage sous verrou dans SEC-10.
+
+**Ce qui a été corrigé par les revues** :
+- une base saine pouvait être classée « abîmée » (et proposée à l'effacement) : le porteur a tranché, « abîmée » seulement pour un fichier illisible, sinon « Réessayer » sans effacement ;
+- « Garder » restait actif pendant la purge : confirmation figée (`busy`) ;
+- au passage de minuit, la relecture faisait disparaître la section et la confirmation de purge ;
+- tests manquants sur les gardes des membres de la purge ;
+- les notes de la maquette du 015b attribuaient au porteur des décisions automatiques (contradicteur) ;
+- blocage possible sur « Appel enregistré » en attendant la lecture des réglages de l'invitation (014d) : le retour n'attend plus la lecture.
+
+**Ce que j'ai corrigé ou refusé** : deux réponses en cours de lot : le classement « abîmée » (ci-dessus) et la confirmation de purge sans le nom du groupe de l'appel en cours (contrôle EX-14 non élargi).
+
+**Leçons** :
+- Les intégrations des lots 2 et 3 avaient remplacé les lignes de `docs/DECISIONS.md` au lieu d'ajouter en bas : historique rétabli à ce lot.
+
+### Lot 5 (014g, 017, 015f, 014f) — 2026-11-27
+
+**Prompt clé** : séance de lancement en QCM (plans de zone sensible du 014g, du 015f et du 014f ; texte de Tout effacer ; mot « EFFACER » ; 014f gardé entier ; minimatch par `overrides`), puis agents de code en parallèle.
+
+**Ce que l'IA a fait** :
+- **Développement** : un agent par ticket, dans son worktree ; le 014g fusionné en premier, les autres ont récupéré la branche du jalon par une fusion.
+- **Intégration** : revue de code, contradicteur, revue de sécurité pour 014g, 015f et 014f ; corrections renvoyées aux agents ; fusions une par une (PR #54 à #57) ; 1284 tests ; 41 décisions ajoutées à `docs/DECISIONS.md`.
+- **Suites** : SEC-10 et SEC-11 complétées (vidage de l'export sous verrou, Tout effacer, limites des arrêts brutaux), nouveau ticket 018 (glob), relances à annuler par Tout effacer notées dans `docs/IDEES.md`, maquette régénérée.
+
+**Ce qui a été corrigé par les revues** :
+- « Rien n'a été effacé » s'affichait après un effacement réel quand la base neuve ne s'ouvrait pas : état `erased` et message propre (réponse 1 du porteur) ;
+- le résultat `'ignored'` (base qui n'est plus abîmée au moment de remplacer) était silencieux : carte « La restauration n'a pas abouti » ;
+- le double appui sur le bouton rouge de Tout effacer n'était pas testé : garde dans l'écran et test ;
+- la liste des dossiers du cache était écrite deux fois (démarrage et Tout effacer) : `clearCacheCopies()` commun ;
+- l'ancien accueil restait visible un instant après Tout effacer : compteur d'effacements lu par `useSetupProgress` ;
+- minimatch 11 forcé partout cassait `test-exclude@6` (suite pourtant verte) : override limité à la plage vulnérable.
+
+**Ce que j'ai corrigé ou refusé** : quatre réponses après les revues du 014f (état `erased`, titre et message de `restoreFailed`, effacement en échec pendant une restauration, deux phrases de la carte gardées) ; ticket à part pour glob ; **recette sur l'A55 des lots 4 et 5 non faite, décision du 2026-11-27 : « on poursuit malgré tout »** (liste dans `ETAT.md`).
+
+**Leçons** :
+- Une suite verte ne prouve pas qu'une dépendance forcée marche : le 017 l'a vu en chargeant `test-exclude@6` à la main ; critère repris dans le 018.
+
+### Lot 6 (018, 016) — 2026-11-27
+
+**Prompt clé** : séance de lancement du lot 018-016 (aller-retour de la sauvegarde par une sauvegarde fictive générée par le script et déposée dans Téléchargements ; émulateur seul, A55 « non vérifié » ; Maestro 2.12.0 local, statistiques désactivées ; override de glob limité comme au 017), puis deux agents de code en parallèle.
+
+**Ce que l'IA a fait** :
+- **Développement** : 018 (glob 14.0.6 par `overrides`, garde-fou `scripts/glob.test.js`, chargement de chaque paquet vérifié hors de la suite, APK audité) ; 016 (`.maestro/`, `scripts/e2e.sh`, générateur de sauvegarde fictive sans dépendance, campagne verte sur l'émulateur API 36).
+- **Intégration** : revue de code et contradicteur ; corrections renvoyées aux agents ; fusions une par une (PR #60 et #61) ; 1304 tests ; 14 décisions ajoutées à `docs/DECISIONS.md` ; bilan des décisions du jalon 1 : 0 annulée.
+
+**Ce qui a été corrigé par les revues** :
+- le générateur de la sauvegarde fictive plantait en juillet et en août (saison de Bienvenue au 1er septembre suivant, appels dans le futur) : saison qui contient aujourd'hui ;
+- garde-fous de versions : comparaison écrite en double (`scripts/lock-versions.js` commun), suffixe `+build` mal lu, entrée du verrou sans version qui faisait planter le fichier ;
+- l'override sans borne haute pouvait redescendre en silence une future version de glob ou de minimatch : échec « ajuster l'override » ;
+- parcours fragiles : feuille de partage repérée par un identifiant qui n'existe qu'à partir d'Android 14, sélecteur en anglais seulement, émulateur relié en TCP refusé, version de Node trop basse non signalée (22.15 au moins).
+
+**Ce que j'ai corrigé ou refusé** : **NF-01, décision du porteur du 2026-11-27** : le scénario d'appel ordinaire (3 absents, 1 retard), le seuil de 30 s et le départ du chronomètre depuis la liste des groupes sont gardés tels quels (écart au cadrage « de l'ouverture à l'enregistrement » noté ; 24,9 s mesurées) ; recette sur l'A55 des lots 4, 5 et 6 non faite (liste dans `ETAT.md`).
+
+**Leçons** :
+- Maestro mesure surtout son propre coût (environ 2,2 s par appui) : sur l'émulateur, NF-01 se lit comme une alerte ; la mesure qui fait foi reste sur un téléphone.
+- Une base d'un ancien build laisse l'accueil vide sans message : désinstaller avant chaque installation de test.
+
 ### [Étape] — [AAAA-MM-JJ]
 
 **Prompt**

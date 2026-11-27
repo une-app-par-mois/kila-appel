@@ -10,7 +10,7 @@ Ce que la machine ne vérifie pas encore, l'IA le respecte ; ce qu'elle peut vé
 | --- | --- | --- |
 | CONV-01 | Identifiants en anglais, avec le terme du glossaire du cadrage (`Session`, `RollCall`, `Attendance`…) ; aucun synonyme | Revue |
 | CONV-02 | Commentaires, textes de l'interface, documents et messages de commit en français | Revue |
-| CONV-03 | Tous les textes de l'interface dans `src/config/libelles.ts`, jamais en dur dans un écran | Test `src/staticChecks.test.ts` (texte littéral dans le JSX interdit hors de ce fichier ; Biome ne le permet pas) |
+| CONV-03 | Tous les textes de l'interface dans `src/config/libelles/` (un fichier par domaine, 300 lignes au plus, rassemblés par `index.ts` ; décision du porteur du 2026-11-27), jamais en dur dans un écran | Test `src/staticChecks.test.ts` (texte littéral dans le JSX interdit hors de ce dossier ; Biome ne le permet pas) |
 | CONV-04 | Fichiers : composants et écrans en `PascalCase.tsx` sauf les routes Expo Router (`index.tsx`, `[id].tsx`) ; le reste en `camelCase.ts` | Revue |
 | CONV-05 | Tables SQL au pluriel, colonnes en `snake_case` (`docs/ARCHITECTURE.md` §4) | Tests de données |
 

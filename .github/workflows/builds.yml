@@ -25,6 +25,9 @@ jobs:
           distribution: temurin
           java-version: "17"
       - run: npm ci
+      # Registre affiché dans l'appli (EX-42) : à jour des dépendances embarquées, licences acceptées.
+      - name: Registre des licences à jour (CONFORMITE §7)
+        run: node scripts/licences.js --check
       - name: Projet natif (expo prebuild)
         run: npx expo prebuild --platform android --no-install
         env:

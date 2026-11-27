@@ -1,34 +1,40 @@
-# 006 — Saisons et groupes
+# 006 — Saisons et groupes : dépôts et hooks
 
-Statut : à faire · Jalon : 1 · Zone sensible : oui · Trivial : non
+Statut : fusionné dans le groupe · Jalon : 1 · Zone sensible : oui (suppressions) · Trivial : non
+
+Découpé le 2026-11-26 (décision du porteur) : 006 (données), 006b (composants), 006c (écrans).
 
 ## Contexte
 
-Premiers écrans de gestion : saisons (EX-01) et groupes (EX-02), avec leurs suppressions.
+Couche données des saisons (EX-01) et des groupes (EX-02), avec leurs suppressions, avant les écrans du ticket 006c.
 
 ## À lire
 
-- `docs/PRD.md` EX-01, EX-02
-- Maquettes : Saisons, Création ou modification d'une saison, Suppression d'une saison, Groupes, Création d'un groupe, Renommer ou supprimer un groupe, Suppression d'un groupe, Paramètres, États vides
+- `docs/PRD.md` EX-01, EX-02 ; `docs/ARCHITECTURE.md` §4 (schéma, suppressions)
 
 ## Ce qui change
 
-- Dépôts `seasons`, `groups`
-- Écrans correspondants, onglet Paramètres
-- Composants de base (bouton, carte, ligne, confirmation)
+- `src/data/seasonsRepo.ts`, `src/data/groupsRepo.ts` : lire, créer, modifier, activer, archiver, supprimer ; ce qu'une suppression effacera
+- `src/hooks/useSeasons.ts`, `src/hooks/useGroups.ts` : seul accès des écrans (CONV-10)
 
 ## Critères d'acceptation
 
-- [ ] Créer, renommer, activer, supprimer une saison ; une seule active (EX-01)
-- [ ] Supprimer une saison efface ses groupes, créneaux, séances et présences, pas les membres, après une confirmation qui le dit (EX-01)
-- [ ] Créer, renommer, archiver, supprimer un groupe (EX-02)
-- [ ] Écrans conformes aux maquettes ; états vides
+- [x] Créer, renommer (et changer les dates), activer, supprimer une saison ; une seule active (EX-01)
+- [x] Supprimer une saison efface ses groupes, créneaux, séances et présences, pas les membres ; le nombre de lignes concernées est connu avant (EX-01)
+- [x] Créer, renommer, archiver, désarchiver, supprimer un groupe ; les présences restent (EX-02)
+- [x] Toute saisie est validée avant la base (nom non vide, dates RM-04, fin après début)
 
 ## Tests attendus
 
-- Tests de données des dépôts et des suppressions (comptes de lignes)
-- Tests d'écrans des confirmations
+- Tests de données des dépôts et des suppressions (comptes de lignes), sur `node:sqlite`
+- Tests des hooks
+
+## Décisions du porteur (2026-11-26)
+
+- Supprimer un groupe garde ses séances et leurs présences (ARCHITECTURE §4.1, ticket 002) ; la maquette sera corrigée au 006c.
+- « Désarchiver » un groupe est prévu, bien qu'absent de la maquette.
+- Changer les dates d'une saison est refusé si des séances enregistrées tomberaient en dehors (`SESSIONS_OUTSIDE_SEASON`).
 
 ## Hors périmètre
 
-- Membres (007)
+- Écrans (006c), composants (006b), membres (007)

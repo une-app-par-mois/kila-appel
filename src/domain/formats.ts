@@ -57,3 +57,55 @@ export const parseDisplayDate = (input: string): string | null => {
   const iso = `${year}-${month}-${day}`;
   return isIsoDate(iso) ? iso : null;
 };
+
+/** Date locale d'un instant → date stockée (le jour affiché sur le téléphone, pas en UTC). */
+export const toIsoDate = (date: Date): string => {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+};
+
+/** Heure locale d'un instant → « HH:MM » (séance proposée, EX-09). */
+export const toLocalTime = (date: Date): string =>
+  `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+
+/**
+ * EX-04 (décision du porteur du 2026-11-26) : date de début proposée pour une inscription,
+ * aujourd'hui ramené dans les dates de la saison active (premier ou dernier jour) ; sans saison,
+ * aujourd'hui.
+ */
+export const startInSeason = (
+  today: string,
+  season: { startDate: string; endDate: string } | null | undefined,
+): string => {
+  if (!season) return today;
+  if (today < season.startDate) return season.startDate;
+  return today > season.endDate ? season.endDate : today;
+};
+
+/** Veille d'une date stockée : dernier jour d'une inscription dont la fin est exclue (EX-04). */
+export const previousDay = (iso: string): string => {
+  if (!isIsoDate(iso)) {
+    throw new Error('Date stockée invalide (RM-04)');
+  }
+  const [year, month, day] = iso.split('-').map(Number);
+  // Midi : à l'abri des changements d'heure.
+  return toIsoDate(new Date(year ?? 0, (month ?? 1) - 1, (day ?? 1) - 1, 12));
+};
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Jour d'une date stockée compté depuis 1970, en UTC : à l'abri des changements d'heure. */
+const dayNumber = (iso: string): number => {
+  if (!isIsoDate(iso)) {
+    throw new Error('Date stockée invalide (RM-04)');
+  }
+  const [year, month, day] = iso.split('-').map(Number);
+  return Date.UTC(year ?? 0, (month ?? 1) - 1, day ?? 1) / DAY_MS;
+};
+
+/** EX-21 : jours entiers de `from` à `to` (négatif si `from` est après `to`). */
+export const daysSince = (from: string, to: string): number => dayNumber(to) - dayNumber(from);
+
+/** Texte replié pour une recherche : sans accent ni casse (« Élodie » → « elodie »). */
+export const foldText = (text: string): string =>
+  text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();

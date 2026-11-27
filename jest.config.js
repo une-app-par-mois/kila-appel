@@ -2,9 +2,16 @@
 /** @type {import('jest').Config} */
 module.exports = {
   preset: 'jest-expo',
+  // Animations (008b) : résolveur publié par Reanimated pour Jest ; expo-router/testing-library
+  // installe ensuite les imitations de gesture-handler et de Reanimated.
+  resolver: 'react-native-reanimated/jest/resolver',
+  setupFiles: ['<rootDir>/jest.setup.js'],
   roots: ['<rootDir>/src', '<rootDir>/scripts', '<rootDir>/plugins'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    // Lucide publie ses modules ES en .mjs, que Jest ne transforme pas : version CommonJS du même paquet.
+    '^lucide-react-native/icons/(.*)$':
+      '<rootDir>/node_modules/lucide-react-native/dist/cjs/icons/$1.js',
   },
   collectCoverageFrom: [
     'src/domain/**/*.{ts,tsx}',

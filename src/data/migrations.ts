@@ -71,9 +71,16 @@ const MIGRATION_1: string[] = [
     start_time TEXT NOT NULL CHECK ${hhmm('start_time')},
     duration_min INTEGER NOT NULL CHECK (duration_min BETWEEN 1 AND 1440),
     place TEXT,
-    name TEXT
+    name TEXT,
+    -- EX-08 : date d'effet de l'horaire ; aucun appel réclamé avant (décisions du 2026-11-26).
+    schedule_from TEXT NOT NULL CHECK ${isoDate('schedule_from')}
   ) STRICT`,
   'CREATE INDEX slots_season ON slots (season_id)',
+  // EX-07 : avancée quand le jour ou l'heure changent (ticket 009), jamais reculée : le passé
+  // n'est pas recalculé avec le nouvel horaire. Pas de REPLACE INTO slots (ARCHITECTURE §4.2).
+  `CREATE TRIGGER slots_schedule_from_forward BEFORE UPDATE OF schedule_from ON slots
+   WHEN NEW.schedule_from < OLD.schedule_from
+   BEGIN SELECT RAISE(ABORT, 'slots.schedule_from ne recule pas (EX-07)'); END`,
 
   `CREATE TABLE slot_dates (
     slot_id INTEGER NOT NULL REFERENCES slots (id) ON DELETE CASCADE,
@@ -129,6 +136,9 @@ const MIGRATION_1: string[] = [
     slot_id INTEGER REFERENCES slots (id) ON DELETE CASCADE,
     date TEXT NOT NULL CHECK ${isoDate('date')},
     comment TEXT,
+    -- Ticket 011 (décision du porteur du 2026-11-27, ADR-003) : ouverture de l'appel, « commencé à »
+    -- et heure d'un appel sans créneau repris. Aucune donnée personnelle (ABS-03).
+    started_at TEXT NOT NULL CHECK ${hhmm('started_at')},
     updated_at TEXT NOT NULL
   ) STRICT`,
   // Groupes et statuts du brouillon en tables filles (décision du porteur du 2026-11-26) :

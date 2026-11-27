@@ -24,10 +24,10 @@ Données personnelles, règles des stores, droit de l'UE, licences, et liste des
 | Obligation du club ou de l'encadrant | Ce que fait l'appli |
 | --- | --- |
 | Minimisation | Nom et prénom seuls obligatoires ; aucun champ de santé ni commentaire par membre (ABS-03) |
-| Durée de conservation (CNIL, sport amateur : 3 ans au plus après la fin de l'adhésion) | Conservation réglable, 3 saisons par défaut, purge (EX-24) |
+| Durée de conservation (CNIL, sport amateur : 3 ans au plus après la fin de l'adhésion) | Conservation réglable de 1 à 3 saisons, 3 par défaut ; la purge efface aussi les membres qui ne figurent plus dans aucune saison gardée (EX-24, décisions du porteur du 2026-11-27) |
 | Droit d'accès d'une famille | Export CSV filtrable (EX-31) |
 | Droit de rectification | Fiche membre modifiable (EX-03) |
-| Droit à l'effacement | Suppression réelle d'un membre et de ses présences (ABS-05, EX-03) |
+| Droit à l'effacement | Suppression réelle d'un membre et de ses présences (ABS-05, EX-03) ; valeurs effacées aussi dans le fichier de base (`secure_delete`, ticket 007d) |
 | Sécurité | Données dans l'espace privé de l'appli ; avertissement à chaque sortie de données (SEC-09) |
 | Information des familles | Modèle de mention d'information à copier par le club, publié sur GitHub Pages (décision du 2026-11-26) ; rien dans l'appli |
 
@@ -73,9 +73,10 @@ Apple et Google demandent de déclarer si l'éditeur est un **commerçant** (*tr
 ## 7. Licences
 
 - **Code du dépôt** : MIT (fichier `LICENSE`).
-- **Licences acceptées pour une dépendance** : MIT, ISC, BSD, Apache-2.0 ; **polices** : SIL OFL 1.1. **Refusées sans décision du porteur** : GPL, LGPL, AGPL, SSPL et toute licence copyleft.
+- **Licences acceptées pour une dépendance** : MIT, ISC, BSD, Apache-2.0, et (décision du porteur du 2026-11-26) 0BSD, BlueOak-1.0.0, CC0-1.0, Unlicense ; une double licence est acceptée si l'une des deux l'est ; **polices** : SIL OFL 1.1. **Refusées sans décision du porteur** : GPL, LGPL, AGPL, SSPL et toute licence copyleft.
 - **Registre** : la liste des licences embarquées est générée depuis les dépendances réellement présentes dans le build et affichée dans l'appli (EX-42) ; elle est mise à jour dans le même ticket que toute nouvelle dépendance, police ou ressource.
 - Polices IBM Plex : fichier de licence OFL livré à côté des `.ttf` (ADR-001).
+- **Périmètre du registre** (décision du porteur du 2026-11-26) : paquets du bundle JavaScript exporté et polices, par `scripts/licences.js` ; les bibliothèques natives (Gradle, CocoaPods) font l'objet d'un inventaire à part (§8).
 
 ## 8. Actions avant le lancement
 
@@ -89,6 +90,7 @@ Apple et Google demandent de déclarer si l'éditeur est un **commerçant** (*tr
 | Déclarer le public cible 18+ (Play) et remplir le questionnaire d'âge (Apple) | Porteur | À la soumission |
 | Auditer les permissions et l'absence de chiffrement sur les binaires | IA (CI), porteur (lecture) | Fin de jalon et chaque version |
 | Générer le registre des licences | IA | Chaque version |
+| Inventorier les licences des bibliothèques natives (Gradle, CocoaPods : AndroidX, Kotlin, OkHttp, Hermes…) et les ajouter au registre affiché (EX-42), décision du porteur du 2026-11-26 | IA | Avant la première soumission |
 | Préparer un jeu de données fictif pour la revue des stores (une appli vide est souvent refusée) | IA | Avant la première soumission |
 
 ## 9. Sources (consultées le 2026-11-26)
@@ -114,6 +116,7 @@ Non lus (pages vides ou en erreur) : considérant 18 du RGPD (EUR-Lex), deux pag
 
 ## Décisions du porteur
 
+- 2026-11-26 (ticket 005) : date d'effet de l'horaire des créneaux ajoutée (donnée d'organisation, non personnelle, stockée sur l'appareil) ; rien ne change pour les déclarations des stores (« aucune donnée collectée ») ; la politique de confidentialité (EX-40) la range avec les créneaux (ABS-08).
 - 2026-11-26 : comptes Jita Vision, nom Ki&La, GitHub Pages ; Jita Vision **commerçant** au sens du DSA ; modèle de mention d'information pour les familles sur la page web ; export non déclaré comme partage (action initiée par l'utilisateur) ; public cible Play **16 ans et plus**.
 
 ## Questions ouvertes

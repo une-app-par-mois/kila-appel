@@ -66,8 +66,8 @@ export const seed = async (db: Db): Promise<Seeded> => {
   }
   const slotId = await insert(
     db,
-    'INSERT INTO slots (season_id, weekday, start_time, duration_min, place) VALUES (?, 3, ?, 90, ?)',
-    [seasonId, '17:30', 'Gymnase'],
+    'INSERT INTO slots (season_id, weekday, start_time, duration_min, place, schedule_from) VALUES (?, 3, ?, 90, ?, ?)',
+    [seasonId, '17:30', 'Gymnase', '2025-09-01'],
   );
   await db.execute('INSERT INTO slot_groups (slot_id, group_id) VALUES (?, ?)', [slotId, groupId]);
   await db.execute('INSERT INTO slot_dates (slot_id, date) VALUES (?, ?)', [slotId, '2026-12-05']);
@@ -89,8 +89,8 @@ export const seed = async (db: Db): Promise<Seeded> => {
     [sessionId, otherMemberId],
   );
   await db.execute(
-    'INSERT INTO roll_call_drafts (id, season_id, slot_id, date, updated_at) VALUES (1, ?, ?, ?, ?)',
-    [seasonId, slotId, '2026-12-02', '2026-12-02T17:35:00'],
+    'INSERT INTO roll_call_drafts (id, season_id, slot_id, date, started_at, updated_at) VALUES (1, ?, ?, ?, ?, ?)',
+    [seasonId, slotId, '2026-12-02', '17:32', '2026-12-02T17:35:00'],
   );
   await db.execute('INSERT INTO roll_call_draft_groups (draft_id, group_id) VALUES (1, ?)', [
     groupId,

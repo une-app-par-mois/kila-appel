@@ -45,7 +45,7 @@ ${go('groupe-nouveau', 'Créer un groupe')}
 <div class="etape"><span class="num">3</span><div><div class="l-titre">Ajouter les membres</div></div></div>
 <div class="etape"><span class="num">4</span><div><div class="l-titre">Déclarer les créneaux</div></div></div>
 `)}
-<p class="note">Un seul bouton à l'écran, sur la première étape qui reste.</p>`);
+<p class="note">Un seul bouton à l'écran, sur la première étape qui reste. Décisions du porteur du 2026-11-27 : affiché à la place de l'accueil tant qu'une étape reste et qu'aucun appel n'est enregistré dans la saison, jamais pendant un appel en cours ; saison créée sur une base vide seulement, du 1er septembre au 31 août (dès le 1er juillet, celle de la rentrée).</p>`);
 
 // 02 — Accueil
 ecran('accueil', 1, 'Accueil', 'EX-09, EX-17, EX-21, EX-06', 'accueil', `
@@ -62,7 +62,7 @@ ${carte(`
 ${ligne('<span class="rouge">●</span> Benjamins lundi', 'Lundi 24 nov. · 18:00', 'data-go="appel"')}
 `)}
 ${carte(`<div class="l-titre">Pas de sauvegarde depuis 34 jours</div><div class="l-sous">Vos données ne vivent que sur cet appareil.</div>${go('donnees', 'Sauvegarder maintenant', 'btn-s')}`, 'bandeau')}
-<p class="note">Version finale avec frise et alertes : <a class="lien" data-go="accueil-complet">Accueil complet</a> (lot 2).</p>`);
+<p class="note">Version finale avec frise et alertes : <a class="lien" data-go="accueil-complet">Accueil complet</a> (lot 2). Ticket 012 (décisions du 2026-11-27) : sans « Annuler » (jalon 2) ni bandeau de sauvegarde (ticket 014) ; appels manquants : 5 au plus, puis « et N autres » ; séance déjà faite : « Appel enregistré », sans bouton ; onglets Accueil, Nouvel appel, Paramètres jusqu'au ticket 013.</p>`);
 
 // 03 — Recherche contact d'urgence
 ecran('urgence', 1, "Recherche d'un contact d'urgence", 'EX-06, EX-05', 'accueil', `
@@ -85,7 +85,8 @@ ${titre('Poussins mercredi', 'accueil')}
 <div id="liste-appel"></div>
 <button class="btn-s" data-go="ajout">+ Ajouter un membre</button>
 <div class="champ multi">Commentaire de la séance (facultatif)</div>
-<button class="btn-p" id="enregistrer">Enregistrer l'appel</button>`);
+<button class="btn-p" id="enregistrer">Enregistrer l'appel</button>
+<p class="note">Le chronomètre ne sert qu'à la démonstration (mesurer NF-01) : absent de l'appli. Après l'enregistrement, retour à l'accueil jusqu'à l'Historique (ticket 013). Séance déjà enregistrée : « L'appel de cette séance est déjà enregistré. », sans bouton (décisions du 2026-11-27). Décision du porteur du 2026-11-27 : « N présents dont M retards », retards compris dans les présents.</p>`);
 
 // 05 — Appel sans créneau (EX-39)
 ecran('appel-libre', 1, 'Appel sans créneau', 'EX-39', 'appel', `
@@ -95,7 +96,7 @@ ${section('Groupe')}
 ${carte(`${ligne('Poussins mercredi', '22 membres', 'data-go="appel"')}${ligne('Benjamins lundi', '18 membres', 'data-go="appel"')}${ligne('Adultes jeudi', '25 membres', 'data-go="appel"')}`)}
 ${section('Date')}
 <div class="champ mono">26/11/2026</div>
-<p class="note">S'affiche quand on touche « Nouvel appel » hors de tout créneau proche.</p>`);
+<p class="note">S'affiche quand on touche « Nouvel appel » sans séance à faire : aucune proposée, ou la proposée déjà enregistrée. Groupes listés par leur nom, sans le nombre de membres au lot 1. Date jamais future, dans la saison active ; l'heure de la séance est celle de l'ouverture de l'appel. Appel du groupe déjà enregistré ce jour-là : « Un appel de Poussins est déjà enregistré le 16/11/2026. En faire un autre ? » (Annuler / Faire un autre appel) (décisions du 2026-11-27).</p>`);
 
 // 06 — Ajout d'un membre pendant l'appel (EX-12)
 ecran('ajout', 1, "Ajout d'un membre pendant l'appel", 'EX-12, EX-03', 'appel', `
@@ -104,6 +105,7 @@ ${titre('Nouveau membre', 'appel')}
 <label>Nom</label><div class="champ">Colin</div>
 <label>Date de naissance <span class="facultatif">facultative</span></label><div class="champ vide">JJ/MM/AAAA</div>
 <p class="aide">Il sera inscrit à « Poussins mercredi » à partir d'aujourd'hui.</p>
+<p class="note">Inscrit à la date de la séance : « à partir du 18/11/2026 » pour le rattrapage d'une séance passée (décision du 2026-11-27).</p>
 ${go('appel', "Ajouter et revenir à l'appel")}`);
 
 // 07 — Historique
@@ -118,7 +120,7 @@ ${ligne('Benjamins lundi', 'Lun. 17/11 · <span class="mono">16/18</span> prése
 ${ligne('<span class="gris">Annulée</span> · Poussins mercredi', 'Mer. 12/11', '')}
 ${ligne('<span class="gris">Non planifiée</span> · Adultes jeudi', 'Jeu. 30/10 · vacances', '')}
 `)}
-<p class="note">Annulée et Non planifiée viennent du lot 2 (F-13) : montrées ici pour le rendu.</p>`);
+<p class="note">Annulée et Non planifiée viennent du lot 2 (F-13) : montrées ici pour le rendu. Décision du porteur du 2026-11-27 : la période propose aussi « Toutes les saisons », pour consulter les saisons passées.</p>`);
 
 // 08 — Détail et correction d'une séance (EX-18)
 ecran('seance', 1, "Détail d'une séance", 'EX-18, EX-13', 'historique', `
@@ -127,7 +129,8 @@ ${titre('Poussins mercredi', 'historique')}
 <div class="carte compteur mono"><span><i class="carre s-present"></i>19 présents</span><span><i class="carre s-absent"></i>2 absents</span><span><i class="carre s-excused"></i>1 excusé</span></div>
 ${carte(membres.slice(0, 5).map((p, i) => `<div class="rang"><span class="nom">${p.prenom} ${p.nom}</span>${pastille(['present', 'absent', 'present', 'excused', 'present'][i])}</div>`).join(''))}
 <p class="aide">Touchez un statut pour le corriger.</p>
-<div class="duo">${go('suppression-seance', 'Supprimer la séance', 'btn-s tiers danger')}${go('historique', 'Enregistrer les corrections', 'btn-p deuxtiers')}</div>`);
+<div class="duo">${go('suppression-seance', 'Supprimer la séance', 'btn-s tiers danger')}${go('historique', 'Enregistrer les corrections', 'btn-p deuxtiers')}</div>
+<p class="note">Décision du porteur du 2026-11-27 (EX-18) : champ « Commentaire de la séance (facultatif) », comme à l'appel, entre la liste et les boutons.</p>`);
 
 // 09 — Paramètres
 ecran('parametres', 1, 'Paramètres', 'EX-01 à EX-07, EX-19 à EX-24', 'parametres', `
@@ -188,7 +191,8 @@ ecran('creneaux', 1, 'Créneaux', 'EX-07', 'parametres', `
 ${titre('Créneaux', 'parametres')}
 ${carte(`${ligne('Mercredi 14:00 – 15:30', 'Poussins mercredi · Gymnase Jean-Moulin', 'data-go="creneau-modif"')}${ligne('Lundi 18:00 – 19:30', 'Benjamins lundi · Dojo municipal', 'data-go="creneau"')}${ligne('Jeudi 20:00 – 21:30', 'Adultes jeudi · Dojo municipal', 'data-go="creneau"')}`)}
 <div class="duo">${go('creneau', 'Chaque semaine', 'btn-s tiers')}${go('creneau-ponctuel', 'Nouveau créneau', 'btn-p deuxtiers')}</div>
-${carte(ligne('Stage de Noël', '27, 28 et 29/12 · Poussins et Benjamins', 'data-go="creneau-ponctuel"'))}`);
+${carte(ligne('Stage de Noël', '27, 28 et 29/12 · Poussins et Benjamins', 'data-go="creneau-ponctuel"'))}
+<p class="note">Lot 1 : un seul bouton « Nouveau créneau », vers le créneau hebdomadaire ; « Chaque semaine » et les ponctuels arrivent au lot 2 (décision du 2026-11-27).</p>`);
 
 // 12 — Fiche membre (EX-03, EX-04, EX-05)
 ecran('membre', 1, 'Fiche membre', 'EX-03, EX-04, EX-05', 'parametres', `
@@ -206,7 +210,7 @@ ${carte(`<div class="rang"><div><div class="l-titre">Poussins mercredi</div><div
 // 13 — Confirmation de suppression (ABS-05)
 ecran('suppression', 1, "Suppression d'un membre", 'EX-03, ABS-05', 'parametres', `
 ${titre('Supprimer Léo Garcia ?', 'membre')}
-${carte(`<p>Seront effacés <b>définitivement</b> :</p><ul><li>sa fiche et sa date de naissance ;</li><li>ses 2 contacts d'urgence ;</li><li>ses <span class="mono">41</span> présences.</li></ul><p class="l-sous">Pour le retirer des listes sans rien effacer, utilisez plutôt « Archiver ».</p>`, 'bandeau')}
+${carte(`<p>Seront effacés <b>définitivement</b> :</p><ul><li>sa fiche et sa date de naissance ;</li><li>ses 2 contacts d'urgence ;</li><li>ses <span class="mono">41</span> présences ;</li><li>ses 2 inscriptions.</li></ul><p class="l-sous">Pour le retirer des listes sans rien effacer, utilisez plutôt « Archiver ».</p>`, 'bandeau')}
 <div class="duo">${go('membre', 'Garder', 'btn-s tiers')}${go('groupe', 'Supprimer définitivement', 'btn-p deuxtiers fond-marge')}</div>`);
 
 // 14 — Créneau (EX-07)
@@ -230,6 +234,8 @@ ${section('Restaurer')}
 ${carte(`<p>Remplace <b>toutes</b> les données de l'appareil par celles du fichier. Le fichier est vérifié avant tout changement.</p>${go('restauration', 'Choisir un fichier…', 'btn-s')}`)}
 ${section('Conservation')}
 ${carte(`<div class="rang"><span>Garder les</span><span class="champ mini mono">3 ▾</span><span>dernières saisons</span></div><p class="l-sous">1 saison dépasse cette durée : 2023-2024.</p>${go('purge', 'Purger 2023-2024…', 'btn-s')}`)}
+<p class="note">Réponses du porteur du 2026-11-27 (ticket 015b) : conservation de 1 à 3 saisons, 3 par défaut ; seules les saisons commencées comptent parmi les gardées, une saison à venir est toujours gardée en plus.</p>
+<p class="note">Décisions automatiques, à relire (ticket 015b) : changer la durée ne purge rien ; la saison active n'est jamais purgée et, si elle est ancienne, elle est gardée en plus des N plus récentes ; aucune saison au-delà : « Aucune saison ne dépasse cette durée. » ; plusieurs : « 2 saisons dépassent cette durée : 2022-2023, 2023-2024. » et « Purger 2 saisons… » ; pendant une purge, l'export, la restauration et le choix de la durée sont désactivés, et inversement. En attente du porteur : « Garder les 1 dernières saisons » (accord de la maquette gardé).</p>
 ${section('Tout effacer')}
 ${carte(`<p class="l-sous">Efface toutes les données de cet appareil. Double confirmation.</p>${go('tout-effacer', 'Tout effacer…', 'btn-s danger')}`)}`);
 
@@ -238,8 +244,13 @@ ecran('illisible', 1, 'Base illisible au démarrage', 'EX-22', null, `
 ${titre('Vos données ne peuvent pas être ouvertes')}
 ${carte(`<p>Le fichier de données de l'appli est abîmé. Rien n'a été effacé pour l'instant.</p><p>Vous pouvez restaurer votre dernière sauvegarde, ou repartir de zéro.</p>`)}
 ${go('accueil', 'Restaurer une sauvegarde')}
+${go('illisible', 'Réessayer', 'btn-s')}
 ${go('bienvenue', 'Repartir de zéro', 'btn-s')}
-<p class="note">Jamais de message technique ni de plantage.</p>`);
+<p class="note">Jamais de message technique ni de plantage. Une seule maquette, trois variantes.</p>
+<p class="note">Réponses du porteur du 2026-11-27 (ticket 014c) : « Repartir de zéro » demande une confirmation (« Repartir de zéro ? », « Les données abîmées seront effacées définitivement. », « Garder » et « Effacer et repartir de zéro »), puis Bienvenue. (1) <b>Abîmée</b> seulement si le fichier est illisible (lecture d'essai ou contrôle du fichier) : cet écran, avec « Réessayer » au-dessus de « Repartir de zéro ». Toute autre erreur montre la variante « réglage refusé ». (2) Si l'effacement échoue : « L'effacement n'a pas abouti. Réessayez. » sous les boutons ; un fichier déjà absent compte comme effacé. (3) Le texte « Vous pouvez restaurer… » reste tel quel jusqu'au ticket 014f, qui ajoute « Restaurer une sauvegarde ». (4) <b>Réglage refusé</b> (ou erreur non reconnue, fichier gardé) : « L'appli n'a pas pu préparer le fichier de données. Rien n'a été effacé. » et un seul bouton, « Réessayer ». <b>Version plus récente</b> : « Vos données viennent d'une version plus récente de l'appli : mettez l'appli à jour. Rien n'a été effacé. », sans aucun bouton.</p>
+<p class="note">Décisions automatiques, à relire (ticket 014c) : même titre pour les trois variantes ; avant le 014f, « Réessayer » est le bouton principal et « Repartir de zéro » reste secondaire ; boutons désactivés pendant un nouvel essai ; au démarrage, une vue vide (Papier) tant que la base n'est pas prête.</p>
+<p class="note">Réponses du porteur du 2026-11-27 (ticket 014f) : « Restaurer une sauvegarde » est le bouton principal, au-dessus de « Réessayer » (secondaire) et de « Repartir de zéro ». Le fichier est vérifié sur cet écran, sans navigation : « Vérification du fichier… », puis un refus avec le message de l'écran Restauration, ou la carte de résumé de l'écran Restauration avec « Les données abîmées seront effacées définitivement. », sans ligne d'appel en cours, et « Annuler » / « Remplacer mes données » (une seule confirmation). Refus ou Annuler : le fichier abîmé n'est pas touché. Si la recopie échoue après l'effacement : titre « La restauration n'a pas abouti », « Les données abîmées ont été effacées. Choisissez un autre fichier, ou repartez de zéro. », avec « Choisir un fichier… » (principal) et « Repartir de zéro » (vers Bienvenue, sans confirmation). Si l'effacement échoue : la carte « La restauration n'a pas abouti », « Rien n'a été modifié. Choisissez un autre fichier. », au-dessus des trois boutons. Si la base neuve ne s'ouvre pas après l'effacement (restauration ou « Repartir de zéro ») : « Les données abîmées ont été effacées, mais l'appli n'a pas pu préparer un nouveau fichier de données. Réessayez. » et « Réessayer », qui ouvre une base vide puis mène à Bienvenue ; jamais « Rien n'a été effacé » après un effacement ; titre « La restauration n'a pas abouti » après une restauration. La carte de confirmation garde ses deux phrases. Retour Android sans effet pendant l'effacement et la recopie.</p>
+<p class="note">Décisions automatiques, à relire (ticket 014f) : la carte de résumé garde « Toutes les données actuelles de l'appareil seront remplacées par celles de ce fichier. », suivie de la phrase des données abîmées ; pendant la confirmation, l'écran ne montre que la carte et ses deux boutons ; un refus s'affiche au-dessus des trois boutons, qui restent actifs ; sélecteur fermé ou Annuler : retour à l'écran sans message ; tous les boutons sont désactivés du choix du fichier à la fin de la recopie, et « Restaurer une sauvegarde » aussi pendant le nettoyage du démarrage ; titre de l'écran après « Repartir de zéro » quand la base neuve ne s'ouvre pas ; un refus disparaît à l'appui sur « Réessayer » ou « Repartir de zéro » ; après « Choisir un fichier… », la confirmation est celle de l'écran Restauration, sans la phrase des données abîmées ; après une réussite, l'accueil, sans message.</p>`);
 
 // ---------- Écrans ajoutés à la deuxième passe ----------
 const confirmer = (t, retour, corps, oui, ouiVers, non = 'Garder') => `${titre(t, retour)}${carte(corps, 'bandeau')}<div class="duo">${go(retour, non, 'btn-s tiers')}${go(ouiVers, oui, 'btn-p deuxtiers fond-marge')}</div>`;
@@ -247,7 +258,7 @@ const confirmer = (t, retour, corps, oui, ouiVers, non = 'Garder') => `${titre(t
 ecran('accueil-brouillon', 1, 'Accueil avec un appel interrompu', 'EX-14', 'accueil', `
 ${titre('Mercredi 26 nov.')}
 ${carte(`<div class="l-titre">Appel en cours</div><div class="l-sous">Poussins mercredi · commencé à 14:03 · 3 absents notés</div><div class="duo">${go('abandon-brouillon', 'Abandonner', 'btn-s tiers')}${go('appel', "Reprendre l'appel", 'btn-p deuxtiers')}</div>`, 'bandeau')}
-<p class="note">S'affiche à la réouverture si un brouillon d'appel existe (fermeture forcée, redémarrage). L'appel s'ouvre aussi directement sur le brouillon depuis « Nouvel appel ».</p>`);
+<p class="note">S'affiche à la réouverture si un brouillon d'appel existe (fermeture forcée, redémarrage). L'appel s'ouvre aussi directement sur le brouillon depuis « Nouvel appel » (« Appel en cours : Poussins mercredi »). Le brouillon naît au premier changement ; tant qu'il existe, un autre appel affiche « Un appel est en cours : … Reprenez-le ou abandonnez-le depuis l'accueil. » avec « Reprendre l'appel » (décisions du 2026-11-27).</p>`);
 
 ecran('abandon-brouillon', 1, "Abandon d'un brouillon d'appel", 'EX-14', 'accueil', confirmer("Abandonner l'appel en cours ?", 'accueil-brouillon',
   `<p>Les statuts déjà notés pour <b>Poussins mercredi</b> seront perdus. Aucune séance ne sera enregistrée.</p>`, 'Abandonner', 'accueil', 'Revenir'));
@@ -309,29 +320,44 @@ ${titre('Mercredi 14:00', 'creneaux')}
 <label>Jour</label><div class="jours">${['L', 'M', 'Me', 'J', 'V', 'S', 'D'].map((d) => `<span class="jour ${d === 'Me' ? 'on' : ''}">${d}</span>`).join('')}</div>
 <div class="deux"><div><label>Début</label><div class="champ mono">14:00</div></div><div><label>Durée</label><div class="champ mono">1 h 30</div></div></div>
 <label>Groupe</label><div class="champ">Poussins mercredi ▾</div>
+<label>Lieu <span class="facultatif">facultatif</span></label><div class="champ">Gymnase Jean-Moulin</div>
+<label>Nom <span class="facultatif">facultatif</span></label><div class="champ vide">Par exemple « Technique »</div>
 ${go('creneaux', 'Enregistrer')}
-${go('creneaux', 'Supprimer le créneau', 'btn-s danger')}
-<p class="note">Modifier ou supprimer un créneau ne touche à aucune séance déjà enregistrée (EX-07).</p>`);
+${go('suppression-creneau', 'Supprimer le créneau', 'btn-s danger')}
+<p class="note">Modifier ou supprimer un créneau ne touche à aucune séance déjà enregistrée (EX-07). Lieu et nom modifiables (décision du 2026-11-27).</p>`);
+
+ecran('suppression-creneau', 1, "Suppression d'un créneau", 'EX-07', 'parametres', confirmer('Supprimer ce créneau ?', 'creneau-modif',
+  `<p>Le créneau sera supprimé. L'appel interrompu sur ce créneau sera effacé.</p><p class="l-sous">Les séances déjà enregistrées sont conservées.</p>`, 'Supprimer', 'creneaux') + `
+<p class="note">La phrase sur l'appel interrompu n'apparaît que s'il y en a un (décision du 2026-11-27).</p>`);
 
 ecran('suppression-seance', 1, "Suppression d'une séance", 'EX-18', 'historique', confirmer('Supprimer cette séance ?', 'seance',
   `<p>L'appel de <b>Poussins mercredi</b> du <span class="mono">19/11/2026</span> et ses <span class="mono">22</span> présences seront effacés définitivement.</p><p class="l-sous">La date réapparaîtra comme appel manquant.</p>`, 'Supprimer définitivement', 'historique'));
 
 ecran('restauration', 1, "Restauration d'une sauvegarde", 'EX-20', 'parametres', `
 ${titre('Restaurer ?', 'donnees')}
-${carte(`<div class="l-titre">Sauvegarde du 22/10/2026</div><div class="l-sous mono">65 membres · 3 groupes · 112 séances</div><p>Toutes les données actuelles de l'appareil seront <b>remplacées</b> par celles de ce fichier.</p>`, 'bandeau')}
+${carte(`<div class="l-titre">Sauvegarde du 22/10/2026</div><div class="l-sous mono">65 membres · 3 groupes · 112 séances</div><p>Toutes les données actuelles de l'appareil seront <b>remplacées</b> par celles de ce fichier.</p><p>L'appel en cours (Poussins mercredi) sera aussi remplacé.</p>`, 'bandeau')}
 <div class="duo">${go('donnees', 'Annuler', 'btn-s tiers')}${go('accueil', 'Remplacer mes données', 'btn-p deuxtiers fond-marge')}</div>
 ${section('Si le fichier est invalide')}
-${carte(`<div class="l-titre">Ce fichier n'est pas une sauvegarde Ki&La</div><p class="l-sous">Rien n'a été modifié. Choisissez un autre fichier.</p>`)}`);
+${carte(`<div class="l-titre">Ce fichier n'est pas une sauvegarde Ki&La</div><p class="l-sous">Rien n'a été modifié. Choisissez un autre fichier.</p>`)}
+${go('restauration', 'Choisir un fichier…', 'btn-s')}
+${section('Pendant la vérification')}
+<p class="l-sous">Vérification du fichier…</p>
+<p class="note">Décisions du porteur du 2026-11-27 (tickets 014b et 014e) : « Choisir un fichier… » de l'écran Sauvegarde ouvre cet écran, qui lance le sélecteur ; sélecteur annulé = retour à Sauvegarde. La confirmation nomme l'appel en cours remplacé, s'il y en a un. Pendant la vérification : « Vérification du fichier… ». Messages d'un refus, chacun suivi de « Rien n'a été modifié. Choisissez un autre fichier. » et du bouton « Choisir un fichier… » : « Ce fichier n'est pas une sauvegarde Ki&La » ; « Cette sauvegarde est abîmée ou a été modifiée » ; « Cette sauvegarde vient d'une version plus récente de l'appli : mettez l'appli à jour » ; « La restauration n'a pas abouti ». Après une réussite : l'accueil, sans message.</p>
+<p class="note">Décisions automatiques, à relire (ticket 014e) : sans date dans le fichier, le titre est « Sauvegarde » ; appel en cours dont le groupe a été supprimé : « L'appel en cours sera aussi remplacé. » ; un échec du sélecteur s'affiche comme « La restauration n'a pas abouti » ; pendant la restauration, l'écran ne peut pas être quitté (retour caché, boutons désactivés, retour du système bloqué).</p>`);
 
-ecran('purge', 1, 'Purge des anciennes saisons', 'EX-24, ABS-05', 'parametres', confirmer('Purger 2023-2024 ?', 'donnees',
-  `<p>Seront effacés <b>définitivement</b> : la saison 2023-2024, ses groupes, créneaux, séances et présences.</p><p class="l-sous">Les membres qui ne figurent plus dans aucune saison conservée sont aussi effacés.</p>`, 'Purger', 'donnees'));
+ecran('purge', 1, 'Purge des anciennes saisons', 'EX-24, ABS-05', 'parametres', `${confirmer('Purger 2023-2024 ?', 'donnees',
+  `<p>Seront effacés <b>définitivement</b> : la saison 2023-2024, ses 3 groupes, 2 créneaux, 31 séances et 412 présences.</p><p class="l-sous">12 membres qui ne figurent plus dans aucune saison conservée seront aussi effacés.</p>`, 'Purger', 'donnees')}
+<p class="note">Réponse du porteur du 2026-11-27 (ticket 015b) : confirmation chiffrée, « Seront effacés définitivement : la saison 2023-2024, ses 3 groupes, 2 créneaux, 31 séances et 412 présences. », puis « 12 membres qui ne figurent plus dans aucune saison conservée seront aussi effacés. » ; « L'appel en cours sera aussi effacé. » s'il appartient à une saison purgée, sans le nom du groupe (contrôle EX-14 non élargi).</p>
+<p class="note">Décisions automatiques, à relire (ticket 015b) : comptes nuls omis ; plusieurs saisons : « Purger 2 saisons ? », « les saisons 2022-2023 et 2023-2024, leurs … » ; aucun membre : « Aucun membre ne sera effacé. » ; après la purge, retour à Sauvegarde ; en cas d'échec : « La purge n'a pas abouti. Rien n'a été effacé. » ; purge refusée, sans rien effacer, si la liste a changé depuis la confirmation (jour ou base) ; pendant la purge, « Garder », « Purger » et le retour sont sans effet. En attente du porteur : « ses 1 groupe » (accord gardé).</p>`);
 
 ecran('tout-effacer', 1, 'Tout effacer (double confirmation)', 'EX-23, ABS-05', 'parametres', `
 ${titre('Tout effacer ?', 'donnees')}
 ${carte(`<p>Toutes les données de cet appareil seront effacées <b>définitivement</b> : membres, contacts d'urgence, groupes, créneaux, séances, présences et réglages.</p><p class="l-sous">Sans sauvegarde, elles ne pourront pas être retrouvées.</p>`, 'bandeau')}
 <label>Pour confirmer, tapez EFFACER</label><div class="champ mono vide">EFFACER</div>
 <div class="duo">${go('donnees', 'Garder', 'btn-s tiers')}${go('bienvenue', 'Tout effacer', 'btn-p deuxtiers fond-marge')}</div>
-<p class="note">Double confirmation : le bouton, puis le mot à taper.</p>`);
+<p class="note">Double confirmation : le bouton, puis le mot à taper.</p>
+<p class="note">Réponses du porteur du 2026-11-27 (ticket 015f) : avertissement tel quel ; « EFFACER » accepté sans tenir compte des majuscules ni des espaces autour, clavier en majuscules sans correction automatique ; première confirmation = « Tout effacer… » de Sauvegarde, seconde = le mot puis le bouton rouge, sans boîte en plus ; tout est effacé sur la base ouverte, puis les copies du cache sont vidées ; ensuite Bienvenue, qui recrée la saison comme à une installation neuve (conservation revenue à 3 saisons) ; pendant l'effacement, boutons désactivés et retour bloqué ; en cas d'échec : « L'effacement n'a pas abouti. Rien n'a été effacé. »</p>
+<p class="note">Décisions automatiques, à relire (ticket 015f) : la ligne « Tout effacer » de Paramètres ouvre directement cet écran ; « Tout effacer » reste désactivé tant que le mot ne correspond pas, et pendant un export, une restauration ou une purge ; Entrée au clavier n'efface rien ; « Garder » et le retour ramènent à l'écran précédent ; un échec du vidage des copies est écrit au journal sans empêcher Bienvenue ; le champ montre « EFFACER » en gris tant qu'il est vide, comme la maquette.</p>`);
 
 ecran('confidentialite', 1, 'Page légale (confidentialité, conditions)', 'EX-40, EX-41', 'parametres', `
 ${titre('Confidentialité', 'parametres')}
@@ -347,6 +373,7 @@ ${carte(`${ligne('IBM Plex Sans, IBM Plex Mono', 'SIL Open Font License 1.1')}${
 ecran('etats-vides', 1, 'États vides (une carte par liste)', 'P1, NF-06', null, `
 ${titre('États vides')}
 <p class="note">Catalogue : chaque carte remplace le contenu de la liste concernée quand elle est vide.</p>
+${section('Saisons')}${carte(`<p>Aucune saison. Créez-en une pour y ranger vos groupes et vos appels.</p>${go('saison-edition', 'Nouvelle saison')}`)}
 ${section('Groupes')}${carte(`<p>Aucun groupe dans cette saison.</p>${go('groupe-nouveau', 'Créer un groupe')}`)}
 ${section('Groupe sans membre')}${carte(`<p>Personne n'est encore inscrit à ce groupe.</p>${go('inscription', 'Ajouter des membres')}`)}
 ${section('Membres')}${carte(`<p>Aucun membre pour l'instant.</p>${go('membre-nouveau', 'Nouveau membre')}`)}
@@ -354,6 +381,7 @@ ${section('Créneaux')}${carte(`<p>Aucun créneau. Déclarez quand vos groupes s
 ${section('Historique')}${carte(`<p>Aucun appel enregistré. Votre premier appel apparaîtra ici.</p>${go('appel', "Faire l'appel")}`)}
 ${section('Recherche sans résultat')}${carte(`<p>Aucun membre ne correspond à « xyz ».</p><p class="l-sous">Vérifiez l'orthographe, ou cherchez par le prénom.</p>`)}
 ${section("Appel d'un groupe vide")}${carte(`<p>Ce groupe n'a aucun membre à appeler.</p>${go('inscription', 'Ajouter des membres', 'btn-s')}`)}
+<p class="note">Décisions du porteur du 2026-11-27 : l'appel d'un groupe vide garde aussi « Ajouter un membre » (EX-12) sous la carte ; « + » est l'icône du bouton, le libellé est « Ajouter un contact ».</p>
 ${section("Membre sans contact d'urgence")}${carte(`<p>Aucun contact d'urgence pour Léo Garcia.</p>${go('contact', '+ Ajouter un contact', 'btn-s')}`)}`);
 
 // 17 — Annuler une séance (lot 2, F-13) : laissée en lien depuis l'accueil, page d'attente

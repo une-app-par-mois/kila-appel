@@ -25,6 +25,30 @@ declare module 'node:fs' {
   export function readdirSync(path: string, options: { withFileTypes: true }): Dirent[];
   export function readFileSync(path: string, encoding: 'utf8'): string;
   export function readFileSync(path: string): Uint8Array;
+  // Dossier temporaire du test d'effacement dans le fichier (ticket 007d).
+  export function mkdtempSync(prefix: string): string;
+  export function rmSync(path: string, options: { recursive: true; force?: true }): void;
+  // Fichiers piégés des tests de sauvegarde (ticket 014).
+  export function writeFileSync(path: string, data: string | Uint8Array): void;
+  export function copyFileSync(from: string, to: string): void;
+  // Dossier dédié de la sauvegarde et imitation d'expo-file-system (ticket 014b).
+  export function mkdirSync(path: string, options?: { recursive: boolean }): void;
+  export function existsSync(path: string): boolean;
+  export function readdirSync(path: string): string[];
+  export function statSync(path: string): { size: number; isFile(): boolean };
+  export function openSync(path: string, flags: 'r'): number;
+  export function readSync(
+    fd: number,
+    buffer: Uint8Array,
+    offset: number,
+    length: number,
+    position: number,
+  ): number;
+  export function closeSync(fd: number): void;
+}
+
+declare module 'node:os' {
+  export function tmpdir(): string;
 }
 
 // node:crypto : empreintes des polices (ticket 003).
@@ -39,6 +63,8 @@ declare module 'node:crypto' {
 declare module 'node:path' {
   export function join(...parts: string[]): string;
   export function relative(from: string, to: string): string;
+  export function dirname(path: string): string;
+  export function basename(path: string): string;
 }
 
 // Variable globale de Node (CommonJS), utilisée par les tests qui lisent le dépôt.

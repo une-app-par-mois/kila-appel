@@ -26,10 +26,10 @@ Priorité : toutes les exigences sont dans la v1 (décision du 2026-11-26). Le j
 
 | ID | Exigence | Critères d'acceptation |
 | --- | --- | --- |
-| EX-01 | Gérer les **saisons** | Créer, renommer, supprimer une saison (dates de début et de fin). Une seule saison est active ; en activer une autre désactive la précédente. Supprimer une saison efface ses groupes, créneaux, séances et présences, mais pas les membres, après une confirmation qui dit ce qui sera effacé. |
+| EX-01 | Gérer les **saisons** | Créer, renommer, supprimer une saison (dates de début et de fin). Une seule saison est active ; en activer une autre désactive la précédente. Supprimer une saison efface ses groupes, créneaux, séances et présences, mais pas les membres, après une confirmation qui dit ce qui sera effacé. Changer les dates d'une saison est refusé si des séances, ou des débuts d'inscription à ses groupes, tomberaient hors des nouvelles dates (décisions du porteur du 2026-11-26). |
 | EX-02 | Gérer les **groupes** d'une saison | Créer, renommer, **archiver**, **supprimer**. Un groupe archivé disparaît des écrans courants, son historique reste dans les statistiques. |
 | EX-03 | Gérer les **membres** | Créer avec nom et prénom obligatoires ; date de naissance facultative, et l'interface dit qu'elle l'est. Modifier, **archiver**, **supprimer** (efface ses présences et contacts, après confirmation). Aucun autre champ personnel. |
-| EX-04 | **Inscrire** un membre à un ou plusieurs groupes | L'**inscription** a une date de début et une date de fin facultative. Retirer un membre d'un groupe pose une date de fin sans effacer ses présences passées. |
+| EX-04 | **Inscrire** un membre à un ou plusieurs groupes | L'**inscription** a une date de début et une date de fin facultative. Retirer un membre d'un groupe pose une date de fin sans effacer ses présences passées. La date de début tombe dans les dates de la saison active, sinon elle est refusée ; la date proposée est aujourd'hui, ramené au premier ou au dernier jour de la saison (décision du porteur du 2026-11-26). |
 | EX-05 | Gérer les **contacts d'urgence** | Zéro, un ou plusieurs par membre, chacun avec un nom (« sa mère ») et un téléphone obligatoires, dans un ordre choisi. Un appui sur le numéro lance l'appel téléphonique du système. |
 | EX-06 | Retrouver un contact d'urgence vite | Depuis l'accueil, une recherche par nom ou prénom du membre affiche ses contacts en 2 appuis au plus après la saisie. |
 
@@ -37,15 +37,15 @@ Priorité : toutes les exigences sont dans la v1 (décision du 2026-11-26). Le j
 
 | ID | Exigence | Critères d'acceptation |
 | --- | --- | --- |
-| EX-07 | Gérer les **créneaux** récurrents | Jour de la semaine, heure de début, durée, lieu facultatif, nom facultatif, groupe. Modifier ou supprimer un créneau ne modifie aucune **séance** déjà enregistrée. |
+| EX-07 | Gérer les **créneaux** récurrents | Jour de la semaine, heure de début, durée, lieu facultatif, nom facultatif, groupe. Modifier ou supprimer un créneau ne modifie aucune **séance** déjà enregistrée. Un nouveau jour, une nouvelle heure ou un autre groupe s'appliquent à partir du jour de la modification ; une séance de créneau enregistrée tombe un jour du créneau, à son heure, et n'est jamais future (décisions du porteur du 2026-11-27). |
 | EX-08 | Calculer les **séances** à la volée | Les séances d'un créneau ne sont pas créées d'avance : une séance n'existe en base qu'une fois son appel enregistré. Un créneau ne réclame aucun appel pour les semaines antérieures à sa création. |
-| EX-09 | Lancer l'**appel** | À l'ouverture, l'appli propose la séance du créneau en cours ou le plus proche du jour. La liste contient les membres inscrits au groupe à la date de la séance, triés par nom. |
+| EX-09 | Lancer l'**appel** | À l'ouverture, l'appli propose la séance du créneau en cours ou le plus proche du jour, jamais une séance d'un jour à venir (décision du porteur du 2026-11-27). La liste contient les membres inscrits au groupe à la date de la séance, triés par nom. |
 | EX-10 | Saisir les **présences** | Tous les membres démarrent à Présent. Un appui sur un membre change son statut ; Absent et Retard s'obtiennent en 1 et 2 appuis au plus. Chaque statut a une couleur, **un libellé et une icône** (jamais la couleur seule). Un compteur affiche le nombre de présents. |
 | EX-11 | Trouver un membre dans l'appel | Au-delà de 20 membres, un champ de recherche filtre la liste. |
-| EX-12 | Ajouter un membre pendant l'appel | Un nouveau membre peut être créé et inscrit au groupe sans quitter l'appel. |
-| EX-13 | Commenter la séance | Un commentaire libre facultatif, au niveau de la séance uniquement (ABS-03). |
+| EX-12 | Ajouter un membre pendant l'appel | Un nouveau membre peut être créé et inscrit au groupe sans quitter l'appel, à partir de la date de la séance (décision du porteur du 2026-11-27). |
+| EX-13 | Commenter la séance | Un commentaire libre facultatif, au niveau de la séance uniquement (ABS-03), 500 caractères au plus (décision du porteur du 2026-11-27). |
 | EX-14 | Conserver le **brouillon d'appel** | Chaque changement est conservé aussitôt. Après une fermeture forcée de l'appli ou un redémarrage de l'appareil, l'appel est retrouvé tel quel à la réouverture. Le brouillon disparaît à l'enregistrement ou si l'encadrant l'abandonne explicitement. |
-| EX-39 | Faire l'appel sans créneau | L'encadrant choisit un groupe et une date ; la séance enregistrée n'est rattachée à aucun créneau et compte comme les autres. |
+| EX-39 | Faire l'appel sans créneau | L'encadrant choisit un groupe et une date ; la séance enregistrée n'est rattachée à aucun créneau et compte comme les autres. La date n'est jamais future et tombe dans la saison active ; l'heure est celle de l'ouverture de l'appel ; si un appel du groupe est déjà enregistré ce jour-là, l'appli prévient et laisse choisir (décisions du porteur du 2026-11-27). |
 | EX-15 | Enregistrer l'appel | Un appui enregistre la séance et ses présences, puis affiche une confirmation. |
 
 ### F-03 — Historique et sauvegarde
