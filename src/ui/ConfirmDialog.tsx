@@ -23,6 +23,11 @@ type Props = {
   onCancel: () => void;
   /** Confirmation sans effacement (« Faire un autre appel ») : bouton principal, pas rouge. */
   harmless?: boolean;
+  /**
+   * Action en cours (purge, ticket 015b) : boutons désactivés, retour caché, retour du système
+   * ignoré, comme l'écran Restauration ; la confirmation ne se ferme pas avant la fin.
+   */
+  busy?: boolean;
 };
 
 export const ConfirmDialog = ({
@@ -35,11 +40,15 @@ export const ConfirmDialog = ({
   onConfirm,
   onCancel,
   harmless = false,
+  busy = false,
 }: Props) => {
   const confirmed = useRef(false);
   useEffect(() => {
     if (visible) confirmed.current = false;
   }, [visible]);
+  const cancel = () => {
+    if (!busy) onCancel();
+  };
   const confirmOnce = () => {
     if (confirmed.current) return;
     confirmed.current = true;
@@ -47,20 +56,27 @@ export const ConfirmDialog = ({
   };
 
   return (
-    <Modal visible={visible} animationType="fade" onRequestClose={onCancel}>
+    <Modal visible={visible} animationType="fade" onRequestClose={cancel}>
       <SafeAreaProvider>
-        <Screen title={title} onBack={onCancel}>
+        <Screen title={title} onBack={busy ? undefined : cancel}>
           <Card warning>
             <Text style={styles.message}>{message}</Text>
             {note !== undefined && <Text style={styles.note}>{note}</Text>}
           </Card>
           <View style={styles.actions}>
-            <Button label={cancelLabel} variant="secondary" flex={1} onPress={onCancel} />
+            <Button
+              label={cancelLabel}
+              variant="secondary"
+              flex={1}
+              onPress={cancel}
+              disabled={busy}
+            />
             <Button
               label={confirmLabel}
               variant={harmless ? 'primary' : 'destructive'}
               flex={2}
               onPress={confirmOnce}
+              disabled={busy}
             />
           </View>
         </Screen>

@@ -10,6 +10,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { labels, type PurgeCounts } from '@/config/libelles';
 import { theme } from '@/config/theme';
 import { expoBackupDeps } from '@/data/expoFiles';
+import { log } from '@/data/log';
 import { useFileLock } from '@/hooks/fileLock';
 import { toLastBackup, useBackupExport, useLastBackup } from '@/hooks/useBackupExport';
 import { useErase } from '@/hooks/useErase';
@@ -32,7 +33,7 @@ type Pending = { ids: number[]; names: string[]; counts: PurgeCounts };
 
 /** EX-24 : durée de conservation, saisons au-delà, purge confirmée (sans purge automatique). */
 const Retention = ({ locked }: { locked: boolean }) => {
-  const { retention, candidates, loadFailed, setRetention, impact, purgeNow } = useErase();
+  const { retention, candidates, loadFailed, purging, setRetention, impact, purgeNow } = useErase();
   const [choosing, setChoosing] = useState(false);
   const [pending, setPending] = useState<Pending | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +50,7 @@ const Retention = ({ locked }: { locked: boolean }) => {
     try {
       setPending({ ids, names, counts: await impact(ids) });
     } catch {
+      log('PURGE_IMPACT_FAILED');
       setError(p.failed);
     }
   };
@@ -68,6 +70,7 @@ const Retention = ({ locked }: { locked: boolean }) => {
           accessibilityRole="button"
           accessibilityLabel={k.accessibility(retention)}
           onPress={() => setChoosing(true)}
+          disabled={locked}
           style={styles.choice}
         >
           <Text style={styles.choiceValue}>{retention}</Text>
@@ -112,6 +115,7 @@ const Retention = ({ locked }: { locked: boolean }) => {
         confirmLabel={p.confirm}
         onConfirm={() => void confirm()}
         onCancel={() => setPending(null)}
+        busy={purging}
       />
     </Card>
   );

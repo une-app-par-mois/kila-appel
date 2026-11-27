@@ -32,8 +32,13 @@ export const useErase = () => {
         : null,
     [db, today],
   );
-  const { value, loadFailed } = useLoaded(load, 'RETENTION_LOAD_FAILED');
-  // La purge vise la durée qui a produit les candidates affichées.
+  // Valeur précédente gardée pendant une relecture (nouveau jour à minuit, donnée modifiée) : la
+  // section, et une confirmation ouverte, ne disparaissent pas le temps de relire.
+  const { value, loadFailed } = useLoaded(load, 'RETENTION_LOAD_FAILED', {}, true);
+  // Durée en vigueur au moment de l'appui sur « Purger », pas forcément celle qui a produit la
+  // liste confirmée (relecture en cours, durée changée ailleurs) : la transaction de `purge` exige
+  // que les saisons visées soient exactement les candidates pour cette durée, sinon rien n'est
+  // effacé (`NOT_PURGEABLE`).
   const retentionRef = useRef<number | null>(null);
   retentionRef.current = value?.retention ?? null;
 

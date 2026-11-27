@@ -141,6 +141,7 @@ describe('EX-24 écran Sauvegarde : conservation et purge', () => {
       fileLock.acquire('export');
     });
     await waitFor(() => expect(button('Purger 2023-2024…')).toBeDisabled());
+    expect(button('Garder les 2 dernières saisons')).toBeDisabled();
     await act(async () => {
       fileLock.release('export');
       fileLock.acquire('erase');
