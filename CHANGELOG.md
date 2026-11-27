@@ -6,6 +6,9 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Ajouté
 
+- Relance : notifications locales programmées pour les 7 jours à venir, annulées dès que l'appel est enregistré ; relances affichées retirées quand la séance n'est plus due ; bannière et son quand l'appli est ouverte, sans pastille (F-06, EX-28, ABS-04) — ticket 028b.
+- Relance : un appui ouvre l'appel du créneau ; Tout effacer annule et retire les relances ; une restauration annule et retire les relances de l'ancienne base (F-06, EX-28, SEC-11, SEC-12) — ticket 028c.
+- Paramètres : réglage de la relance (activation, délai), demande de permission seulement à l'activation, état réel affiché (F-06, EX-28, EX-29) — ticket 029.
 - Relance : adaptateur des notifications locales (date fixe, heures d'été et d'hiver, annulation, retrait des relances affichées), contrôle statique d'expo-notifications en liste fermée, séances lues avec leur état ; rien n'est encore programmé (F-06, EX-28, ABS-01, ABS-04, SEC-03) — ticket 028a.
 - Stats : taux de présence de chaque membre d'un groupe, séance par séance ; un appui sur un groupe de l'onglet ouvre ses statistiques (F-05, EX-27) — ticket 025.
 - Effacement : accords au singulier dans la confirmation de purge (« son groupe », « leur présence ») et « Garder la dernière saison » pour une saison — ticket 020.

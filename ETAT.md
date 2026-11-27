@@ -6,14 +6,14 @@ Dernière mise à jour : 2026-11-27
 
 ## En cours
 
-**Jalon 2 (Suivre l'assiduité), lot J2-3 fusionné** dans `groupe/jalon-2-suivre-assiduite` : 020 accords au singulier (PR #77), 025 statistiques d'un groupe et d'un membre (PR #78), 028a relance, adaptateur et garde-fous (PR #79) ; **1653 tests**. Lots J2-1 (021, 023, 026) et J2-2 (022, 024, 027) fusionnés avant. Le 028 est découpé par le porteur en 028a (fait) et 028b (fiche `docs/tickets/028b-relance-reprogrammation.md`). Intégration documentaire : branche `ticket/lot-j2-3-integration`. Jalon 1 fait (PR #63, `main` à `91ed684`), jalon 0 fait (PR #7).
+**Jalon 2 (Suivre l'assiduité), lot J2-4 fusionné** dans `groupe/jalon-2-suivre-assiduite` : 029 relance, réglage et demande de permission (PR #82), 028c relance, appui et effacement (PR #83), 028b relance, programmation (PR #84) ; **1741 tests**. Lots J2-1 (021, 023, 026), J2-2 (022, 024, 027) et J2-3 (020, 025, 028a) fusionnés avant ; il reste le 030. Intégration documentaire : branche `ticket/lot-j2-4-integration`. Jalon 1 fait (PR #63, `main` à `91ed684`), jalon 0 fait (PR #7).
 
-Décisions du lot : 63 lignes ajoutées à `docs/DECISIONS.md` (la ligne « Tout effacer et relances » du 028, déjà présente, non dupliquée), dont les réponses du porteur au QCM (020, 025, découpage du 028, plan ajusté, 028a gardé à 12 fichiers) et ses trois réponses pour le 028b. Aucune nouvelle question en file ; la question 023 « séance sans statut » sort de `docs/QUESTIONS.md` (répondue au 025).
+Décisions du lot : 41 lignes ajoutées à `docs/DECISIONS.md` (les 6 du lancement J2-4, déjà présentes, non dupliquées), dont les décisions du porteur en revue (029 fusionné après relecture, 028c gardé à 12 fichiers, 028b gardé à 13 fichiers, annulation ciblée, M1 : base effacée, tout annuler). 3 questions en file dans `docs/QUESTIONS.md` (028c : cible hors format appli ouverte ; 028b : lecture des données en échec ; 028b : relances affichées quand la relance est désactivée). SEC-02, SEC-03, SEC-11, SEC-12 à jour ; ABS-08 au journal de `docs/CONFORMITE.md` (déclarations inchangées). Décisions annulées depuis le début : 2 (015b, par le 020).
 
 ## Prochaines étapes
 
-1. **Lot J2-4 : 028b et 029** (séance de lancement, pré-analyse, QCM ; plans en zone sensible). 028b : `useReminders` (ouverture, premier plan, chaque écriture), appui sur la notification, `_layout.tsx`, Tout effacer, canal « Relances » en importance haute, `setNotificationHandler`, retrait des relances affichées dont l'appel est fait ; reports B1 à B4, Doze, appui appli fermée, registre des licences. 029 (dépend du 028a seulement) : `requestPermissionsAsync` avec les options iOS, échec de lecture de la permission, état réel après une restauration, ligne Relance, clé `alerts.settingsSection`.
-2. Puis 030 (campagne Maestro, NF-08 sur l'appareil, focus de l'écran d'alerte, `dismissTo` de l'écran Période, lecture de « — » par TalkBack).
+1. **Lot suivant : 030** (campagne Maestro du jalon 2 sur l'APK de la CI, ou recette selon sa fiche `docs/tickets/030-maestro-jalon-2.md` : alerte traitée, statistiques, réglage de la relance ; NF-08 sur l'appareil, focus de l'écran d'alerte, `dismissTo` de l'écran Période, lecture de « — » par TalkBack).
+2. Puis le **prétest du jalon sur l'A55** par le porteur (liste ci-dessous), puis la **PR du jalon 2 vers `main`** (CI complète, APK de la CI audité, build iOS avec expo-notifications) ; bilan des décisions annulées à donner au porteur.
 3. **Recette sur l'A55 du 2026-11-27, faite par le porteur** avec l'APK de production du jalon 2 (`1a23be4`, après les PR #72 à #74). L'audit SEC-02 est conforme. Par le câble : 2 permissions (`POST_NOTIFICATIONS` non accordée, `RECEIVE_BOOT_COMPLETED`), `DB_READY` version 1, aucune ligne Firebase dans le processus de Ki&La (celles du journal venaient de `com.facebook.katana`). Le porteur a validé :
    - Bienvenue, mise en route, appel au doigt (NF-01, dit « ok », durée non relevée), onglet Stats ;
    - brouillon repris après redémarrage de l'appareil ;
@@ -26,7 +26,17 @@ Décisions du lot : 63 lignes ajoutées à `docs/DECISIONS.md` (la ligne « Tout
    - bandeau des 30 jours (014d) ; `scripts/e2e.sh --appareil-reel` ;
    - écrans des alertes (022) et du choix de période (024) : focus, retour Android, `dismissTo` ;
    - écrans du lot J2-3 : « Garder la [1 ▾] dernière saison » (020), statistiques d'un groupe et d'un membre (025 : 35 cases, tablette, TalkBack) ;
-   - **relances réelles** (028b, 029) : notification reçue, sans nom de membre, après un redémarrage ;
+   - **relances (028b, 028c, 029)**, APK du jalon :
+     - activation et dialogue de permission (Android 13 : le dialogue pourrait ne pas venir tant qu'aucun canal n'existe ; sinon, question au porteur) ;
+     - dialogue fermé sans réponse (interrupteur éteint attendu, pas le bandeau) ;
+     - refus, puis réglages du téléphone et retour : bandeau, puis bandeau disparu ;
+     - relance reçue à l'heure (début + délai), sans nom de membre sur l'écran verrouillé ;
+     - bannière et son quand l'appli est ouverte, sans pastille ;
+     - appui avec l'appli fermée, en arrière-plan et ouverte : l'appel du créneau s'ouvre ;
+     - plus aucune relance programmée ni affichée après Tout effacer ;
+     - comportement en Doze et après un redémarrage du téléphone ;
+     - mode avion (aucune différence attendue) ;
+     - retour Android bloqué pendant la demande de permission ;
    - **durées NF-08 sur l'appareil** (alertes et statistiques, jeux de volume, 030).
 4. **Vérifications iPhone avant le jalon 7** (toute publication iOS) : restauration réelle puis `tmp/` vide ; aucun lien dans `Caches/expo-sharing-tmp/` ; préfixe du cache identique entre expo-file-system et expo-modules-core ; Inbox `tmp/<identifiant>-Inbox/` vidée par Tout effacer et par le démarrage ; restauration depuis l'écran de récupération ; build iOS avec expo-notifications sans habilitation.
 5. PR méthode n° 1 sur `une-app-par-mois/methode-vibe-coding` à relire par le porteur, app-template à suivre.
@@ -56,6 +66,6 @@ Décisions du lot : 63 lignes ajoutées à `docs/DECISIONS.md` (la ligne « Tout
 - Requêtes métier sur le module natif `expo-sqlite` : vues sur l'émulateur (016) ; sur le Galaxy A55, recette des lots 4 à 6 non faite. Rien encore sur un iPhone réel.
 - **Requêtes du lot J2-1 jamais lancées par expo-sqlite sur un appareil** : séries d'absences (CTE, `ROW_NUMBER`, 021) et agrégats des statistiques (`+e.group_id` pour forcer l'index `enrollments_member`, 023) ; vérifiées sur `node:sqlite` seulement. APK de la CI et build iOS avec expo-notifications : à la PR du jalon vers `main`.
 - **Écrans des lots J2-2 et J2-3 jamais vus sur un appareil** : statistiques d'un groupe et d'un membre, phrase de conservation du 020 ; alertes (focus et retour Android de l'écran d'alerte, recherche d'urgence limitée au membre), onglet Stats (`router.dismissTo` de l'écran Période, textes agrandis, tablette) ; testés avec le routeur simulé de Jest seulement.
-- **Adaptateur des relances (028a)** : importé par aucun écran, donc absent du bundle ; APK de production construit et audité en local (conforme, INTERNET absente, aucune ligne Firebase), mais aucune notification programmée sur un appareil ; Hermes non vérifié pour les heures doublées. Contrôle statique SEC-03 : un nom calculé (`obj[a + b]`) n'est pas détecté.
+- **Relances (028a, 028b, 028c, 029)** : branchées et dans le bundle ; APK de production reconstruit et audité en local après la fusion (conforme, mêmes trois permissions, INTERNET absente, aucune ligne Firebase sur l'émulateur), mais aucune relance programmée ni délivrée sur un appareil, annulation ciblée et retrait des SharedPreferences non vus ; Hermes non vérifié pour les heures doublées ; iOS non construit. Contrôle statique SEC-03 : un nom calculé (`obj[a + b]`) n'est pas détecté, `jest.setup.js` n'est pas parcouru. `expoNotifications.ts` et `staticChecksNotifications.test.ts` à 300 lignes (découper au prochain ajout).
 - Couleurs nommées (`'red'`) non détectées par le contrôle CONV-16.
 - Habilitations iOS contrôlées sur le projet généré, pas sur un binaire signé : à revoir avec la signature (jalon 6). Polices IBM Plex absentes du poste : les maquettes s'affichent dans la police du système.

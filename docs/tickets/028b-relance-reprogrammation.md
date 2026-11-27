@@ -1,6 +1,6 @@
 # 028b — Relance : programmation
 
-Statut : à faire · Jalon : 2 · Zone sensible : **oui** (notifications, ABS-01 : liste fermée d'expo-notifications élargie à `setNotificationHandler` ; ABS-04) · Trivial : non
+Statut : fusionné dans le groupe (PR #84) · Jalon : 2 · Zone sensible : **oui** (notifications, ABS-01 : liste fermée d'expo-notifications élargie à `setNotificationHandler` ; ABS-04) · Trivial : non
 
 Dépend de : 028a (adaptateur `src/data/expoNotifications.ts`, `sessionsRepo.reminderSessions`, contrôle statique), 027 (calcul et réglages) ; pas du 028c, qui tourne en parallèle · Fichiers touchés : `src/hooks/useReminders.ts` et `src/hooks/useReminders.test.tsx` (nouveaux), `src/domain/reminders.ts` et son test (fonction « séances encore dues »), `src/config/libelles/relance.ts` (`channel`), `src/data/expoNotifications.ts` (`setNotificationHandler`), `src/__fixtures__/expoModules.ts` (faux module), `src/staticChecksNotifications.test.ts` (liste fermée), `src/app/_layout.tsx` (montage), `src/config/licences.json` — environ 12 fichiers avec la fiche ; APK reconstruit et audité. Seul fichier commun avec le 028c : `_layout.tsx` (un petit ajout chacun).
 
@@ -30,15 +30,16 @@ Le 028a a posé l'adaptateur des notifications locales, sans qu'aucun écran ne 
 
 ## Critères d'acceptation
 
-- [ ] EX-28 : relance activée, créneau dans 1 h → une notification programmée à début + délai (adaptateur simulé, puis téléphone).
-- [ ] Enregistrer l'appel annule la relance de cette séance et retire la relance affichée ; modifier ou supprimer un créneau, un groupe, la saison, la reprogramme.
-- [ ] Une relance affichée dont l'appel manque toujours reste affichée après une ouverture ou un retour au premier plan ; celle dont tous les groupes sont archivés, ou hors de la saison active, est retirée.
-- [ ] Relance désactivée ou permission refusée : rien n'est programmé, tout est annulé ; le canal n'est créé qu'avec la relance activée et la permission accordée ; création du canal en échec : rien n'est programmé.
-- [ ] Reprogrammations une par une, la dernière demande gagne ; aucune pendant un effacement ou une restauration (verrou), reprise ensuite.
-- [ ] Appli au premier plan : la relance s'affiche en bannière, dans la liste, avec le son, sans pastille ; la notification reçue n'est pas journalisée.
-- [ ] SEC-01 et SEC-03 : liste fermée élargie à `setNotificationHandler` seulement, contrôle vu en échec sur un exemple.
-- [ ] ABS-04 : aucun nom dans le journal ni dans la notification.
-- [ ] B4 : `licences.json` régénéré ; APK reconstruit et audité, aucune ligne Firebase ; essai en mode avion.
+- [x] EX-28 : relance activée, créneau dans 1 h → une notification programmée à début + délai (adaptateur simulé, puis téléphone). Adaptateur simulé seulement ; relance réellement programmée puis délivrée non vérifiée sur l'appareil.
+- [x] Enregistrer l'appel annule la relance de cette séance et retire la relance affichée ; modifier ou supprimer un créneau, un groupe, la saison, la reprogramme.
+- [x] Une relance affichée dont l'appel manque toujours reste affichée après une ouverture ou un retour au premier plan ; celle dont tous les groupes sont archivés, ou hors de la saison active, est retirée.
+- [x] Relance désactivée ou permission refusée : rien n'est programmé, tout est annulé ; le canal n'est créé qu'avec la relance activée et la permission accordée ; création du canal en échec : rien n'est programmé.
+- [x] Reprogrammations une par une, la dernière demande gagne ; aucune pendant un effacement ou une restauration (verrou), reprise ensuite.
+- [x] Appli au premier plan : la relance s'affiche en bannière, dans la liste, avec le son, sans pastille ; la notification reçue n'est pas journalisée (gestionnaire testé ; bannière non vérifiée sur l'appareil).
+- [x] SEC-01 et SEC-03 : liste fermée élargie à `setNotificationHandler` seulement, contrôle vu en échec sur un exemple ; puis à `getAllScheduledNotificationsAsync` et `cancelScheduledNotificationAsync` (annulation ciblée, décision du porteur du 2026-11-27).
+- [x] ABS-04 : aucun nom dans le journal ni dans la notification (écran verrouillé réel non vérifié).
+- [ ] B4 : `licences.json` régénéré ; APK reconstruit et audité, aucune ligne Firebase ; essai en mode avion. Fait : licences, APK audité « conforme », aucune ligne Firebase sur l'émulateur ; non fait : essai en mode avion (prétest du jalon sur l'A55).
+- Non vérifié sur l'appareil (prétest du jalon) : relance reçue à l'heure, annulation ciblée, comportement en Doze et après un redémarrage, mode avion ; iOS.
 
 ## Tests attendus
 
@@ -103,6 +104,7 @@ B1 (cible lue au démarrage à froid), B2 (restauration), B3 (SharedPreferences,
 ## Questions pour le porteur
 
 - **Taille du 028b (ticket en attente de la réponse).** Après les corrections de revue, le ticket touche 13 fichiers avec la fiche (au lieu d'environ 12 prévus) : `src/hooks/useRemindersGuards.test.tsx` (le test du hook dépassait 300 lignes) et `src/data/localDates.ts` (l'adaptateur dépassait 300 lignes après la fusion du 029 et du 028c). Option A (recommandée) : garder le ticket entier, comme pour le 028a. Option B : sortir les garde-fous dans un ticket à part. Rien d'autre n'attend cette réponse.
+- **Réponse du porteur du 2026-11-27** : option A, ticket gardé entier à 13 fichiers, puis fusionné (PR #84) ; annulation ciblée et M1 (base effacée : tout annuler) décidés en revue (voir « Décisions »).
 
 ## À reporter
 

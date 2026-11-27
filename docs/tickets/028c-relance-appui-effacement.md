@@ -1,6 +1,6 @@
 # 028c — Relance : appui et effacement
 
-Statut : à faire · Jalon : 2 · Zone sensible : **oui** (notifications, ABS-04 ; effacement : Tout effacer annule et retire les relances, ABS-05 ; restauration ; SEC-11) · Trivial : non
+Statut : fusionné dans le groupe (PR #83) · Jalon : 2 · Zone sensible : **oui** (notifications, ABS-04 ; effacement : Tout effacer annule et retire les relances, ABS-05 ; restauration ; SEC-11) · Trivial : non
 
 Dépend de : 028a (adaptateur `src/data/expoNotifications.ts` : `lastReminderTarget`, `onReminderTarget`, `cancelAllReminders`, `dismissAllReminders`), 027 (calcul et réglages) ; pas du 028b, qui tourne en parallèle · Fichiers touchés : `src/app/_layout.tsx` (cible de l'appui), `src/hooks/useErase.ts`, `src/app/tout-effacer.tsx`, `src/hooks/useEraseAll.test.tsx`, `src/hooks/useRestore.ts` et `src/hooks/useRestore.test.tsx`, `src/hooks/useRecovery.ts` et `src/hooks/useRecovery.test.tsx`, un test d'écran de l'appui dans `src/appTests/` (nouveau) — environ 9 fichiers. Seul fichier commun avec le 028b : `_layout.tsx` (un petit ajout chacun).
 
@@ -26,12 +26,12 @@ Un appui sur la relance ouvre l'appel du créneau (maquette « Relance sur l'éc
 
 ## Critères d'acceptation
 
-- [ ] Appui sur la notification (appli ouverte, en arrière-plan, fermée) : l'appel du créneau à la bonne date s'ouvre ; données hors format → accueil.
-- [ ] B1 : la cible du démarrage à froid n'est lue qu'une fois ; elle ne rouvre pas un appel après Tout effacer ou une restauration.
-- [ ] Appui pendant un effacement, une restauration ou un export : ignoré ; écran de récupération affiché : cible abandonnée.
-- [ ] Tout effacer : plus aucune relance programmée ni affichée (IDEES, SEC-11) ; échec journalisé sans bloquer Bienvenue.
-- [ ] B2 : restauration réussie (Paramètres ou écran de récupération) → relances affichées retirées ; restauration en échec → rien n'est retiré.
-- [ ] ABS-04 : aucun nom dans le journal.
+- [x] Appui sur la notification (appli ouverte, en arrière-plan, fermée) : l'appel du créneau à la bonne date s'ouvre ; données hors format → accueil (à froid ; appli ouverte, rien ne s'ouvre, décision en attente du porteur). Testé avec l'adaptateur simulé ; non vérifié sur l'appareil (appli fermée, en arrière-plan, ouverte).
+- [x] B1 : la cible du démarrage à froid n'est lue qu'une fois ; elle ne rouvre pas un appel après Tout effacer ou une restauration.
+- [x] Appui pendant un effacement, une restauration ou un export : ignoré ; écran de récupération affiché : cible abandonnée.
+- [x] Tout effacer : plus aucune relance programmée ni affichée (IDEES, SEC-11) ; échec journalisé sans bloquer Bienvenue (non vérifié sur l'appareil, ni le retrait effectif des SharedPreferences).
+- [x] B2 : restauration réussie (Paramètres ou écran de récupération) → relances affichées retirées ; restauration en échec → rien n'est retiré.
+- [x] ABS-04 : aucun nom dans le journal.
 
 ## Tests attendus
 
@@ -81,6 +81,7 @@ Reports du 028a (2026-11-27), part du 028c :
   2. Sortir l'imitation de `jest.setup.js` dans un petit ticket à fusionner avant celui-ci.
   3. Remettre la logique de l'appui dans `_layout.tsx` (10 fichiers), au prix d'un conflit plus large avec le 028b.
 - Attention à l'intégration : si le 028b ajoute aussi une imitation d'expo-notifications dans `jest.setup.js`, n'en garder qu'une.
+- **Réponse du porteur du 2026-11-27** : option 1, ticket gardé entier à 12 fichiers, puis fusionné (PR #83). Une seule imitation dans `jest.setup.js` après la fusion du 028b.
 
 ## À reporter
 

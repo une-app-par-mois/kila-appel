@@ -320,6 +320,36 @@ Avant de passer aux tickets suivants, je veux voir avec toi comment optimiser le
 - Un contrôle statique par motifs se teste en cherchant à le contourner : chaque forme d'import (chemin, `require`, simulation de Jest) est une porte.
 - Un test qui dépend de l'heure doit fixer son fuseau là où les workers démarrent, et passer aussi en UTC avant la PR.
 
+### Lot J2-4 (028b, 028c, 029) — 2026-11-27
+
+**Prompt clé** : séance de lancement du lot J2-4 (pré-analyse, QCM des questions prévisibles, plans des trois tickets en zone sensible, découpage du 028b en 028b et 028c), puis trois agents de code en parallèle.
+
+**Réponses du porteur au QCM du lot** :
+- 028b découpé en 028b (programmation) et 028c (appui sur la notification, Tout effacer, restauration), en parallèle, seul fichier commun `_layout.tsx` ;
+- plans validés : reprogrammations une par une, la dernière demande gagne, reportées pendant un effacement ou une restauration ; canal créé seulement relance activée et permission accordée ; `setNotificationHandler` (bannière, liste, son, sans pastille) ; Tout effacer annule et retire toutes les relances, une restauration retire les affichées avant de reprogrammer ; cible d'un appui lue une fois au démarrage à froid, ignorée pendant le verrou ; permission demandée seulement à l'activation, après l'écran « Autoriser les notifications ? », iOS sans pastille ; APK reconstruit et audité ;
+- relances affichées : retirer aussi celles dont tous les groupes sont archivés ou hors de la saison active ;
+- 029 gardé entier (environ 12 fichiers) ; refus au dialogue et permission jamais demandée : état effectif avec bandeau (jamais demandée : interrupteur éteint, sans bandeau) ; mention « Le nom du groupe s'affiche sur l'écran verrouillé. » (écart de maquette accepté) ;
+- placement pour éviter les conflits entre agents (clés de `relance.ts`, fonctions de l'adaptateur et du faux module, imports alphabétiques).
+
+**Réponses du porteur en revue** : 029 fusionné après relecture ; 028c gardé entier à 12 fichiers ; 028b gardé entier à 13 fichiers ; annulation ciblée (`getAllScheduledNotificationsAsync` et `cancelScheduledNotificationAsync` ajoutées à la liste fermée) ; M1 corrigé dans le 028b (base effacée : tout annuler).
+
+**Ce que l'IA a fait** :
+- **Développement** : 029 (écrans `relance.tsx` et `permission-notifications.tsx`, `useReminderSettings`, `reminderPermissionState` et `requestReminderPermission`, ligne Relance de Paramètres) ; 028c (`useReminderTap`, `clearReminders` de Tout effacer, annulation et retrait après une restauration, réponse forgée refusée, imitation globale dans `jest.setup.js`) ; 028b (`useReminders`, `dueSessions`, `showRemindersInForeground`, annulation ciblée, `localDates.ts`, licences, APK reconstruit et audité).
+- **Intégration** : revues de code, contradicteur et revues de sécurité des trois tickets ; corrections renvoyées aux agents ; fusions une par une (PR #82, #83, #84) ; 1741 tests ; 41 décisions ajoutées à `docs/DECISIONS.md`, 3 questions en file.
+
+**Ce qui a été corrigé par les revues** :
+- **appui perdu au démarrage** (028c) : un appui reçu pendant le nettoyage du démarrage (verrou `cleanup`) était ignoré ; il est mis en attente et ouvert une fois la pile montée ;
+- **appui forgé par une autre appli** (revue de sécurité du 028c) : une appli tierce pouvait lancer l'activité avec une fausse notification push et ouvrir un appel ; `targetOfResponse` refuse le type `push` et exige l'identifiant `relance-<slotId>-<date>` ;
+- **relances reprogrammées après Tout effacer** (028b, contradicteur) : une passe commencée avant l'effacement pouvait reprogrammer les relances des données effacées ; verrou, compte des effacements et base relus avant chaque écriture native ;
+- **relance de la minute annulée** (028b) : tout annuler à chaque passe supprimait une relance due dans la minute, pas encore délivrée ; annulation ciblée des seules relances qui ne sont plus gardées (décision du porteur) ;
+- **base effacée** (M1, 028b) : une base effacée qui ne se rouvre pas laissait les relances programmées ; à `erased` ou `restoreFailed`, tout est annulé et retiré (décision du porteur) ;
+- **double appui** (029) : deux appuis sur « Continuer » ou deux bascules de l'interrupteur lançaient deux demandes ou empilaient deux écrans ; gardes et retour bloqué pendant la demande ;
+- **permission illisible affichée comme activée** (029, contradicteur) : la ligne de Paramètres suivait la préférence alors que le 028b ne programme rien quand la lecture échoue ; elle suit l'interrupteur (« Désactivée »).
+
+**Leçons** :
+- Une passe asynchrone qui écrit dans le système doit revérifier ses conditions avant chaque écriture, pas seulement au départ.
+- Tout point d'entrée qu'une autre appli peut atteindre (activité, notification) se traite comme une entrée non fiable.
+
 ### [Étape] — [AAAA-MM-JJ]
 
 **Prompt**
