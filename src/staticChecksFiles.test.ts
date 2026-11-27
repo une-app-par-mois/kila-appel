@@ -11,7 +11,12 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import ts from 'typescript';
 import { tempDir } from '@/__fixtures__/backupFiles';
-import { literalText, readsExpoModules, readsGlobalExpo } from '@/__fixtures__/expoAccess';
+import {
+  literalText,
+  moduleName,
+  readsExpoModules,
+  readsGlobalExpo,
+} from '@/__fixtures__/expoAccess';
 import { scriptKind, TEST_FILE, walkSources } from '@/__fixtures__/sourceFiles';
 
 /** Seul fichier autorisé à importer ces modules de fichiers (liste testée). */
@@ -41,24 +46,6 @@ const FILE_NETWORK = new Set([
 ]);
 
 type Violation = { rule: string; line: number };
-
-/** Module nommé par un import, un export, un require() ou un import() ; sinon undefined. */
-const moduleName = (node: ts.Node): string | undefined => {
-  if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
-    return literalText(node.moduleSpecifier);
-  }
-  if (ts.isCallExpression(node)) {
-    const callee = node.expression;
-    const isRequire = ts.isIdentifier(callee) && callee.text === 'require';
-    if (isRequire || callee.kind === ts.SyntaxKind.ImportKeyword) {
-      return literalText(node.arguments[0]);
-    }
-  }
-  if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument)) {
-    return literalText(node.argument.literal);
-  }
-  return undefined;
-};
 
 const check = (file: string, source: string): Violation[] => {
   const tree = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, scriptKind(file));

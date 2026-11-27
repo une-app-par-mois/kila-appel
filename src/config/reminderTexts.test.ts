@@ -13,10 +13,26 @@ import { seasonsRepo } from '@/data/seasonsRepo';
 import { sessionsRepo } from '@/data/sessionsRepo';
 import { settingsRepo } from '@/data/settingsRepo';
 import { slotsRepo } from '@/data/slotsRepo';
-import type { WeeklySlot } from '@/domain/occurrences';
-import { plannedReminders } from '@/domain/reminders';
+import { plannedReminders, type ReminderSlot } from '@/domain/reminders';
 
 const r = labels.reminder;
+const NOW = { date: '2026-11-30', time: '08:00' };
+
+/** Relances calculées sur des données lues par les dépôts, comme sur l'appareil (028b). */
+const plannedFromRepos = async (db: Db) => {
+  const season = await seasonsRepo(db).getActive();
+  if (!season) throw new Error('saison active attendue');
+  const groups = await groupsRepo(db).listBySeason(season.id);
+  const slots = await slotsRepo(db).listBySeason(season.id);
+  return plannedReminders({
+    slots: slots as ReminderSlot[],
+    activeGroupIds: groups.map((g) => g.id),
+    season,
+    sessions: await sessionsRepo(db, NOW.date).reminderSessions(season.id),
+    settings: await settingsRepo(db).reminderSettings(),
+    now: NOW,
+  });
+};
 
 describe('EX-28 textes de la relance', () => {
   it('maquette : titre et corps, au caractère près', () => {
@@ -78,20 +94,7 @@ describe('SEC-12 ABS-04 aucune relance ne nomme un membre', () => {
     }
     await settingsRepo(db).setReminderEnabled(true);
 
-    const now = { date: '2026-11-30', time: '08:00' };
-    const season = await seasonsRepo(db).getActive();
-    if (!season) throw new Error('saison active attendue');
-    const groups = await groupsRepo(db).listBySeason(season.id);
-    const slots = await slotsRepo(db).listBySeason(season.id);
-    const recorded = await sessionsRepo(db, now.date).slotSessions(season.id);
-    const reminders = plannedReminders({
-      slots: slots as (WeeklySlot & { groups: { id: number; name: string }[] })[],
-      activeGroupIds: groups.map((g) => g.id),
-      season,
-      sessions: recorded.map((x) => ({ ...x, state: 'recorded' as const })),
-      settings: await settingsRepo(db).reminderSettings(),
-      now,
-    });
+    const reminders = await plannedFromRepos(db);
     expect(reminders.length).toBe(2);
 
     const texts = reminders.flatMap((x) => [r.title(x.groupNames), r.body(x.startTime)]);
@@ -116,5 +119,34 @@ describe('SEC-12 ABS-04 aucune relance ne nomme un membre', () => {
       expect(payload).not.toContain(last_name.toLowerCase());
       expect(payload).not.toContain(first_name.toLowerCase());
     }
+  });
+});
+
+describe('EX-36 EX-38 état de la séance lu par le dépôt', () => {
+  let db: Db;
+  beforeEach(async () => {
+    db = await prepareDatabase(openNodeDb());
+  });
+  afterEach(async () => {
+    await db.close();
+  });
+
+  // Créneau du mercredi 17:30 du jeu fictif : relance le 2026-12-02 à 18:00 (délai de 30 min).
+  const markSession = (seasonId: number, slotId: number, state: string) =>
+    db.execute(
+      'INSERT INTO sessions (season_id, slot_id, date, start_time, state) VALUES (?, ?, ?, ?, ?)',
+      [seasonId, slotId, '2026-12-02', '17:30', state],
+    );
+
+  it.each([
+    ['prepared', ['2026-12-02']],
+    ['cancelled', []],
+    ['unscheduled', []],
+  ])('EX-36 EX-38 séance future %s : relances %p', async (state, dates) => {
+    const s = await seed(db);
+    await settingsRepo(db).setReminderEnabled(true);
+    await markSession(s.seasonId, s.slotId, state);
+    const reminders = await plannedFromRepos(db);
+    expect(reminders.map((x) => x.date)).toEqual(dates);
   });
 });

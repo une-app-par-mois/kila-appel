@@ -8,6 +8,27 @@ export const literalText = (node: ts.Node | undefined): string | undefined =>
     ? node.text
     : undefined;
 
+/**
+ * Module nommé par un import, un export, un require(), un import() ou un type import() ; sinon
+ * undefined (contrôles staticChecksFiles et staticChecksNotifications).
+ */
+export const moduleName = (node: ts.Node): string | undefined => {
+  if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
+    return literalText(node.moduleSpecifier);
+  }
+  if (ts.isCallExpression(node)) {
+    const callee = node.expression;
+    const isRequire = ts.isIdentifier(callee) && callee.text === 'require';
+    if (isRequire || callee.kind === ts.SyntaxKind.ImportKeyword) {
+      return literalText(node.arguments[0]);
+    }
+  }
+  if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument)) {
+    return literalText(node.argument.literal);
+  }
+  return undefined;
+};
+
 /** `expo`, `globalThis.expo`, `global['expo']` : l'objet qui porte la table des modules natifs. */
 const isExpo = (node: ts.Expression): boolean =>
   (ts.isIdentifier(node) && node.text === 'expo') ||

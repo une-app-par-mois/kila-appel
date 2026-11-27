@@ -6,6 +6,7 @@ import { current } from '@/data/enrollmentsRepo';
 import { DataError, expectChanged } from '@/data/errors';
 import { isIsoDate } from '@/domain/formats';
 import { slotDates, type WeeklySlot } from '@/domain/occurrences';
+import type { ReminderSession } from '@/domain/reminders';
 import {
   type AttendanceStatus,
   InputError,
@@ -185,6 +186,17 @@ export const sessionsRepo = (db: Db, today: string) => ({
   slotSessions: async (seasonId: number): Promise<{ slotId: number; date: string }[]> =>
     db.query<{ slotId: number; date: string }>(
       'SELECT slot_id AS slotId, date FROM sessions WHERE season_id = ? AND slot_id IS NOT NULL ORDER BY date',
+      [seasonId],
+    ),
+
+  /**
+   * EX-28, EX-36, EX-38 : séances des créneaux de la saison avec leur état, futures comprises ;
+   * `plannedReminders` en déduit les relances dues. Sans les appels sans créneau (EX-39).
+   */
+  reminderSessions: async (seasonId: number): Promise<ReminderSession[]> =>
+    db.query<ReminderSession>(
+      `SELECT slot_id AS slotId, date, state FROM sessions
+       WHERE season_id = ? AND slot_id IS NOT NULL ORDER BY date`,
       [seasonId],
     ),
 
