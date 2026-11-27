@@ -67,6 +67,10 @@ Séance de découpage du jalon 2 (2026-11-27), réponses du porteur :
 - Plan validé par le porteur le 2026-11-27.
 - Portée de la série : le membre, tous groupes confondus (glossaire), comme le plan.
 - `alert_acks` : ligne « Alertes traitées (membre, longueur de la série, date) » ajoutée au tableau « Données manipulées » du cadrage (personnelle, non sensible, effacée avec le membre).
+- Séance de lancement du lot J2-1 (2026-11-27), réponses du porteur :
+  - retraiter une alerte : `ON CONFLICT (member_id, streak_length) DO UPDATE SET acked_at = MAX(acked_at, excluded.acked_at)` (mise à jour sur place, pas de `INSERT OR REPLACE`) au lieu de `DO NOTHING` ; test « traitée, revenue, retraitée → masquée » ;
+  - ABS-08 : une ligne au journal de `docs/CONFORMITE.md` (alertes traitées stockées sur l'appareil, sauvegardées, effacées avec le membre ; déclarations des stores inchangées ; reprises dans la politique du jalon 6), écrite par l'IA principale à l'intégration ; l'agent ne touche pas CONFORMITE ;
+  - fichiers partagés avec 023 : ne pas modifier `src/__fixtures__/seed.ts` ; jeux de scénarios et de volume dans `src/__fixtures__/alertsSeed.ts` (nouveau) ; `ALERT_THRESHOLD_INVALID` est le seul ajout à `src/data/errors.ts`.
 
 ## Décisions
 

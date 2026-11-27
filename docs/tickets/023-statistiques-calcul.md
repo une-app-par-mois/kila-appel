@@ -67,6 +67,12 @@ Séance de découpage du jalon 2 (2026-11-27), réponses du porteur :
 - Points 2 (présence sans inscription correspondante : groupe unique de la séance) et 6 (arrondi, 0 % et 100 % réservés aux valeurs exactes) acceptés tels quels.
 - RM-01 fait foi sur la maquette : « Statistiques d'un membre » corrigée de 58 % à 64 % (7 sur 11).
 - Groupes archivés ou d'une autre saison : listés après les autres avec « Archivé », s'ils ont une séance dans la période ; ils comptent dans la synthèse (point 4 du plan).
+- Séance de lancement du lot J2-1 (2026-11-27), réponses du porteur :
+  - membres listés dans un groupe : aussi tout membre dont au moins une présence compte pour le groupe (cas de secours du point 2), pour que le taux du groupe corresponde à sa liste ;
+  - maquette : une case par séance enregistrée du groupe dans la période, et le nombre de séances suit ; sous-titre de « Statistiques d'un groupe » corrigé en « 13 séances » (fait au lancement) ;
+  - file du porteur (appliqué, en attente du porteur) : sans saison active, `season` vaut `null`, période par défaut « Ce mois », seuls les groupes ayant une séance dans la période sont listés (avec « Archivé ») ;
+  - reporté au 025 : affichage d'une séance où le membre était inscrit sans statut (le 023 renvoie `status: null` avec `enrolled`) ;
+  - fichiers partagés avec 021 : ne pas modifier `src/__fixtures__/seed.ts` ni `src/data/errors.ts` ; jeux dans `src/__fixtures__/statsSeed.ts` (nouveau).
 
 ## Décisions
 
