@@ -68,6 +68,11 @@ Séance de découpage du jalon 2 (2026-11-27), réponses du porteur :
 - Permissions Android gardées : `POST_NOTIFICATIONS` et `RECEIVE_BOOT_COMPLETED`, sans alarme exacte (ni `SCHEDULE_EXACT_ALARM` ni `USE_EXACT_ALARM`) ; toutes les autres bloquées (`ACCESS_NETWORK_STATE`, `WAKE_LOCK`, `com.google.android.c2dm.permission.RECEIVE`, `BIND_GET_INSTALL_REFERRER_SERVICE`, en plus de celles déjà bloquées) ; `config/permissions-attendues.txt` et l'audit de l'APK mis à jour.
 - iOS : alerte et son, sans pastille, sans habilitation.
 - Stores : « aucune donnée collectée » gardé ; CONFORMITE §3 et §8 complétés par ce ticket ; risque noté : l'index des SDK de Play peut repérer Firebase Messaging dans le binaire.
+- Séance de lancement du lot J2-1 (2026-11-27), réponses du porteur :
+  - licence : décision datée du porteur acceptant l'« Android Software Development Kit License » pour ces 8 bibliothèques natives seulement : play-services-base, play-services-basement, play-services-tasks, play-services-stats, play-services-cloud-messaging, firebase-iid-interop, firebase-measurement-connector, installreferrer ; inventaire nominatif dans CONFORMITE §7 et §8 ;
+  - ShortcutBadger (`me.leolin:ShortcutBadger` 1.1.22, Apache-2.0) accepté ; ses 16 permissions de lanceurs ajoutées à `blockedPermissions` ; inventaire CONFORMITE §8 ; à reporter pour le 028 : `setBadgeCountAsync`, `get/requestExactAlarmPermissionsAsync` et tout import d'`expo-application` refusés par le contrôle statique ;
+  - composants à retirer : les 8 noms complets de la pré-analyse ; audit APK aussi sur les `intent-filter` `com.google.firebase.MESSAGING_EVENT` et `com.google.android.c2dm.intent.RECEIVE` ; `plugins/withoutFirebase.test.js` (10 fichiers) ;
+  - APK construit et audité en local (`aapt2`) avant la fusion dans le jalon, et démarrage vérifié sur l'émulateur (`adb logcat`, aucun plantage).
 
 ## Décisions
 

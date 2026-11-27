@@ -433,7 +433,7 @@ ${go('stats', 'Appliquer')}`);
 // F-05, F-14 — Groupe : membres et podium
 ecran('stats-groupe', 2, 'Statistiques d\'un groupe (podium)', 'EX-27, EX-37', 'stats', `
 ${titre('Poussins mercredi', 'stats')}
-<div class="l-sous sous-titre">Saison 2026-2027 · 12 séances</div>
+<div class="l-sous sous-titre">Saison 2026-2027 · 13 séances</div>
 ${section('Podium')}
 ${carte(`<div class="podium"><div class="marche m2"><div class="mono">2</div>Emma D.<br><span class="mono">96 %</span></div><div class="marche m1"><div class="mono">1</div>Léa M. · Zoé B.<br><span class="mono">100 %</span></div><div class="marche m3"><div class="mono">3</div>Jules L.<br><span class="mono">92 %</span></div></div><p class="l-sous">Ex æquo au même rang.</p>`)}
 ${section('Par membre')}
