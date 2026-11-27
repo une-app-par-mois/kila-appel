@@ -1,6 +1,8 @@
 # NNN — [Intitulé]
 
-Statut : à faire | en cours | fusionné dans le groupe | fait · Jalon : [n] · Zone sensible : oui | non · Trivial : oui | non
+Statut : à faire | en cours | en attente du porteur | fusionné dans le groupe | fait · Jalon : [n] · Zone sensible : oui | non · Trivial : oui | non
+
+Dépend de : [tickets, ou « aucun »] · Fichiers touchés : [dossiers ou fichiers principaux, pour choisir un lot sans conflit]
 
 ## Contexte
 
@@ -26,3 +28,21 @@ Statut : à faire | en cours | fusionné dans le groupe | fait · Jalon : [n] ·
 ## Hors périmètre
 
 - [Ce que ce ticket ne fait pas]
+
+## Questions prévues
+
+[Remplie par la pré-analyse, réponses du porteur à la séance de lancement.]
+
+## Décisions
+
+| Question | Options | Choix | Raison | État |
+| --- | --- | --- | --- | --- |
+
+## Questions pour le porteur
+
+[Questions apparues pendant le développement : « en attente du porteur » (appliquée) ou « ticket en attente » (cas réservé).]
+
+## À reporter
+
+- CHANGELOG : [une ligne]
+- Architecture : [une ligne, ou « rien »]

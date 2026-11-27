@@ -127,6 +127,20 @@ Pour éviter de me demander trop souvent des décisions, est-ce pertinent d'ajou
 
 **Ce que j'ai corrigé ou refusé** : les écarts avec la maquette restent posés sur le moment.
 
+### Travail par lot — 2026-11-27
+
+**Prompt**
+
+```text
+Avant de passer aux tickets suivants, je veux voir avec toi comment optimiser le skill et le process de vibe coding. L'objectif est de réduire le temps de développement, pouvoir au maximum lancer des agents de code en parallèle pour plusieurs tickets. Avoir les questions par séance de questions, c'est-à-dire garder les questions en mémoire pour avoir des questions posées à un moment donné et pas sans arrêt.
+```
+
+**Ce que l'IA a fait** :
+- Elle a mis en place le travail par lot : séance de lancement avec pré-analyse, au plus 3 agents de code en parallèle dans des worktrees, intégration par l'IA principale, séance de clôture.
+- Elle a ajouté la file `docs/QUESTIONS.md`, un modèle de ticket avec les dépendances, les fichiers touchés et les sections tenues par l'agent, et les agents `pre-analyse` et `codeur`.
+
+**Ce que j'ai corrigé ou refusé** : rien. Choix du porteur : dès maintenant ; cas réservés repoussés à la séance suivante, avec le ticket mis de côté ; 3 agents au plus.
+
 ### [Étape] — [AAAA-MM-JJ]
 
 **Prompt**
