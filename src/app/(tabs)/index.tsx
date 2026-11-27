@@ -1,8 +1,9 @@
 // Accueil (maquettes Accueil et Accueil avec un appel interrompu, ticket 012) : date du jour,
 // recherche d'un contact d'urgence (EX-06), appel en cours ou séance du moment (EX-09, EX-14),
 // appels manquants (EX-17), bandeau de sauvegarde en bas (EX-21, ticket 014d), même pendant un
-// appel en cours. Hors de ce ticket : « Annuler » une séance (jalon 2) ; décisions du porteur du
-// 2026-11-27. Bienvenue (P1, ticket 012b) remplace l'accueil tant qu'une étape reste et qu'aucun
+// appel en cours. Alertes d'assiduité (EX-25, ticket 022) entre les appels manquants et le bandeau,
+// appel en cours compris ; illisibles : section cachée, avec l'erreur. Hors de ce ticket :
+// « Annuler » une séance (jalon 2) ; décisions du porteur du 2026-11-27. Bienvenue (P1, ticket 012b) remplace l'accueil tant qu'une étape reste et qu'aucun
 // appel n'est fait, jamais pendant un appel en cours ; si l'avancement ne se lit pas, l'accueil
 // s'affiche avec l'erreur (rien n'y est caché).
 import { useRouter } from 'expo-router';
@@ -11,10 +12,12 @@ import { Pressable, StyleSheet, Text } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
 import { weekdayOfDate } from '@/domain/occurrences';
+import { useAlerts, useAlertThreshold } from '@/hooks/useAlerts';
 import { useBackupBanner } from '@/hooks/useBackupReminder';
 import { useLocalNow } from '@/hooks/useLocalNow';
 import { useDraft, useMissingRollCalls } from '@/hooks/useRollCall';
 import { useSetupProgress } from '@/hooks/useSeasons';
+import { AttendanceAlerts } from '@/ui/AttendanceAlerts';
 import { Button } from '@/ui/Button';
 import { Card } from '@/ui/Card';
 import { Icon } from '@/ui/Icon';
@@ -33,6 +36,8 @@ export default function Home() {
   const [, month, day] = now.date.split('-').map(Number);
   const { missing, loadFailed } = useMissingRollCalls(now);
   const setup = useSetupProgress(now.date);
+  const alerts = useAlerts(now.date);
+  const { threshold } = useAlertThreshold();
   // Bandeau illisible : caché, sans message (revue du 014d).
   const backupDays = useBackupBanner(now.date);
   // Seule l'existence d'un appel en cours compte ici (pas de Bienvenue pendant un appel).
@@ -54,7 +59,9 @@ export default function Home() {
   return (
     <Screen
       title={title}
-      error={loadFailed || setup.loadFailed ? labels.common.loadFailed : entryError}
+      error={
+        loadFailed || setup.loadFailed || alerts.loadFailed ? labels.common.loadFailed : entryError
+      }
     >
       <Pressable
         accessibilityRole="button"
@@ -67,6 +74,7 @@ export default function Home() {
       </Pressable>
       <RollCallEntry now={now} onError={setEntryError} />
       <MissingCalls missing={missing} />
+      {!alerts.loadFailed && <AttendanceAlerts alerts={alerts.alerts} threshold={threshold} />}
       {backupDays !== null && (
         <Card warning>
           <Text style={styles.bannerTitle}>{h.backupBanner(backupDays)}</Text>

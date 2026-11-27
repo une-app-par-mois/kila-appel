@@ -1,8 +1,11 @@
 // Recherche d'un contact d'urgence (maquette, EX-06) : résultats dès la saisie, membres courants,
 // leurs groupes et leurs contacts ; « Appeler » ouvre le composeur du système (lien tel:, aucune
-// permission d'appel). Le numéro n'est jamais écrit dans le journal (ABS-04).
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
+// permission d'appel). Le numéro n'est jamais écrit dans le journal (ABS-04). Ouverte depuis une
+// alerte (ticket 022, décision du porteur du 2026-11-27) : `?membre=<id>` remplit la recherche avec
+// le nom du membre, modifiable ; le nom ne passe jamais dans la route (ABS-04). Identifiant
+// invalide ou inconnu : recherche vide.
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
 import { Linking, StyleSheet, Text, View } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
@@ -10,6 +13,7 @@ import { log } from '@/data/log';
 import { toIsoDate } from '@/domain/formats';
 import { formatPhone } from '@/domain/phone';
 import { useContactSearch } from '@/hooks/useContacts';
+import { useMember } from '@/hooks/useMembers';
 import { Button } from '@/ui/Button';
 import { Card } from '@/ui/Card';
 import { NoMatch } from '@/ui/NoMatch';
@@ -18,11 +22,24 @@ import { TextField } from '@/ui/TextField';
 
 const t = labels.emergency;
 
+/** Identifiant de l'adresse : chiffres seulement, sinon 0 (aucun membre), comme la fiche membre. */
+const idFrom = (param: string | undefined) => (param && /^\d+$/.test(param) ? Number(param) : 0);
+
 export default function Emergency() {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [callFailed, setCallFailed] = useState(false);
-  const { results, loadFailed } = useContactSearch(query, toIsoDate(new Date()));
+  const today = toIsoDate(new Date());
+  const { results, loadFailed } = useContactSearch(query, today);
+  const { member } = useMember(idFrom(useLocalSearchParams<{ membre?: string }>().membre), today);
+  // Remplie une seule fois, et jamais par-dessus une saisie déjà commencée.
+  const prefilled = useRef(false);
+  useEffect(() => {
+    if (member === null || prefilled.current) return;
+    prefilled.current = true;
+    const name = labels.memberForm.fullName(member.firstName, member.lastName);
+    setQuery((typed) => (typed === '' ? name : typed));
+  }, [member]);
 
   const call = (contactId: number, phone: string) => {
     setCallFailed(false);
