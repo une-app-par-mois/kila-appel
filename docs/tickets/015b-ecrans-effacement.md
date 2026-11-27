@@ -1,6 +1,6 @@
 # 015b — Conservation et purge des anciennes saisons
 
-Statut : en attente du porteur (une question, voir plus bas ; code poussé sur `ticket/015b-conservation-purge`) · Jalon : 1 · Zone sensible : oui (plan validé par le porteur le 2026-11-27) · Trivial : non
+Statut : relecture du porteur (code poussé sur `ticket/015b-conservation-purge`) · Jalon : 1 · Zone sensible : oui (plan validé par le porteur le 2026-11-27) · Trivial : non
 
 Dépend de : 015, 014, 014b, 014e · Fichiers touchés : `src/data/purge.ts` et son test, `src/hooks/useErase.ts` (conservation et purge), `src/hooks/fileLock.ts` (tâche `'erase'`), `src/app/donnees.tsx`, `src/app/(tabs)/parametres.tsx`, `src/config/libelles/effacement.ts` (et `index.ts`), `scripts/maquettes.mjs`, tests
 
@@ -41,6 +41,7 @@ Séance du 2026-11-27 : conservation de 1 à 3 saisons. Clôture du 2026-11-27 :
   - découpage en 015b et 015f ;
   - confirmation de la purge chiffrée par `purgeImpact` : « Seront effacés définitivement : la saison 2023-2024, ses 3 groupes, 2 créneaux, 31 séances et 412 présences. » puis « 12 membres qui ne figurent plus dans aucune saison conservée seront aussi effacés. », plus « L'appel en cours (<groupe>) sera aussi effacé. » s'il appartient à une saison purgée ; maquette annotée ;
   - plan validé.
+- Question du développement, réponse du porteur du 2026-11-27 : nom du groupe de l'appel en cours dans la confirmation de purge (EX-14 : `draftGroupName.ts` n'est importable que par `useRestore.ts`). Options : garder le texte sans nom ; autoriser `useErase.ts` à importer `draftGroupName` ; ajouter le nom à `purgeImpact`. **Réponse : texte sans nom, « L'appel en cours sera aussi effacé. »** ; le contrôle EX-14 n'est pas élargi.
 
 ## Décisions
 
@@ -62,12 +63,10 @@ Séance du 2026-11-27 : conservation de 1 à 3 saisons. Clôture du 2026-11-27 :
 | Relecture à minuit (revue de code) | Vider la valeur ; garder la précédente | `useLoaded(…, keepPrevious)` dans `useErase` : la section et une confirmation ouverte restent affichées pendant la relecture | Pas de disparition de la confirmation | changée après revue |
 | Lecture de l'impact en échec (revue de code) | — | Journal `PURGE_IMPACT_FAILED` (sans détail), message « La purge n'a pas abouti. Rien n'a été effacé. » | ABS-04 | changée après revue |
 | Choix de la durée sous le verrou (revue de code) | — | Champ « 3 ▾ » désactivé pendant un export, une restauration ou une purge | Cohérence avec les autres boutons | changée après revue |
-| Notes de la maquette (contradicteur) | — | Chaque note découpée : « Réponse du porteur du 2026-11-27 » (texte chiffré, ligne des membres, conservation) et « Décisions automatiques, à relire (ticket 015b) » ; la ligne de l'appel en cours y est notée en attente de la réponse du porteur | Les décisions automatiques étaient présentées comme des décisions du porteur | changée après contradiction |
+| Notes de la maquette (contradicteur) | — | Chaque note découpée : « Réponse du porteur du 2026-11-27 » (texte chiffré, ligne des membres, conservation) et « Décisions automatiques, à relire (ticket 015b) » ; la ligne de l'appel en cours, d'abord notée en attente, est depuis une réponse du porteur (texte sans nom) | Les décisions automatiques étaient présentées comme des décisions du porteur | changée après contradiction |
 | Fichiers au-delà de la liste | — | `src/ui/ConfirmDialog.tsx` (type du message, `busy`), `src/__fixtures__/purgeSeed.ts` (jeu fictif sorti de `purge.test.ts`, gardé sous 300 lignes), tests `purgeToday.test.ts`, `purgeMembers.test.ts`, `useErase.test.tsx`, `appTests/purge.test.tsx`, `appTests/purgeEdges.test.tsx`, `config/purgeTexts.test.ts`, `design/maquettes/index.html` régénéré | Ajouts mécaniques et tests | à relire |
 
 ## Questions pour le porteur
-
-- **Nom du groupe de l'appel en cours dans la confirmation de purge (EX-14).** `src/data/draftGroupName.ts` n'est importable que par `useRestore.ts` (test `draftGroupName.test.ts`) ; l'élargir est un contrôle de sécurité, non tranché ici. Appliqué en attendant : `purgeImpact.rollCallDraft` et « L'appel en cours sera aussi effacé. » Options : (1) **recommandée** : garder ce texte sans nom (rien à élargir ; l'écran Accueil nomme déjà l'appel en cours) ; (2) autoriser `src/hooks/useErase.ts` à importer `draftGroupName` (liste du test élargie) et écrire « L'appel en cours (<groupe>) sera aussi effacé. », en vérifiant que le brouillon appartient à une saison purgée ; (3) ajouter à `purgeImpact` le nom du groupe (`purge.ts` entrerait dans la liste EX-14 des fichiers qui nomment les tables du brouillon).
 
 ## À reporter
 
