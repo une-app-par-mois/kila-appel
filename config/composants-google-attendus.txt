@@ -1,0 +1,8 @@
+# Composants Google Play services (com.google.android.gms.*) permis dans le manifeste
+# compilé du binaire Android (SEC-02, ABS-01, ticket 026). Tout autre composant gms,
+# exporté ou non, fait échouer scripts/audit-apk.js ; un composant de cette liste
+# exporté aussi. Un nom par ligne ; `#` commente.
+#
+# Activité de résolution d'erreur de Google Play services (play-services-base, tirée
+# par Firebase Messaging) : non exportée, jamais lancée par Ki&La.
+com.google.android.gms.common.api.GoogleApiActivity
