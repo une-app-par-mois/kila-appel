@@ -27,6 +27,12 @@ Tout effacer après double confirmation, puis Bienvenue (EX-23, SEC-11).
   - copies du cache vidées juste après l'effacement ;
   - Bienvenue recrée la saison automatiquement, comme une installation neuve.
 - Plan de zone sensible : à valider à la séance de lancement de son lot.
+- Report de l'intégration du lot 014c-014d-015b (2026-11-27) :
+  - `src/hooks/useErase.ts` existe (conservation et purge, ticket 015b) : Tout effacer s'y ajoute, sous la tâche `'erase'` de `fileLock` (déjà prise par la purge ; tâches : `'export'`, `'restore'`, `'cleanup'`, `'erase'`) ; boutons désactivés pendant un export, une restauration ou une purge, comme ceux du 015b ;
+  - `ConfirmDialog` accepte un message en `ReactNode` et un état `busy` (015b) : à reprendre pour la première confirmation, retour bloqué pendant l'effacement ;
+  - l'écran Sauvegarde (`src/app/donnees.tsx`) a maintenant la section Conservation et purge, et Paramètres la ligne Conservation : la ligne Tout effacer se place selon la maquette, après elles ;
+  - le vidage des copies juste après l'effacement reprend les fonctions du nettoyage au démarrage du 014c (`expoStorage(…).clear()`, `expoPicker(Platform.OS).clearPicked()`, code `STARTUP_CLEANUP_FAILED` pour le démarrage seulement : un code propre au 015f) ;
+  - après l'effacement, le retour à Bienvenue doit passer par la base déjà ouverte (pas par `resetDatabase()`, réservée à une base abîmée) ; l'invitation à sauvegarder (014d) repart de zéro, car `backup_invite_seen` et `last_backup_at` sont effacés avec les réglages.
 
 ## Décisions
 

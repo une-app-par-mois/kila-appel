@@ -1,6 +1,6 @@
 # 015b — Conservation et purge des anciennes saisons
 
-Statut : relecture du porteur (code poussé sur `ticket/015b-conservation-purge`) · Jalon : 1 · Zone sensible : oui (plan validé par le porteur le 2026-11-27) · Trivial : non
+Statut : fusionné dans le groupe (PR #50, 2026-11-27) · Jalon : 1 · Zone sensible : oui (plan validé par le porteur le 2026-11-27) · Trivial : non
 
 Dépend de : 015, 014, 014b, 014e · Fichiers touchés : `src/data/purge.ts` et son test, `src/hooks/useErase.ts` (conservation et purge), `src/hooks/fileLock.ts` (tâche `'erase'`), `src/app/donnees.tsx`, `src/app/(tabs)/parametres.tsx`, `src/config/libelles/effacement.ts` (et `index.ts`), `scripts/maquettes.mjs`, tests
 
@@ -21,9 +21,9 @@ La conservation et la purge des anciennes saisons (EX-24). Tout effacer est au 0
 
 ## Critères d'acceptation
 
-- [ ] Conservation de 1 à 3 saisons, 3 par défaut (EX-24)
-- [ ] Confirmation de la purge qui liste ce qui part, membres compris (EX-24)
-- [ ] Une saison à venir n'est jamais purgée et ne compte pas parmi les N ; une saison commencée aujourd'hui compte ; purge refusée (rien effacé) si la date change la liste
+- [x] Conservation de 1 à 3 saisons, 3 par défaut (EX-24)
+- [x] Confirmation de la purge qui liste ce qui part, membres compris (EX-24)
+- [x] Une saison à venir n'est jamais purgée et ne compte pas parmi les N ; une saison commencée aujourd'hui compte ; purge refusée (rien effacé) si la date change la liste
 
 ## Tests attendus
 

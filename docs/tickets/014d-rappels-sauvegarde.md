@@ -1,6 +1,6 @@
 # 014d — Invitation et bandeau de sauvegarde
 
-Statut : à faire · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : fusionné dans le groupe (PR #49, 2026-11-27 ; invitation et bandeau pas encore vus sur l'A55) · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Dépend de : 014, 014b, 013 · Fichiers touchés : `src/app/invitation-sauvegarde.tsx` (nouveau), `src/hooks/useBackupReminder.ts` (nouveau), `src/hooks/useSavedReturn.ts`, `src/app/(tabs)/index.tsx`, `src/data/sessionsRepo.ts` (`firstRecordedDate`), `src/config/libelles/accueil.ts`, tests
 
@@ -20,8 +20,8 @@ Inviter à sauvegarder après le premier appel, et rappeler après 30 jours sans
 
 ## Critères d'acceptation
 
-- [ ] Invitation après le premier appel, une seule fois, s'il n'y a aucune sauvegarde (EX-21)
-- [ ] Bandeau après 30 jours sans sauvegarde, jamais pendant Bienvenue (EX-21)
+- [x] Invitation après le premier appel, une seule fois, s'il n'y a aucune sauvegarde (EX-21)
+- [x] Bandeau après 30 jours sans sauvegarde, jamais pendant Bienvenue (EX-21)
 
 ## Tests attendus
 
