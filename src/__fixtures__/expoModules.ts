@@ -46,6 +46,12 @@ class FakeFile {
     if (existsSync(pathOf(destination.uri))) throw new Error('DestinationAlreadyExists');
     copyFileSync(pathOf(this.uri), pathOf(destination.uri));
   }
+  get exists() {
+    return existsSync(pathOf(this.uri));
+  }
+  delete() {
+    rmSync(pathOf(this.uri), { recursive: true });
+  }
 }
 
 class FakeDirectory {
@@ -64,14 +70,50 @@ class FakeDirectory {
   }
 }
 
-/** Le cache de l'appareil est `<root>/cache dir/` (avec une espace : URI encodées). */
-export const fakeFileSystem = () => {
+/**
+ * Android : le cache de l'appareil est `<root>/cache dir/` (avec une espace : URI encodées).
+ * iOS (ticket 014e) : conteneur `<root>/app data/`, cache `Library/Caches/`, dossier `tmp/`.
+ */
+export const fakeFileSystem = (layout: 'android' | 'ios' = 'android') => {
   const root = mkdtempSync(join(tmpdir(), 'kila-expo-fs-'));
+  const cache = layout === 'ios' ? `${root}/app data/Library/Caches/` : `${root}/cache dir/`;
   return {
     File: FakeFile,
     Directory: FakeDirectory,
     FileMode: { ReadOnly: 'r' },
-    Paths: { cache: new FakeDirectory(`file://${root}/cache dir/`), root },
+    Paths: { cache: new FakeDirectory(`file://${cache}`), root },
+  };
+};
+
+const fileUri = (path: string) => `file://${path.split('/').map(encodeURIComponent).join('/')}`;
+
+/**
+ * expo-document-picker (ticket 014e). Avec `copyToCacheDirectory`, copie le fichier que rend
+ * `choose()` dans `<cacheRoot>/DocumentPicker/` (Android et iOS) ; sans, rend la copie que
+ * dépose le sélecteur d'iOS (`asCopy`) dans `inboxRoot()`. `null` : annulé ; `choose` peut lever
+ * une erreur (sélecteur en échec). Options relevées par `options` ; `size` : taille annoncée.
+ */
+export const fakeDocumentPicker = (
+  cacheRoot: () => string,
+  choose: () => string | null,
+  options: (o: object) => void,
+  inboxRoot: () => string = () => join(cacheRoot(), 'sans-inbox'),
+  size: () => number | undefined = () => undefined,
+) => {
+  let next = 0;
+  return {
+    getDocumentAsync: async (o: { copyToCacheDirectory?: boolean }) => {
+      options(o);
+      const source = choose();
+      if (source === null) return { canceled: true, assets: null };
+      const dir = o.copyToCacheDirectory ? join(cacheRoot(), 'DocumentPicker') : inboxRoot();
+      mkdirSync(dir, { recursive: true });
+      next += 1;
+      const path = join(dir, `${next}-choisi.db`);
+      copyFileSync(source, path);
+      const asset = { name: 'choisi.db', uri: fileUri(path), lastModified: 0, size: size() };
+      return { canceled: false, assets: [asset] };
+    },
   };
 };
 

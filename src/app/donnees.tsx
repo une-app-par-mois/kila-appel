@@ -1,23 +1,28 @@
 // Sauvegarde (maquette « Sauvegarde et données », ticket 014b, EX-19, EX-21) : avertissement
 // complet au-dessus du bouton (SEC-09, ABS-06 : jamais réduit), export par le partage du système,
-// date de la dernière sauvegarde. Restauration (014e), conservation et tout effacer (015b) : à venir.
+// date de la dernière sauvegarde ; section Restaurer, qui ouvre l'écran Restauration (ticket 014e,
+// EX-20). Conservation et tout effacer (015b) : à venir.
 import { useRouter } from 'expo-router';
 import { StyleSheet, Text } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
 import { expoBackupDeps } from '@/data/expoFiles';
+import { useFileLock } from '@/hooks/fileLock';
 import { toLastBackup, useBackupExport, useLastBackup } from '@/hooks/useBackupExport';
 import { useLocalNow } from '@/hooks/useLocalNow';
 import { Button } from '@/ui/Button';
 import { Card } from '@/ui/Card';
-import { Screen } from '@/ui/Screen';
+import { Screen, Section } from '@/ui/Screen';
 
 const t = labels.backup;
+const r = labels.restore;
 
 export default function Backup() {
   const router = useRouter();
   const { exportNow, busy, failed } = useBackupExport(expoBackupDeps);
   const { lastBackup, loaded, loadFailed } = useLastBackup();
+  // Export et restauration ne tournent jamais en même temps (verrou commun, revue du 014e).
+  const locked = useFileLock() !== null;
   // Horloge partagée (ticket 012) : « aujourd'hui » devient « hier » après minuit, page ouverte.
   const now = useLocalNow();
   return (
@@ -34,9 +39,23 @@ export default function Backup() {
           {t.warningAfter}
         </Text>
       </Card>
-      <Button label={t.export} onPress={() => void exportNow()} disabled={busy} />
+      <Button label={t.export} onPress={() => void exportNow()} disabled={busy || locked} />
       {failed && <Text style={styles.error}>{t.exportFailed}</Text>}
       {loaded && <Text style={styles.note}>{t.last(toLastBackup(lastBackup, now.date))}</Text>}
+      <Section title={r.section} />
+      <Card>
+        <Text style={styles.intro}>
+          {r.introBefore}
+          <Text style={styles.strong}>{r.introStrong}</Text>
+          {r.introAfter}
+        </Text>
+        <Button
+          label={r.choose}
+          variant="secondary"
+          onPress={() => router.push('/restauration')}
+          disabled={busy || locked}
+        />
+      </Card>
     </Screen>
   );
 }
@@ -50,6 +69,12 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing,
   },
   strong: { fontFamily: theme.fonts.title },
+  intro: {
+    fontFamily: theme.fonts.text,
+    fontSize: 15,
+    color: theme.colors.texte,
+    marginBottom: theme.spacing * 2.5,
+  },
   note: {
     fontFamily: theme.fonts.text,
     fontSize: 14,

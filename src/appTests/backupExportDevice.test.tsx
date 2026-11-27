@@ -20,6 +20,7 @@ const mockOpened = jest.fn();
 jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => mockDb }));
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
 jest.mock('expo-file-system', () => require('@/__fixtures__/expoModules').fakeFileSystem());
+jest.mock('expo-document-picker', () => ({ getDocumentAsync: jest.fn() }));
 jest.mock('expo-sharing', () => ({
   shareAsync: (uri: string, options: object) => mockShareAsync(uri, options),
 }));

@@ -12,6 +12,7 @@ import { log } from '@/data/log';
 import { settingsRepo } from '@/data/settingsRepo';
 import { daysSince, toDisplayDate, toIsoDate } from '@/domain/formats';
 import { notifyDataChanged } from '@/hooks/dataChanged';
+import { fileLock } from '@/hooks/fileLock';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useLoaded } from '@/hooks/useLoaded';
 
@@ -27,15 +28,15 @@ export const useLastBackup = () => {
   return { lastBackup: value, loaded, loadFailed };
 };
 
-// Un seul export à la fois dans l'appli, au niveau du module (revue du 014b) : un second écran
-// Sauvegarde, monté pendant un partage, ne vide pas le dossier et ne lance pas un autre export.
-let exporting: Promise<boolean> | null = null;
+// Un seul export à la fois dans l'appli, et jamais pendant une restauration (verrou commun,
+// revues du 014b et du 014e) : un second écran Sauvegarde, monté pendant un partage, ne vide pas
+// le dossier et ne lance pas un autre export.
 // Vidage du dossier dédié : un export attend qu'il soit fini avant d'y écrire.
 let clearing: Promise<void> = Promise.resolve();
 
 /** Copies restées d'un arrêt brutal pendant un partage ; rien pendant un export en cours. */
 const clearDir = (files: BackupStorage) => {
-  if (exporting) return;
+  if (fileLock.holder() === 'export') return;
   clearing = clearing.then(() => files.clear()).catch(() => log('BACKUP_CLEAR_FAILED'));
 };
 
@@ -87,15 +88,13 @@ export const useBackupExport = (deps: BackupDeps) => {
   useEffect(() => clearDir(depsRef.current.files), []);
 
   const exportNow = useCallback(async () => {
-    if (!db || exporting) return;
-    const run = exportOnce(db, depsRef.current);
-    exporting = run;
+    if (!db || !fileLock.acquire('export')) return;
     setBusy(true);
     setFailed(false);
     try {
-      if (!(await run)) setFailed(true);
+      if (!(await exportOnce(db, depsRef.current))) setFailed(true);
     } finally {
-      exporting = null;
+      fileLock.release('export');
       setBusy(false);
     }
   }, [db]);
