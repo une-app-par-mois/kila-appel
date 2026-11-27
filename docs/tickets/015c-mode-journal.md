@@ -1,6 +1,6 @@
 # 015c — Mode de journal de la base fixé à l'ouverture
 
-Statut : à faire · Jalon : 1 · Zone sensible : oui (plan validé par le porteur le 2026-11-27) · Trivial : non
+Statut : en cours · Jalon : 1 · Zone sensible : oui (plan validé par le porteur le 2026-11-27) · Trivial : non
 
 Dépend de : aucun ticket à faire · Fichiers touchés : `src/data/open.ts` et son test
 
@@ -40,10 +40,16 @@ Décidé par le porteur le 2026-11-27 (séance de clôture du lot 013-014-015).
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
+| Texte fixe de l'erreur | « Mode de journal de la base non fixé » ; autre formulation | « Mode de journal de la base non fixé » | Même forme que `SECURE_DELETE_OFF`, sans identifiant ni donnée (ABS-04) ; jamais affiché tel quel (014c donne son propre texte) | à relire |
+| Erreur SQLite pendant le pragma : comment la tester | Driver qui lève « database is locked » sur le pragma ; vrai verrou tenu par une seconde connexion | Driver qui lève l'erreur | Déterministe et rapide ; un vrai verrou dépend du délai d'attente de SQLite. Le test vérifie que le message de SQLite n'est pas repris | à relire |
+| `pragma_database_list` sans ligne `main` alors que le mode lu est `memory` | Refus ; acceptation | Refus | Doute = refus, comme pour les autres réglages de SEC-11 | à relire |
 
 ## Questions pour le porteur
 
+Aucune.
+
 ## À reporter
 
-- CHANGELOG :
-- Architecture :
+- 014c : ajouter `JOURNAL_MODE_OFF` aux causes qui affichent Réessayer
+- CHANGELOG : Sécurité : le mode de journal de la base est fixé à `delete` et vérifié à chaque ouverture ; sinon la base n'est pas ouverte (SEC-11, ABS-05, ticket 015c)
+- Architecture (§4.1, ouverture) : après `foreign_keys` et `secure_delete`, `PRAGMA main.journal_mode = DELETE` puis relecture ; refus `JOURNAL_MODE_OFF` si le mode lu n'est pas `delete` (`memory` accepté seulement pour une base sans fichier), avant les migrations
