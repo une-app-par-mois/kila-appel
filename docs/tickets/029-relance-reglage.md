@@ -2,7 +2,7 @@
 
 Statut : à faire · Jalon : 2 · Zone sensible : **oui** (demande de permission du système, EX-29, ABS-07) · Trivial : non
 
-Dépend de : 028a (adaptateur `src/data/expoNotifications.ts`, `reminderPermission` ; pas le 028b, décision du porteur du 2026-11-27) · Fichiers touchés : `src/app/relance.tsx` (nouveau), `src/app/permission-notifications.tsx` (nouveau), `src/hooks/useReminderSettings.ts` (nouveau), `src/app/(tabs)/parametres.tsx`, `src/config/libelles/relance.ts`, `src/appTests/reminderSettings.test.tsx` (nouveau), `src/appTests/notificationPermission.test.tsx` (nouveau) — 7 fichiers
+Dépend de : 028a (adaptateur `src/data/expoNotifications.ts`, `reminderPermission` ; pas le 028b, décision du porteur du 2026-11-27) · Fichiers touchés : `src/app/relance.tsx` (nouveau), `src/app/permission-notifications.tsx` (nouveau), `src/hooks/useReminderSettings.ts` (nouveau), `src/app/(tabs)/parametres.tsx`, `src/config/libelles/relance.ts`, `src/appTests/reminderSettings.test.tsx` (nouveau), `src/appTests/notificationPermission.test.tsx` (nouveau), `src/data/expoNotifications.ts` (fonction de demande juste après `reminderPermission`), `src/__fixtures__/expoModules.ts` (faux module, même placement), `src/data/expoNotificationsPermission.test.ts` (nouveau : le test actuel de l'adaptateur fait 300 lignes), `src/config/libelles/commun.ts` et `src/config/libelles/alertes.ts` (`alerts.settingsSection` déplacé vers `labels.settings`, avec sa référence dans `src/appTests/alerts.test.tsx`) — environ 12 fichiers, gardé entier (décision du porteur du 2026-11-27)
 
 Découpé le 2026-11-27 (séance de découpage du jalon 2).
 
@@ -20,7 +20,10 @@ EX-29 : la permission n'est demandée qu'à l'activation de la relance, et le r�
 
 - `src/app/relance.tsx` : « Me relancer si l'appel n'est pas fait » (interrupteur), « Notification sur cet appareil, jamais envoyée ailleurs » ; « Après [30 min ▾] le début du créneau » ; si la préférence est active mais la permission refusée : bandeau « Notifications refusées dans les réglages du téléphone », « La relance est activée ici mais ne peut pas s'afficher. », « Ouvrir les réglages du téléphone » (`Linking.openSettings` de React Native, sans réseau).
 - `src/app/permission-notifications.tsx` : texte de la maquette ; « Continuer » → demande du système ; « Pas maintenant » → retour, relance non activée.
-- Parcours : interrupteur activé → permission déjà accordée : activée tout de suite ; sinon écran de permission → accordée : activée ; refusée : non activée, bandeau. Désactiver ne demande rien.
+- Parcours (décision du porteur du 2026-11-27) : interrupteur activé → permission déjà accordée : activée tout de suite ; `canAskAgain: false` : pas d'écran de permission, préférence active et bandeau ; sinon écran de permission → accordée : activée ; refusée au dialogue : préférence active, bandeau « ne peut pas s'afficher » avec « Ouvrir les réglages du téléphone » (accordée ensuite dans les réglages : la relance marche sans autre manipulation). Permission jamais demandée (`undetermined`, par exemple après une sauvegarde restaurée) : interrupteur éteint, sans bandeau. Désactiver ne demande rien.
+- `src/app/relance.tsx` : sous « Notification sur cet appareil, jamais envoyée ailleurs », en texte secondaire, « Le nom du groupe s'affiche sur l'écran verrouillé. » (écart de maquette accepté par le porteur le 2026-11-27).
+- `src/data/expoNotifications.ts` : fonction de demande (`requestPermissionsAsync`, iOS `allowAlert: true, allowSound: true, allowBadge: false`), placée juste après `reminderPermission` ; même placement dans `src/__fixtures__/expoModules.ts` ; testée dans `src/data/expoNotificationsPermission.test.ts`. Clés de `relance.ts` ajoutées après le bloc `reminder` (le 028b ajoute `channel` en première clé de `reminder`). Imports dans l'ordre alphabétique.
+- `alerts.settingsSection` (« Réglages ») déplacé de `src/config/libelles/alertes.ts` vers `labels.settings` (`src/config/libelles/commun.ts`).
 - `src/hooks/useReminderSettings.ts` : préférence (027), permission relue à l'ouverture et au retour au premier plan (l'encadrant revient des réglages du téléphone) ; écrire la préférence émet `notifyDataChanged` (reprogrammation, 028).
 - Paramètres : ligne « Relance · Activée · 30 min » ou « Désactivée » (ou « Refusée par le téléphone »), au-dessus de « Alertes d'assiduité » (section « Réglages » posée au 022).
 
@@ -35,7 +38,7 @@ EX-29 : la permission n'est demandée qu'à l'activation de la relance, et le r�
 
 ## Tests attendus
 
-- `src/appTests/reminderSettings.test.tsx`, `src/appTests/notificationPermission.test.tsx` : accordée, refusée, déjà refusée (iOS ne redemande pas), « Pas maintenant », retour au premier plan.
+- `src/appTests/reminderSettings.test.tsx`, `src/appTests/notificationPermission.test.tsx` : accordée, refusée, déjà refusée (`canAskAgain: false`, écran de permission sauté), jamais demandée avec la préférence active (interrupteur éteint, sans bandeau), « Pas maintenant », retour au premier plan, mention « écran verrouillé » ; `src/data/expoNotificationsPermission.test.ts` : fonction de demande (iOS `allowBadge: false`).
 - À la main (téléphone Android 13 ou plus, prétest) : boîte du système, refus puis réglages du téléphone, relance reçue.
 
 ## Hors périmètre
@@ -63,6 +66,15 @@ Reports de l'intégration du lot J2-3 (2026-11-27) :
 - le 029 dépend seulement du 028a (décision du porteur du 2026-11-27) : il peut avancer dans le même lot que le 028b, qui branche la reprogrammation ; « Délai modifié : reprogrammation » se vérifie par `notifyDataChanged` émis, la reprogrammation elle-même étant testée au 028b.
 - `requestPermissionsAsync` est permis par la liste fermée de l'adaptateur mais ni importé ni exposé au 028a : l'ajouter dans `src/data/expoNotifications.ts` avec `ios: { allowAlert: true, allowSound: true, allowBadge: false }` (alerte et son, sans pastille, réponse du porteur au 026) ; le contrôle `src/staticChecksNotifications.test.ts` l'accepte déjà dans l'adaptateur seulement (028a).
 - quand la lecture de la permission échoue, `reminderPermission` rend `canAskAgain: false` (code `REMINDER_PERMISSION_FAILED`) : ne pas afficher alors « Notifications refusées dans les réglages du téléphone » (028a).
+
+Séance de lancement du lot J2-4 (2026-11-27), réponses du porteur :
+
+- **Plan validé par le porteur le 2026-11-27** (zone sensible) : la permission n'est demandée qu'à l'activation, après l'écran « Autoriser les notifications ? » ; iOS avec `allowBadge: false` ; permission relue au retour au premier plan ; bouton « Ouvrir les réglages du téléphone ».
+- Questions posées au porteur au QCM, toutes tranchées le 2026-11-27 :
+  - **Taille** : gardé entier, à environ 12 fichiers (fonction de demande dans l'adaptateur, faux module, nouveau fichier de test de l'adaptateur, déplacement de `alerts.settingsSection`).
+  - **Refus au dialogue et permission jamais demandée** : on montre l'état effectif, avec un bandeau. Refus : la préférence reste active, le bandeau « ne peut pas s'afficher » propose d'ouvrir les réglages ; accordée ensuite dans les réglages, la relance marche sans autre manipulation. `canAskAgain: false` : on saute l'écran « Autoriser les notifications ? », la préférence passe à active et le bandeau s'affiche. Jamais demandée (`undetermined`, par exemple après une sauvegarde restaurée) : interrupteur éteint, sans bandeau ; l'activer suit le parcours normal.
+  - **Mention « écran verrouillé »** : écart de maquette accepté ; « Le nom du groupe s'affiche sur l'écran verrouillé. » en texte secondaire, sous « Notification sur cet appareil, jamais envoyée ailleurs », sur l'écran Relance.
+- Placement pour éviter les conflits avec le 028b : clés de `relance.ts` après le bloc `reminder` ; fonction de demande juste après `reminderPermission` dans l'adaptateur et le faux module ; imports dans l'ordre alphabétique.
 
 ## Décisions
 
