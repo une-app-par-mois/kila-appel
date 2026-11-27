@@ -3,12 +3,12 @@
 // manquants (EX-17). Hors de ce ticket : « Annuler » une séance (jalon 2), bandeau de sauvegarde
 // (ticket 014), Bienvenue (012b) ; décisions du porteur du 2026-11-27.
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
-import { toIsoDate, toLocalTime } from '@/domain/formats';
 import { weekdayOfDate } from '@/domain/occurrences';
+import { useLocalNow } from '@/hooks/useLocalNow';
 import { useMissingRollCalls } from '@/hooks/useRollCall';
 import { Icon } from '@/ui/Icon';
 import { MissingCalls } from '@/ui/MissingCalls';
@@ -19,19 +19,16 @@ const h = labels.home;
 
 export default function Home() {
   const router = useRouter();
-  // L'heure avance d'elle-même : séance du moment et appels manquants suivent (une fois par minute).
-  const [clock, setClock] = useState(() => new Date());
-  useEffect(() => {
-    const timer = setInterval(() => setClock(new Date()), 60_000);
-    return () => clearInterval(timer);
-  }, []);
-  const now = { date: toIsoDate(clock), time: toLocalTime(clock) };
+  // L'heure avance d'elle-même (horloge partagée avec la barre d'onglets) : séance du moment et
+  // appels manquants suivent, y compris au retour au premier plan.
+  const now = useLocalNow();
+  const [, month, day] = now.date.split('-').map(Number);
   const { missing, loadFailed } = useMissingRollCalls(now);
   const [entryError, setEntryError] = useState<string | undefined>();
   const title = h.title(
     labels.weekdays[weekdayOfDate(now.date) - 1] ?? '',
-    clock.getDate(),
-    h.months[clock.getMonth()] ?? '',
+    day ?? 0,
+    h.months[(month ?? 1) - 1] ?? '',
   );
   return (
     <Screen title={title} error={loadFailed ? labels.common.loadFailed : entryError}>

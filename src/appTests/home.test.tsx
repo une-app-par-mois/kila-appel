@@ -87,6 +87,16 @@ describe('Onglets et accueil (ticket 012)', () => {
     });
   });
 
+  it('EX-09 EX-17 séance du moment finie sans appel : sous « Maintenant », pas en double dans les manquants', async () => {
+    jest.setSystemTime(new Date(2026, 10, 18, 19, 30));
+    await open();
+    expect(await screen.findByText(h.start)).toBeTruthy();
+    expect(await screen.findAllByTestId('missing-call')).toHaveLength(5);
+    expect(screen.queryByText(h.missingRow('Mercredi', 18, 'nov.', '17:30'))).toBeNull();
+    expect(screen.getByText(h.missingRow('Mercredi', 11, 'nov.', '17:30'))).toBeTruthy();
+    expect(screen.getByText(h.more(6))).toBeTruthy();
+  });
+
   it('EX-17 sans appel manquant : pas de section', async () => {
     await db.execute("UPDATE slots SET schedule_from = '2026-11-18'");
     await open();
@@ -100,7 +110,7 @@ describe('Onglets et accueil (ticket 012)', () => {
     expect(router.getPathname()).toBe('/urgence');
   });
 
-  it('onglets : Accueil, Nouvel appel, Paramètres ; Paramètres garde l’organisation', async () => {
+  it('EX-09 onglets : Accueil, Nouvel appel, Paramètres ; Paramètres garde l’organisation', async () => {
     const router = await open();
     expect(await button(tab.home)).toBeTruthy();
     expect(screen.getByRole('button', { name: tab.newRollCall })).toBeTruthy();
@@ -112,7 +122,7 @@ describe('Onglets et accueil (ticket 012)', () => {
     expect(router.getPathname()).toBe('/');
   });
 
-  it('« Nouvel appel » ouvre la séance proposée', async () => {
+  it('EX-09 « Nouvel appel » ouvre la séance proposée', async () => {
     const router = await open();
     await screen.findByText(h.start);
     await fireEvent.press(await button(tab.newRollCall));
@@ -123,7 +133,7 @@ describe('Onglets et accueil (ticket 012)', () => {
     });
   });
 
-  it('« Nouvel appel » sans séance à faire : l’appel sans créneau', async () => {
+  it('EX-39 « Nouvel appel » sans séance à faire : l’appel sans créneau', async () => {
     jest.setSystemTime(new Date(2026, 10, 25, 18, 0));
     const router = await open();
     await screen.findByText(h.recorded);

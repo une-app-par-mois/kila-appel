@@ -35,6 +35,13 @@ Relier les écrans : barre d'onglets et accueil (EX-09, EX-17, EX-06).
 
 - Tests d'écrans
 
+## Revue de code (2026-11-27)
+
+- L'accueil ne se vide plus à chaque minute (`useLoaded` garde valeur et « chargé » avec `keepPrevious`)
+- La séance proposée n'apparaît plus aussi dans les appels manquants
+- « Maintenant » attend de savoir s'il y a un appel en cours
+- Une seule horloge (`useLocalNow`) pour l'accueil et la barre d'onglets, relue au retour au premier plan
+
 ## Hors périmètre
 
 - Bienvenue (012b), états vides (012c), frise et alertes (jalons 2 et 5)

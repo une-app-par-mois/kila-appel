@@ -26,7 +26,7 @@ type Props = { now: LocalNow; onError: (message: string | undefined) => void };
 export const RollCallEntry = ({ now, onError }: Props) => {
   const router = useRouter();
   const proposed = useProposedSession(now);
-  const { draft, loadFailed: draftFailed, discard } = useDraft();
+  const { draft, loaded: draftLoaded, loadFailed: draftFailed, discard } = useDraft();
   const call = proposed.session;
   const { roster } = useRoster(call?.group.id ?? null, call?.date ?? '');
   const [confirm, setConfirm] = useState(false);
@@ -75,7 +75,8 @@ export const RollCallEntry = ({ now, onError }: Props) => {
     );
   }
 
-  if (!proposed.loaded) return null;
+  // Rien avant de savoir s'il y a un appel en cours : « Faire l'appel » mènerait à un appel bloqué.
+  if (!proposed.loaded || !draftLoaded) return null;
   return (
     <>
       <Section title={h.now} />

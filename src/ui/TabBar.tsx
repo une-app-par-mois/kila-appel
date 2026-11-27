@@ -3,11 +3,10 @@
 // Le rond n'est pas un onglet : il ouvre l'appel par-dessus (`useNewRollCallRoute`).
 import { useRouter } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
-import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
-import { toIsoDate, toLocalTime } from '@/domain/formats';
+import { useLocalNow } from '@/hooks/useLocalNow';
 import { useNewRollCallRoute } from '@/hooks/useRollCall';
 import { Icon } from '@/ui/Icon';
 
@@ -19,13 +18,8 @@ const TABS = {
 
 export const TabBar = ({ state, navigateToTab, insets }: BottomTabBarProps) => {
   const router = useRouter();
-  // La séance proposée suit l'heure (une fois par minute), comme sur l'accueil.
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 60_000);
-    return () => clearInterval(timer);
-  }, []);
-  const route = useNewRollCallRoute({ date: toIsoDate(now), time: toLocalTime(now) });
+  // Même horloge que l'accueil : le rond ouvre la séance affichée sous « Maintenant ».
+  const route = useNewRollCallRoute(useLocalNow());
 
   const tab = (index: number) => {
     const r = state.routes[index];

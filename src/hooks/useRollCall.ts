@@ -71,7 +71,8 @@ export const useProposedSession = (now: LocalNow) => {
         : null,
     [db, date, time],
   );
-  const { value, loaded, loadFailed } = useLoaded(load, 'PROPOSED_SESSION_FAILED', {});
+  // L'heure change chaque minute : l'accueil garde la séance affichée pendant la relecture.
+  const { value, loaded, loadFailed } = useLoaded(load, 'PROPOSED_SESSION_FAILED', {}, true);
   return { session: value ?? null, loaded, loadFailed };
 };
 
@@ -155,7 +156,10 @@ export const useDraft = () => {
 /** Appel manquant de l'accueil : séance passée, son groupe actif (EX-17). */
 export type MissingRollCall = Occurrence & { groupName: string };
 
-/** EX-17 : séances finies sans appel, les plus récentes d'abord ; créneaux sans groupe actif exclus. */
+/**
+ * EX-17 : séances finies sans appel, les plus récentes d'abord ; créneaux sans groupe actif exclus,
+ * comme la séance proposée (EX-09), déjà sous « Maintenant » (revue du ticket 012).
+ */
 export const useMissingRollCalls = (now: LocalNow) => {
   const db = useDatabase();
   const { date, time } = now;
@@ -175,20 +179,22 @@ export const useMissingRollCalls = (now: LocalNow) => {
             );
             const recorded = await sessionsRepo(db, date).slotSessions(season.id);
             const usable = slots.filter((s) => groupOf.has(s.id)) as WeeklySlot[];
+            const shown = proposedSession(usable, season, { date, time });
             return missingRollCalls(usable, season, recorded, { date, time })
+              .filter((o) => !(o.slotId === shown?.slotId && o.date === shown.date))
               .reverse()
               .map((o) => ({ ...o, groupName: groupOf.get(o.slotId) ?? '' }));
           }
         : null,
     [db, date, time],
   );
-  const { value, loaded, loadFailed } = useLoaded(load, 'MISSING_CALLS_FAILED', {});
+  const { value, loaded, loadFailed } = useLoaded(load, 'MISSING_CALLS_FAILED', {}, true);
   return { missing: value ?? [], loaded, loadFailed };
 };
 
 /**
- * « Nouvel appel » (onglet central, décision du 2026-11-27) : l'appel en cours, sinon la séance
- * proposée, sinon l'appel sans créneau. `null` tant que ce n'est pas connu. Un appel en cours qui
+ * « Nouvel appel » (onglet central, décision du 2026-11-27) : l'appel en cours (EX-14), sinon la
+ * séance proposée (EX-09), sinon l'appel sans créneau (EX-39). `null` tant que ce n'est pas connu. Un appel en cours qui
  * ne peut plus être repris mène à l'accueil, où il s'abandonne.
  */
 export const useNewRollCallRoute = (now: LocalNow) => {
