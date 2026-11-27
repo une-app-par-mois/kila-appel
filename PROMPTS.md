@@ -112,6 +112,21 @@ On peut ajouter un sous agent autonome pour être le contradicteur ?
 
 **Décision** : premier usage sur le ticket 012b.
 
+### File du porteur — 2026-11-27
+
+**Prompt**
+
+```text
+Pour éviter de me demander trop souvent des décisions, est-ce pertinent d'ajouter un agent de décision ? Et / ou un agent médiateur ?
+```
+
+**Ce que l'IA a fait** :
+- Elle a déconseillé les deux agents : les questions qui remontent sont celles réservées au porteur, et aucun agent ne peut les trancher.
+- Elle a proposé deux règles : écarts mineurs avec la maquette en décision automatique, et file du porteur.
+- Le porteur a choisi la file seule. Les choix sans recommandation nette et les ajustements de ses décisions, s'ils sont faciles à défaire, sont appliqués et posés en fin de jalon.
+
+**Ce que j'ai corrigé ou refusé** : les écarts avec la maquette restent posés sur le moment.
+
 ### [Étape] — [AAAA-MM-JJ]
 
 **Prompt**
