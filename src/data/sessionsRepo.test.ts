@@ -188,4 +188,25 @@ describe('Dépôt des séances (EX-15, RM-03, RM-05)', () => {
     expect(await repo.slotSessions(s.seasonId)).toEqual([{ slotId: s.slotId, date: '2026-11-25' }]);
     expect(await repo.slotSessions(s.otherSeasonId)).toEqual([]);
   });
+
+  it('EX-28 EX-36 EX-38 séances des créneaux avec leur état, futures comprises (relances)', async () => {
+    const repo = sessionsRepo(db, '2026-11-25');
+    await repo.record(call({ slotId: null, date: '2026-11-24', startTime: '10:05' }));
+    for (const [date, state] of [
+      ['2026-12-23', 'unscheduled'],
+      ['2026-12-09', 'prepared'],
+      ['2026-12-16', 'cancelled'],
+    ] as const)
+      await db.execute(
+        'INSERT INTO sessions (season_id, slot_id, date, start_time, state) VALUES (?, ?, ?, ?, ?)',
+        [s.seasonId, s.slotId, date, '17:30', state],
+      );
+    expect(await repo.reminderSessions(s.seasonId)).toEqual([
+      { slotId: s.slotId, date: '2026-11-25', state: 'recorded' },
+      { slotId: s.slotId, date: '2026-12-09', state: 'prepared' },
+      { slotId: s.slotId, date: '2026-12-16', state: 'cancelled' },
+      { slotId: s.slotId, date: '2026-12-23', state: 'unscheduled' },
+    ]);
+    expect(await repo.reminderSessions(s.otherSeasonId)).toEqual([]);
+  });
 });

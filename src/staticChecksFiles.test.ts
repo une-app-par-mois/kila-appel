@@ -11,7 +11,13 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import ts from 'typescript';
 import { tempDir } from '@/__fixtures__/backupFiles';
-import { literalText, readsExpoModules, readsGlobalExpo } from '@/__fixtures__/expoAccess';
+import {
+  factoryMocks,
+  literalText,
+  loadedModule,
+  readsExpoModules,
+  readsGlobalExpo,
+} from '@/__fixtures__/expoAccess';
 import { scriptKind, TEST_FILE, walkSources } from '@/__fixtures__/sourceFiles';
 
 /** Seul fichier autorisé à importer ces modules de fichiers (liste testée). */
@@ -42,31 +48,15 @@ const FILE_NETWORK = new Set([
 
 type Violation = { rule: string; line: number };
 
-/** Module nommé par un import, un export, un require() ou un import() ; sinon undefined. */
-const moduleName = (node: ts.Node): string | undefined => {
-  if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
-    return literalText(node.moduleSpecifier);
-  }
-  if (ts.isCallExpression(node)) {
-    const callee = node.expression;
-    const isRequire = ts.isIdentifier(callee) && callee.text === 'require';
-    if (isRequire || callee.kind === ts.SyntaxKind.ImportKeyword) {
-      return literalText(node.arguments[0]);
-    }
-  }
-  if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument)) {
-    return literalText(node.argument.literal);
-  }
-  return undefined;
-};
-
 const check = (file: string, source: string): Violation[] => {
   const tree = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, scriptKind(file));
+  // jest.requireMock d'un module simulé par une fabrique rend la simulation (revue du 028a).
+  const mocked = factoryMocks(tree);
   const found: Violation[] = [];
   const add = (rule: string, node: ts.Node) =>
     found.push({ rule, line: tree.getLineAndCharacterOfPosition(node.getStart()).line + 1 });
   const visit = (node: ts.Node) => {
-    const name = moduleName(node);
+    const name = loadedModule(node, mocked);
     if (name !== undefined && SUBPATH.test(name)) add('ABS-01 sous-chemin', node);
     else if (name !== undefined && FILE_MODULES.test(name) && !FILE_MODULE_OWNERS.includes(file)) {
       add('ABS-01 import hors de expoFiles.ts', node);
@@ -107,6 +97,8 @@ describe('ABS-01 modules de fichiers seulement dans src/data/expoFiles.ts', () =
     "const picker = require('expo-document-picker');",
     "const picker = await import('expo-document-picker');",
     "export * from 'expo-document-picker';",
+    "import F = require('expo-file-system');",
+    "const s = jest.requireActual('expo-sharing');",
   ])('repère hors de l’adaptateur : %s', (source) => {
     expect(rules('src/hooks/useBackupExport.ts', source)).toEqual([
       'ABS-01 import hors de expoFiles.ts',
