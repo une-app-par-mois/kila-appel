@@ -1,8 +1,8 @@
 # 026 — Relance : expo-notifications et garde-fous du binaire
 
-Statut : **en attente du porteur** (nouvelle dépendance, permissions, ABS-01, ABS-07, ABS-08) · Jalon : 2 · Zone sensible : **oui** (dépendance et permissions : règle « aucun réseau », `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
+Statut : à faire (dépendance et permissions acceptées par le porteur le 2026-11-27) · Jalon : 2 · Zone sensible : **oui** (dépendance et permissions : règle « aucun réseau », `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
 
-Dépend de : aucun (mais **rien n'est installé avant la réponse du porteur** sur la dépendance et les permissions) · Fichiers touchés : `package.json`, `package-lock.json`, `app.json`, `plugins/withoutFirebase.js` (nouveau), `config/permissions-attendues.txt`, `scripts/audit-apk.js`, `scripts/audit-apk.test.js`, `README.md` (permissions), `docs/CONFORMITE.md` (§3 permissions, §8 inventaire natif) — 9 fichiers
+Dépend de : aucun · Fichiers touchés : `package.json`, `package-lock.json`, `app.json`, `plugins/withoutFirebase.js` (nouveau), `config/permissions-attendues.txt`, `scripts/audit-apk.js`, `scripts/audit-apk.test.js`, `README.md` (permissions), `docs/CONFORMITE.md` (§3 permissions, §8 inventaire natif) — 9 fichiers
 
 Découpé le 2026-11-27 (séance de découpage du jalon 2).
 
@@ -27,7 +27,7 @@ Relevé du 2026-11-27 (lecture seule, paquets npm et Maven) :
 - `app.json`, `plugins/withoutUrlScheme.js` (modèle d'extension), `scripts/audit-apk.js`, `scripts/audit-ios.js`, `config/permissions-attendues.txt`, `README.md` « Permissions demandées »
 - Précédents : expo-font (003), react-native-svg (006b), react-native-worklets (008b), expo-file-system (014b), acceptés avec un contrôle de leurs fonctions réseau
 
-## Ce qui change (plan à valider, option recommandée)
+## Ce qui change (plan validé par le porteur le 2026-11-27)
 
 - `npx expo install expo-notifications` (version exacte, CONV-31) ; aucune autre dépendance directe.
 - `app.json` : extension `["expo-notifications", { "enableRemoteNotifications": false }]` (pas d'`aps-environment`) ; `blockedPermissions` reçoit `ACCESS_NETWORK_STATE`, `WAKE_LOCK`, `com.google.android.c2dm.permission.RECEIVE`, `com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE` ; ni `SCHEDULE_EXACT_ALARM` ni `USE_EXACT_ALARM`.
@@ -60,6 +60,14 @@ Relevé du 2026-11-27 (lecture seule, paquets npm et Maven) :
 ## Questions prévues
 
 Toutes réservées au porteur (nouvelle dépendance, ABS-01, ABS-07, ABS-08, zone sensible) : voir les questions du découpage (dépendance, permissions Android, iOS, déclarations des stores, plan).
+
+Séance de découpage du jalon 2 (2026-11-27), réponses du porteur :
+
+- Plan validé par le porteur le 2026-11-27.
+- **Décision datée du porteur sur ABS-01 (2026-11-27)** : expo-notifications 58.1.10 accepté, verrouillé selon l'option A (extension `enableRemoteNotifications: false`, `plugins/withoutFirebase.js`, `blockedPermissions` étendue, audit de l'APK qui refuse tout composant Firebase ou datatransport, un seul fichier importe le paquet), avec ses dépendances expo-application, badgin et abort-controller.
+- Permissions Android gardées : `POST_NOTIFICATIONS` et `RECEIVE_BOOT_COMPLETED`, sans alarme exacte (ni `SCHEDULE_EXACT_ALARM` ni `USE_EXACT_ALARM`) ; toutes les autres bloquées (`ACCESS_NETWORK_STATE`, `WAKE_LOCK`, `com.google.android.c2dm.permission.RECEIVE`, `BIND_GET_INSTALL_REFERRER_SERVICE`, en plus de celles déjà bloquées) ; `config/permissions-attendues.txt` et l'audit de l'APK mis à jour.
+- iOS : alerte et son, sans pastille, sans habilitation.
+- Stores : « aucune donnée collectée » gardé ; CONFORMITE §3 et §8 complétés par ce ticket ; risque noté : l'index des SDK de Play peut repérer Firebase Messaging dans le binaire.
 
 ## Décisions
 

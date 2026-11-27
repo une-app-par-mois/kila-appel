@@ -46,6 +46,11 @@ EX-27 demande le taux par membre : écrans « Statistiques d'un groupe » (sans 
 - Écart de maquette : podium absent jusqu'au jalon 5 (question du découpage).
 - Accord de « présent » et « absent » dans la ligne des comptes (« 6 présent ») : la maquette les laisse invariables ; à garder tel quel sauf avis contraire (même logique que le ticket 020).
 
+Séance de découpage du jalon 2 (2026-11-27), réponses du porteur :
+
+- Podium masqué jusqu'au jalon 5.
+- RM-01 fait foi : la maquette « Statistiques d'un membre » affiche 64 % (7 sur 11), et la ligne de Hugo Moreau dans « Statistiques d'un groupe » aussi.
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

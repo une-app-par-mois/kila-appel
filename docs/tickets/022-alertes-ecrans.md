@@ -50,6 +50,13 @@ Montrer les alertes sur l'accueil, l'écran « Alerte d'assiduité » avec « Ma
 - Nombre d'alertes sur l'accueil : proposé 5 au plus, puis « et N autres », comme les appels manquants (question du découpage).
 - Destination de « Voir ses contacts d'urgence » : la maquette ouvre la recherche d'urgence ; à préciser par la pré-analyse (recherche vide, ou fiche du membre).
 
+Séance de découpage du jalon 2 (2026-11-27), réponses du porteur :
+
+- Place de la section : après « Appels manquants », avant le bandeau de sauvegarde.
+- Nombre : 5 alertes au plus, puis « et N autres », comme les appels manquants.
+- `alert_acks` ajoutée au tableau « Données manipulées » du cadrage.
+- Destination de « Voir ses contacts d'urgence » : reste à préciser par la pré-analyse (non tranchée au découpage).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

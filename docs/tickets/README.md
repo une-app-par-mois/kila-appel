@@ -71,7 +71,7 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 023 | [Statistiques : calcul et données](023-statistiques-calcul.md) | 2 | F-05 | oui | à faire |
 | 024 | [Statistiques : onglet et période](024-statistiques-onglet.md) | 2 | F-05 | non | à faire |
 | 025 | [Statistiques d'un groupe et d'un membre](025-statistiques-groupe-membre.md) | 2 | F-05 | non | à faire |
-| 026 | [Relance : expo-notifications et garde-fous du binaire](026-relance-dependance.md) | 2 | F-06 | oui | en attente du porteur |
+| 026 | [Relance : expo-notifications et garde-fous du binaire](026-relance-dependance.md) | 2 | F-06 | oui | à faire |
 | 027 | [Relance : calcul des relances et réglages](027-relance-calcul.md) | 2 | F-06 | oui | à faire |
 | 028 | [Relance : programmation sur l'appareil](028-relance-programmation.md) | 2 | F-06 | oui | à faire |
 | 029 | [Relance : réglage et demande de permission](029-relance-reglage.md) | 2 | F-06 | oui | à faire |

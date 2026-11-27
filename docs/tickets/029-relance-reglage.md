@@ -47,6 +47,10 @@ EX-29 : la permission n'est demandée qu'à l'activation de la relance, et le r�
 - Plan à valider à la séance de lancement (zone sensible).
 - Interrupteur quand la permission est refusée : la maquette le montre activé avec le bandeau ; garder cette lecture (préférence active, affichage impossible) sauf avis contraire.
 
+Séance de découpage du jalon 2 (2026-11-27), réponses du porteur :
+
+- Plan validé par le porteur le 2026-11-27.
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

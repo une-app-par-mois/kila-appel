@@ -62,6 +62,12 @@ F-04 : un membre dont la série d'absences atteint le seuil apparaît sur l'accu
 - Portée de la série (membre tous groupes confondus, comme le dit le glossaire, ou membre par groupe) : le glossaire dit « d'un membre » ; appliqué tel quel.
 - `alert_acks` n'apparaît pas dans le tableau « Données manipulées » du cadrage (voir les questions du découpage).
 
+Séance de découpage du jalon 2 (2026-11-27), réponses du porteur :
+
+- Plan validé par le porteur le 2026-11-27.
+- Portée de la série : le membre, tous groupes confondus (glossaire), comme le plan.
+- `alert_acks` : ligne « Alertes traitées (membre, longueur de la série, date) » ajoutée au tableau « Données manipulées » du cadrage (personnelle, non sensible, effacée avec le membre).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

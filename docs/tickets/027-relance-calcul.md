@@ -60,6 +60,10 @@ EX-28 : une notification locale si aucun appel n'est enregistré X minutes aprè
 - Plan à valider à la séance de lancement (zone sensible).
 - Appel sans créneau (EX-39) du même groupe le même jour : la relance du créneau part quand même, comme l'appel manquant aujourd'hui (même règle qu'EX-17).
 
+Séance de découpage du jalon 2 (2026-11-27), réponses du porteur :
+
+- Plan validé par le porteur le 2026-11-27.
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

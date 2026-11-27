@@ -61,6 +61,13 @@ F-05 : taux de présence par groupe et par membre sur une période choisie, avec
 
 - Plan ci-dessus à valider à la séance de lancement (zone sensible), notamment les points 2 (présence sans inscription correspondante) et 6 (arrondi).
 
+Séance de découpage du jalon 2 (2026-11-27), réponses du porteur :
+
+- Plan validé par le porteur le 2026-11-27.
+- Points 2 (présence sans inscription correspondante : groupe unique de la séance) et 6 (arrondi, 0 % et 100 % réservés aux valeurs exactes) acceptés tels quels.
+- RM-01 fait foi sur la maquette : « Statistiques d'un membre » corrigée de 58 % à 64 % (7 sur 11).
+- Groupes archivés ou d'une autre saison : listés après les autres avec « Archivé », s'ils ont une séance dans la période ; ils comptent dans la synthèse (point 4 du plan).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

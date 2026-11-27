@@ -437,13 +437,13 @@ ${titre('Poussins mercredi', 'stats')}
 ${section('Podium')}
 ${carte(`<div class="podium"><div class="marche m2"><div class="mono">2</div>Emma D.<br><span class="mono">96 %</span></div><div class="marche m1"><div class="mono">1</div>Léa M. · Zoé B.<br><span class="mono">100 %</span></div><div class="marche m3"><div class="mono">3</div>Jules L.<br><span class="mono">92 %</span></div></div><p class="l-sous">Ex æquo au même rang.</p>`)}
 ${section('Par membre')}
-${carte([['Zoé Blanc', '100 %'], ['Emma Durand', '96 %'], ['Jules Lefebvre', '92 %'], ['Léa Michel', '100 %'], ['Hugo Moreau', '58 %']].map(([n, t]) => `<div class="rang" data-go="stats-membre"><span>${n}</span>${taux(t)}</div>`).join(''))}
+${carte([['Zoé Blanc', '100 %'], ['Emma Durand', '96 %'], ['Jules Lefebvre', '92 %'], ['Léa Michel', '100 %'], ['Hugo Moreau', '64 %']].map(([n, t]) => `<div class="rang" data-go="stats-membre"><span>${n}</span>${taux(t)}</div>`).join(''))}
 <p class="l-sous">Triés par nom ; 22 membres.</p>`);
 
 ecran('stats-membre', 2, "Statistiques d'un membre", 'EX-27', 'stats', `
 ${titre('Hugo Moreau', 'stats-groupe')}
 <div class="l-sous sous-titre">Poussins mercredi · saison 2026-2027</div>
-${carte(`<div class="chiffre mono">58 %</div>${barre(50, 8, 8, 34)}<p class="l-sous mono">6 présent · 1 retard · 1 excusé · 4 absent</p>`)}
+${carte(`<div class="chiffre mono">64 %</div>${barre(50, 8, 8, 34)}<p class="l-sous mono">6 présent · 1 retard · 1 excusé · 4 absent</p>`)}
 ${section('Séance par séance')}
 ${carte(`<div class="cases">${['present', 'present', 'late', 'present', 'excused', 'present', 'present', 'present', 'absent', 'absent', 'absent', 'absent'].map((k) => `<span class="cas s-${k}">${ico[k]}</span>`).join('')}<span class="cas vide"></span></div><p class="l-sous">Case vide : séance hors inscription.</p>`)}`);
 

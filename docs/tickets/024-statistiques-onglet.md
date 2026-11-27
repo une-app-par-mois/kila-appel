@@ -47,6 +47,12 @@ L'onglet Stats prend la place vide gardée dans la barre d'onglets (décision du
 - Écart de maquette : boutons d'export absents jusqu'au jalon 3 (question du découpage).
 - Groupes archivés ou d'une autre saison dans « Par groupe » (point 4 du plan du 023) : comment les signaler (question du découpage).
 
+Séance de découpage du jalon 2 (2026-11-27), réponses du porteur :
+
+- Boutons « Exporter (CSV) » et « Rapport PDF » masqués jusqu'au jalon 3.
+- Groupes archivés ou d'une autre saison : listés après les autres, avec la mention « Archivé », seulement s'ils ont une séance dans la période ; ils comptent dans la synthèse.
+- RM-01 fait foi : la maquette a été corrigée (58 % → 64 %).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

@@ -53,6 +53,11 @@ Programmer sur l'appareil les relances calculées par le 027 : tout annuler puis
 - Plan à valider à la séance de lancement (zone sensible).
 - Comportement quand l'appli est au premier plan au moment de la relance : proposé, afficher la notification quand même (`setNotificationHandler`), car l'encadrant peut être sur un autre écran.
 
+Séance de découpage du jalon 2 (2026-11-27), réponses du porteur :
+
+- Plan validé par le porteur le 2026-11-27.
+- Autorisation iOS : alerte et son, sans pastille (réponse sur le 026).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |
