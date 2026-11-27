@@ -84,6 +84,20 @@ tu peux fusionner la PR #5 (puis : « Vas y » pour la PR du jalon vers main)
 
 **Ce que j'ai corrigé ou décidé** : l'IA a fusionné la PR #8 (correction Semgrep) sans `/code-review` préalable, contrairement à `CLAUDE.md` ; elle l'a signalé d'elle-même et lancé la revue après coup (aucune remarque). Réévaluation : moins de 2 h réelles pour 6 h prévues ; estimation de 1,5 h par ticket gardée, l'avance d'une semaine sert de marge.
 
+### Décisions automatiques — 2026-11-27
+
+**Prompt**
+
+```text
+Pour une très importante partie (très majoritaire) quand tu poses des questions, je ne fais que valider ta recommandation. [...] si lorsque je dois choisir par qcm on met en place la validation automatique de ta recommandation, on gagnerait du temps. [...] faire une note dans un document qui mémorise tes choix pour pouvoir à la fin remonter sur une potentielle erreur si nécessaire. On pourrait intégrer ce point au skill de vibe coding, qu'en penses-tu ?
+```
+
+**Ce que l'IA a fait** : `CLAUDE.md` (rôles, plan annoncé, « Arrête-toi et demande » resserré, § « Décisions automatiques »), `docs/DECISIONS.md`, section du modèle de PR. Exceptions gardées : sécurité, ABS, données et conformité, dépendance ou dépense, contradiction avec un document validé, zone sensible, action irréversible ou extérieure, choix sans recommandation nette.
+
+**Ce que j'ai corrigé ou refusé** : rien.
+
+**Décision** : « projet puis méthode » : Ki&La d'abord, puis une PR sur `une-app-par-mois/methode-vibe-coding`, relue par le porteur. Bilan au jalon : nombre de décisions annulées.
+
 ### [Étape] — [AAAA-MM-JJ]
 
 **Prompt**

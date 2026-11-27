@@ -2,7 +2,7 @@
 
 Ce fichier est lu par Claude Code à chaque session. Il fixe le contexte et les règles non négociables. Le compléter avant la première génération de code. Réponds en français.
 
-**Rôles** : l'IA écrit le code, les tests et la documentation, signale ses doutes et ce qu'elle n'a pas vérifié. Le porteur décide du produit, valide les plans, teste l'app et relit les zones sensibles. L'IA ne décide jamais seule d'un choix de produit, d'architecture, de sécurité ou de dépense.
+**Rôles** : l'IA écrit le code, les tests et la documentation, signale ses doutes et ce qu'elle n'a pas vérifié. Le porteur décide du produit, teste l'app, relit les zones sensibles et les décisions automatiques. Depuis le 2026-11-27 (décision du porteur), l'IA applique sa recommandation sans attendre quand elle est nette, et la note dans `docs/DECISIONS.md` (voir « Décisions automatiques ») ; elle ne décide jamais seule de sécurité, de dépense, ni de ce que la liste « Arrête-toi et demande » réserve au porteur.
 
 ## Contexte
 
@@ -30,7 +30,7 @@ Ce fichier est lu par Claude Code à chaque session. Il fixe le contexte et les 
 
 1. Lis `ETAT.md` (ticket en cours, prochaines étapes, points d'attention).
 2. Lis le ticket (`docs/tickets/`) et les documents qu'il cite.
-3. Propose un plan court (fichiers, approche, tests prévus, risques) et **attends sa validation** avant de coder, sauf ticket marqué « trivial ».
+3. Annonce un plan court (fichiers, approche, tests prévus, risques), puis commence. Le plan **attend la validation** du porteur seulement pour une zone sensible ou un cas de « Arrête-toi et demande ».
 
 ## Règles non négociables
 
@@ -62,15 +62,22 @@ Chacune a un identifiant, cité dans le code, les tests et les tickets. Le motif
 
 ## Arrête-toi et demande
 
-- Spécification absente, ambiguë ou contradictoire avec un document.
-- Besoin d'une nouvelle dépendance ou d'un nouveau terme (absent du glossaire du cadrage).
-- Choix de produit, d'architecture, de sécurité ou de données non tranché dans les documents.
-- Modification d'une zone sensible que le ticket ne prévoit pas.
+Ces cas attendent toujours la réponse du porteur, même avec une recommandation nette :
+
+- Contradiction avec un document validé (cadrage, PRD, architecture, ADR, sécurité, conformité, charte, maquette).
+- Besoin d'une nouvelle dépendance ou d'une dépense.
+- Ce qui touche aux règles absolues ABS-xx, à la sécurité (SEC-xx), aux données personnelles ou à la conformité (stores, RGPD, licences).
+- Modification d'une zone sensible que le ticket ne prévoit pas ; plan d'un ticket en zone sensible.
+- Choix sans recommandation nette (options équivalentes, ou information qui manque).
 - Test existant qui échoue sans rapport avec le ticket.
-- Ticket plus gros que prévu (plus de 10 fichiers, plus d'une session) : on le découpe **avant**.
+- Ticket plus gros que prévu (plus de 10 fichiers, plus d'une session) : on le découpe **avant** ; le découpage suit la recommandation et se note dans `docs/DECISIONS.md`, sauf en zone sensible.
 - Toute action irréversible ou extérieure au dépôt (publication, tag, réglages GitHub).
 
 Pose chaque décision sous forme de choix (options, avec ta recommandation en premier).
+
+## Décisions automatiques
+
+Décision du porteur du 2026-11-27 (« projet puis méthode ») : hors des cas ci-dessus, une question qui a une recommandation nette (spécification absente ou ambiguë, texte, affichage, découpage d'un ticket, cas limite, choix d'architecture interne) n'est pas posée. L'IA applique sa recommandation, continue, et ajoute une ligne à `docs/DECISIONS.md` : date, ticket, question, options, choix, raison. Chaque PR liste ses décisions automatiques dans « Décisions automatiques à relire ». Le porteur en annule une quand il veut : la correction se fait sur un ticket, et la ligne est marquée « annulée ». À chaque fin de jalon, l'IA compte les décisions annulées et le dit au porteur.
 
 ## Mode de CI
 
