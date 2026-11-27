@@ -121,3 +121,32 @@ export const plannedReminders = ({
     .slice(0, MAX_REMINDERS)
     .map(({ reminder }) => reminder);
 };
+
+export type DueInput = Omit<ReminderInput, 'settings'>;
+export type DueSession = { slotId: number; date: IsoDate };
+
+/**
+ * EX-28 (ticket 028b) : séances encore dues, dont une relance affichée est gardée. Occurrences de
+ * la saison active jusqu'à aujourd'hui, depuis la date d'effet de l'horaire, sans séance
+ * enregistrée, annulée ou non planifiée (EX-17, EX-36, EX-38), d'un créneau qui a encore un groupe
+ * non archivé : même règle que `plannedReminders`. Une relance retardée par Doze reste due.
+ */
+export const dueSessions = ({
+  slots,
+  activeGroupIds,
+  season,
+  sessions,
+  now,
+}: DueInput): DueSession[] => {
+  if (!isIsoDate(now.date) || !TIME.test(now.time)) throw new Error(INVALID_NOW);
+  if (!season) return [];
+  const active = new Set(activeGroupIds);
+  const done = closed(sessions);
+  return slots
+    .filter((slot) => slot.groups.some((g) => active.has(g.id)))
+    .flatMap((slot) =>
+      slotDates(slot, season, season.startDate, now.date)
+        .filter((date) => !done.has(`${slot.id}|${date}`))
+        .map((date) => ({ slotId: slot.id, date })),
+    );
+};

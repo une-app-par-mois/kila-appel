@@ -36,6 +36,10 @@ const ALLOWED = new Set([
   'dismissNotificationAsync',
   'SchedulableTriggerInputTypes',
   'AndroidImportance',
+  // 028b, porteur, 2026-11-27 : premier plan sans pastille ; lire et annuler une relance, en local.
+  'setNotificationHandler',
+  'getAllScheduledNotificationsAsync',
+  'cancelScheduledNotificationAsync',
 ]);
 /** Refusés partout, adaptateur compris : réseau, jeton, tâche de fond, pastille, alarme exacte. */
 const REFUSED = new Set([
@@ -133,16 +137,19 @@ describe('ABS-01 expo-notifications seulement dans l’adaptateur, en liste ferm
   it('autorise l’adaptateur pour la liste fermée, et lui seul', () => {
     const source =
       'import { AndroidImportance, scheduleNotificationAsync as schedule, type ' +
-      "SchedulableTriggerInputTypes, requestPermissionsAsync } from 'expo-notifications';";
+      'SchedulableTriggerInputTypes, requestPermissionsAsync, setNotificationHandler, ' +
+      'getAllScheduledNotificationsAsync, cancelScheduledNotificationAsync } ' +
+      "from 'expo-notifications';";
     expect(check(OWNER, source)).toEqual([]);
+    expect([...REFUSED].filter((name) => ALLOWED.has(name))).toEqual([]);
     expect(check('src/data/expoNotifications.test.ts', source)).toEqual([
       'ABS-01 import hors de expoNotifications.ts',
     ]);
   });
 
   it.each([
-    "import { getAllScheduledNotificationsAsync } from 'expo-notifications';",
-    "import { scheduleNotificationAsync, setNotificationHandler } from 'expo-notifications';",
+    "import { getNextTriggerDateAsync } from 'expo-notifications';",
+    "import { scheduleNotificationAsync, setNotificationCategoryAsync } from 'expo-notifications';",
     "import { getLastNotificationResponseAsync } from 'expo-notifications';",
     "import { dismissAllNotificationsAsync as d } from 'expo-notifications';",
     "import Notifications from 'expo-notifications';",

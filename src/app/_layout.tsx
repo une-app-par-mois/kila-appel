@@ -10,6 +10,7 @@ import {
   useDatabaseState,
 } from '@/hooks/useDatabase';
 import { useRecovery } from '@/hooks/useRecovery';
+import { useReminders } from '@/hooks/useReminders';
 import { useReminderTap } from '@/hooks/useReminderTap';
 import { useStartupCleanup } from '@/hooks/useStartupCleanup';
 import { Recovery } from '@/ui/Recovery';
@@ -28,6 +29,8 @@ export default function RootLayout() {
   const database = useDatabaseState();
   const cleaned = useStartupCleanup();
   const recovery = useRecovery(expoRestoreDeps, database.status);
+  // Relances (028b) : reprogrammées seulement une fois la base prête.
+  useReminders();
   const showRecovery =
     database.status === 'failed' ||
     database.status === 'restoreFailed' ||

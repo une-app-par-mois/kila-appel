@@ -210,5 +210,18 @@ export const fakeNotifications = () => {
         },
       };
     },
+    // Ticket 028b : comportement au premier plan, relevé par jest.spyOn dans les tests.
+    setNotificationHandler: (_handler: object | null) => {
+      guard('setNotificationHandler');
+    },
+    // Ticket 028b : n'annuler que les relances qui ne sont plus prévues.
+    getAllScheduledNotificationsAsync: async () => {
+      guard('getAllScheduledNotificationsAsync');
+      return [...state.scheduled];
+    },
+    cancelScheduledNotificationAsync: async (identifier: string) => {
+      guard('cancelScheduledNotificationAsync');
+      state.scheduled = state.scheduled.filter((x) => x.identifier !== identifier);
+    },
   };
 };

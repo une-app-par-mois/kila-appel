@@ -8,7 +8,9 @@ import {
   AndroidImportance,
   addNotificationResponseReceivedListener,
   cancelAllScheduledNotificationsAsync,
+  cancelScheduledNotificationAsync,
   dismissNotificationAsync,
+  getAllScheduledNotificationsAsync,
   getLastNotificationResponse,
   getPermissionsAsync,
   getPresentedNotificationsAsync,
@@ -16,13 +18,18 @@ import {
   SchedulableTriggerInputTypes,
   scheduleNotificationAsync,
   setNotificationChannelAsync,
+  setNotificationHandler,
 } from 'expo-notifications';
 import { labels } from '@/config/libelles';
+import { toLocalDate } from '@/data/localDates';
 import { log } from '@/data/log';
 import { isIsoDate } from '@/domain/formats';
-import { type IsoDate, TIME } from '@/domain/occurrences';
+import type { IsoDate } from '@/domain/occurrences';
 import type { PlannedReminder } from '@/domain/reminders';
 import { isId } from '@/domain/validation';
+
+// Conversion des dates locales, testée avec l'adaptateur (expoNotifications.test.ts).
+export { firstOccurrence, toLocalDate } from '@/data/localDates';
 
 /** Canal Android des relances ; créé par `createReminderChannel` avant de programmer (028b). */
 export const REMINDER_CHANNEL = 'relances';
@@ -36,55 +43,24 @@ type Presented = Awaited<ReturnType<typeof getPresentedNotificationsAsync>>[numb
 const MINUTE_MS = 60_000;
 // iOS refuse un déclencheur déjà passé au moment de l'appel natif : marge de sécurité.
 const MIN_LEAD_MS = 5_000;
-// Au plus 3 h d'écart cherchées autour d'un changement d'heure (1 h en France).
-const SHIFT_MAX_MIN = 180;
-
-/** Heures et minutes locales de `d` égales à celles voulues (jour compris). */
-const reads = (d: Date, want: Date) =>
-  d.getFullYear() === want.getUTCFullYear() &&
-  d.getMonth() === want.getUTCMonth() &&
-  d.getDate() === want.getUTCDate() &&
-  d.getHours() === want.getUTCHours() &&
-  d.getMinutes() === want.getUTCMinutes();
-
-/**
- * Heure doublée (passage à l'heure d'hiver) : la même heure locale existe une heure plus tôt ;
- * seule la première occurrence compte, quel que soit le choix du moteur JavaScript.
- */
-export const firstOccurrence = (d: Date): Date => {
-  for (let back = SHIFT_MAX_MIN; back > 0; back -= 30) {
-    const earlier = new Date(d.getTime() - back * MINUTE_MS);
-    if (earlier.getHours() === d.getHours() && earlier.getMinutes() === d.getMinutes())
-      return earlier;
-  }
-  return d;
-};
-
-/**
- * Date et heure locales (texte du domaine) → `Date`. L'heure absente du passage à l'heure d'été
- * passe à la première minute valide qui suit ; la date construite est relue. Hors format : null.
- */
-export const toLocalDate = (date: string, time: string): Date | null => {
-  if (!isIsoDate(date) || !TIME.test(time)) return null;
-  const [y, m, d] = date.split('-').map(Number) as [number, number, number];
-  const [h, mi] = time.split(':').map(Number) as [number, number];
-  for (let shift = 0; shift <= SHIFT_MAX_MIN; shift += 1) {
-    const built = new Date(y, m - 1, d, h, mi + shift);
-    if (reads(built, new Date(Date.UTC(y, m - 1, d, h, mi + shift)))) return firstOccurrence(built);
-  }
-  return null;
-};
 
 /**
  * EX-28 : programme chaque relance à sa date fixe et rend le nombre programmé. Un déclencheur
  * passé ou à la minute courante est écarté : le calcul et la programmation n'ont pas lieu à la
  * même minute. L'horloge est relue juste avant chaque appel natif : un déclencheur à moins de 5 s
  * est écarté aussi. Une relance en échec est journalisée et n'empêche pas les autres.
+ * `keepGoing` est relu avant chaque relance : faux, la boucle s'arrête (028b).
  */
-export const scheduleReminders = async (planned: PlannedReminder[], now: Date): Promise<number> => {
+export const scheduleReminders = async (
+  planned: PlannedReminder[],
+  now: Date,
+  keepGoing: () => boolean = () => true,
+): Promise<number> => {
   const currentMinute = Math.floor(now.getTime() / MINUTE_MS) * MINUTE_MS;
   let count = 0;
   for (const reminder of planned) {
+    // 028b : passe interrompue (verrou des fichiers, effacement) : plus aucun appel natif.
+    if (!keepGoing()) break;
     const { slotId, date } = reminder;
     const fire = toLocalDate(reminder.fireDate, reminder.fireTime);
     if (fire === null) {
@@ -275,5 +251,50 @@ export const onReminderTarget = (
   } catch {
     log('REMINDER_LISTEN_FAILED');
     return () => undefined;
+  }
+};
+
+/**
+ * Appli au premier plan (ticket 028b, décision du porteur du 2026-11-27) : une relance s'affiche
+ * en bannière, dans la liste et avec le son, sans pastille. La notification reçue n'est ni lue ni
+ * journalisée (ABS-04) ; un échec est journalisé par un code.
+ */
+export const showRemindersInForeground = (): void => {
+  try {
+    setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+      }),
+    });
+  } catch {
+    log('REMINDER_HANDLER_FAILED');
+  }
+};
+
+/**
+ * Identifiants des relances programmées (`relance-…` seulement), pour n'annuler que celles qui ne
+ * sont plus prévues (028b, décision du porteur du 2026-11-27) ; null en cas d'échec (journalisé).
+ */
+export const scheduledReminderIds = async (): Promise<string[] | null> => {
+  try {
+    const requests = await getAllScheduledNotificationsAsync();
+    return requests.map((r) => r.identifier).filter((id) => id.startsWith('relance-'));
+  } catch {
+    log('REMINDER_LIST_FAILED');
+    return null;
+  }
+};
+
+/** Annule une relance programmée ; faux en cas d'échec (journalisé par un code). */
+export const cancelReminder = async (identifier: string): Promise<boolean> => {
+  try {
+    await cancelScheduledNotificationAsync(identifier);
+    return true;
+  } catch {
+    log('REMINDER_CANCEL_FAILED');
+    return false;
   }
 };
