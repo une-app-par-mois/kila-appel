@@ -26,6 +26,10 @@ Tout effacer après double confirmation, puis Bienvenue (EX-23, SEC-11).
 - Séance de lancement du lot 014c-014d-015b (2026-11-27), réponses du porteur :
   - copies du cache vidées juste après l'effacement ;
   - Bienvenue recrée la saison automatiquement, comme une installation neuve.
+- Séance de lancement du lot 014f-015f-014g (2026-11-27), réponses du porteur :
+  - texte de l'avertissement : celui de la maquette, tel quel ;
+  - mot « EFFACER » : majuscules et espaces autour ignorés ; clavier en majuscules, sans correction automatique ;
+  - plan validé : verrou `'erase'`, `eraseAll` sur la base ouverte (jamais la suppression du fichier), puis, seulement si l'effacement réussit, vidage des copies sous le même verrou ; première confirmation = le bouton « Tout effacer… » qui ouvre l'écran, seconde = le mot puis le bouton rouge, sans boîte en plus ; boutons désactivés et retour bloqué pendant l'effacement ; échec : « L'effacement n'a pas abouti. Rien n'a été effacé. » ; à noter pour les relances (ADR-007) : Tout effacer devra les annuler.
 - Plan de zone sensible : à valider à la séance de lancement de son lot.
 - Report de l'intégration du lot 014c-014d-015b (2026-11-27) :
   - `src/hooks/useErase.ts` existe (conservation et purge, ticket 015b) : Tout effacer s'y ajoute, sous la tâche `'erase'` de `fileLock` (déjà prise par la purge ; tâches : `'export'`, `'restore'`, `'cleanup'`, `'erase'`) ; boutons désactivés pendant un export, une restauration ou une purge, comme ceux du 015b ;

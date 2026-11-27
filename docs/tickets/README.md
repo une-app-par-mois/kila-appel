@@ -61,3 +61,4 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 015f | [Tout effacer](015f-tout-effacer.md) | 1 | F-03 | oui | à faire |
 | 015c | [Mode de journal de la base fixé à l'ouverture](015c-mode-journal.md) | 1 | F-03 | oui | fusionné dans le groupe |
 | 016 | [Campagne Maestro du jalon 1](016-maestro-jalon-1.md) | 1 | F-01 à F-03 | non | à faire |
+| 017 | [minimatch 11 forcé (Dependabot n° 2)](017-minimatch-overrides.md) | 1 | — | non | à faire |

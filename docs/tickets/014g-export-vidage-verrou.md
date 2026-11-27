@@ -37,7 +37,7 @@ Créé le 2026-11-27 à l'intégration du lot 014c-014d-015b, depuis la section 
 
 ## Questions prévues
 
-- Plan de zone sensible : à valider à la séance de lancement de son lot.
+- Séance de lancement du lot 014f-015f-014g (2026-11-27), réponses du porteur : plan validé — plus de vidage au montage de l'écran ; vidage au début de chaque export, sous le verrou `'export'` ; échec journalisé (`BACKUP_CLEAR_FAILED`) sans empêcher l'export ; règle ajoutée à SEC-10 (à l'intégration) ; tests : vidage sous verrou, rien au montage, rien pendant une restauration, une purge ou un nettoyage, copie en cours de partage jamais effacée. Fusionné en premier.
 
 ## Décisions
 

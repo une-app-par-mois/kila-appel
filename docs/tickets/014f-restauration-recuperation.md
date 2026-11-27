@@ -24,7 +24,11 @@ Depuis l'écran « Base illisible », restaurer une sauvegarde alors que la base
 ## Questions prévues
 
 - Séance de lancement du lot 014c-014d-015b (2026-11-27), réponses du porteur : restauration « vérifier d'abord, puis remplacer » (option recommandée) ; reprend les états de l'écran Restauration (maquette annotée par 014c).
-- Plan de zone sensible : à valider à la séance de lancement de son lot.
+- Séance de lancement du lot 014f-015f-014g (2026-11-27), réponses du porteur :
+  - vérification, refus et confirmation sur l'écran de récupération, sans navigation : « Vérification du fichier… » ; refus = message 014e ; confirmation = carte de résumé de l'écran Restauration, avec « Les données abîmées seront effacées définitivement. », « Annuler » et « Remplacer mes données » ; une seule confirmation ; maquette annotée ;
+  - échec de la recopie après la suppression : « La restauration n'a pas abouti. Les données abîmées ont été effacées. Choisissez un autre fichier, ou repartez de zéro. » ; « Choisir un fichier… » (principal) et « Repartir de zéro » (vers Bienvenue, sans confirmation, la base étant vide) ;
+  - ticket gardé entier (environ 15 fichiers, tests compris) ;
+  - plan validé : `replaceDamagedDatabase` dans `useDatabase` (abîmée seulement ; base neuve non publiée avant la fin de la recopie), cycle partagé `restoreFlow`, verrou tenu du choix du fichier à la fin de la recopie, après le nettoyage du démarrage ; refus ou Annuler ne touchent jamais au fichier abîmé ; retour Android bloqué pendant la suppression et la recopie ; « Restaurer une sauvegarde » en bouton principal, au-dessus de « Réessayer » ; recette sur l'A55 indispensable.
 - Report de l'intégration du lot 014c-014d-015b (2026-11-27), depuis le 014c :
   - la variante abîmée de `src/ui/Recovery.tsx` a maintenant « Réessayer » (bouton principal) au-dessus de « Repartir de zéro » (secondaire) ; « Restaurer une sauvegarde » s'ajoute au-dessus de « Repartir de zéro » et devient le bouton principal (maquette), « Réessayer » passe alors en secondaire ;
   - le texte « Vous pouvez restaurer votre dernière sauvegarde, ou repartir de zéro. » est gardé tel quel jusqu'au 014f (réponse 3 du porteur) : le 014f le rend vrai sur l'écran même ;
