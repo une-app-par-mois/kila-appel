@@ -71,7 +71,6 @@ export default function Emergency() {
 }
 
 const styles = StyleSheet.create({
-  text: { fontFamily: theme.fonts.text, fontSize: 16, color: theme.colors.texte },
   name: { fontFamily: theme.fonts.title, fontSize: 20, color: theme.colors.texte },
   groups: { fontFamily: theme.fonts.text, fontSize: 14, color: theme.colors.texteSecondaire },
   contact: {

@@ -105,7 +105,13 @@ export default function Members() {
       {members !== null && members.length === 0 && !searching && (
         <Card>
           <Text style={styles.text}>
-            {filterGroup !== null ? t.noMatchGroup : archived ? t.emptyArchived : t.empty}
+            {filterGroup !== null
+              ? t.noMatchGroup
+              : archived
+                ? t.emptyArchived
+                : (archivedMembers?.length ?? 0) > 0
+                  ? t.emptyAllArchived
+                  : t.empty}
           </Text>
           {empty && <Button label={t.create} onPress={() => router.push('/membres/nouveau')} />}
         </Card>

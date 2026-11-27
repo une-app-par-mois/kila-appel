@@ -21,6 +21,8 @@ export const membres = {
     create: 'Nouveau membre',
     empty: 'Aucun membre pour l’instant.',
     emptyArchived: 'Aucun membre archivé.',
+    /** Tous les membres archivés (absent de la maquette, ticket 012c). */
+    emptyAllArchived: 'Aucun membre actif. Les membres archivés sont dans « Archivés ».',
     /** Recherche sans résultat (maquette « États vides »). */
     noMatch: (query: string) => `Aucun membre ne correspond à « ${query} ».`,
     noMatchHint: 'Vérifiez l’orthographe, ou cherchez par le prénom.',

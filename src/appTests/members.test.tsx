@@ -66,6 +66,14 @@ describe('Écrans des membres (EX-03)', () => {
     expect(router.getPathname()).toBe('/membres/nouveau');
   });
 
+  it('P1 tous les membres archivés : la liste renvoie aux archivés, pas « pour l’instant »', async () => {
+    await db.execute("UPDATE members SET archived_at = '2026-11-01'");
+    await open('/membres');
+    expect(await screen.findByText(t.members.emptyAllArchived)).toBeTruthy();
+    expect(screen.queryByText(t.members.empty)).toBeNull();
+    expect(screen.getByRole('button', { name: t.members.create })).toBeTruthy();
+  });
+
   it('filtre par groupe (la puce ouvre la liste) et bascule sur les archivés', async () => {
     await db.execute("INSERT INTO members (first_name, last_name) VALUES ('Mila', 'Fournier')");
     await db.execute(

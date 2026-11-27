@@ -33,6 +33,9 @@ describe('P1 NF-06 états vides : textes de la maquette', () => {
       'Vérifiez l’orthographe, ou cherchez par le prénom.',
     ],
     ['Appel d’un groupe vide', labels.rollCall.noMember, 'Ce groupe n’a aucun membre à appeler.'],
+    ['Appel d’un groupe vide, bouton', labels.group.addMembers, 'Ajouter des membres'],
+    // Le « + » de la maquette est l'icône du bouton, pas du texte (décision du 2026-11-27).
+    ['Membre sans contact, bouton', labels.contacts.add, 'Ajouter un contact'],
     [
       'Membre sans contact',
       labels.contacts.none('Léo Garcia'),

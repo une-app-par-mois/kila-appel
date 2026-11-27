@@ -142,6 +142,14 @@ export default function RollCallScreen() {
       )
     : undefined;
   // EX-12 : nouveau membre inscrit au groupe à la date de la séance, puis retour à l'appel.
+  const enrollMembers = () => {
+    if (!target) return;
+    router.push({
+      pathname: '/groupes/[id]/inscrire',
+      params: { id: target.group.id, debut: target.date },
+    });
+  };
+
   const addMember = () => {
     if (!target) return;
     // Le nouveau membre doit apparaître au retour : la recherche est vidée.
@@ -208,7 +216,19 @@ export default function RollCallScreen() {
             })}
             {shown.length === 0 &&
               (members.length === 0 ? (
-                <Text style={styles.empty}>{t.noMember}</Text>
+                <>
+                  <Text style={styles.empty}>{t.noMember}</Text>
+                  {/* Maquette « Appel d'un groupe vide » : inscrire des membres existants dès la
+                      date de l'appel, puis revenir (décision du porteur du 2026-11-27). */}
+                  {!saved && (
+                    <Button
+                      label={labels.group.addMembers}
+                      variant="secondary"
+                      disabled={busy}
+                      onPress={enrollMembers}
+                    />
+                  )}
+                </>
               ) : (
                 <NoMatch query={query} />
               ))}
