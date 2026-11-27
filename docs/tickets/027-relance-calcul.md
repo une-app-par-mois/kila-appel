@@ -2,7 +2,7 @@
 
 Statut : à faire · Jalon : 2 · Zone sensible : **oui** (notifications : aucun nom de membre, ABS-04, SEC-12 ; texte et moments calculés) · Trivial : non
 
-Dépend de : aucun (aucune dépendance installée : domaine pur et réglages) · Fichiers touchés : `src/domain/reminders.ts` et son test (nouveaux), `src/data/settingsRepo.ts`, `src/data/settingsRepo.test.ts`, `src/config/libelles/relance.ts` (nouveau), `src/config/libelles/index.ts`, `src/config/reminderTexts.test.ts` (nouveau) — 7 fichiers
+Dépend de : aucun (aucune dépendance installée : domaine pur et réglages) · Fichiers touchés : `src/domain/reminders.ts` et son test (nouveaux), `src/domain/occurrences.ts` (exports, après revue), `src/data/settingsRepo.ts`, `src/data/settingsRepo.test.ts`, `src/config/libelles/relance.ts` (nouveau), `src/config/libelles/index.ts`, `src/config/reminderTexts.test.ts` (nouveau) — 7 fichiers
 
 Découpé le 2026-11-27 (séance de découpage du jalon 2).
 
@@ -70,11 +70,43 @@ Séance de découpage du jalon 2 (2026-11-27), réponses du porteur :
 | --- | --- | --- | --- | --- |
 | Relance active par défaut ? | Activée ; désactivée | Désactivée | EX-29 : la permission n'est demandée qu'à l'activation ; activée sans permission, elle ne s'afficherait pas | à relire |
 | Délais proposés (maquette « 30 min ▾ ») | 15 à 60 par 15 ; 10, 15, 20, 30, 45, 60 | 10, 15, 20, 30, 45, 60 min, 30 par défaut | Couvre un retard court comme une séance longue | à relire |
-| Quand une relance est-elle due ? | Règle propre ; même règle que les appels manquants | Même règle que les appels manquants (EX-17) | Une relance annonce un appel manquant : les deux ne doivent jamais se contredire | à relire |
+| Quand une relance est-elle due ? | Règle propre ; même règle que les appels manquants | Même règle que les appels manquants (EX-17), avec EX-36 : une séance préparée garde sa relance | Une relance annonce un appel manquant : les deux ne doivent pas se contredire. Écart connu : `slotSessions` compte toute séance, préparée comprise, pour les appels manquants (voir F-13 dans « À reporter ») | à relire |
+| Taille du ticket (9 fichiers avec `errors.ts` et `commun.ts`) | Découper ; garder entier | Gardé entier | Une session ; `errors.ts` et `commun.ts` ne gagnent qu'une ligne chacun. Après revue, `src/domain/occurrences.ts` exporte `TIME`, `DAY_MIN`, `minutes`, `dayNumber` et `isoFromDay` pour éviter les doublons : 10 fichiers de code, à la limite | à relire |
+| EX-36, EX-38 : quelles séances retirent la relance ? | Toutes ; enregistrée, annulée et non planifiée | Enregistrée, annulée, non planifiée ; une séance préparée garde sa relance | EX-36 (« la relance part quand même »), EX-38 (« aucune relance ») | à relire |
+| Entrée de `plannedReminders` | Liste déjà filtrée par l'appelant ; séances `{ slotId, date, state }` | Séances avec leur état ; la fonction applique EX-17, EX-36, EX-38 | Règle testée en un seul endroit, dans le domaine pur | à relire |
+| Groupes nommés dans la relance | Tous les groupes du créneau ; seulement les actifs | Seulement les groupes non archivés de la saison active, joints par `joinFr` ; sans groupe actif, pas de relance | Le titre nomme tous les groupes à qui l'appel manque. Écart : `loadMissingRollCalls` n'en garde qu'un ; l'appel manquant est à aligner (F-11, voir « À reporter ») | à relire |
+| Fenêtre des occurrences | Aujourd'hui à + 6 ; d'hier à aujourd'hui + 7, bornée par maintenant + 7 jours | Occurrences d'hier à aujourd'hui + 7 ; relance gardée si son moment est strictement après maintenant et au plus maintenant + 7 × 1440 min | ADR-007 : la relance de la semaine suivante est programmée dès que celle du jour est passée (lundi 08:00, créneau du lundi à 07:00 → lundi suivant 07:30) ; une ouverture juste après minuit ne perd pas la relance de la veille. Corrigée après revue (la fenêtre s'arrêtait à aujourd'hui + 6) | à relire |
+| Relance à la minute même de maintenant | Gardée ; non gardée | Gardée seulement si son moment est strictement après maintenant, à la minute | Jamais dans le passé ; une relance programmée à la minute courante risquerait de ne jamais s'afficher | à relire |
+| Brouillon d'appel non enregistré | Retire la relance ; la garde | La relance part (EX-28 : « aucun appel enregistré ») | Le brouillon n'est pas une séance enregistrée | à relire |
+| Appel sans créneau (EX-39) du même groupe le même jour | Retire la relance ; la garde | La relance part | Même règle qu'EX-17 pour les appels manquants (décision 013) ; voir « Questions pour le porteur » | en attente du porteur |
+| Saison | — | Sans saison active, liste vide ; dates bornées par la saison (`slotDates`) ; l'occurrence du dernier jour est gardée même si sa relance tombe le lendemain | La séance appartient à la saison, pas sa relance | à relire |
+| Plafond de 64 | — | Tri par moment de la relance, puis par `slotId`, puis coupe à 64 | Les plus proches d'abord, ordre stable | à relire |
+| Texte (maquette) | Avec jour de la semaine ; sans | Titre « Appel non fait : <groupes joints> », corps « Le créneau a commencé à HH:MM. », sans jour | Texte de la maquette au caractère près | à relire |
+| Libellés | — | Une seule clé de premier niveau `reminder` dans `relance.ts` ; le message d'erreur va dans `labels.errors` (`commun.ts`) | Pas de collision de clés lors de la fusion des libellés | à relire |
+| Réglages illisibles et validation | — | `reminder_enabled` vaut `'0'` ou `'1'`, `reminder_delay_min` parmi 10, 15, 20, 30, 45, 60 (`isValidSetting` n'accepte que celles-là) ; valeur illisible lue comme désactivée et 30 ; `REMINDER_DELAY_INVALID` levé seulement à l'écriture | Même modèle que la conservation et le seuil d'alertes | à relire |
+| Test SEC-12 | Textes construits à la main ; dépôts sur une base | Base `node:sqlite`, jeu fictif aux noms reconnaissables, créneaux et groupes lus par les dépôts puis passés à `plannedReminders` et aux textes | Prouve l'absence de nom sur le chemin des dépôts (créneaux, groupes, séances). Il ne lit pas `state` : les séances lues sont marquées `recorded`, la requête qui renvoie l'état vient au 028. Ce n'est donc pas un test de bout en bout | à relire |
+| Heures renvoyées | `Date` ; texte local | Dates et heures locales en texte seulement ; la conversion en `Date` vient au 028 | Domaine pur, à l'abri des changements d'heure | à relire |
+| Délai invalide passé à `plannedReminders` | Valeur par défaut ; erreur | Erreur sans donnée (« Délai de relance invalide (EX-28) ») | Le dépôt lit déjà une valeur autorisée ; un autre délai est un défaut du programme | à relire |
 
 ## Questions pour le porteur
+
+- **Appel sans créneau du même jour (file du porteur, ne bloque pas).** Un appel sans créneau (EX-39) enregistré le même jour pour un groupe du créneau ne retire aujourd'hui ni la relance ni l'appel manquant.
+  - Option A (appliquée, recommandée en l'état) : garder ce comportement ; la relance part.
+  - Option B : un appel sans créneau enregistré le même jour pour **tous** les groupes actifs du créneau retire la relance, et aussi l'appel manquant (EX-17, ajustement de la décision 013).
 
 ## À reporter
 
 - CHANGELOG : Relance : calcul des relances des 7 jours à venir et réglages (désactivée par défaut, 30 min) (F-06, EX-28).
-- Architecture : `src/domain/reminders.ts` ; réglages `reminder_enabled`, `reminder_delay_min`.
+- Architecture : `src/domain/reminders.ts` ; réglages `reminder_enabled`, `reminder_delay_min` (lus par `settingsRepo.reminderSettings`) ; code `REMINDER_DELAY_INVALID`.
+- F-13 (jalon 4) : `sessionsRepo.slotSessions` ne filtre pas sur `state` ; une séance préparée y compterait comme enregistrée, ce qui contredit EX-36 (appels manquants et relances). Non corrigé ici.
+- 028 : `plannedReminders` attend les séances avec leur état (`{ slotId, date, state }`) ; il faudra une requête qui renvoie `state`, donc toucher `src/data/sessionsRepo.ts`. Le test SEC-12 du 027 marque pour l'instant toutes les séances lues comme `recorded`.
+- 028 : à la conversion en `Date`, traiter l'heure qui n'existe pas au passage à l'heure d'été (02:00 à 03:00 le dernier dimanche de mars) ; la fonction ne renvoie que des dates et heures locales en texte.
+- 029 : une sauvegarde restaurée avec `reminder_enabled = 1` alors que la permission n'est pas accordée doit afficher l'état réel (EX-29).
+- Intégration : CONFORMITE, ligne ABS-08 pour les deux réglages `reminder_enabled` et `reminder_delay_min` (aucune donnée personnelle).
+- F-11 : aligner l'appel manquant sur la relance : nommer tous les groupes actifs du créneau, pas un seul (`loadMissingRollCalls`).
+- 028 : passage à l'heure d'hiver (02:00 à 03:00 le dernier dimanche d'octobre) : une heure locale y existe deux fois, éviter une relance en double.
+- 028 : au moment de programmer, écarter un déclencheur déjà passé (le calcul et la programmation n'ont pas lieu à la même minute).
+- 028 : attraper l'erreur de `plannedReminders` pour qu'un appel bien enregistré ne paraisse pas échoué.
+- 028 : test « séance préparée → la relance part » qui passe par le dépôt.
+- 028 : la requête des séances doit aussi renvoyer les séances futures annulées ou non planifiées (EX-38), avec leur état.
+- 029 (intégration, `docs/IDEES.md`) : sous le réglage, la mention « le nom du groupe s'affiche sur l'écran verrouillé ».

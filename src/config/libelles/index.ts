@@ -11,6 +11,7 @@ import { historique } from './historique';
 import { membres } from './membres';
 import { organisation } from './organisation';
 import { recuperation } from './recuperation';
+import { relance } from './relance';
 import { stats } from './stats';
 
 export type { LastBackup } from './donnees';
@@ -29,6 +30,7 @@ export const labels = {
   ...donnees,
   ...recuperation,
   ...effacement,
+  ...relance,
   ...stats,
   ...alertes,
 } as const;
