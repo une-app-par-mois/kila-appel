@@ -20,8 +20,8 @@ Découpé le 2026-11-27 (décision du porteur) depuis le ticket 009.
 
 ## Critères d'acceptation
 
-- [ ] Créer, modifier, supprimer un créneau depuis les écrans ; erreurs sous les champs
-- [ ] Les séances enregistrées restent dans l'historique après suppression du créneau
+- [x] Créer, modifier, supprimer un créneau depuis les écrans ; erreurs sous les champs
+- [x] Les séances enregistrées restent dans l'historique après suppression du créneau
 
 ## Tests attendus
 

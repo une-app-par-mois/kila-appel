@@ -37,6 +37,7 @@ export const commun = {
     groupCount: (n: number) => (n === 0 ? 'Aucun groupe' : plural(n, 'groupe', 'groupes')),
     members: 'Membres',
     memberCount: (n: number) => (n === 0 ? 'Aucun membre' : plural(n, 'membre', 'membres')),
+    slots: 'Créneaux',
   },
   licences: {
     title: 'Licences',

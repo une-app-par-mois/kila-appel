@@ -172,4 +172,12 @@ describe('Dépôt des créneaux (EX-07)', () => {
     await repo.update(s.slotId, input({ weekday: 3, startTime: '17:30', groupId: lundi }), TODAY);
     expect((await repo.get(s.slotId))?.groups).toEqual([{ id: lundi, name: 'Benjamins lundi' }]);
   });
+
+  it('EX-07 ce que la suppression effacera : l’appel interrompu sur ce créneau, s’il y en a un', async () => {
+    const repo = slotsRepo(db);
+    expect(await repo.deletionImpact(s.slotId)).toEqual({ rollCallDraft: true });
+    await db.execute('DELETE FROM roll_call_drafts');
+    expect(await repo.deletionImpact(s.slotId)).toEqual({ rollCallDraft: false });
+    await expect(repo.deletionImpact(9999)).rejects.toMatchObject({ code: 'NOT_FOUND' });
+  });
 });

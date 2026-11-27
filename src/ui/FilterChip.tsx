@@ -3,12 +3,18 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { theme } from '@/config/theme';
 
-type Props = { label: string; selected: boolean; onPress: () => void };
+type Props = {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+  /** Lu par le lecteur d'écran à la place d'un libellé court (« Me » → « Mercredi »). */
+  accessibilityLabel?: string;
+};
 
-export const FilterChip = ({ label, selected, onPress }: Props) => (
+export const FilterChip = ({ label, selected, onPress, accessibilityLabel }: Props) => (
   <Pressable
     accessibilityRole="button"
-    accessibilityLabel={label}
+    accessibilityLabel={accessibilityLabel ?? label}
     accessibilityState={{ selected }}
     onPress={onPress}
     style={[styles.chip, selected && styles.selected]}
