@@ -6,3 +6,4 @@ Les idées hors périmètre, notées pour plus tard. **Une idée n'est jamais co
 | --- | --- | --- | --- |
 | 2026-11-26 | Importer les membres en photographiant la liste (noms, prénoms, contacts), lecture du texte sur l'appareil, sans réseau. À étudier par une preuve de concept : qualité de lecture, permission caméra, photos de listes de mineurs. | moi | à étudier |
 | 2026-11-26 | Thème sombre (« carnet de nuit »), qui suit le réglage du système. | moi | à étudier |
+| 2026-11-27 | Corriger la date de début d'une inscription déjà commencée (dans la saison, sans chevauchement) : aujourd'hui, avancer le début d'une saison est refusé sans issue si des membres y sont inscrits dès l'ancien début (ticket 006f). | revue du 006f, décision du porteur | à étudier |
