@@ -257,6 +257,8 @@ describe('Le code du dépôt respecte les contrôles', () => {
       'src/data/slotsRepo.ts',
       'src/data/groupsRepo.ts',
       'src/data/membersRepo.ts',
+      // Ticket 014 : validation des lignes d'une sauvegarde (brouillon compris), sans statistique.
+      'src/data/backupRows.ts',
     ];
     const naming = walk(join(root, 'src'))
       .map((path) => relative(root, path))

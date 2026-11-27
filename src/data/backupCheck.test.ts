@@ -7,7 +7,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { nodeFiles, openNode, tempDir } from '@/__fixtures__/backupFiles';
 import { seed } from '@/__fixtures__/seed';
 import { exportBackup } from '@/data/backup';
-import { checkRows, MAX_BACKUP_BYTES, verifyBackup } from '@/data/backupCheck';
+import { MAX_BACKUP_BYTES, verifyBackup } from '@/data/backupCheck';
 import type { Db } from '@/data/db';
 import { MIGRATIONS, type Migration } from '@/data/migrations';
 import { openNodeDb } from '@/data/nodeDb';
@@ -17,6 +17,13 @@ jest.mock('@/data/log', () => ({ log: jest.fn() }));
 const { log } = jest.requireMock('@/data/log') as { log: jest.Mock };
 
 const deps = { files: nodeFiles, open: openNode };
+
+// Chaque vérification copie le fichier choisi dans un chemin temporaire neuf.
+let copies = 0;
+const verifyIn =
+  (dir: ReturnType<typeof tempDir>) =>
+  (path: string, d: typeof deps = deps) =>
+    verifyBackup(path, dir.path(`verif-${++copies}.db`), d);
 
 describe('EX-20 SEC-10 vérification d’une sauvegarde', () => {
   let dir: ReturnType<typeof tempDir>;
@@ -40,13 +47,15 @@ describe('EX-20 SEC-10 vérification d’une sauvegarde', () => {
     await db.close();
   });
   afterEach(() => dir.remove());
+  const verify = (path: string, d: typeof deps = deps) => verifyIn(dir)(path, d);
 
   it('accepte une sauvegarde de l’appli et la résume (membres, groupes, séances, date)', async () => {
-    const result = await verifyBackup(backup, deps);
+    const copyPath = dir.path('verif.db');
+    const result = await verifyBackup(backup, copyPath, deps);
     expect(result).toEqual({
       ok: true,
       backup: {
-        path: backup,
+        path: copyPath,
         summary: { members: 2, groups: 2, recordedSessions: 1, backupDate: '2026-10-22' },
       },
     });
@@ -59,20 +68,20 @@ describe('EX-20 SEC-10 vérification d’une sauvegarde', () => {
         "INSERT INTO sessions (season_id, date, start_time, state) VALUES (1, '2026-11-01', '10:00', 'cancelled')",
       );
     });
-    const result = await verifyBackup(backup, deps);
+    const result = await verify(backup, deps);
     expect(result.ok && result.backup.summary.recordedSessions).toBe(1);
   });
 
-  it('sans date lisible dans la copie, le résumé n’a pas de date', async () => {
+  it('sans date dans la copie, le résumé n’a pas de date', async () => {
     await trapped(async (copy) => {
-      await copy.execute("UPDATE settings SET value = 'hier' WHERE key = 'last_backup_at'");
+      await copy.execute("DELETE FROM settings WHERE key = 'last_backup_at'");
     });
-    const result = await verifyBackup(backup, deps);
+    const result = await verify(backup, deps);
     expect(result.ok && result.backup.summary.backupDate).toBeNull();
   });
 
   const rejects = async (path: string, reason: string) => {
-    expect(await verifyBackup(path, deps)).toEqual({ ok: false, reason });
+    expect(await verify(path, deps)).toEqual({ ok: false, reason });
     // ABS-04, SEC-12 : un code seul dans le journal.
     expect(log).toHaveBeenCalledWith(`RESTORE_REJECTED_${reason}`);
   };
@@ -92,7 +101,7 @@ describe('EX-20 SEC-10 vérification d’une sauvegarde', () => {
   it('refuse un fichier trop gros sans l’ouvrir (TOO_LARGE)', async () => {
     const open = jest.fn(openNode);
     const files = { ...nodeFiles, size: async () => MAX_BACKUP_BYTES + 1 };
-    expect(await verifyBackup(backup, { files, open })).toEqual({
+    expect(await verify(backup, { files, open })).toEqual({
       ok: false,
       reason: 'TOO_LARGE',
     });
@@ -192,18 +201,32 @@ describe('EX-20 SEC-10 vérification d’une sauvegarde', () => {
       closes.push(close);
       return { ...db, close };
     };
-    await verifyBackup(backup, { files: nodeFiles, open });
+    await verify(backup, { files: nodeFiles, open });
     await trapped((copy) => copy.execute('PRAGMA user_version = 99').then(() => undefined));
-    await verifyBackup(backup, { files: nodeFiles, open });
+    await verify(backup, { files: nodeFiles, open });
     expect(closes.length).toBeGreaterThan(0);
     for (const close of closes) expect(close).toHaveBeenCalledTimes(1);
+  });
+
+  it('une fermeture qui échoue ne change ni le résultat ni la cause du refus', async () => {
+    const open = async (path: string) => {
+      const db = openNodeDb(path);
+      const close = () => db.close().then(() => Promise.reject(new Error('fermeture')));
+      return { ...db, close };
+    };
+    expect((await verify(backup, { files: nodeFiles, open })).ok).toBe(true);
+    await trapped((copy) => copy.execute('PRAGMA user_version = 99').then(() => undefined));
+    expect(await verify(backup, { files: nodeFiles, open })).toEqual({
+      ok: false,
+      reason: 'NEWER_VERSION',
+    });
   });
 
   it('une copie qui ne s’ouvre pas est abîmée (DAMAGED)', async () => {
     const open = async () => {
       throw new Error('ouverture impossible');
     };
-    expect(await verifyBackup(backup, { files: nodeFiles, open })).toEqual({
+    expect(await verify(backup, { files: nodeFiles, open })).toEqual({
       ok: false,
       reason: 'DAMAGED',
     });
@@ -218,18 +241,23 @@ describe('EX-20 migrations d’une sauvegarde plus ancienne', () => {
     dir = tempDir();
   });
   afterEach(() => dir.remove());
+  const verify = (path: string, d: typeof deps = deps) => verifyIn(dir)(path, d);
 
-  it('migre la copie avant de l’accepter', async () => {
+  it('migre la copie avant de l’accepter, sans toucher au fichier choisi', async () => {
     const backup = dir.path('ancienne.db');
     const db = await prepareDatabase(openNodeDb());
     await exportBackup(db, backup, '2026-10-22');
     await db.close();
+    const original = readFileSync(backup);
+    const copyPath = dir.path('verif.db');
     const migrations = [first, second];
-    const result = await verifyBackup(backup, { ...deps, migrations });
+    const result = await verifyBackup(backup, copyPath, { ...deps, migrations });
     expect(result.ok).toBe(true);
-    const copy = openNodeDb(backup);
+    const copy = openNodeDb(copyPath);
     expect(await copy.query('PRAGMA user_version')).toEqual([{ user_version: 2 }]);
     await copy.close();
+    // Le fichier choisi n'est jamais ouvert ni migré : ses octets restent les mêmes.
+    expect(readFileSync(backup)).toEqual(original);
   });
 
   it('refuse une base vide en version 0 : rien à restaurer (NOT_A_BACKUP)', async () => {
@@ -237,27 +265,6 @@ describe('EX-20 migrations d’une sauvegarde plus ancienne', () => {
     const empty = openNodeDb(path);
     await empty.execute('CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL) STRICT');
     await empty.close();
-    expect(await verifyBackup(path, deps)).toEqual({ ok: false, reason: 'NOT_A_BACKUP' });
-  });
-});
-
-describe('checkRows : règles que la base ne garantit pas seule', () => {
-  let db: Db;
-  beforeEach(async () => {
-    db = await prepareDatabase(openNodeDb());
-    await seed(db);
-  });
-  afterEach(async () => {
-    await db.close();
-  });
-
-  it('accepte le jeu fictif', async () => {
-    expect(await checkRows(db)).toBeNull();
-  });
-
-  it('EX-08 refuse un schedule_from invalide même si integrity_check le laissait passer', async () => {
-    await db.execute('PRAGMA ignore_check_constraints = ON');
-    await db.execute("UPDATE slots SET schedule_from = 'demain'");
-    expect(await checkRows(db)).toBe('INVALID_DATA');
+    expect(await verify(path, deps)).toEqual({ ok: false, reason: 'NOT_A_BACKUP' });
   });
 });

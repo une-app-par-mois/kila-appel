@@ -1,21 +1,29 @@
 // Vérification d'une sauvegarde avant toute restauration (EX-20, SEC-10, ARCHITECTURE §4.3).
-// Elle porte sur une copie temporaire du fichier choisi, jamais sur la base de l'appareil : la
-// copie est seulement ouverte, contrôlée et migrée si elle est plus ancienne.
+// Elle copie d'abord le fichier choisi dans un chemin temporaire, puis ne travaille que sur cette
+// copie (ouverture, contrôles, migrations) : ni le fichier choisi ni la base de l'appareil ne sont
+// ouverts en écriture.
 // ABS-04, SEC-12 : le journal ne reçoit qu'un code ; aucune valeur du fichier n'en sort.
+
+import { type BACKUP_ALIAS, checkRows } from '@/data/backupRows';
 import type { Db } from '@/data/db';
 import { log } from '@/data/log';
 import { MIGRATIONS, type Migration, migrate } from '@/data/migrations';
 import { settingsRepo } from '@/data/settingsRepo';
-import { isIsoDate } from '@/domain/formats';
-import { validateContact } from '@/domain/validation';
 
-/** Lecture du fichier sans l'ouvrir comme base (014b : expo-file-system ; tests : node:fs). */
+/** Accès aux fichiers sans les ouvrir comme base (014b : expo-file-system ; tests : node:fs). */
 export type BackupFiles = {
   size(path: string): Promise<number>;
   readHead(path: string, length: number): Promise<Uint8Array>;
+  /** Copie octet pour octet ; la destination est un chemin temporaire neuf. */
+  copy(from: string, to: string): Promise<void>;
 };
 
-/** Ouvre une base à ce chemin, ou une base vide en mémoire avec ':memory:'. */
+/**
+ * Ouvre la base à ce chemin **telle quelle**, ou une base vide en mémoire avec ':memory:'.
+ * Contrat de l'appelant (014b) : ni prepareDatabase ni migrations, sinon une base en version 0
+ * serait migrée puis acceptée. L'appelant supprime ensuite la copie et ses fichiers `-wal`,
+ * `-shm` et `-journal`.
+ */
 export type OpenDb = (path: string) => Promise<Db>;
 
 /**
@@ -40,12 +48,16 @@ export type BackupSummary = {
   backupDate: string | null;
 };
 
+// Symbole de typage seulement, non exporté : aucun autre module ne peut poser la marque.
 declare const verifiedBrand: unique symbol;
-/** Seule une copie passée par verifyBackup peut être restaurée (restoreBackup). */
+/**
+ * Copie acceptée par verifyBackup, seule à pouvoir être restaurée (restoreBackup) : la marque est
+ * obligatoire et seule verifyBackup la pose. `path` est le chemin de la copie temporaire.
+ */
 export type VerifiedBackup = {
   readonly path: string;
   readonly summary: BackupSummary;
-  readonly [verifiedBrand]?: true;
+  readonly [verifiedBrand]: true;
 };
 
 export type Verification =
@@ -81,8 +93,12 @@ const checkFile = async (files: BackupFiles, path: string) => {
 
 type SchemaRow = { type: string; name: string; tbl_name: string; sql: string | null };
 
-const schemaOf = async (db: Db): Promise<string[]> =>
-  (await db.query<SchemaRow>('SELECT type, name, tbl_name, sql FROM sqlite_schema'))
+/** Schéma d'une base (`main`) ou de la copie attachée, trié : comparé exactement. */
+export const schemaOf = async (
+  db: Db,
+  schema: 'main' | typeof BACKUP_ALIAS = 'main',
+): Promise<string[]> =>
+  (await db.query<SchemaRow>(`SELECT type, name, tbl_name, sql FROM ${schema}.sqlite_schema`))
     .map((row) => JSON.stringify([row.type, row.name, row.tbl_name, row.sql]))
     .sort();
 
@@ -93,32 +109,11 @@ const expectedSchema = async (open: OpenDb, migrations: Migration[]) => {
     await migrate(scratch, migrations);
     return await schemaOf(scratch);
   } finally {
-    await scratch.close();
+    await scratch.close().catch(() => undefined);
   }
 };
 
 const count = async (db: Db, sql: string) => (await db.query<{ n: number }>(sql))[0]?.n ?? 0;
-
-/**
- * Règles que les contraintes de la base ne garantissent pas seules : un contact valide (ticket 008,
- * la base ne vérifie que le non-vide du téléphone) et `slots.schedule_from`, dont le déclencheur
- * ne protège que les modifications (ticket 005), vérifié même si integrity_check le laissait passer.
- */
-export const checkRows = async (db: Db): Promise<RejectReason | null> => {
-  const slots = await db.query<{ schedule_from: unknown }>('SELECT schedule_from FROM slots');
-  if (slots.some((row) => typeof row.schedule_from !== 'string' || !isIsoDate(row.schedule_from)))
-    return 'INVALID_DATA';
-  const contacts = await db.query<{ label: string | null; phone: string }>(
-    'SELECT label, phone FROM emergency_contacts',
-  );
-  try {
-    for (const contact of contacts)
-      validateContact({ label: contact.label ?? '', phone: contact.phone });
-  } catch {
-    return 'INVALID_DATA';
-  }
-  return null;
-};
 
 const summarize = async (db: Db): Promise<BackupSummary> => ({
   members: await count(db, 'SELECT count(*) AS n FROM members'),
@@ -147,19 +142,25 @@ const inspect = async (copy: Db, open: OpenDb, migrations: Migration[]) => {
 };
 
 /**
- * Vérifie la copie temporaire `path` d'un fichier choisi. Accepté : son résumé et la copie, prête
- * pour restoreBackup. Refusé : une cause, et rien n'a touché la base de l'appareil.
+ * Vérifie le fichier choisi `sourcePath` : contrôle de sa taille et de son en-tête, copie dans
+ * `copyPath` (chemin temporaire neuf), puis tous les contrôles sur la copie seule. Accepté : le
+ * résumé et la copie, prête pour restoreBackup. Refusé : une cause ; rien n'a touché la base de
+ * l'appareil ni le fichier choisi.
  */
 export const verifyBackup = async (
-  path: string,
+  sourcePath: string,
+  copyPath: string,
   deps: { files: BackupFiles; open: OpenDb; migrations?: Migration[] },
 ): Promise<Verification> => {
   const { files, open, migrations = MIGRATIONS } = deps;
   try {
-    await checkFile(files, path);
+    // Un fichier trop gros ou étranger n'est même pas copié ; la copie est recontrôlée ensuite.
+    await checkFile(files, sourcePath);
+    await files.copy(sourcePath, copyPath);
+    await checkFile(files, copyPath);
     let copy: Db;
     try {
-      copy = await open(path);
+      copy = await open(copyPath);
     } catch {
       return reject('DAMAGED');
     }
@@ -167,9 +168,11 @@ export const verifyBackup = async (
       const version = await inspect(copy, open, migrations);
       const summary = await summarize(copy);
       log('RESTORE_VERIFIED', { version });
-      return { ok: true, backup: { path, summary } };
+      // Seul endroit où la marque d'une copie vérifiée est posée.
+      return { ok: true, backup: { path: copyPath, summary } as VerifiedBackup };
     } finally {
-      await copy.close();
+      // Une fermeture qui échoue ne change ni le résultat ni la cause d'un refus.
+      await copy.close().catch(() => undefined);
     }
   } catch (error) {
     // Toute autre erreur de SQLite sur la copie (fichier malformé, page illisible) : abîmée.

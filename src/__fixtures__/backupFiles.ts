@@ -1,6 +1,6 @@
 // Fichiers temporaires des tests de sauvegarde (ticket 014). SEC-13 : aucun .db versionné, chaque
 // fichier piégé est produit à l'exécution par node:sqlite dans un dossier temporaire.
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { copyFileSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { BackupFiles } from '@/data/backupCheck';
@@ -11,6 +11,7 @@ import { openNodeDb } from '@/data/nodeDb';
 export const nodeFiles: BackupFiles = {
   size: async (path) => readFileSync(path).length,
   readHead: async (path, length) => readFileSync(path).slice(0, length),
+  copy: async (from, to) => copyFileSync(from, to),
 };
 
 /** Ouvre une copie à vérifier, ou une base vide en mémoire (':memory:'). */
@@ -24,3 +25,10 @@ export const tempDir = () => {
     remove: () => rmSync(dir, { recursive: true, force: true }),
   };
 };
+
+/** Une base dont le DETACH échoue sans rien faire : la copie reste attachée. */
+export const failingDetach = (db: Db): Db => ({
+  ...db,
+  execute: (sql, params) =>
+    /^DETACH/.test(sql) ? Promise.reject(new Error('detach')) : db.execute(sql, params),
+});

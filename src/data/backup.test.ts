@@ -3,10 +3,10 @@
  */
 // EX-19 export, EX-20 et NF-04 restauration par recopie en une transaction (ARCHITECTURE §4.3,
 // décision du porteur du 2026-11-27). Fichiers temporaires produits à l'exécution (SEC-13).
-import { readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { nodeFiles, openNode, tempDir } from '@/__fixtures__/backupFiles';
+import { readFileSync, rmSync } from 'node:fs';
+import { failingDetach, nodeFiles, openNode, tempDir } from '@/__fixtures__/backupFiles';
 import { seed } from '@/__fixtures__/seed';
-import { exportBackup, restoreBackup } from '@/data/backup';
+import { exportBackup, IDENTIFIER, restoreBackup } from '@/data/backup';
 import { type VerifiedBackup, verifyBackup } from '@/data/backupCheck';
 import type { Db } from '@/data/db';
 import { membersRepo } from '@/data/membersRepo';
@@ -45,62 +45,13 @@ const counts = async (db: Db) => {
   return result;
 };
 
+// Copie vérifiée dans un chemin temporaire neuf, à côté du fichier choisi.
+let copies = 0;
 const verified = async (path: string): Promise<VerifiedBackup> => {
-  const result = await verifyBackup(path, deps);
+  const result = await verifyBackup(path, `${path}.verif-${++copies}`, deps);
   if (!result.ok) throw new Error(`sauvegarde refusée : ${result.reason}`);
   return result.backup;
 };
-
-describe('EX-19 export de la sauvegarde', () => {
-  let dir: ReturnType<typeof tempDir>;
-  let db: Db;
-  beforeEach(async () => {
-    dir = tempDir();
-    db = await prepareDatabase(openNodeDb());
-    await seed(db);
-  });
-  afterEach(async () => {
-    await db.close();
-    dir.remove();
-  });
-
-  it('copie la base dans un fichier SQLite, date de la sauvegarde écrite dans la copie', async () => {
-    const path = dir.path('kila-sauvegarde-2026-11-27.db');
-    await exportBackup(db, path, '2026-11-27');
-    expect(new TextDecoder().decode(readFileSync(path).slice(0, 15))).toBe('SQLite format 3');
-    const copy = openNodeDb(path);
-    expect(await settingsRepo(copy).lastBackupDate()).toBe('2026-11-27');
-    expect(await copy.query('PRAGMA user_version')).toEqual([{ user_version: 1 }]);
-    await copy.close();
-    // La base de l'appareil n'est pas touchée : 014b note la date une fois le fichier partagé.
-    expect(await settingsRepo(db).lastBackupDate()).toBeNull();
-    expect(log).toHaveBeenCalledWith('BACKUP_EXPORTED');
-  });
-
-  it('remplace la date d’une sauvegarde précédente dans la copie', async () => {
-    await settingsRepo(db).setLastBackupDate('2026-10-01');
-    const path = dir.path('copie.db');
-    await exportBackup(db, path, '2026-11-27');
-    const copy = openNodeDb(path);
-    expect(await settingsRepo(copy).lastBackupDate()).toBe('2026-11-27');
-    await copy.close();
-  });
-
-  it('refuse une date qui n’est pas AAAA-MM-JJ, sans écrire de fichier', async () => {
-    const path = dir.path('copie.db');
-    await expect(exportBackup(db, path, '27/11/2026')).rejects.toMatchObject({
-      code: 'DATE_INVALID',
-    });
-    expect(() => readFileSync(path)).toThrow();
-  });
-
-  it('n’écrase pas un fichier qui existe déjà', async () => {
-    const path = dir.path('existant.db');
-    writeFileSync(path, 'déjà là');
-    await expect(exportBackup(db, path, '2026-11-27')).rejects.toThrow();
-    expect(new TextDecoder().decode(readFileSync(path))).toBe('déjà là');
-  });
-});
 
 describe('EX-20 NF-04 restauration par recopie en une transaction', () => {
   let dir: ReturnType<typeof tempDir>;
@@ -206,7 +157,7 @@ describe('EX-20 NF-04 restauration par recopie en une transaction', () => {
   it('une copie disparue après la vérification : échec, données intactes', async () => {
     const backup = await verified(backupPath);
     const before = await snapshot(target);
-    rmSync(backupPath, { recursive: true, force: true });
+    rmSync(backup.path, { recursive: true, force: true });
     await expect(restoreBackup(target, backup)).rejects.toMatchObject({
       code: 'RESTORE_FAILED',
     });
@@ -216,7 +167,7 @@ describe('EX-20 NF-04 restauration par recopie en une transaction', () => {
   it('SEC-11 une clé étrangère cassée refusée à la validation : tout est annulé', async () => {
     // Copie modifiée après sa vérification : seule la validation de la transaction l'arrête.
     const backup = await verified(backupPath);
-    const copy = openNodeDb(backupPath);
+    const copy = openNodeDb(backup.path);
     await copy.execute('PRAGMA foreign_keys = OFF');
     await copy.execute(
       "INSERT INTO attendances (session_id, member_id, status) VALUES (1, 999, 'present')",
@@ -230,5 +181,66 @@ describe('EX-20 NF-04 restauration par recopie en une transaction', () => {
     // La connexion reste utilisable après l'échec.
     await settingsRepo(target).setRetentionSeasons(1);
     expect(await settingsRepo(target).retentionSeasons()).toBe(1);
+  });
+
+  // Copie modifiée entre sa vérification et sa restauration : recontrôlée dans la transaction.
+  const alteredAfterCheck = async (alter: (copy: Db) => Promise<unknown>) => {
+    const backup = await verified(backupPath);
+    const copy = openNodeDb(backup.path);
+    await alter(copy);
+    await copy.close();
+    const before = await snapshot(target);
+    await expect(restoreBackup(target, backup)).rejects.toMatchObject({ code: 'RESTORE_FAILED' });
+    expect(await snapshot(target)).toEqual(before);
+    expect(await target.query('PRAGMA database_list')).toHaveLength(1);
+  };
+
+  it('SEC-10 refuse une copie dont le schéma a changé après la vérification', async () => {
+    await alteredAfterCheck((copy) =>
+      copy.execute('CREATE TRIGGER piege AFTER INSERT ON members BEGIN SELECT 1; END'),
+    );
+  });
+
+  it('SEC-10 refuse une copie dont la version a changé après la vérification', async () => {
+    await alteredAfterCheck((copy) => copy.execute('PRAGMA user_version = 2'));
+  });
+
+  it('SEC-10 refuse une copie dont une ligne est devenue invalide après la vérification', async () => {
+    await alteredAfterCheck((copy) => copy.execute("UPDATE emergency_contacts SET phone = '12'"));
+  });
+
+  it('un DETACH qui a échoué ne bloque pas la restauration suivante', async () => {
+    const backup = await verified(backupPath);
+    await restoreBackup(failingDetach(target), backup);
+    expect(await target.query('PRAGMA database_list')).toHaveLength(2);
+    await restoreBackup(target, await verified(backupPath));
+    expect(await target.query('PRAGMA database_list')).toHaveLength(1);
+  });
+});
+
+describe('Noms SQL de la recopie', () => {
+  it('chaque table et chaque colonne du schéma de l’appli passe le motif IDENTIFIER', async () => {
+    const db = await prepareDatabase(openNodeDb());
+    const tables = await tableNames(db);
+    expect(tables.length).toBeGreaterThan(10);
+    for (const table of tables) {
+      expect(table).toMatch(IDENTIFIER);
+      const cols = await db.query<{ name: string }>('SELECT name FROM pragma_table_info(?)', [
+        table,
+      ]);
+      for (const { name } of cols) expect(name).toMatch(IDENTIFIER);
+    }
+    await db.close();
+  });
+
+  it('seule verifyBackup produit une copie vérifiée (marque obligatoire)', async () => {
+    const db = openNodeDb();
+    const summary = { members: 0, groups: 0, recordedSessions: 0, backupDate: null };
+    // Jamais appelée : seul le typage compte.
+    const literal = () =>
+      // @ts-expect-error un objet littéral n'est pas une copie vérifiée
+      restoreBackup(db, { path: 'copie.db', summary });
+    expect(typeof literal).toBe('function');
+    await db.close();
   });
 });

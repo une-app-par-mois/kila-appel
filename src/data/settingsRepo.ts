@@ -18,6 +18,20 @@ type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];
 export const RETENTION_DEFAULT = 3;
 const RETENTION_VALUES = ['1', '2', '3'];
 
+/** Réglage connu, avec une valeur que l'appli aurait pu écrire (vérification d'une sauvegarde). */
+export const isValidSetting = (key: string, value: string): boolean => {
+  switch (key) {
+    case SETTING_KEYS.lastBackupAt:
+      return isIsoDate(value);
+    case SETTING_KEYS.backupInviteSeen:
+      return value === '1';
+    case SETTING_KEYS.retentionSeasons:
+      return RETENTION_VALUES.includes(value);
+    default:
+      return false;
+  }
+};
+
 const read = async (db: Db, key: SettingKey): Promise<string | null> => {
   const [row] = await db.query<{ value: string }>('SELECT value FROM settings WHERE key = ?', [
     key,
