@@ -165,14 +165,16 @@ describe('Paramètres : ligne Conservation (EX-24)', () => {
     await db.close();
   });
 
+  // Expressions écrites en dur : pas de RegExp construite (alerte Semgrep, ticket 019).
   it.each([
-    [null, '3 saisons'],
-    [1, '1 saison'],
-  ])('conservation %p : « %s », et la ligne ouvre Sauvegarde', async (retention, shown) => {
+    [null, '3 saisons', /^Conservation, 3 saisons/],
+    [1, '1 saison', /^Conservation, 1 saison/],
+  ])('conservation %p : « %s », et la ligne ouvre Sauvegarde', async (retention, shown, row) => {
+    expect(row.source).toContain(shown);
     if (retention !== null) await settingsRepo(db).setRetentionSeasons(retention);
     const router = await open('/parametres');
     expect(await screen.findByText(shown)).toBeTruthy();
-    await fireEvent.press(button(new RegExp(`^Conservation, ${shown}`)));
+    await fireEvent.press(button(row));
     expect(router.getPathname()).toBe('/donnees');
   });
 });
