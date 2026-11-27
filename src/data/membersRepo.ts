@@ -2,6 +2,7 @@
 import type { Db } from '@/data/db';
 import { current, expectEnrollable } from '@/data/enrollmentsRepo';
 import { expectChanged, expectFound } from '@/data/errors';
+import { foldText } from '@/domain/formats';
 import { type MemberInput, validateDate, validateMember } from '@/domain/validation';
 
 export type Member = {
@@ -28,7 +29,6 @@ export type MemberFilter = {
 export type MemberDeletionImpact = { contacts: number; attendances: number; enrollments: number };
 
 const collator = new Intl.Collator('fr', { sensitivity: 'base' });
-const fold = (text: string) => text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 
 type MemberRow = {
   id: number;
@@ -51,12 +51,12 @@ export const filterByQuery = <T extends { firstName: string; lastName: string }>
   members: T[],
   query: string,
 ): T[] => {
-  const wanted = fold(query.trim());
+  const wanted = foldText(query.trim());
   if (wanted === '') return members;
   return members.filter(
     (m) =>
-      fold(`${m.firstName} ${m.lastName}`).includes(wanted) ||
-      fold(`${m.lastName} ${m.firstName}`).includes(wanted),
+      foldText(`${m.firstName} ${m.lastName}`).includes(wanted) ||
+      foldText(`${m.lastName} ${m.firstName}`).includes(wanted),
   );
 };
 

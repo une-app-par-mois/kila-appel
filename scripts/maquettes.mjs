@@ -85,7 +85,8 @@ ${titre('Poussins mercredi', 'accueil')}
 <div id="liste-appel"></div>
 <button class="btn-s" data-go="ajout">+ Ajouter un membre</button>
 <div class="champ multi">Commentaire de la séance (facultatif)</div>
-<button class="btn-p" id="enregistrer">Enregistrer l'appel</button>`);
+<button class="btn-p" id="enregistrer">Enregistrer l'appel</button>
+<p class="note">Le chronomètre ne sert qu'à la démonstration (mesurer NF-01) : absent de l'appli. Après l'enregistrement, retour à l'accueil jusqu'à l'Historique (ticket 013). Séance déjà enregistrée : « L'appel de cette séance est déjà enregistré. », sans bouton (décisions du 2026-11-27).</p>`);
 
 // 05 — Appel sans créneau (EX-39)
 ecran('appel-libre', 1, 'Appel sans créneau', 'EX-39', 'appel', `
