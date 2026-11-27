@@ -237,7 +237,7 @@ describe('Alertes d’assiduité : écrans (ticket 022)', () => {
 
   it('EX-25 seuil réglé : Paramètres et accueil suivent sans redémarrer', async () => {
     const router = await open('/parametres');
-    expect(await screen.findByText(a.settingsSection)).toBeTruthy();
+    expect(await screen.findByText(labels.settings.preferences)).toBeTruthy();
     const settingsRow = labels.rowAccessibility(a.settingTitle, a.settingsRow(3));
     await fireEvent.press(await screen.findByRole('button', { name: settingsRow }));
     expect(router.getPathname()).toBe('/assiduite');

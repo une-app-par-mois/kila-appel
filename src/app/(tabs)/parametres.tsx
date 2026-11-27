@@ -1,6 +1,6 @@
 // Paramètres (maquette Paramètres, onglet, ticket 012) : seules les lignes qui mènent à un écran
-// existant (décision du porteur du 2026-11-26). Réglages : alertes d'assiduité (ticket 022), la
-// relance arrive au ticket 029 ; conservation : ticket 015b ; Tout effacer (ticket 015f) ouvre directement l'écran Tout effacer.
+// existant (décision du porteur du 2026-11-26). Réglages : relance (ticket 029, état effectif,
+// EX-29 : la permission y est lue, jamais demandée) et alertes d'assiduité (ticket 022) ; conservation : ticket 015b ; Tout effacer (ticket 015f) ouvre directement l'écran Tout effacer.
 import { useRouter } from 'expo-router';
 import { labels } from '@/config/libelles';
 import { toIsoDate } from '@/domain/formats';
@@ -10,6 +10,7 @@ import { useRetention } from '@/hooks/useErase';
 import { useGroups } from '@/hooks/useGroups';
 import { useLocalNow } from '@/hooks/useLocalNow';
 import { useMembers } from '@/hooks/useMembers';
+import { reminderStatus, useReminderSettings } from '@/hooks/useReminderSettings';
 import { useSeasons } from '@/hooks/useSeasons';
 import { useSlots } from '@/hooks/useSlots';
 import { Card } from '@/ui/Card';
@@ -17,6 +18,8 @@ import { ListRow } from '@/ui/ListRow';
 import { Screen, Section } from '@/ui/Screen';
 
 const t = labels.settings;
+const r = labels.reminderSetting;
+const REMINDER_ROWS = { disabled: r.rowDisabled, denied: r.rowDenied } as const;
 
 export default function Settings() {
   const router = useRouter();
@@ -28,6 +31,8 @@ export default function Settings() {
   const { lastBackup, loaded: backupLoaded, loadFailed: backupFailed } = useLastBackup();
   const { retention, loadFailed: retentionFailed } = useRetention();
   const { threshold, loadFailed: thresholdFailed } = useAlertThreshold();
+  const { view: reminder, loadFailed: reminderFailed } = useReminderSettings();
+  const status = reminder === null ? null : reminderStatus(reminder);
   // Horloge partagée (ticket 012) : « aujourd'hui » devient « hier » après minuit, page ouverte.
   const now = useLocalNow();
   return (
@@ -40,7 +45,8 @@ export default function Settings() {
         slotsFailed ||
         backupFailed ||
         retentionFailed ||
-        thresholdFailed
+        thresholdFailed ||
+        reminderFailed
           ? labels.common.loadFailed
           : undefined
       }
@@ -86,8 +92,19 @@ export default function Settings() {
           onPress={() => router.push('/creneaux')}
         />
       </Card>
-      <Section title={labels.alerts.settingsSection} />
+      <Section title={t.preferences} />
       <Card>
+        <ListRow
+          title={r.title}
+          subtitle={
+            reminder === null || status === null
+              ? undefined
+              : status === 'enabled'
+                ? r.rowEnabled(reminder.delayMin)
+                : REMINDER_ROWS[status]
+          }
+          onPress={() => router.push('/relance')}
+        />
         <ListRow
           title={labels.alerts.settingTitle}
           subtitle={threshold === null ? undefined : labels.alerts.settingsRow(threshold)}

@@ -39,6 +39,8 @@ export const commun = {
     members: 'Membres',
     memberCount: (n: number) => (n === 0 ? 'Aucun membre' : plural(n, 'membre', 'membres')),
     slots: 'Créneaux',
+    /** Section des réglages : relance (ticket 029) et alertes d'assiduité (ticket 022). */
+    preferences: 'Réglages',
     data: 'Données',
     backup: 'Sauvegarde et restauration',
   },

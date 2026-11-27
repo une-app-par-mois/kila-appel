@@ -141,7 +141,7 @@ type FakeSchedule = { identifier: string; content: object; trigger: object };
 
 /**
  * expo-notifications (ticket 028a) : notifications programmées et affichées tenues en mémoire,
- * permission et dernière réponse réglables ; une fonction nommée dans `fail` échoue. Constantes
+ * permission, réponse à la demande et dernière réponse réglables ; une fonction nommée dans `fail` échoue. Constantes
  * recopiées du paquet (58.1.10), car seul l'adaptateur peut l'importer (ABS-01).
  */
 export const fakeNotifications = () => {
@@ -150,6 +150,9 @@ export const fakeNotifications = () => {
     presented: [] as FakeRequest[],
     channels: [] as { id: string; channel: object }[],
     permission: { granted: false, canAskAgain: true, status: 'undetermined' },
+    /** Réponse du système à la demande (029) et options de chaque demande. */
+    answer: { granted: true, canAskAgain: true, status: 'granted' },
+    requests: [] as object[],
     lastResponse: null as FakeResponse | null,
     listeners: [] as ((response: FakeResponse) => void)[],
     fail: new Set<string>(),
@@ -174,6 +177,12 @@ export const fakeNotifications = () => {
     getPermissionsAsync: async () => {
       guard('getPermissionsAsync');
       return state.permission;
+    },
+    requestPermissionsAsync: async (options: object) => {
+      guard('requestPermissionsAsync');
+      state.requests.push(options);
+      state.permission = state.answer;
+      return state.answer;
     },
     setNotificationChannelAsync: async (id: string, channel: object) => {
       guard('setNotificationChannelAsync');
