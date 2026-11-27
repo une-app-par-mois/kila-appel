@@ -92,17 +92,15 @@ describe('alertsRepo : alertes traitées (EX-26)', () => {
       [alix],
     );
     expect(await streaks('2026-11-04')).toEqual([]);
-    // La série 3, 4… a commencé avant le traitement : couverte jusqu'à la longueur traitée.
-    await record('absent', 'absent');
-    expect(await streaks('2026-11-06')).toEqual([]);
+    // Une absence après la date du traitement : la série n'est plus couverte (décision du 2026-11-27).
     await record('absent');
-    expect(await streaks('2026-11-07')).toEqual([5]);
+    expect(await streaks('2026-11-05')).toEqual([3]);
   });
 
-  it('EX-26 risque connu : traité le jour même où commence une nouvelle série, elle reste masquée', async () => {
-    // Plusieurs séances le même jour : le traitement est daté du jour, sans heure. Une nouvelle
-    // série qui commence ce jour-là, après un Présent, est vue comme couverte tant qu'elle ne
-    // dépasse pas la longueur traitée. Limite acceptée (plan point 5 : comparaison de dates).
+  it('EX-26 risque connu : une nouvelle série tout entière dans le jour du traitement reste masquée', async () => {
+    // Le traitement est daté du jour, sans heure. Une série qui commence et finit ce jour-là,
+    // après un Présent, est vue comme couverte tant qu'elle ne dépasse pas la longueur traitée.
+    // Dès qu'une absence tombe un jour suivant, elle réapparaît. Limite acceptée.
     await record('absent', 'absent', 'absent');
     await alertsRepo(db).acknowledge(alix, 3, '2026-11-04');
     for (const status of ['present', 'absent', 'absent', 'absent'] as const)
@@ -110,6 +108,15 @@ describe('alertsRepo : alertes traitées (EX-26)', () => {
     expect(await streaks('2026-11-04')).toEqual([]);
     await w.session(season, [group], '2026-11-05', '18:00', [[alix, 'absent']]);
     expect(await streaks('2026-11-05')).toEqual([4]);
+  });
+
+  it('EX-26 refuse une longueur qui n’est pas celle de la série en cours (écran périmé)', async () => {
+    await record('absent', 'absent', 'absent');
+    for (const n of [2, 4])
+      await expect(alertsRepo(db).acknowledge(alix, n, '2026-11-03')).rejects.toThrow(RangeError);
+    await record('present');
+    await expect(alertsRepo(db).acknowledge(alix, 3, '2026-11-04')).rejects.toThrow(RangeError);
+    expect(await acks()).toEqual([]);
   });
 
   it.each([0, -1, 2.5, Number.NaN])('EX-26 refuse une longueur traitée de %p', async (n) => {
@@ -133,5 +140,47 @@ describe('alertsRepo : alertes traitées (EX-26)', () => {
     await alertsRepo(db).acknowledge(alix, 3, '2026-11-03');
     await db.execute('DELETE FROM members WHERE id = ?', [alix]);
     expect(await acks()).toEqual([]);
+  });
+
+  describe('masquage jusqu’à la dernière absence (décision du porteur du 2026-11-27)', () => {
+    const on = (date: string, status: AttendanceStatus, time = '18:00') =>
+      w.session(season, [group], date, time, [[alix, status]]);
+    const setPresent = (date: string, time = '18:00') =>
+      db.execute(
+        `UPDATE attendances SET status = 'present' WHERE member_id = ? AND session_id =
+         (SELECT id FROM sessions WHERE date = ? AND start_time = ?)`,
+        [alix, date, time],
+      );
+
+    it('EX-26 a. correction qui coupe la série traitée, puis deux absences : réapparaît', async () => {
+      for (const d of ['2026-11-01', '2026-11-08', '2026-11-15']) await on(d, 'absent');
+      await alertsRepo(db).acknowledge(alix, 3, '2026-11-20');
+      await setPresent('2026-11-08');
+      await on('2026-11-22', 'absent');
+      await on('2026-11-29', 'absent');
+      expect(await streaks('2026-11-29')).toEqual([3]);
+    });
+
+    it('EX-26 b. série raccourcie masquée, puis nouvelles absences : réapparaît', async () => {
+      for (const d of ['2026-11-01', '2026-11-10', '2026-11-12', '2026-11-15', '2026-11-18'])
+        await on(d, 'absent');
+      await alertsRepo(db).acknowledge(alix, 5, '2026-11-20');
+      await setPresent('2026-11-10');
+      expect(await streaks('2026-11-20')).toEqual([]);
+      await on('2026-11-22', 'absent');
+      expect(await streaks('2026-11-22')).toEqual([4]);
+      await on('2026-11-24', 'absent');
+      expect(await streaks('2026-11-24')).toEqual([5]);
+    });
+
+    it('EX-26 c. deux séances le jour du traitement, puis les jours suivants : réapparaît', async () => {
+      for (const d of ['2026-11-20', '2026-11-22', '2026-11-25']) await on(d, 'absent');
+      await alertsRepo(db).acknowledge(alix, 3, '2026-11-27');
+      await on('2026-11-27', 'present', '10:00');
+      await on('2026-11-27', 'absent', '18:00');
+      await on('2026-11-29', 'absent');
+      await on('2026-12-01', 'absent');
+      expect(await streaks('2026-12-01')).toEqual([3]);
+    });
   });
 });

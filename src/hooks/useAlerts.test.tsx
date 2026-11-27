@@ -1,6 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { notifyDataChanged } from '@/hooks/dataChanged';
 import { useAlert, useAlerts, useAlertThreshold } from '@/hooks/useAlerts';
+import { errorMessage } from '@/ui/errorMessage';
 
 // La base et les dépôts sont simulés : les dépôts sont testés sur node:sqlite.
 const mockDb = { fake: true };
@@ -121,8 +122,8 @@ describe('useAlertThreshold (EX-25)', () => {
     mockSettings.setAlertThreshold.mockRejectedValue({ code: 'ALERT_THRESHOLD_INVALID' });
     const { result } = await renderHook(() => useAlertThreshold());
     await waitFor(() => expect(result.current.threshold).toBe(3));
-    await expect(result.current.setThreshold(11)).rejects.toEqual({
-      code: 'ALERT_THRESHOLD_INVALID',
-    });
+    const refused = await result.current.setThreshold(11).catch((e: unknown) => e);
+    expect(refused).toEqual({ code: 'ALERT_THRESHOLD_INVALID' });
+    expect(errorMessage(refused)).toBe('Choisissez un seuil de 2 à 10 absences.');
   });
 });

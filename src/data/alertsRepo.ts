@@ -85,7 +85,10 @@ type StatusRow = {
   acks: string | null;
 };
 
-/** `alert_acks` agrégés « longueur:date,… » (valeurs garanties par les contraintes du schéma). */
+/**
+ * `alert_acks` agrégés « longueur:date,… ». Les valeurs viennent de l'appli ou d'une sauvegarde
+ * vérifiée à la restauration (backupRows : longueur entière de 1 ou plus, date AAAA-MM-JJ).
+ */
 const parseAcks = (acks: string | null): AlertAck[] =>
   (acks ?? '')
     .split(',')
@@ -168,11 +171,13 @@ export const alertsRepo = (db: Db) => {
       const date = validateDate(today);
       await db.transaction(async (tx) => {
         expectFound((await tx.query('SELECT id FROM members WHERE id = ?', [memberId]))[0]);
-        const end = currentStreak(await memberStatuses(tx, memberId, 'ASC', -1)).end;
+        const { length, end } = currentStreak(await memberStatuses(tx, memberId, 'ASC', -1));
+        // La longueur enregistrée est celle calculée ici : un écran périmé est refusé et recharge.
+        if (length !== streakLength) throw new RangeError('Longueur de série périmée');
         await tx.execute(
           `INSERT INTO alert_acks (member_id, streak_length, acked_at) VALUES (?, ?, ?)
            ON CONFLICT (member_id, streak_length) DO UPDATE SET acked_at = MAX(acked_at, excluded.acked_at)`,
-          [memberId, streakLength, end !== null && end > date ? end : date],
+          [memberId, length, end !== null && end > date ? end : date],
         );
       });
     },

@@ -1,10 +1,5 @@
 // Série d'absences (RM-02) et alerte d'assiduité (EX-25, EX-26) : domaine pur, zone sensible.
-import {
-  absenceStreak,
-  currentStreak,
-  isAlertShown,
-  type StatusOnDate,
-} from '@/domain/absenceStreak';
+import { currentStreak, isAlertShown, type StatusOnDate } from '@/domain/absenceStreak';
 import type { AttendanceStatus } from '@/domain/validation';
 
 const letters: Record<string, AttendanceStatus> = {
@@ -18,7 +13,7 @@ const statuses = (s: string) => s.split(' ').map((l) => letters[l] as Attendance
 const onDates = (s: string): StatusOnDate[] =>
   statuses(s).map((status, i) => ({ status, date: `2026-11-${String(i + 1).padStart(2, '0')}` }));
 
-describe('absenceStreak (RM-02)', () => {
+describe('currentStreak : longueur (RM-02)', () => {
   it.each([
     ['A A E A', 3],
     ['A A P A', 1],
@@ -28,11 +23,11 @@ describe('absenceStreak (RM-02)', () => {
     ['P A A A', 3],
     ['A E E A E', 2],
   ])('RM-02 %s → %i', (s, expected) => {
-    expect(absenceStreak(statuses(s))).toBe(expected);
+    expect(currentStreak(onDates(s)).length).toBe(expected);
   });
 
   it('RM-02 aucune séance → 0', () => {
-    expect(absenceStreak([])).toBe(0);
+    expect(currentStreak([]).length).toBe(0);
   });
 });
 
@@ -60,13 +55,15 @@ describe('isAlertShown (EX-25, EX-26)', () => {
     expect(isAlertShown({ streak, threshold: 5, acks: [] })).toBe(false);
   });
 
-  it('EX-26 traitée à cette longueur pendant la série : masquée', () => {
-    const acks = [{ streakLength: 3, ackedAt: '2026-11-20' }];
-    expect(isAlertShown({ streak, threshold: 3, acks })).toBe(false);
+  it('EX-26 traitée à cette longueur le jour de la dernière absence ou après : masquée', () => {
+    for (const ackedAt of ['2026-11-20', '2026-11-21'])
+      expect(isAlertShown({ streak, threshold: 3, acks: [{ streakLength: 3, ackedAt }] })).toBe(
+        false,
+      );
   });
 
   it('EX-26 la série s’allonge au-delà de la longueur traitée : l’alerte revient', () => {
-    const acks = [{ streakLength: 3, ackedAt: '2026-11-20' }];
+    const acks = [{ streakLength: 3, ackedAt: '2026-11-25' }];
     expect(isAlertShown({ streak: { ...streak, length: 4 }, threshold: 3, acks })).toBe(true);
   });
 
@@ -80,9 +77,11 @@ describe('isAlertShown (EX-25, EX-26)', () => {
     expect(isAlertShown({ streak, threshold: 3, acks })).toBe(true);
   });
 
-  it('EX-26 traitée le jour même du début de la série : masquée (date égale comprise)', () => {
-    const acks = [{ streakLength: 3, ackedAt: '2026-11-10' }];
-    expect(isAlertShown({ streak, threshold: 3, acks })).toBe(false);
+  it('EX-26 traitée avant la dernière absence de la série (décision du 2026-11-27) : montrée', () => {
+    for (const ackedAt of ['2026-11-10', '2026-11-19'])
+      expect(isAlertShown({ streak, threshold: 3, acks: [{ streakLength: 3, ackedAt }] })).toBe(
+        true,
+      );
   });
 
   it('EX-26 plusieurs traitements : un seul qui couvre la série suffit', () => {

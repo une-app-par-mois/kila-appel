@@ -94,6 +94,8 @@ describe('checkRows : toute ligne de la copie passe les règles de l’appli', (
     ['EX-13 commentaire du brouillon trop long', `UPDATE roll_call_drafts SET comment = '${long}'`],
     ['EX-10 statut du brouillon inconnu', "UPDATE roll_call_draft_statuses SET status = 'x'"],
     ['EX-26 date d’alerte traitée invalide', "UPDATE alert_acks SET acked_at = '2026-02-29'"],
+    ['EX-26 longueur d’alerte traitée nulle', 'UPDATE alert_acks SET streak_length = 0'],
+    ['EX-26 longueur d’alerte traitée négative', 'UPDATE alert_acks SET streak_length = -2'],
     ['ADR-002 réglage inconnu', "INSERT INTO settings (key, value) VALUES ('nom', 'Exemple')"],
     [
       'EX-21 date de sauvegarde invalide',
@@ -143,6 +145,20 @@ describe('checkRows : toute ligne de la copie passe les règles de l’appli', (
   ])('refuse : %s (INVALID_DATA)', async (_rule, sql) => {
     await db.execute(sql);
     expect(await checkRows(db, TODAY)).toBe('INVALID_DATA');
+  });
+
+  it('EX-26 refuse une longueur d’alerte traitée non entière (table forgée sans STRICT)', async () => {
+    // STRICT refuse 2.5 dans la table de l'appli ; un fichier forgé peut la déclarer sans type.
+    await db.execute('DROP TABLE alert_acks');
+    await db.execute('CREATE TABLE alert_acks (member_id INTEGER, streak_length, acked_at TEXT)');
+    for (const length of [2.5, '3']) {
+      await db.execute('DELETE FROM alert_acks');
+      await db.execute(
+        "INSERT INTO alert_acks (member_id, streak_length, acked_at) VALUES (1, ?, '2026-11-20')",
+        [length],
+      );
+      expect(await checkRows(db, TODAY)).toBe('INVALID_DATA');
+    }
   });
 
   it('EX-14 accepte un updated_at avec ou sans secondes', async () => {

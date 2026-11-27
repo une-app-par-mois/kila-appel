@@ -30,14 +30,10 @@ export const currentStreak = (entries: readonly StatusOnDate[]): Streak => {
   return { length, start, end };
 };
 
-/** RM-02 : longueur de la série d'absences en cours. */
-export const absenceStreak = (statuses: readonly AttendanceStatus[]): number =>
-  currentStreak(statuses.map((status) => ({ status, date: '' }))).length;
-
 /**
  * EX-25, EX-26 : alerte montrée si la série atteint le seuil, sauf si un traitement la couvre :
- * longueur traitée au moins égale à la série, et traitement daté du début de la série ou après.
- * Une série retombée à zéro puis revenue commence après l'ancien traitement : elle réapparaît.
+ * longueur traitée au moins égale à la série, et traitement daté de sa dernière absence ou après
+ * (décision du porteur du 2026-11-27). Toute absence placée après le traitement la fait revenir.
  */
 export const isAlertShown = ({
   streak,
@@ -48,7 +44,7 @@ export const isAlertShown = ({
   threshold: number;
   acks: readonly AlertAck[];
 }): boolean => {
-  if (streak.length < threshold || streak.start === null) return false;
-  const start = streak.start;
-  return !acks.some((ack) => ack.streakLength >= streak.length && ack.ackedAt >= start);
+  if (streak.length < threshold || streak.end === null) return false;
+  const end = streak.end;
+  return !acks.some((ack) => ack.streakLength >= streak.length && ack.ackedAt >= end);
 };
