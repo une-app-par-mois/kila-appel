@@ -50,7 +50,8 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 012c | [États vides](012c-etats-vides.md) | 1 | F-01, F-02, F-03 | non | en cours |
 | 013 | [Historique et correction des appels](013-historique.md) | 1 | F-03 | non | fusionné dans le groupe |
 | 014 | [Sauvegarde et restauration : données](014-sauvegarde-restauration.md) | 1 | F-03 | oui | fusionné dans le groupe |
-| 014b | [Écrans Sauvegarde et Restauration](014b-ecrans-sauvegarde.md) | 1 | F-03 | oui | à faire |
+| 014b | [Écran Sauvegarde : export](014b-ecrans-sauvegarde.md) | 1 | F-03 | oui | à faire |
+| 014e | [Écran Restauration](014e-ecran-restauration.md) | 1 | F-03 | oui | à faire |
 | 014c | [Base illisible au démarrage](014c-base-illisible.md) | 1 | F-03 | oui | à faire |
 | 014d | [Invitation et bandeau de sauvegarde](014d-rappels-sauvegarde.md) | 1 | F-03 | non | à faire |
 | 015 | [Tout effacer et purge : données](015-effacement-purge.md) | 1 | F-03 | oui | fusionné dans le groupe |
