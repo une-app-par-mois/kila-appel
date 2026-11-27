@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { copyFileSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Db } from '@/data/db';
@@ -97,6 +97,7 @@ describe('SEC-11 mode de journal fixé à delete à chaque ouverture (ticket 015
     file = join(dir, 'kila.db');
   });
   afterEach(() => rmSync(dir, { recursive: true, force: true }));
+  const files = () => readdirSync(dir, { withFileTypes: true }).map((entry) => entry.name);
 
   it('base sur fichier : mode delete lu après ouverture', async () => {
     const db = await prepareDatabase(openNodeDb(file));
@@ -111,20 +112,68 @@ describe('SEC-11 mode de journal fixé à delete à chaque ouverture (ticket 015
   });
 
   it('base en WAL ramenée à delete, ligne gardée, mode gardé à la réouverture', async () => {
-    const before = openNodeDb(file);
+    // Trames gardées dans `-wal` : sans checkpoint automatique, copie de la base et de son
+    // `-wal` pendant que la première connexion reste ouverte (la fermer viderait le `-wal`).
+    const before = openNodeDb(join(dir, 'source.db'));
     expect(await before.query('PRAGMA journal_mode = WAL')).toEqual([{ journal_mode: 'wal' }]);
+    await before.query('PRAGMA wal_autocheckpoint = 0');
     await before.execute('CREATE TABLE fictive (id INTEGER PRIMARY KEY, label TEXT)');
     await before.execute('INSERT INTO fictive (label) VALUES (?)', ['Zzfictifzz']);
+    copyFileSync(join(dir, 'source.db'), file);
+    copyFileSync(join(dir, 'source.db-wal'), `${file}-wal`);
     await before.close();
+    expect(readFileSync(`${file}-wal`).length).toBeGreaterThan(0);
 
     const db = await prepareDatabase(openNodeDb(file));
     expect(await journalMode(db)).toBe('delete');
+    expect(files()).not.toContain('kila.db-wal');
     expect(await db.query('SELECT label FROM fictive')).toEqual([{ label: 'Zzfictifzz' }]);
     await db.close();
 
     const again = openNodeDb(file);
     expect(await journalMode(again)).toBe('delete');
     await again.close();
+  });
+
+  it('PRAGMA journal_mode passe avant la première instruction de migration', async () => {
+    const before = openNodeDb(file);
+    await before.query('PRAGMA journal_mode = WAL');
+    await before.close();
+    const db = openNodeDb(file);
+    const order: string[] = [];
+    const recording = (base: Db): Db => ({
+      execute: (sql, params) => {
+        order.push(sql);
+        return base.execute(sql, params);
+      },
+      query: (sql, params) => {
+        order.push(sql);
+        return base.query(sql, params);
+      },
+      transaction: (fn) => {
+        order.push('BEGIN');
+        return base.transaction((tx) => fn(recording(tx)));
+      },
+      close: () => base.close(),
+    });
+    await prepareDatabase(recording(db));
+    const journal = order.indexOf('PRAGMA main.journal_mode = DELETE');
+    expect(journal).toBeGreaterThanOrEqual(0);
+    expect(journal).toBeLessThan(order.indexOf('BEGIN'));
+    expect(journal).toBeLessThan(order.findIndex((sql) => sql.startsWith('CREATE')));
+    await db.close();
+  });
+
+  it('relecture memory sans ligne main dans pragma_database_list : refusée', async () => {
+    const db = openNodeDb();
+    const memory = answering(db, 'memory');
+    const noMain: Db = {
+      ...memory,
+      query: async <T>(sql: string, params: (string | number | null)[] = []) =>
+        sql.includes('pragma_database_list') ? ([] as T[]) : memory.query<T>(sql, params),
+    };
+    await expect(prepareDatabase(noMain)).rejects.toThrow(JOURNAL_MODE_OFF);
+    await db.close();
   });
 
   it('base sur fichier dont la relecture rend memory : refusée', async () => {
@@ -148,9 +197,11 @@ describe('SEC-11 mode de journal fixé à delete à chaque ouverture (ticket 015
         return db.execute(sql, params);
       },
     };
-    const error = await prepareDatabase(locked).catch((e: unknown) => e);
+    log.mockClear();
+    const error = await openAppDatabase(async () => locked).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(Error);
     expect((error as Error).message).toBe(JOURNAL_MODE_OFF);
-    await db.close();
+    // ABS-04 : le message de SQLite ne part pas non plus dans le journal.
+    expect(JSON.stringify(log.mock.calls)).not.toContain('locked');
   });
 });
