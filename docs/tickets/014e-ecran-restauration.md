@@ -32,6 +32,8 @@ La restauration d'une sauvegarde (EX-20, NF-04) sur le code de données du 014 e
 
 - Tests d'écran (version 0 refusée, fichier texte ou tronqué, résumé, Annuler efface la copie) ; à la main sur l'A55 : export, Tout effacer ou désinstaller, restauration identique (NF-04)
 
+- Le choix du fichier passe par `src/data/expoFiles.ts` (seul fichier autorisé à importer expo-file-system et expo-sharing, contrôle `src/staticChecksFiles.test.ts`) ou élargit sa liste ; `openExpoCopy` (014b) ouvre la copie sur une connexion neuve
+
 ## Hors périmètre
 
 - Base illisible (014c)

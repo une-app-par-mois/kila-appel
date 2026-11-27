@@ -6,6 +6,8 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Ajouté
 
+- Écran Sauvegarde : export d'une copie datée de la base par le partage du système, avertissement complet « fichier non protégé » avant l'export, date de la dernière sauvegarde notée à la fin du partage et affichée dans l'écran et dans Paramètres ; copie effacée dès la fin du partage (EX-19, EX-21, SEC-09, ABS-06) — ticket 014b.
+- Sécurité : le mode de journal de la base est fixé à `delete` et vérifié à chaque ouverture ; sinon la base n'est pas ouverte (SEC-11, ABS-05) — ticket 015c.
 - Onglet Historique : séances enregistrées et appels manquants, la plus récente en haut, filtres par groupe et par période (30 derniers jours, saison active, toutes les saisons) ; détail d'une séance pour corriger les statuts et le commentaire, ou la supprimer après confirmation (EX-16 à EX-18). Après l'enregistrement d'un appel, retour à l'Historique ; le compteur compte les retards parmi les présents (« 19 présents dont 2 retards ») ; barre d'onglets à cinq places, le rond « Nouvel appel » au centre — ticket 013.
 - Données : sauvegarde de la base (copie datée), vérification d'un fichier avant tout remplacement (cause précise, dont « version plus récente »), restauration en une seule transaction ; réglages de l'appli (EX-19, EX-20, NF-04) — ticket 014.
 - Données : tout effacer (une transaction) et purge des anciennes saisons, membres qui ne figurent plus dans aucune saison gardée compris (EX-23, EX-24, SEC-11) — ticket 015.

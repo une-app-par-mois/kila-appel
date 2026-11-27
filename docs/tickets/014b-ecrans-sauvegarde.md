@@ -1,6 +1,6 @@
 # 014b — Écran Sauvegarde : export
 
-Statut : développé sur `ticket/014b-export`, à relire (revue, revue de sécurité, porteur) · Jalon : 1 · Zone sensible : oui (plan validé par le porteur le 2026-11-27) · Trivial : non
+Statut : fusionné dans le groupe (PR #43, relu et accepté par le porteur le 2026-11-27 ; export vers Gmail et Drive vérifié sur l'A55) · Jalon : 1 · Zone sensible : oui (plan validé par le porteur le 2026-11-27) · Trivial : non
 
 Dépend de : 014, 013 · Fichiers touchés : `package.json`, `package-lock.json`, `src/config/licences.json`, `src/data/expoFiles.ts` (nouveau), `src/data/expoDb.ts`, `src/hooks/useBackupExport.ts` (nouveau), `src/app/donnees.tsx` (nouveau), `src/app/(tabs)/parametres.tsx`, libellés, `src/staticChecks.test.ts`, `jest.setup.js`, tests
 
@@ -70,6 +70,8 @@ L'écran de la sauvegarde (EX-19) sur le code de données du 014. La restauratio
 | Fichiers au-delà de la liste | Découper ; garder | Gardés : `src/config/libelles/donnees.ts` et `commun.ts`, `index.ts` ; `src/domain/formats.ts` (`daysSince`) et son test ; `src/staticChecksFiles.test.ts` ; `src/data/expoFiles.test.ts`, `expoDbCopy.test.ts` ; `src/hooks/useBackupExport.test.tsx` ; `src/appTests/backupExportDevice.test.tsx` ; `src/__fixtures__/backupFiles.ts` (`nodeStorage`), `expoModules.ts` (imitations des modules natifs), `sourceFiles.ts` (parcours des contrôles) ; `src/node.d.ts` ; `jest.setup.js` non touché | Ajouts mécaniques et tests ; une seule session | à relire |
 
 ## Questions pour le porteur
+
+Répondue à la relecture du 2026-11-27 : ticket gardé entier (une vingtaine de fichiers, `daysSince` et aides de test hors du plan), accepté. Export vers Gmail et Drive vérifié sur l'A55 : la copie effacée dès la fin du partage ne gêne pas l'envoi.
 
 Aucune.
 

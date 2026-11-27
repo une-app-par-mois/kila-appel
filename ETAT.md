@@ -12,9 +12,9 @@ Réévaluation (PLAN §6) : moins de 2 h de porteur pour 6 h prévues ; 1,5 h pa
 
 ## Prochaines étapes
 
-1. **Lot 013-014-015 fusionné dans le groupe** (PR #37, #38, #39 ; 879 tests) : travail par lot (`CLAUDE.md` § « Travail par lot », agents `pre-analyse`, `codeur`, `contradicteur`), file `docs/QUESTIONS.md` vide. Prochain lot : **014b** (écrans Sauvegarde et Restauration, dépendances expo-file-system, expo-sharing, expo-document-picker acceptées), **015c** (mode de journal), puis 014c, 014d, 015b, enfin 016 (Maestro) et la PR du jalon vers `main` (file du porteur posée avant). PR méthode n° 1 sur `une-app-par-mois/methode-vibe-coding` à relire par le porteur, app-template à suivre.
-   - **Désinstaller l'APK de test avant le suivant** (migration 1 corrigée : `started_at`). À vérifier sur l'A55 : barre d'onglets à cinq places (rond centré), Historique (liste longue, retour après un appel), Bienvenue sur une base vide, fermeture forcée pendant un appel, poignée ≡, « Appeler », secure_delete, lecteur d'écran sur « aucun résultat ».
-   - Non vérifié hors de node:sqlite : `VACUUM INTO`, `ATTACH`, `json_each`, `DENSE_RANK` sur expo-sqlite (014b le vérifie).
+1. **Lots 013-014-015 et 014b-015c fusionnés dans le groupe** (PR #37 à #43 ; 978 tests). Travail par lot en place (`CLAUDE.md` § « Travail par lot »). Export vérifié sur l'A55 (Gmail, Drive) ; mode de journal accepté sur l'A55 (`DB_READY`). Prochain lot : **014e** (restauration, expo-document-picker accepté), puis 014c (base illisible : `JOURNAL_MODE_OFF`, vider `cache/sauvegardes/` au démarrage), 014d (rappels), 015b (Conservation, Tout effacer ; saisons commencées seulement), enfin 016 (Maestro) et la PR du jalon vers `main`. PR méthode n° 1 sur `une-app-par-mois/methode-vibe-coding` à relire par le porteur, app-template à suivre.
+   - Non vérifié sur l'appareil : restauration (`ATTACH`), `useNewConnection` ; iPhone : aucun lien dans `Caches/expo-sharing-tmp/`.
+   - Branche locale `essai/lot-2-apk` (APK d'essai 014b + 015c), non poussée, gardée (pas de suppression de branche).
    - `@expo/devtools` est dans le bundle de production : client WebSocket d'expo-sqlite, appelé seulement si `__DEV__` (jamais en production) ; INTERNET absente du binaire. Pas une violation d'ABS-01.
 2. Fin du jalon 1 : bilan des décisions automatiques annulées (0 à ce jour).
 ## Points d'attention
