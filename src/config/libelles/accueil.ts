@@ -1,4 +1,5 @@
-// Textes de la barre d'onglets et de l'accueil (ticket 012, EX-09, EX-17).
+// Textes de la barre d'onglets et de l'accueil (ticket 012, EX-09, EX-17), rappels de sauvegarde
+// (ticket 014d, EX-21).
 
 export const accueil = {
   /** Barre d'onglets (maquette) : seulement les écrans existants (décision du 2026-11-27). */
@@ -59,5 +60,19 @@ export const accueil = {
       `${weekday} ${day} ${month} · ${time}`,
     /** Au-delà des 5 plus récents (décision du 2026-11-27). */
     more: (n: number) => (n === 1 ? 'et 1 autre' : `et ${n} autres`),
+    /** Bandeau (maquette Accueil) : au moins 30 jours, toujours au pluriel. */
+    backupBanner: (days: number) => `Pas de sauvegarde depuis ${days} jours`,
+    backupBannerText: 'Vos données ne vivent que sur cet appareil.',
+    backupNow: 'Sauvegarder maintenant',
+  },
+  /** Invitation à sauvegarder (maquette), une seule fois, après le premier appel enregistré. */
+  backupInvite: {
+    title: 'Premier appel enregistré',
+    cardTitle: 'Pensez à sauvegarder',
+    text:
+      'Vos données ne vivent que sur cet appareil. Si vous le perdez ou le changez, seule une ' +
+      'sauvegarde permet de les retrouver.',
+    saveNow: 'Sauvegarder maintenant',
+    later: 'Plus tard',
   },
 } as const;

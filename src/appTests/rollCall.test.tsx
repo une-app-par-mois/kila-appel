@@ -38,6 +38,9 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
     s = await seed(db);
     // Le brouillon du jeu fictif bloquerait tout autre appel (ticket 011) : chaque test part sans.
     await db.execute('DELETE FROM roll_call_drafts');
+    // Invitation à sauvegarder déjà vue : l'enregistrement revient à l'Historique (ticket 014d,
+    // invitation testée dans backupReminder.test.tsx).
+    await db.execute("INSERT INTO settings (key, value) VALUES ('backup_invite_seen', '1')");
     mockDb = db;
     // Horloge figée : mercredi 18/11/2026 18:00, pendant la séance du jeu fictif.
     jest.useFakeTimers({ advanceTimers: true, now: new Date(2026, 10, 18, 18, 0) });
