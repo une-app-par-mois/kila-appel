@@ -19,6 +19,13 @@ describe('EX-30 RM-04 date de naissance d’un import', () => {
     ['2017-03-14', '2017-03-14'],
     ['  14/03/2017  ', '2017-03-14'],
     ['29/02/2016', '2016-02-29'],
+    // Contradiction du 032 : points et tirets d'Excel ou de LibreOffice, heure nulle.
+    ['14.03.2017', '2017-03-14'],
+    ['4.3.2017', '2017-03-04'],
+    ['14-03-2017', '2017-03-14'],
+    ['4-3-2017', '2017-03-04'],
+    ['2017-03-14 00:00', '2017-03-14'],
+    ['2017-03-14 00:00:00', '2017-03-14'],
     [TODAY, TODAY],
   ])('RM-04 lit %j en %s', (cell, iso) => {
     expect(parseImportDate(cell, TODAY)).toBe(iso);
@@ -31,10 +38,14 @@ describe('EX-30 RM-04 date de naissance d’un import', () => {
   it.each([
     '31/02/2016',
     '02/05/16',
-    '14.03.2017',
-    '14-03-2017',
+    '14.03.17',
+    '14.03-2017',
+    '14/03-2017',
     '14/03/2017 00:00',
     '2017-03-14T00:00',
+    '2017-03-14 08:30',
+    '2017-03-14 00:00:01',
+    '2017-03-14  00:00',
     '2017-3-14',
     '31/12/1899',
     '14/13/2017',
@@ -50,7 +61,7 @@ describe('EX-30 RM-04 date de naissance d’un import', () => {
 
   it('ABS-04 l’erreur ne contient pas la cellule', () => {
     try {
-      parseImportDate('14.03.2017', TODAY);
+      parseImportDate('14.03.17', TODAY);
     } catch (error) {
       expect(String(error)).not.toContain('14.03');
     }
@@ -66,6 +77,8 @@ describe('EX-30 EX-05 téléphone d’un import', () => {
     ['6.00.00.00.01', '0600000001'],
     ['06-00-00-00-01', '0600000001'],
     ['+33600000001', '0600000001'],
+    ['33600000001', '0600000001'],
+    ['33 6 00 00 00 01', '0600000001'],
     [' 0600000001 ', '0600000001'],
   ])('lit %j en %s (zéro d’Excel remis devant 9 chiffres)', (cell, phone) => {
     expect(parseImportPhone(cell)).toBe(phone);
@@ -78,6 +91,8 @@ describe('EX-30 EX-05 téléphone d’un import', () => {
   it.each([
     '6,00E+08',
     '0033600000001',
+    '33060000000',
+    '336000000011',
     '060000000',
     '012345678',
     '06000000011',
@@ -90,7 +105,7 @@ describe('EX-30 EX-05 téléphone d’un import', () => {
 
 describe('EX-30 nom et prénom d’un import', () => {
   it('retire les espaces autour et écrit le nom en NFC', () => {
-    const decomposed = 'Zoé';
+    const decomposed = 'Zoe\u0301';
     expect(readImportName(`  ${decomposed} `)).toBe('Zoé');
     expect(readImportName(` ${decomposed} `)).toHaveLength(3);
   });

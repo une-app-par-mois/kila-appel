@@ -1,6 +1,6 @@
 // Lignes lues d'un CSV d'import (ticket 032, EX-30) : données fictives seulement (SEC-13).
 // Même forme que la sortie de la lecture (031) : en-tête en premier, `line` = ligne du tableur.
-import type { CsvRow, ImportGroup, ImportOptions } from '@/domain/memberImport';
+import type { CsvRow, ExistingMember, ImportGroup, ImportOptions } from '@/domain/memberImport';
 
 /** Lignes numérotées à partir de 1 (l'en-tête), sans ligne vide. */
 export const numbered = (...lines: string[][]): CsvRow[] =>
@@ -18,9 +18,9 @@ export const GROUPS: ImportGroup[] = [
 ];
 
 /** Membres déjà dans l'appli : Léo Garcia (avec date), Zoé Blanc (archivée, sans date). */
-export const EXISTING = [
-  { lastName: 'Garcia', firstName: 'Léo', birthDate: '2017-03-14' },
-  { lastName: 'Blanc', firstName: 'Zoé', birthDate: null },
+export const EXISTING: ExistingMember[] = [
+  { id: 11, lastName: 'Garcia', firstName: 'Léo', birthDate: '2017-03-14', archivedAt: null },
+  { id: 12, lastName: 'Blanc', firstName: 'Zoé', birthDate: null, archivedAt: '2026-06-30' },
 ];
 
 export const OPTIONS: ImportOptions = {
