@@ -136,7 +136,7 @@ const detectSeparator = (text: string): CsvSeparator => {
  * lire la suite. MALFORMED porte le numéro de la ligne du tableur du champ fautif.
  */
 export const parseCsv = (input: string): ParseResult => {
-  let text = input.startsWith('﻿') ? input.slice(1) : input;
+  let text = input.startsWith('\uFEFF') ? input.slice(1) : input;
   const directive = DIRECTIVE.exec(text);
   if (directive) text = text.slice(directive[0].length);
   const separator = directive ? (directive[1] as CsvSeparator) : detectSeparator(text);
