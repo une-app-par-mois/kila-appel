@@ -10,6 +10,7 @@ import { exportBackup, IDENTIFIER, restoreBackup } from '@/data/backup';
 import { type VerifiedBackup, verifyBackup } from '@/data/backupCheck';
 import type { Db } from '@/data/db';
 import { membersRepo } from '@/data/membersRepo';
+import { LATEST_VERSION, MIGRATIONS, migrate } from '@/data/migrations';
 import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
 import { settingsRepo } from '@/data/settingsRepo';
@@ -215,11 +216,44 @@ describe('EX-20 NF-04 restauration par recopie en une transaction', () => {
   });
 
   it('SEC-10 refuse une copie dont la version a changé après la vérification', async () => {
-    await alteredAfterCheck((copy) => copy.execute('PRAGMA user_version = 2'));
+    await alteredAfterCheck((copy) => copy.execute(`PRAGMA user_version = ${LATEST_VERSION + 1}`));
   });
 
   it('SEC-10 refuse une copie dont une ligne est devenue invalide après la vérification', async () => {
     await alteredAfterCheck((copy) => copy.execute("UPDATE emergency_contacts SET phone = '12'"));
+  });
+
+  it('SEC-10 RM-03 refuse une copie dont une séance a plus de groupes que son nombre figé', async () => {
+    await alteredAfterCheck(async (copy) => {
+      await copy.execute('UPDATE sessions SET group_count = 1');
+      await copy.execute(
+        'INSERT INTO session_groups (session_id, group_id) SELECT id, 2 FROM sessions',
+      );
+    });
+  });
+
+  it('EX-20 RM-03 une sauvegarde de la version 1 est migrée puis restaurée sans perte', async () => {
+    const old = openNodeDb();
+    await migrate(old, MIGRATIONS.slice(0, 1));
+    await seed(old);
+    // Une seconde séance, à deux groupes, enregistrée avant le ticket 043.
+    await old.execute(
+      "INSERT INTO sessions (id, season_id, date, start_time, state) VALUES (9, 1, '2026-11-18', '10:00', 'recorded')",
+    );
+    await old.execute('INSERT INTO session_groups (session_id, group_id) VALUES (9, 1), (9, 2)');
+    const oldPath = dir.path('v1.db');
+    await exportBackup(old, oldPath, '2026-10-22');
+    await restoreBackup(target, await verified(oldPath));
+    const expected = await snapshot(old);
+    const restored = await snapshot(target);
+    for (const table of Object.keys(expected).filter((t) => t !== 'settings' && t !== 'sessions'))
+      expect({ table, rows: restored[table] }).toEqual({ table, rows: expected[table] });
+    const sessions = 'SELECT * FROM sessions ORDER BY id';
+    const counts = [1, 2];
+    expect(await target.query(sessions)).toEqual(
+      (await old.query<object>(sessions)).map((row, i) => ({ ...row, group_count: counts[i] })),
+    );
+    await old.close();
   });
 
   it('un DETACH qui a échoué ne bloque pas la restauration suivante', async () => {

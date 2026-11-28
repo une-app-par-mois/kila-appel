@@ -147,6 +147,12 @@ export const sessionsRepo = (db: Db, today: string) => ({
         id,
         call.groupId,
       ]);
+      // RM-03 (ticket 043) : nombre de groupes écrits, figé ici et jamais changé ensuite (F-11).
+      await tx.execute(
+        `UPDATE sessions SET group_count =
+           (SELECT count(*) FROM session_groups WHERE session_id = ?1) WHERE id = ?1`,
+        [id],
+      );
       for (const { memberId, status } of call.statuses) {
         await tx.execute(
           'INSERT INTO attendances (session_id, member_id, status) VALUES (?, ?, ?)',

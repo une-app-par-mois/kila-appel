@@ -66,7 +66,13 @@ const ids = (row: Row) => {
 };
 const none = () => undefined;
 
-type Rule = { table: string; columns: string; check: (row: Row, today: string) => void };
+type Schema = 'main' | typeof BACKUP_ALIAS;
+/** `columns` : liste fixe, ou fonction du schéma lu quand une sous-requête lit une autre table. */
+type Rule = {
+  table: string;
+  columns: string | ((schema: Schema) => string);
+  check: (row: Row, today: string) => void;
+};
 
 /** Une règle par table : les colonnes lues (identifiants compris) et ce que chaque ligne respecte. */
 const RULES: Rule[] = [
@@ -141,12 +147,26 @@ const RULES: Rule[] = [
   { table: 'slot_dates', columns: 'slot_id, date', check: (r) => date(r.date) },
   { table: 'slot_groups', columns: 'slot_id, group_id', check: none },
   {
+    // RM-03, SEC-10 (ticket 043) : nombre de groupes figé NULL (inconnu) ou entier de 1 ou plus,
+    // jamais inférieur aux groupes de la séance (un groupe supprimé le laisse supérieur).
     table: 'sessions',
-    columns: 'id, season_id, slot_id, date, start_time, comment',
+    columns: (schema) =>
+      // Au-delà des entiers sûrs, lu 0 (refusé) : le pilote SQLite ne le lirait pas en nombre exact.
+      `id, season_id, slot_id, date, start_time, comment,
+       CASE WHEN group_count > ${Number.MAX_SAFE_INTEGER} THEN 0 ELSE group_count END AS group_count,
+       (SELECT count(*) FROM ${schema}.session_groups sg WHERE sg.session_id = sessions.id) AS group_rows`,
     check: (r) => {
       date(r.date);
       time(r.start_time);
       comment(r.comment);
+      const n = r.group_count;
+      ensure(
+        n === null ||
+          (typeof n === 'number' &&
+            isId(n) &&
+            Number.isSafeInteger(n) &&
+            n >= Number(r.group_rows)),
+      );
     },
   },
   { table: 'session_groups', columns: 'session_id, group_id', check: none },
@@ -197,10 +217,11 @@ const RULES: Rule[] = [
 export const checkRows = async (
   db: Db,
   today: string,
-  schema: 'main' | typeof BACKUP_ALIAS = 'main',
+  schema: Schema = 'main',
 ): Promise<'INVALID_DATA' | null> => {
   for (const rule of RULES) {
-    const rows = await db.query<Row>(`SELECT ${rule.columns} FROM ${schema}.${rule.table}`);
+    const columns = typeof rule.columns === 'string' ? rule.columns : rule.columns(schema);
+    const rows = await db.query<Row>(`SELECT ${columns} FROM ${schema}.${rule.table}`);
     try {
       for (const row of rows) {
         ids(row);
