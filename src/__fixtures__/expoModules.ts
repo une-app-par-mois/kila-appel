@@ -140,7 +140,9 @@ export const fakeDocumentPicker = (
  * expo-print (ticket 040a) : `render` imite la fonction de rendu en fichier. Elle relève ses options,
  * écrit `content` (un faux PDF, `%PDF-` en tête) dans `<printRoot()>/<n>-rapport.pdf`, comme le
  * module natif dans `cache/Print/`, et rend son URI. `uri` force l'URI rendue (chemins piégés) ;
- * `fail` : rendu en échec, message avec un nom fictif. La clé de la fonction du module n'est écrite
+ * `fail` : rendu en échec après la création d'un fichier partiel (Android crée le fichier avant
+ * le rendu), message avec un nom fictif ; `noUri` : résolu sans `uri`, comme iOS peut le faire
+ * (`ExpoPrintToFile.swift`, 58.0.9). La clé de la fonction du module n'est écrite
  * que dans la fabrique `jest.mock` d'un test (staticChecksPrint, 038).
  */
 export const fakePrint = (printRoot: () => string) => {
@@ -149,16 +151,18 @@ export const fakePrint = (printRoot: () => string) => {
     content: '%PDF-1.7\n% rapport fictif\n' as string | Uint8Array,
     uri: null as string | null,
     fail: false,
+    noUri: false,
   };
   let next = 0;
   const render = async (options: object) => {
     state.calls.push(options);
-    if (state.fail) throw new Error(`${printRoot()}/Dupont-Lea.pdf`);
+    if (state.noUri) return { numberOfPages: 0 };
     if (state.uri !== null) return { uri: state.uri, numberOfPages: 1 };
     mkdirSync(printRoot(), { recursive: true });
     next += 1;
     const path = join(printRoot(), `${next}-rapport.pdf`);
-    writeFileSync(path, state.content);
+    writeFileSync(path, state.fail ? '%PDF-1.7\n% partiel' : state.content);
+    if (state.fail) throw new Error(`${printRoot()}/Dupont-Lea.pdf`);
     return { uri: fileUri(path), numberOfPages: 1 };
   };
   return { state, render };

@@ -5,7 +5,7 @@
 // rapport seulement, argument fermé (html, width, height ; jamais `uri`), chemin rendu contrôlé
 // (enfant direct de `cache/Print/`), erreurs sans chemin. Modules natifs imités sur node:fs
 // (src/__fixtures__/expoModules.ts, ADR-008).
-import { existsSync, readFileSync, rmSync } from 'node:fs';
+import { readdirSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { printPdf } from '@/data/expoPrint';
 import type { ReportHtml } from '@/domain/reportHtml';
@@ -22,7 +22,7 @@ jest.mock('expo-print', () => {
 
 const fsMock = jest.requireMock('expo-file-system') as { Paths: { root: string } };
 const printMock = jest.requireMock('expo-print') as {
-  state: { calls: object[]; uri: string | null; fail: boolean };
+  state: { calls: object[]; uri: string | null; fail: boolean; noUri: boolean };
   printToFileAsync: jest.Mock;
 };
 const cache = join(fsMock.Paths.root, 'cache dir');
@@ -34,7 +34,7 @@ const NO_PATH = /cache|Print|Dupont|\//;
 
 beforeEach(() => {
   printMock.printToFileAsync.mockClear();
-  Object.assign(printMock.state, { calls: [], uri: null, fail: false });
+  Object.assign(printMock.state, { calls: [], uri: null, fail: false, noUri: false });
 });
 afterEach(() => rmSync(cache, { recursive: true, force: true }));
 
@@ -74,11 +74,17 @@ describe('SEC-08 ABS-04 printPdf : chemin rendu contrôlé, erreurs sans chemin'
     expect((error as Error).message).not.toMatch(NO_PATH);
   });
 
-  it('rendu natif en échec : erreur fixe, sans le message natif', async () => {
+  it('ABS-04 rendu natif en échec : erreur fixe ; le fichier partiel reste pour le 040b', async () => {
     printMock.state.fail = true;
     const error = await printPdf(page, 'portrait').catch((e: Error) => e);
     expect(error).toEqual(new Error('Rendu du PDF impossible'));
     expect((error as Error).message).not.toMatch(NO_PATH);
-    expect(existsSync(printDir)).toBe(false);
+    // Comme Android, le fichier est créé avant le rendu : c'est au cycle (040b) de vider Print/.
+    expect(readdirSync(printDir)).toEqual([expect.stringMatching(/^\d+-rapport\.pdf$/)]);
+  });
+
+  it('iOS résout sans uri : même erreur fixe, aucun chemin rendu', async () => {
+    printMock.state.noUri = true;
+    await expect(printPdf(page, 'portrait')).rejects.toEqual(new Error('Rendu du PDF impossible'));
   });
 });

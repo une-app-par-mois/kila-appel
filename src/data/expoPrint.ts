@@ -22,14 +22,18 @@ const unprintable = () => new Error('Rendu du PDF impossible');
 /**
  * EX-32 : rend le HTML du rapport en PDF A4 dans `cache/Print/` et rend le chemin du fichier.
  * Chemin hors de `cache/Print/` : refus sans le chemin (le fichier reste au vidage du dossier).
+ * Rendu en échec : un fichier partiel peut rester dans `cache/Print/` (Android le crée avant le
+ * rendu) ; le cycle du rapport (040b) vide le dossier dans son `finally`.
  */
 export const printPdf = async (html: ReportHtml, orientation: PageOrientation): Promise<string> => {
   const { width, height } = A4[orientation];
-  let uri: string;
+  let uri: unknown;
   try {
     ({ uri } = await printToFileAsync({ html, width, height }));
   } catch {
     throw unprintable();
   }
+  // iOS (`ExpoPrintToFile.swift`, 58.0.9) peut résoudre sans `uri` au lieu de rejeter.
+  if (typeof uri !== 'string') throw unprintable();
   return printedPath(uri);
 };

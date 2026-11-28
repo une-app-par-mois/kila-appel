@@ -4,7 +4,7 @@
 // Les fichiers vivent dans `cache/exports/<sous-dossier>/`, vidé au début de chaque export, au
 // démarrage et après Tout effacer ; le sous-dossier est effacé à la fermeture du partage.
 // Ticket 040a (EX-32, SEC-08, SEC-10) : le PDF rendu par expo-print dans `cache/Print/` (contrôlé
-// par `printedPath`) est déplacé sous `kila-rapport-AAAA-MM-JJ.pdf`, `cache/Print/` est vidé.
+// par `printedPath`) est déplacé sous `kila-rapport-<début>-au-<fin>.pdf`, `cache/Print/` est vidé.
 import { Directory, File, FileMode, Paths } from 'expo-file-system';
 import { shareAsync } from 'expo-sharing';
 import { checkSystemPath } from '@/data/expoDb';
@@ -27,7 +27,17 @@ const notPdf = () => new Error('Fichier PDF invalide');
 const printDir = () => new Directory(Paths.cache, 'Print');
 const PDF_HEADER = '%PDF-';
 const PRINTED_NAME = /\.pdf$/;
-const DAY = /^\d{4}-\d{2}-\d{2}$/;
+const DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
+/** Période du rapport (début et fin inclus, `AAAA-MM-JJ`). */
+export type ReportPeriod = { from: string; to: string };
+
+/** Vraie date du calendrier : reconstruite, elle doit redonner le même texte (2026-02-30 refusé). */
+const isRealDay = (day: string): boolean => {
+  const match = DAY.exec(day);
+  if (match === null) return false;
+  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+  return date.toISOString().slice(0, 10) === day;
+};
 
 /** `path` : `<cache/exports>/<sous-dossier>/<nom>`, nom de `EXPORT_NAME` ; rend l'extension. */
 const checkExportPath = (path: string): string => {
@@ -105,16 +115,21 @@ const hasPdfHeader = async (file: File): Promise<boolean> => {
 };
 
 /**
- * EX-32 : déplace le PDF de `cache/Print/` vers `<dir>/kila-rapport-<today>.pdf`, `dir` étant un
- * sous-dossier de `cache/exports/` ; rend le nouveau chemin. Source contrôlée d'abord (jamais un
- * autre fichier touché) ; ensuite, tout échec (destination refusée, en-tête, déplacement) efface
- * l'original (SEC-10). Erreurs sans chemin (ABS-04).
+ * EX-32 : déplace le PDF de `cache/Print/` vers `<dir>/kila-rapport-<début>-au-<fin>.pdf` (comme le
+ * CSV du 037 : deux périodes, deux noms), `dir` étant un sous-dossier de `cache/exports/` ; rend le
+ * nouveau chemin. Source contrôlée d'abord (jamais un autre fichier touché) ; ensuite, tout échec
+ * (vraies dates, début après la fin, destination, en-tête, déplacement) efface l'original (SEC-10).
+ * Erreurs sans chemin (ABS-04).
  */
-export const moveReport = async (printed: string, dir: string, today: string): Promise<string> => {
+export const moveReport = async (
+  printed: string,
+  dir: string,
+  { from, to }: ReportPeriod,
+): Promise<string> => {
   const source = new File(pathToUri(checkPrinted(printed)));
   try {
-    if (!DAY.test(today)) throw refused();
-    const target = `${dir}/kila-rapport-${today}.pdf`;
+    if (!isRealDay(from) || !isRealDay(to) || from > to) throw refused();
+    const target = `${dir}/kila-rapport-${from}-au-${to}.pdf`;
     checkExportPath(target);
     if (!(await hasPdfHeader(source).catch(() => false))) throw notPdf();
     // Sous-dossier neuf : rien à écraser ; un reste y est effacé avec lui (fermeture du partage).
