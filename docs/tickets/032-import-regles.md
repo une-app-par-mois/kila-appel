@@ -95,8 +95,20 @@ Décisions automatiques de la pré-analyse (état « à relire », `docs/DECISIO
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
+| Saison active pour le groupe | Groupes déjà filtrés par l'appelant ; saison passée en paramètre | `previewImport(rows, { existingMembers, groups, activeSeasonId, today })`, groupes de la forme de `Group` (`id`, `seasonId`, `name`, `archivedAt`) | Le domaine applique lui-même « non archivé, saison active » (testé) ; le 034 passe les listes des dépôts telles quelles | à relire |
+| Ordre des motifs nom puis prénom | Appeler `validateMember` seul (prénom d'abord) ; exporter la règle d'un nom | `validateMemberName` exporté de `validation.ts`, appelé pour nom puis prénom ; `validateMember` rejoué ensuite sur le membre entier | Ordre du ticket (nom, prénom, date, téléphone) sans dupliquer la règle SEC-06 | à relire |
+| Écriture du contrôle des caractères | Regex ; test des points de code | Fonction `isInvisible` sur les points de code | Biome refuse les caractères de contrôle dans une regex (`noControlCharactersInRegex`) ; la règle n'est pas désactivée | à relire |
+| Comptage « 24 lignes » | Toutes les lignes ; lignes non vides | Lignes de données non vides (les lignes toutes vides ne comptent pas) | Maquette : 24 = 21 + 1 + 2 | à relire |
+| Compteur « à importer » et doublons gardés | Compteur recalculé ; liste seule | `counts.toImport` = lignes valides (doublons ignorés) ; `membersToWrite(preview, kept)` rend la liste à écrire, dans l'ordre du fichier, avec les doublons gardés (numéros de ligne) | L'écran (035) recalcule le bouton à partir de la liste | à relire |
+| Doublon interne et doublons précédents | Comparer aussi aux doublons ; aux valides seules | Un doublon n'est pas une ligne valide : les lignes suivantes ne lui sont pas comparées ; un doublon porte sa source (`app` ou `file`) | Décision « lignes valides précédentes » de la pré-analyse ; la source sert au texte de l'écran | à relire |
+| Apostrophe dans un en-tête | Gardée ; retirée | Retirée avec espaces, `_` et `-` (« téléphone d'urgence » reconnu avec ' ou ’) | Sinon l'en-tête prévu par le ticket n'est pas reconnu | à relire |
+| Date `J/M/AAAA` | Jour et mois tous deux à un chiffre ; chacun à 1 ou 2 chiffres | Chacun à 1 ou 2 chiffres (`04/3/2017` accepté) | Excel écrit les deux formes selon le format de cellule | à relire |
+| Groupe introuvable à l'écran | Numéro de ligne seul ; avec la cellule | `{ line, group }`, la cellule pour l'écran (« Poussin mercredi », maquette) ; jamais dans une erreur ni un journal | La maquette montre le nom saisi ; ce n'est pas une donnée de personne | à relire |
+| Fichiers du ticket | 8 fichiers ; plus les tests de sauvegarde | 10 : `src/data/backupRows.test.ts` et `src/data/backup.test.ts` en plus (tests seulement, demandés au lancement) | Montrer qu'un nom hors règle fait refuser la sauvegarde en entier ; `backupRows.ts` inchangé | à relire |
 
 ## Questions pour le porteur
+
+Aucune.
 
 ## À reporter
 

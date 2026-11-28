@@ -56,6 +56,8 @@ export const commun = {
   /** Erreurs attendues, sans terme technique (CONV-15). */
   errors: {
     NAME_REQUIRED: 'Indiquez un nom.',
+    NAME_TOO_LONG: '100 caractères au plus.',
+    NAME_INVALID_CHAR: 'Retirez le caractère invisible (tabulation, retour à la ligne).',
     DATE_INVALID: 'Date à écrire sous la forme JJ/MM/AAAA.',
     DATE_IN_FUTURE: 'Cette date est dans le futur.',
     DATE_OUTSIDE_SEASON: 'Cette date est en dehors de la saison.',
