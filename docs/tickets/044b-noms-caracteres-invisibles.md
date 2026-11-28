@@ -60,7 +60,7 @@ Le 044 refuse dans un nom de groupe, comme le 032 dans un nom de membre, les car
 | Drapeaux faits de tags | Accepter ; refuser | Refusés, limite écrite dans SEC-06 à l'intégration, un test fixe le refus | Plage U+E0000 à U+E007F refusée en entier | décidée par le porteur le 2026-11-28 |
 | Écriture de la liste dans `isInvisible` | Une condition par point ou par plage ; table de plages | Une condition par point ou par plage, ajoutée à la suite des anciennes ; commentaire complété | Lisible et vérifiable d'un coup d'œil, comme l'existant | à relire |
 | Points de code dans les tests | Importer la liste du code ; les écrire en clair | En clair (`String.fromCodePoint(0x…)`), sans importer la liste ; jamais de caractère brut dans les sources (`grep` vide) | Un test qui importe la liste ne détecte pas un oubli dans la liste | à relire |
-| Points testés | Bornes seules ; plages complètes | Bornes de chaque plage plus U+E0061 partout ; dans `validationInvisible.test.ts`, aussi U+2061 à U+2063 et U+FFFA ; voisins U+00AC, U+00AE, U+205F, U+FFFC, U+1F600, 김민준, 🇫🇷, 👍🏽, ❤️, 1️⃣, famille, drapeau arc-en-ciel acceptés ; drapeaux d'Écosse, d'Angleterre et du pays de Galles refusés | Bornes = erreurs les plus probables ; plages courtes testées en entier à peu de frais | à relire |
+| Points testés | Bornes seules ; plages complètes | Tous les points dans `validationInvisible.test.ts` (bornes, U+E0061, U+2061 à U+2063, U+FFFA, voisins acceptés, trois drapeaux faits de tags refusés) ; un échantillon dans les dépôts, l'import, la saisie et la restauration | Bornes = erreurs les plus probables ; plages courtes testées en entier à peu de frais | à relire |
 | Outil de test commun | Copier une fonction dans chaque fichier ; un module de test | `src/__fixtures__/codePoints.ts` (nouveau, test seulement) : `char(...)` et `hexCodes(...)` pour titrer les tests « U+00AD » ; 8 fichiers au lieu de 7 | Évite quatre copies ; Jest n'écrit pas un nombre en hexadécimal dans un titre | à relire |
 
 ## Questions pour le porteur
@@ -68,6 +68,7 @@ Le 044 refuse dans un nom de groupe, comme le 032 dans un nom de membre, les car
 ## À reporter
 
 - CHANGELOG : Noms : la liste des caractères invisibles refusés est élargie (SEC-06).
-- Fichiers touchés : ajouter `src/__fixtures__/codePoints.ts` (nouveau, outil de test).
+- Fichiers touchés : ajouter `src/__fixtures__/codePoints.ts` (nouveau, outil de test) et `src/appTests/groups.test.tsx` (saisie d'un nom de groupe) ; 9 fichiers.
+- SEC-07 (`csvWrite.ts`) à aligner au 044c avant la PR du jalon.
 - SECURITE.md (intégration) : SEC-06, la liste élargie passe de « prévue » à « codée » (avec les tests) ; limite des drapeaux faits de tags ; SEC-10, export bloqué par un nom de membre déjà en base.
 - Architecture : rien.

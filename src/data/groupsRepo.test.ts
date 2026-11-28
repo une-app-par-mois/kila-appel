@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  */
-import { hexCodes } from '@/__fixtures__/codePoints';
+import { char, hexCodes } from '@/__fixtures__/codePoints';
 import { count, seed } from '@/__fixtures__/seed';
 import type { Db } from '@/data/db';
 import { groupsRepo } from '@/data/groupsRepo';
@@ -61,7 +61,7 @@ describe('Dépôt des groupes (EX-02)', () => {
     'SEC-06 refuse U+%s à la création et au renommage, rien n’est écrit',
     async (_hex, code) => {
       const repo = groupsRepo(db);
-      const name = `Pous${String.fromCodePoint(code)}sins`;
+      const name = `Pous${char(code)}sins`;
       await expect(repo.create(seasonId, name)).rejects.toMatchObject({
         code: 'NAME_INVALID_CHAR',
       });
@@ -73,18 +73,19 @@ describe('Dépôt des groupes (EX-02)', () => {
   );
 
   it('SEC-06 refuse le drapeau d’Écosse fait de tags', async () => {
-    const scotland = String.fromCodePoint(
-      0x1f3f4,
-      0xe0067,
-      0xe0062,
-      0xe0073,
-      0xe0063,
-      0xe0074,
-      0xe007f,
-    );
+    const scotland = char(0x1f3f4, 0xe0067, 0xe0062, 0xe0073, 0xe0063, 0xe0074, 0xe007f);
     await expect(groupsRepo(db).create(seasonId, `Poussins ${scotland}`)).rejects.toMatchObject({
       code: 'NAME_INVALID_CHAR',
     });
+  });
+
+  it('SEC-06 accepte le cœur rouge (U+FE0F), à la création et au renommage', async () => {
+    const repo = groupsRepo(db);
+    const heart = `Poussins ${char(0x2764, 0xfe0f)}`;
+    const id = await repo.create(seasonId, heart);
+    expect((await repo.get(id))?.name).toBe(heart);
+    await repo.rename(id, `${heart} mercredi`);
+    expect((await repo.get(id))?.name).toBe(`${heart} mercredi`);
   });
 
   it('SEC-06 accepte un émoji composé avec U+200D, à la création et au renommage', async () => {
