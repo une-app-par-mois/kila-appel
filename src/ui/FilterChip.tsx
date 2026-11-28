@@ -1,5 +1,6 @@
 // Puce de filtre (maquettes Membres, Historique) : rayon 20, bordure Quadrillage ; active, bordure
-// et texte Encre en demi-gras. Zone d'appui de 44 pt (NF-06), état sélectionné annoncé.
+// et texte Encre en demi-gras. Zone d'appui de 44 pt (NF-06), état sélectionné annoncé ; en case à
+// cocher (bascule « Ignorer » de l'import, ticket 035), annoncé « coché ».
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { theme } from '@/config/theme';
 
@@ -9,13 +10,21 @@ type Props = {
   onPress: () => void;
   /** Lu par le lecteur d'écran à la place d'un libellé court (« Me » → « Mercredi »). */
   accessibilityLabel?: string;
+  /** `checkbox` : bascule annoncée « coché » ou « non coché » (NF-06). */
+  role?: 'button' | 'checkbox';
 };
 
-export const FilterChip = ({ label, selected, onPress, accessibilityLabel }: Props) => (
+export const FilterChip = ({
+  label,
+  selected,
+  onPress,
+  accessibilityLabel,
+  role = 'button',
+}: Props) => (
   <Pressable
-    accessibilityRole="button"
+    accessibilityRole={role}
     accessibilityLabel={accessibilityLabel ?? label}
-    accessibilityState={{ selected }}
+    accessibilityState={role === 'checkbox' ? { checked: selected } : { selected }}
     onPress={onPress}
     style={[styles.chip, selected && styles.selected]}
   >
