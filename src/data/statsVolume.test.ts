@@ -3,7 +3,7 @@
  */
 // NF-08 (ticket 023) : 500 membres et 3 saisons ; chaque écran de statistiques en une requête,
 // durée mesurée avec une limite large (machines de CI lentes). Durées réelles dans la fiche.
-import { volumeSeed } from '@/__fixtures__/statsSeed';
+import { fillGroupCount, volumeSeed } from '@/__fixtures__/statsSeed';
 import type { Db } from '@/data/db';
 import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
@@ -51,6 +51,7 @@ describe('NF-08 volume : 500 membres, 3 saisons', () => {
 
   it('NF-08 un groupe par séance, période d’une saison : chaque écran en une requête', async () => {
     const { groupId, memberId } = await volumeSeed(db);
+    await fillGroupCount(db);
     const r = await measure(db, groupId, memberId, '2026-09-01', '2027-07-31');
     expect(r.overview.sessions).toBe(400);
     expect(r.overview.groups).toHaveLength(10);
@@ -60,6 +61,7 @@ describe('NF-08 volume : 500 membres, 3 saisons', () => {
 
   it('NF-08 toutes les séances communes à deux groupes, période sur 3 saisons', async () => {
     const { groupId, memberId } = await volumeSeed(db, { twoGroups: true });
+    await fillGroupCount(db);
     const r = await measure(db, groupId, memberId, '2024-09-01', '2027-07-31');
     expect(r.overview.sessions).toBe(1200);
     expect(r.overview.groups).toHaveLength(30);

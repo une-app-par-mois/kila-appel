@@ -49,10 +49,15 @@ Quand un groupe est supprimé, sa ligne de `session_groups` et les inscriptions 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
 | Découpage | Un ticket ; 043 et 043b | 043b : règle RM-03 et tests « RM-03 Q2 » inversés, après le 043 dans le même lot | Plus de 10 fichiers en zone sensible | décidée par le porteur le 2026-11-28 |
+| Nombre de groupes d'une séance | `group_count` seul ; `COALESCE(rs.group_count, compte actuel)` | `COALESCE` | Les séances `NULL` gardent le comportement d'avant le 043 ; limite provisoire jusqu'au 043c, testée (« RM-03 limite ») | à relire (prévue par la pré-analyse) |
+| Une seule règle | `MEMBER` garde `x.groups = 1` avec la nouvelle expression ; prédicat commun | Prédicat `countsFor(membre, groupe, rs)` dans `statsSql.ts`, utilisé par `credits` et par `MEMBER` ; `groupCount` n'est plus exporté | Une seule écriture de RM-03 : la case d'un membre et les comptes ne peuvent plus diverger | à relire |
+| Jeu fictif `statsSeed` | `group_count` sur toutes les séances ; seulement les séances à deux groupes | B2 seulement (`group_count = 2`) ; les autres restent `NULL` (compte actuel, même résultat) | Consigne du ticket ; un test pose `group_count = 1` pour vérifier le cas de secours inchangé | à relire (prévue par la pré-analyse) |
+| NF-08 : remplir la colonne | Dans `volumeSeed` ; aide `fillGroupCount` appelée par les tests de volume | `fillGroupCount` (même requête que la migration 2), appelée après `volumeSeed` | `volumeSeed` sert aussi sur une base de version 1 (test de migration), sans la colonne | à relire |
 
 ## Questions pour le porteur
 
 ## À reporter
 
 - CHANGELOG : Statistiques, export et rapport : une présence d'un groupe supprimé ne compte plus pour l'autre groupe de la séance (RM-03).
-- Architecture : `statsSql.ts` (`credits`) lit `sessions.group_count`.
+- Architecture : `statsSql.ts` : RM-03 s'écrit une fois, `countsFor` (lit `sessions.group_count`, compte actuel si `NULL`), utilisé par `credits` et par « Statistiques d'un membre ».
+- NF-08 (jeu de volume, séances à deux groupes sur 3 saisons, colonne remplie, poste de dev) : synthèse 170 → 137 ms, export « Tous les groupes » 600 → 527 ms, export filtré 44 ms (inchangé), rapport 525 → 425 ms, grille 370 → 335 ms, membre et groupe ≈ 1 et 10 ms. Colonne `NULL` : durées d'avant.

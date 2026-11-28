@@ -108,21 +108,23 @@ describe('Export des présences (EX-31, RM-03)', () => {
     expect(await repo().count(SEASON, s.groups.benjamins)).toBe(10);
   });
 
-  // Q2 de la fiche, en attente du porteur : comportement attendu (« Sans groupe », hors de l'export
-  // Benjamins) impossible sans changer RM-03 ou le schéma. Ce test fixe le comportement actuel,
-  // identique dans les statistiques du jalon 2 ; il sera inversé selon la réponse.
-  it('RM-03 Q2 séance à deux groupes dont l’un est supprimé : la présence passe au groupe restant (actuel)', async () => {
+  // Ticket 043b (décision du porteur du 2026-11-28 au 036, Q2) : la séance garde son nombre de
+  // groupes (`group_count`) ; le repli du groupe unique ne vaut plus après la suppression d'un groupe.
+  it('RM-03 Q2 séance à deux groupes dont l’un est supprimé : « Sans groupe », hors du groupe restant', async () => {
     // B2 (24/10) : Benjamins et Vétérans ; Paul n'est inscrit qu'aux Vétérans.
     await db.execute('DELETE FROM groups WHERE id = ?', [s.groups.veterans]);
     const b2 = (await repo().rows(SEASON, null)).filter((r) => r.date === '2026-10-24');
     expect(b2.map((r) => [r.lastName, r.groups])).toEqual([
       ['Michel', ['Benjamins']],
-      ['Roux', ['Benjamins']],
+      ['Roux', []],
     ]);
-    expect(await repo().count(SEASON, s.groups.benjamins)).toBe(10);
+    expect(await repo().count(SEASON, null)).toBe(57);
+    const benjamins = await repo().rows(SEASON, s.groups.benjamins);
+    expect(benjamins.map((r) => r.lastName)).not.toContain('Roux');
+    expect(await repo().count(SEASON, s.groups.benjamins)).toBe(9);
     const stats = await statsRepo(db).overview(SEASON);
-    const benjamins = stats.groups.find((g) => g.groupId === s.groups.benjamins);
-    expect(benjamins?.counts).toEqual({ present: 7, late: 1, excused: 0, absent: 2 });
+    const group = stats.groups.find((g) => g.groupId === s.groups.benjamins);
+    expect(group?.counts).toEqual({ present: 7, late: 0, excused: 0, absent: 2 });
   });
 
   it('EX-31 tri par date, heure, séance, puis par nom (Collator français) ; archivés compris', async () => {

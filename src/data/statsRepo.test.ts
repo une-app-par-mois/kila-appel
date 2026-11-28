@@ -240,14 +240,36 @@ describe('Statistiques (EX-27, RM-01, RM-03)', () => {
     });
   });
 
-  it('EX-02 RM-03 comportement actuel, revu au jalon 4 (F-11) : groupe supprimé d’une séance commune, ses présences passent au groupe restant par le cas de secours', async () => {
+  // Ticket 043b : la séance garde son nombre de groupes (`group_count`, B2 : 2).
+  it('EX-02 RM-03 groupe supprimé d’une séance commune : ses présences ne passent pas au groupe restant', async () => {
     await db.execute('DELETE FROM groups WHERE id = ?', [s.groups.veterans]);
     const b = await repo().group(s.groups.benjamins, SEASON);
     expect(b?.members.map((m) => [m.firstName, m.counts])).toEqual([
       ['Nour', c(1, 0, 0, 1)],
       ['Léa', c(6, 0, 0, 1)],
-      ['Paul', c(0, 1, 0, 0)],
     ]);
+    const o = await repo().overview(SEASON);
+    expect(o.groups.find((g) => g.groupId === s.groups.benjamins)?.counts).toEqual(c(7, 0, 0, 2));
+    expect(o.counts).toEqual(c(45, 2, 3, 7));
+    expect(await repo().member(s.members.paul, s.groups.benjamins, SEASON)).toBeNull();
+  });
+
+  it('RM-03 séance d’un seul groupe (`group_count` = 1) : cas de secours inchangé', async () => {
+    await db.execute('UPDATE sessions SET group_count = 1 WHERE group_count IS NULL');
+    const nour = await repo().member(s.members.nour, s.groups.benjamins, SEASON);
+    expect(nour?.sessions[2]).toMatchObject({ status: 'present', enrolled: false });
+    expect(nour?.counts).toEqual(c(1, 0, 0, 1));
+    expect((await repo().group(s.groups.benjamins, SEASON))?.members).toHaveLength(2);
+  });
+
+  // Limite provisoire jusqu'au 043c : séance sans nombre de groupes figé, compte actuel des groupes.
+  it('RM-03 limite : `group_count` NULL, la présence passe au groupe restant (compte actuel)', async () => {
+    await db.execute('UPDATE sessions SET group_count = NULL');
+    await db.execute('DELETE FROM groups WHERE id = ?', [s.groups.veterans]);
+    const b = await repo().group(s.groups.benjamins, SEASON);
+    expect(b?.members.find((m) => m.firstName === 'Paul')?.counts).toEqual(c(0, 1, 0, 0));
+    const paul = await repo().member(s.members.paul, s.groups.benjamins, SEASON);
+    expect(paul?.sessions[1]).toMatchObject({ status: 'late', enrolled: false });
   });
 
   it('EX-27 membre sans inscription ni présence comptée pour le groupe dans la période : null', async () => {

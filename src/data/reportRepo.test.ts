@@ -3,7 +3,13 @@
  */
 // Rapport PDF, données (ticket 039 ; EX-32, RM-01, RM-03, ABS-03, NF-08) sur le jeu fictif vérifié
 // à la main du ticket 023 (`statsSeed.ts`) : mêmes nombres que les écrans de statistiques.
-import { STATS_TODAY, type StatsSeeded, statsSeed, volumeSeed } from '@/__fixtures__/statsSeed';
+import {
+  fillGroupCount,
+  STATS_TODAY,
+  type StatsSeeded,
+  statsSeed,
+  volumeSeed,
+} from '@/__fixtures__/statsSeed';
 import { rapport, rapportPalette } from '@/config/libelles/rapport';
 import type { Db } from '@/data/db';
 import { openNodeDb } from '@/data/nodeDb';
@@ -137,14 +143,14 @@ describe('Rapport PDF : données (EX-32, RM-01, RM-03)', () => {
     expect(r?.groups.every((g) => g.sessions === 0 && g.members.length === 0)).toBe(true);
   });
 
-  // Fiche 043 : ce test fixe le comportement actuel de RM-03 (repli « un seul groupe » après la
-  // suppression d'un groupe de la séance) ; il sera inversé par le ticket 043.
-  it('RM-03 Q2 séance à deux groupes dont l’un est supprimé : la présence passe au groupe restant (actuel)', async () => {
+  // Ticket 043b : la séance garde son nombre de groupes (`group_count`) ; le repli du groupe unique
+  // ne vaut plus après la suppression d'un groupe (décision du porteur du 2026-11-28 au 036, Q2).
+  it('RM-03 Q2 séance à deux groupes dont l’un est supprimé : la présence ne passe pas au groupe restant', async () => {
     await db.execute('DELETE FROM groups WHERE id = ?', [s.groups.veterans]);
     const r = await repo().report(SEASON, null, STATS_TODAY);
     const benjamins = r?.groups.find((g) => g.groupId === s.groups.benjamins);
-    expect(benjamins?.counts).toEqual(c(7, 1, 0, 2));
-    expect(benjamins?.members.map((m) => m.lastName)).toContain('Roux');
+    expect(benjamins?.counts).toEqual(c(7, 0, 0, 2));
+    expect(benjamins?.members.map((m) => m.lastName)).not.toContain('Roux');
   });
 
   it('ABS-03 ni date de naissance, ni contact, ni commentaire de séance dans le HTML', async () => {
@@ -186,6 +192,7 @@ describe('NF-08 rapport : 500 membres, 3 saisons', () => {
     'NF-08 deux groupes : %s, une requête et le HTML en moins de 2 s',
     async (twoGroups, from, sessions, groups) => {
       await volumeSeed(db, { twoGroups });
+      await fillGroupCount(db);
       const counter = counting(db);
       const start = performance.now();
       const r = await reportRepo(counter.db).report(

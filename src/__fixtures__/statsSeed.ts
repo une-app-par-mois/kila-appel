@@ -182,6 +182,8 @@ export const statsSeed = async (db: Db): Promise<StatsSeeded> => {
     BENJAMINS,
   );
   await link(db, benjaminsSessions[1] ?? 0, veterans);
+  // RM-03 (ticket 043b) : nombre de groupes figé de la séance commune ; NULL ailleurs (compte actuel).
+  await db.execute('UPDATE sessions SET group_count = 2 WHERE id = ?', [benjaminsSessions[1] ?? 0]);
 
   // Séance dont le groupe a été supprimé (EX-02) : synthèse seulement.
   const orphan = await session(db, seasonId, '2026-11-06', '10:00', 'recorded');
@@ -266,3 +268,14 @@ export const volumeSeed = async (
   );
   return { seasonIds, groupId: g?.id ?? 0, memberId: 1 };
 };
+
+/**
+ * NF-08 (ticket 043b) : remplit `group_count` comme l'enregistrement d'un appel (nombre de groupes
+ * de la séance), pour mesurer la règle RM-03 sur une base à jour. Hors de `volumeSeed`, qui sert
+ * aussi sur une base de version 1 (test de migration).
+ */
+export const fillGroupCount = (db: Db) =>
+  db.execute(
+    `UPDATE sessions SET group_count =
+       (SELECT NULLIF(count(*), 0) FROM session_groups sg WHERE sg.session_id = sessions.id)`,
+  );

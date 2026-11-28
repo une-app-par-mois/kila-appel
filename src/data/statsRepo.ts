@@ -7,11 +7,11 @@ import {
   byName,
   COUNT_COLUMNS,
   type CountRow,
+  countsFor,
   credits,
   enrolledAt,
   enrolledInPeriod,
   GROUP_ARCHIVED,
-  groupCount,
   RECORDED,
   toCounts,
 } from '@/data/statsSql';
@@ -143,18 +143,18 @@ WHERE g.id = ?4
 GROUP BY m.id`;
 
 // EX-27 : chaque séance enregistrée du groupe dans la période ; statut seulement s'il compte pour
-// le groupe (même règle que `credits`). `listed` : même règle que la liste des membres (GROUP).
+// le groupe (RM-03 : `countsFor`, la règle de `credits`). `listed` : même règle que la liste des membres (GROUP).
 const MEMBER = `WITH ${RECORDED}
 SELECT m.id AS memberId, m.last_name AS lastName, m.first_name AS firstName,
   m.archived_at IS NOT NULL AS archived, ${enrolledInPeriod('m', '?5')} AS listed,
   g.id AS groupId, g.name AS groupName,
   ${GROUP_ARCHIVED} AS groupArchived, x.id AS sessionId, x.date, x.start_time AS startTime,
-  x.enrolled, CASE WHEN x.enrolled OR x.groups = 1 THEN x.status END AS status
+  x.enrolled, x.status
 FROM members m JOIN groups g ON g.id = ?5 JOIN seasons se ON se.id = g.season_id
 LEFT JOIN (
   SELECT rs.id, rs.date, rs.start_time, ${enrolledAt('?4', '?5', 'rs.date')} AS enrolled,
-    (SELECT a.status FROM attendances a WHERE a.session_id = rs.id AND a.member_id = ?4) AS status,
-    ${groupCount('rs.id')} AS groups
+    CASE WHEN ${countsFor('?4', '?5', 'rs')} THEN (SELECT a.status FROM attendances a
+      WHERE a.session_id = rs.id AND a.member_id = ?4) END AS status
   FROM rs JOIN session_groups sg ON sg.session_id = rs.id AND sg.group_id = ?5
 ) x ON 1
 WHERE m.id = ?4

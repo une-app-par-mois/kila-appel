@@ -4,7 +4,13 @@
 // Rapport PDF, grille séance par séance (ticket 039b ; EX-32, RM-03, NF-08) sur le jeu fictif du
 // ticket 023 (`statsSeed.ts`). Oracle : « Statistiques d'un membre » (`statsRepo.member`), jamais
 // des valeurs écrites en dur ; les comptes d'une ligne égalent ceux du rapport (039).
-import { STATS_TODAY, type StatsSeeded, statsSeed, volumeSeed } from '@/__fixtures__/statsSeed';
+import {
+  fillGroupCount,
+  STATS_TODAY,
+  type StatsSeeded,
+  statsSeed,
+  volumeSeed,
+} from '@/__fixtures__/statsSeed';
 import { rapport } from '@/config/libelles/rapport';
 import type { Db } from '@/data/db';
 import { openNodeDb } from '@/data/nodeDb';
@@ -131,6 +137,8 @@ describe('Rapport PDF : grille, données (EX-32, RM-03)', () => {
     const { grid, report } = await both(SEASON, null);
     expect(grid.has(s.groups.veterans)).toBe(false);
     await expectSameAsStats(db, SEASON, report, grid);
+    // RM-03 Q2 (ticket 043b) : le retard de Paul (B2, Vétérans seulement) ne passe pas à Benjamins.
+    expect(grid.get(s.groups.benjamins)?.statuses.has(s.members.paul)).toBe(false);
   });
 
   it('EX-32 filtre introuvable ou invalide : grille vide ; période revalidée (RM-04)', async () => {
@@ -159,6 +167,7 @@ describe('NF-08 grille : 500 membres, 3 saisons', () => {
     'NF-08 deux groupes : %s, une requête en moins de 2 s, taille du HTML mesurée',
     async (twoGroups, from, groups, sessions) => {
       await volumeSeed(db, { twoGroups });
+      await fillGroupCount(db);
       const period = customPeriod(from, '2027-07-31');
       const counter = counting(db);
       const start = performance.now();
