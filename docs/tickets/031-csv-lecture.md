@@ -92,6 +92,15 @@ Décisions automatiques de la pré-analyse (état « à relire », `docs/DECISIO
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
+| Numérotation après une directive `sep=` | Directive comptée (en-tête = 2) ; non comptée | Non comptée : l'en-tête qui suit est la ligne 1 | Contrat « en-tête = 1 » ; Excel consomme la directive et montre l'en-tête en ligne 1 | à relire |
+| Forme de la directive `sep=` | Toute valeur ; `;`, `,` ou tabulation seuls | `sep=;`, `sep=,` ou `sep=` + tabulation, seule sur la première ligne, casse ignorée ; sinon ligne de données ordinaire | Seuls les trois séparateurs reconnus existent ; `sep=;Nom` n'est pas une directive | à relire |
+| Ligne « vide » | Espaces et séparateur choisi ; espaces et les trois séparateurs | Cellules faites seulement d'espaces, `;` et `,` (la tabulation est un espace) : ligne ignorée, comptée ; même règle pour la ligne qui sert à détecter le séparateur | Une ligne `,,` dans un fichier en `;` reste du bruit ; détection et lecture d'accord | à relire |
+| Ligne donnée avec `MALFORMED` | Début de la ligne du tableur ; ligne du défaut | Guillemet non fermé : ligne où il s'ouvre ; texte après un guillemet fermant : ligne du guillemet fermant | L'encadrant retrouve le défaut dans un éditeur de texte | à relire |
+| Espace avant un guillemet ouvrant (` "Martin"`) | `MALFORMED` ; champ sans guillemets | Champ sans guillemets, gardé tel quel (le 032 fait le `trim()`) | RFC 4180 : le guillemet n'ouvre un champ qu'en première position ; même règle que `O"Brien` | à relire |
+| BOM dans le texte reçu par `parseCsv` | Laissé ; retiré | U+FEFF de tête retiré aussi par `parseCsv` | Le 032 et ses tests appellent `parseCsv` sur un texte direct ; l'en-tête resterait « ﻿Nom » | à relire |
+| Exports pour les tests | Tester par `decodeCsv` seulement ; exporter la table | `decodeWindows1252` exporté (les 256 octets comparés au `TextDecoder` de Node, octet nul compris) ; `MAX_CSV_DATA_ROWS = 2000` exporté par `csvParse.ts` | L'octet nul est refusé par `decodeCsv` : seule la fonction seule permet le test des 256 octets | à relire |
+| Ordre des refus du décodage | — | `TOO_LARGE`, puis `NOT_TEXT` (BOM UTF-16, octet nul), puis `MALFORMED` (BOM UTF-8 suivi d'octets invalides), puis `EMPTY` (texte fait de blancs selon `trim()`) | Taille d'abord, sans parcourir un gros fichier | à relire |
+| Second fichier de test | — | `src/domain/csvParseLimits.test.ts` (limites, refus, trois encodages de bout en bout, ABS-04) : 6 fichiers | Décision de la pré-analyse ; `csvParse.test.ts` garde les guillemets, lignes, fins de ligne et séparateurs | à relire |
 
 ## Questions pour le porteur
 
