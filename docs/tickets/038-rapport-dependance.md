@@ -1,8 +1,8 @@
 # 038 — Rapport PDF : expo-print et garde-fous du binaire
 
-Statut : à faire (dépendance accordée par le porteur le 2026-11-28, version exacte 58.0.9) · Jalon : 3 · Zone sensible : **oui** (dépendance et rendu par WebView : règle « aucun réseau », `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
+Statut : en cours (dépendance accordée par le porteur le 2026-11-28, version exacte 58.0.9) · Jalon : 3 · Zone sensible : **oui** (dépendance et rendu par WebView : règle « aucun réseau », `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
 
-Dépend de : aucun · Fichiers touchés : `package.json`, `package-lock.json`, `app.json`, `plugins/withoutWebViewMetrics.js` et son test (nouveaux), `scripts/audit-apk.js`, `scripts/audit-apk.test.js`, `src/staticChecksPrint.test.ts` (nouveau) — 8 fichiers (`docs/SECURITE.md` et `docs/CONFORMITE.md` : à l'intégration du lot, voir « À reporter »)
+Dépend de : aucun · Fichiers touchés : `package.json`, `package-lock.json`, `app.json`, `plugins/withoutWebViewMetrics.js` et son test (nouveaux), `scripts/audit-apk.js`, `scripts/audit-apk-webview.test.js` (nouveau : `audit-apk.test.js` fait 302 lignes), `src/staticChecksPrint.test.ts` (nouveau) — 8 fichiers, ou 9 si `scripts/audit-apk.test.js` doit être retouché (séance de lancement du lot J3-2 ; `docs/SECURITE.md` et `docs/CONFORMITE.md` : à l'intégration du lot, voir « À reporter »)
 
 Découpé le 2026-11-28 (séance de découpage du jalon 3).
 
@@ -27,10 +27,15 @@ Relevé du 2026-11-28 (lecture seule : `npm view`, paquet décompressé hors du 
 
 ## Ce qui change (plan à valider, option recommandée)
 
-- `npx expo install expo-print` (version exacte 58.0.9, CONV-31) ; aucune autre dépendance directe.
-- `plugins/withoutWebViewMetrics.js` : ajoute au manifeste `<meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true"/>` et `…EnableSafeBrowsing` à `false` ; placée dans `app.json`.
-- `scripts/audit-apk.js` : échoue si ces deux méta-données manquent dans le manifeste compilé ; permissions toujours **exactement** `config/permissions-attendues.txt` (inchangé).
-- `src/staticChecksPrint.test.ts` : seul `src/data/expoPrint.ts` (créé au 040) importe expo-print, et seulement `printToFileAsync` ; refusés partout : `printAsync`, `selectPrinterAsync`, `Orientation`, l'option `uri`, l'option `base64`, tout sous-chemin du paquet.
+- `npx expo install expo-print`, puis version exacte 58.0.9 (CONV-31) ; on vérifie que l'installation n'ajoute aucune dépendance npm ; aucune autre dépendance directe.
+- `plugins/withoutWebViewMetrics.js` : ajoute sous `<application>` `<meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true"/>` et `…EnableSafeBrowsing` à `false`, avec `tools:replace="android:value"` ; idempotente (appliquée deux fois, même manifeste) ; placée en dernier dans `app.json`.
+- `scripts/audit-apk.js` : contrôle inconditionnel ; une seule `meta-data` de chaque nom, enfant direct d'`application`, valeur booléenne littérale (`true` pour MetricsOptOut, `false` pour EnableSafeBrowsing) ; refus d'une chaîne, d'une référence, d'un doublon et d'une valeur placée sous une activité ; listes de permissions et de composants inchangées (toujours **exactement** `config/permissions-attendues.txt`) : toute différence vue sur l'APK arrête le ticket et devient une question.
+- `src/staticChecksPrint.test.ts` (reprend les outils de `src/__fixtures__/expoAccess.ts`, chaque refus vu en échec) :
+  - importeurs d'expo-print ⊆ [`src/data/expoPrint.ts`] (créé au 040, aucun aujourd'hui ; le 040 durcira en « exactement ») ; tout sous-chemin du paquet refusé ;
+  - seul `printToFileAsync` peut être importé d'`expo-print` ;
+  - `printAsync`, `selectPrinterAsync` et `ExpoPrint` refusés comme noms dans tout `src/`, même écrits en chaîne ;
+  - argument de `printToFileAsync` : objet écrit en entier, sans `...` ni variable, avec les seules clés `html`, `width`, `height` et `margins` ; toute autre clé refusée, `uri`, `base64` et `useMarkupFormatter` compris ;
+  - `Orientation` et `base64` ne sont pas interdits comme noms ailleurs.
 - `docs/SECURITE.md` et `docs/CONFORMITE.md` : complétés à l'intégration du lot par l'IA principale (voir « À reporter »).
 - Registre des licences (`src/config/licences.json`, EX-42) : régénéré au 040, quand le paquet entre dans le bundle.
 
@@ -45,8 +50,8 @@ Relevé du 2026-11-28 (lecture seule : `npm view`, paquet décompressé hors du 
 
 ## Tests attendus
 
-- `plugins/withoutWebViewMetrics.test.js`, `scripts/audit-apk.test.js` (manifeste fictif sans les méta-données → échec), `src/staticChecksPrint.test.ts`.
-- À la main : build local de l'APK, `aapt2 dump permissions` et `aapt2 dump xmltree` collés dans la PR.
+- `plugins/withoutWebViewMetrics.test.js` (dont l'idempotence), `scripts/audit-apk-webview.test.js` (manifeste fictif sans les méta-données, avec une chaîne, une référence, un doublon ou une valeur sous une activité → échec), `src/staticChecksPrint.test.ts`.
+- À la main : `aapt2 dump permissions` et `aapt2 dump xmltree` avant et après, sur un APK de production local ; le diff va dans la PR ; démarrage sur l'émulateur.
 
 ## Hors périmètre
 
@@ -64,6 +69,23 @@ Séance de découpage du jalon 3 (2026-11-28), réponses du porteur :
 - Conformité (ABS-08) : **déclarations des stores inchangées**, note à `docs/CONFORMITE.md` §3 (la politique du jalon 6 décrira l'import CSV, l'export CSV et le rapport PDF), à l'intégration.
 - Plan validé par le porteur le 2026-11-28 ; relecture du porteur avant la fusion dans le groupe (zone sensible).
 
+Séance de lancement du lot J3-2 (2026-11-28), réponses du porteur :
+
+- **Contrôle statique** : `printAsync`, `selectPrinterAsync` et `ExpoPrint` refusés comme noms dans tout `src/`, même écrits en chaîne ; seul `printToFileAsync` peut être importé d'`expo-print` ; son argument est un objet écrit en entier, sans `...` ni variable, avec les seules clés `html`, `width`, `height` et `margins` (toute autre clé refusée, `uri`, `base64` et `useMarkupFormatter` compris) ; `Orientation` et `base64` ne sont pas interdits comme noms ailleurs.
+- **SECURITE**, complété à l'intégration du 038 (« À reporter ») : SEC-08 reçoit le texte décidé, avec « à venir, 039 » pour la CSP et « à venir, 040 » pour le vidage de `cache/Print/` dans la colonne Vérification ; une ligne à SEC-02 (méta-données de la WebView vérifiées par `audit-apk.js`) ; une ligne à SEC-01 (`src/staticChecksPrint.test.ts`) ; limite écrite : `MetricsOptOut` ne couvre que les mesures d'usage.
+
+Décisions automatiques de la pré-analyse (état « à relire », `docs/DECISIONS.md`) :
+
+- Installation : `npx expo install expo-print`, puis version exacte `58.0.9` ; vérifier que l'installation n'ajoute aucune dépendance npm.
+- Contrôle statique : importeurs ⊆ [`src/data/expoPrint.ts`], aucun aujourd'hui, durci en « exactement » au 040 ; outils de `src/__fixtures__/expoAccess.ts` ; chaque refus vu en échec.
+- Extension `withoutWebViewMetrics` : deux `meta-data` sous `<application>` avec `tools:replace="android:value"` ; idempotente ; en dernier dans `app.json`.
+- Audit : une seule `meta-data` de chaque nom, enfant direct d'`application`, valeur booléenne littérale (`true` pour MetricsOptOut, `false` pour EnableSafeBrowsing) ; refus d'une chaîne, d'une référence, d'un doublon, d'une valeur sous une activité ; contrôle inconditionnel ; tests dans `scripts/audit-apk-webview.test.js` (`audit-apk.test.js` fait 302 lignes).
+- Listes : permissions et composants inchangés ; toute différence vue sur l'APK arrête le ticket et devient une question.
+- Vérification à la main : `aapt2 dump permissions` et `aapt2 dump xmltree` avant et après, sur un APK de production local ; diff dans la PR ; démarrage sur l'émulateur.
+- Ordre de fusion : le 038 avant le 040 ; ABS-07 se juge au niveau du jalon.
+- Licences : `licences.json` régénéré au 040.
+- Fichiers : 8, ou 9.
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |
@@ -75,5 +97,5 @@ Séance de découpage du jalon 3 (2026-11-28), réponses du porteur :
 
 - CHANGELOG : Rapport PDF : bibliothèque d'impression d'Expo, sans permission ni réseau ; mesures d'usage de la WebView d'Android refusées (F-09, ABS-01, ABS-07).
 - Architecture : §2 expo-print installé (version exacte) ; §6 extension `plugins/withoutWebViewMetrics.js`, audit des méta-données WebView.
-- SECURITE (à l'intégration) : SEC-08 complétée : expo-print importé par `src/data/expoPrint.ts` seul, `printToFileAsync` avec du HTML seulement (`printAsync`, `selectPrinterAsync`, `uri`, `base64` refusés) ; CSP `default-src 'none'; style-src 'unsafe-inline'; img-src data:` en tête du HTML ; `cache/Print/` vidé après chaque rapport, au démarrage et après Tout effacer ; méta-données `MetricsOptOut` et `EnableSafeBrowsing` vérifiées sur l'APK.
+- SECURITE (à l'intégration du 038, décisions du porteur du 2026-11-28) : SEC-08 complétée : expo-print importé par `src/data/expoPrint.ts` seul, `printToFileAsync` seul, argument écrit en entier avec les clés `html`, `width`, `height`, `margins` seulement (`printAsync`, `selectPrinterAsync`, `ExpoPrint`, `uri`, `base64`, `useMarkupFormatter` refusés) ; CSP `default-src 'none'; style-src 'unsafe-inline'; img-src data:` en tête du HTML (Vérification : « à venir, 039 ») ; `cache/Print/` vidé après chaque rapport, au démarrage et après Tout effacer (Vérification : « à venir, 040 ») ; méta-données `MetricsOptOut` et `EnableSafeBrowsing` vérifiées sur l'APK. SEC-02 : ligne « méta-données de la WebView vérifiées par `audit-apk.js` ». SEC-01 : ligne `src/staticChecksPrint.test.ts`. Limite : `MetricsOptOut` ne couvre que les mesures d'usage.
 - CONFORMITE (à l'intégration) : §3, rapport et export partagés par l'encadrant, même interprétation que la sauvegarde, à décrire dans la politique au jalon 6 (ABS-08), déclarations inchangées ; §8, module natif expo-print (MIT), aucune bibliothèque tierce nouvelle.

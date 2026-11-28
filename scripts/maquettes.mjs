@@ -478,13 +478,13 @@ ecran('import-apercu', 2, 'Import CSV : aperçu', 'EX-30', 'parametres', `
 ${titre('Aperçu', 'import')}
 <div class="carte compteur mono"><span>24 lignes</span><span>21 à importer</span><span class="rouge">1 invalide</span><span>2 doublons</span></div>
 ${section('Doublons')}
-${carte(`<div class="rang"><div><div class="l-titre">Léo Garcia</div><div class="l-sous mono">14/03/2017 · déjà dans l'appli</div></div><span class="filtre on">Ignorer</span></div><div class="rang"><div><div class="l-titre">Zoé Blanc</div><div class="l-sous mono">déjà dans l'appli</div></div><span class="filtre on">Ignorer</span></div><p class="l-sous">Un doublon ignoré déjà dans l'appli sera inscrit au groupe du fichier, et désarchivé s'il était archivé.</p>`)}
+${carte(`<div class="rang"><div><div class="l-titre">Léo Garcia</div><div class="l-sous mono">14/03/2017 · déjà dans l'appli</div></div><span class="filtre on">Ignorer</span></div><div class="rang"><div><div class="l-titre">Zoé Blanc</div><div class="l-sous mono">déjà dans l'appli</div></div><span class="filtre on">Ignorer</span></div><p class="l-sous">Un doublon ignoré déjà dans l'appli sera inscrit au groupe du fichier, et désarchivé s'il était archivé. Sans groupe trouvé, il reste tel quel.</p>`)}
 ${section('Ligne invalide')}
 ${carte(`<div class="rang"><div><div class="l-titre">Ligne 17</div><div class="l-sous">Prénom manquant</div></div></div>`)}
 ${section('Groupe introuvable')}
 ${carte(`<div class="rang"><div><div class="l-titre">Ligne 12</div><div class="l-sous">« Poussin mercredi » : importé sans groupe</div></div></div>`)}
 ${go('import-resultat', 'Importer 21 membres')}
-<p class="note">Rien n'est écrit avant ce bouton. Doublon ignoré inscrit au groupe du fichier et désarchivé, sans réécrire nom, date ni contact : décision du porteur du 2026-11-28 (tickets 032, 034).</p>`);
+<p class="note">Rien n'est écrit avant ce bouton. Doublon ignoré inscrit au groupe du fichier et désarchivé, sans réécrire nom, date ni contact ; sans groupe trouvé, rien ne change : décisions du porteur du 2026-11-28 (tickets 032, 034).</p>`);
 
 ecran('import-resultat', 2, 'Import CSV : résultat', 'EX-30', 'parametres', `
 ${titre('21 membres importés', 'membres')}
