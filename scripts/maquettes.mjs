@@ -480,6 +480,8 @@ ${titre('Aperçu', 'import')}
 <div class="carte compteur mono"><span>24 lignes</span><span>21 à importer</span><span class="rouge">1 invalide</span><span>2 doublons</span></div>
 ${section('Doublons')}
 ${carte(`<div class="rang"><div><div class="l-titre">Léo Garcia</div><div class="l-sous mono">14/03/2017 · déjà dans l'appli</div></div><span class="filtre on">Ignorer</span></div><div class="rang"><div><div class="l-titre">Zoé Blanc</div><div class="l-sous mono">déjà dans l'appli</div></div><span class="filtre on">Ignorer</span></div><p class="l-sous">Un doublon ignoré déjà dans l'appli sera inscrit au groupe du fichier, et désarchivé s'il était archivé. Sans groupe trouvé, il reste tel quel.</p>`)}
+${section('Doublon archivé')}
+${carte(`<div class="rang"><div><div class="l-titre">Inès Petit</div><div class="l-sous mono">09/11/2015 · déjà dans l'appli (archivé)</div></div><span class="filtre on">Ignorer</span></div>`)}
 ${section('Ligne invalide')}
 ${carte(`<div class="rang"><div><div class="l-titre">Ligne 17</div><div class="l-sous">Prénom manquant</div></div></div>`)}
 ${section('Groupe introuvable')}
@@ -525,16 +527,18 @@ ${carte(`<p>Le fichier contient les noms des membres et leurs présences, <b>en 
 ${section('Groupe archivé, date erronée')}
 <label>Groupe</label><div class="champ">Minimes 2025 · Archivé ▾</div>
 <label>Au</label><div class="champ mono">31/08/2026</div><p class="rouge">La fin doit tomber le jour du début ou après.</p>
+<p class="note">Fichier partagé : <span class="mono">kila-presences-2026-09-01-au-2026-11-26.csv</span> (début et fin de la période, ticket 037).</p>
 <p class="note">Bandeau SEC-09 jamais réduit, présent dans tous les états. Plafond de 50 000 lignes : export refusé, bouton désactivé, compteur affiché ; textes des états : décisions du porteur du 2026-11-28 (ticket 037).</p>`);
 
 ecran('rapport', 2, 'Rapport PDF', 'EX-32', 'stats', `
 ${titre('Rapport PDF', 'stats')}
 <label>Période</label><div class="champ">Saison 2026-2027 ▾</div>
 <label>Groupes</label><div class="champ">Tous les groupes ▾</div>
-${carte(`<div class="feuille"><div class="l-titre">Ki&La · Rapport de présence</div><div class="l-sous mono">01/09/2026 – 26/11/2026</div><div class="barre"><i class="s-present" style="width:80%"></i><i class="s-late" style="width:7%"></i><i class="s-excused" style="width:5%"></i><i class="s-absent" style="width:8%"></i></div><div class="l-sous">Synthèse, puis une page par groupe et sa grille…</div></div>`)}
+${carte(`<div class="feuille"><div class="l-titre">Ki&La · Rapport de présence</div><div class="l-sous mono">01/09/2026 – 26/11/2026</div><div class="barre"><i class="s-present" style="width:80%"></i><i class="s-late" style="width:7%"></i><i class="s-excused" style="width:5%"></i><i class="s-absent" style="width:8%"></i></div><div class="l-sous">Synthèse, puis une page par groupe et sa grille…</div><div class="l-sous">Benjamins · Archivé</div><div class="l-sous">P : présent · R : retard · E : excusé · A : absent. « — » : aucune séance comptée.</div></div>`)}
 ${carte(`<p>Le fichier contient les noms des membres et leurs taux de présence, <b>en clair</b>. Partagez-le seulement avec qui doit le recevoir.</p>`, 'bandeau')}
 ${go('rapport', 'Créer et partager le PDF')}
-<p class="note">Format A4 : synthèse et taux par membre en portrait, puis la grille séance par séance de chaque groupe en paysage, par blocs d'environ 25 séances (décision du porteur du 2026-11-28, tickets 039 et 039b).</p>`);
+<p class="note">Format A4 : synthèse et taux par membre en portrait, puis la grille séance par séance de chaque groupe en paysage, par blocs d'environ 25 séances (décision du porteur du 2026-11-28, tickets 039 et 039b).</p>
+<p class="note">Sous chaque tableau des membres, la légende des lettres P, R, E, A ; « Archivé » en texte secondaire après un groupe ou un membre archivé ; « Aucun membre sur la période. » pour un groupe sans membre ; « Aucune présence comptée sur la période. » quand les séances n'ont aucune présence comptée (décisions du porteur du 2026-11-28, ticket 039).</p>`);
 
 // F-10, F-11 — Créneau ponctuel et plusieurs groupes
 ecran('creneau-ponctuel', 2, 'Créneau ponctuel (plusieurs groupes)', 'EX-33, EX-34', 'parametres', `

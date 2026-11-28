@@ -1,6 +1,6 @@
 # 035 — Import CSV : écrans
 
-Statut : à faire · Jalon : 3 · Zone sensible : non (écrans ; lecture, contrôles et écriture au 031, 032, 034) · Trivial : non
+Statut : fusionné dans le groupe (PR #105) · Jalon : 3 · Zone sensible : non (écrans ; lecture, contrôles et écriture au 031, 032, 034) · Trivial : non
 
 Dépend de : 034 · Fichiers touchés : `src/app/import/index.tsx`, `src/app/import/apercu.tsx`, `src/app/import/resultat.tsx` (nouveaux), `src/app/membres/index.tsx` (bouton « Importer (CSV) »), `src/config/libelles/import.ts` (nouveau), `src/config/libelles/index.ts` (une ligne, partagé avec 037), `src/appTests/memberImport.test.tsx` (nouveau) — 7 fichiers
 

@@ -63,6 +63,12 @@ Reporté du lot J3-2 (2026-11-28, fiche 038) :
 - (c) Les tests simulent expo-print par une fabrique `jest.mock('expo-print', () => …)` et une variable `mock…` : la clé `printToFileAsync:` n'est permise que dans un fichier de test ; aucun nom de module non littéral (« ABS-01 module non littéral »).
 - (d) Durcir dans `src/staticChecksPrint.test.ts` « importeurs ⊆ [`src/data/expoPrint.ts`] » en « exactement [`src/data/expoPrint.ts`] ».
 
+Reporté du lot J3-3 (2026-11-28, fiche 039) :
+
+- Mesurer NF-08 sur l'A55 : requête du rapport (`reportRepo(db).report(period, groupId, today)`) et rendu PDF. Sur le poste de développement (`volumeSeed`, médiane de 5) : 36 ms sur une saison, 525 ms sur 3 saisons à deux groupes, HTML 3 ms (57 Ko) et 8 ms (166 Ko) ; le test garde « une requête » et une limite de 2 s, à surveiller sur un runner de CI chargé.
+- Vérifier la CSP en rendu réel sur iOS (`WKWebView` d'expo-print, JavaScript activé) : aucune ressource chargée, styles en ligne appliqués.
+- `printToFileAsync` reçoit un `ReportHtml` (seul `reportHtml` en produit) ; `report(…)` rend `null` pour un groupe introuvable.
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

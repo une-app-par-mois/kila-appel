@@ -49,6 +49,10 @@ Quand un groupe est supprimé, sa ligne de `session_groups` et les inscriptions 
 - Plan à valider à la séance de lancement (zone sensible, migration) : option A ou B.
 - ABS-08 : une colonne d'organisation (nombre de groupes) n'est pas une donnée personnelle ; à confirmer pour la politique de confidentialité.
 
+Reporté du lot J3-3 (2026-11-28, fiche 039) :
+
+- Inverser le test « RM-03 Q2 séance à deux groupes dont l'un est supprimé : la présence passe au groupe restant (actuel) » de `src/data/reportRepo.test.ts`, comme ceux de `attendanceExportRepo.test.ts`.
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

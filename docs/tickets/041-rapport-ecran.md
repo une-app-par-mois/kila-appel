@@ -50,6 +50,11 @@ Séance de découpage du jalon 3 (2026-11-28), réponses du porteur :
 - Maquette « Rapport PDF » et `scripts/maquettes.mjs` à mettre à jour (bandeau ; état vide dans « États vides » ; aperçu de la feuille : « Synthèse, puis une page par groupe et sa grille… »), à l'intégration, comme au jalon 2, avant la comparaison de la PR.
 - Décision d'office ci-dessus appliquée, notée dans `docs/DECISIONS.md` (état « à relire »).
 
+Reporté du lot J3-3 (2026-11-28, fiches 037 et 039) :
+
+- Ajouter `rapport.ts` à `src/config/libelles/index.ts` (le 039 l'importe directement, aucun écran ne le lisait encore).
+- Rangée de Stats : « Exporter (CSV) » occupe le premier tiers (037) ; le bouton « Rapport PDF » prend les deux tiers restants, aux mêmes conditions (séances et période valide).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

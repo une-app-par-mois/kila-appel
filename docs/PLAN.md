@@ -21,13 +21,13 @@ Le plus gros risque technique d'abord (jalon 0). Chaque jalon se termine par un 
 | 0 | Outillage et risques techniques | — | CI verte avec un premier test du domaine et un test de données sur `node:sqlite` ; APK de développement construit par la CI et installé sur le téléphone ; build iOS de test réussi sur le runner macOS (non signé) | 4 | 6 |
 | 1 | Organiser, appeler, retrouver | F-01, F-02, F-03, EX-39 | Prétest : appel de 20 membres en moins de 30 s ; appel retrouvé après fermeture forcée ; sauvegarde → tout effacer → restauration identique ; campagne Maestro verte | 12 | 19 |
 | 2 | Suivre l'assiduité | F-04, F-05, F-06 | Prétest : alerte levée puis traitée ; taux exacts sur un jeu fictif vérifié à la main ; relance reçue sur le téléphone, sans nom de membre | 13 | 18 |
-| 3 | Entrer et sortir les données | F-07, F-08, F-09 | Prétest : import d'un CSV fictif Excel (UTF-8 et Windows-1252) ; CSV et PDF ouverts sur l'ordinateur | 15 (découpé le 2026-11-28 : 031 à 042, avec 032b et 039b ; 043 ajouté le 2026-11-28) | 6 |
+| 3 | Entrer et sortir les données | F-07, F-08, F-09 | Prétest : import d'un CSV fictif Excel (UTF-8 et Windows-1252) ; CSV et PDF ouverts sur l'ordinateur | 16 (découpé le 2026-11-28 : 031 à 042, avec 032b et 039b ; 043 et 044 ajoutés le 2026-11-28) | 6 |
 | 4 | Calendrier complet | F-10, F-11, F-13 | Prétest : stage sur 3 dates à 2 groupes ; séance préparée puis enregistrée ; séance annulée puis rétablie | 4 | 7 |
 | 5 | Confort | F-12, F-14 | Prétest : frise et podium conformes aux maquettes | 2 | 3 |
 | 6 | Publication Android | EX-40 à EX-42 | Pages légales et GitHub Pages en ligne ; audit adverse sans problème critique ou élevé ouvert ; `CHECKLIST-RELEASE.md` coché ; AAB signé par la CI déposé en test interne puis en production | 4 | 10 |
 | 7 | Publication iOS | — | Test sur un vrai iPhone ; IPA signé par la CI sur TestFlight puis en production | 2 | 5 |
 
-Total jusqu'à la publication Android (jalons 0 à 6) : **43 tickets, environ 69 h de porteur**, hors marge.
+Total jusqu'à la publication Android (jalons 0 à 6) : **55 tickets, environ 69 h de porteur**, hors marge (total recompté le 2026-11-28 à l'intégration du lot J3-3 : 4 + 12 + 13 + 16 + 4 + 2 + 4 ; le découpage du jalon 3 ne l'avait pas mis à jour).
 
 **Jalon 2 fait (2026-11-28)** : PR #88 fusionnée dans `main` en squash (`40d70bb`), CI toute verte sur le dernier commit, campagne Maestro sur l'APK de la CI 7 parcours sur 7. **Fusionné sans le prétest sur l'A55**, sur décision du porteur du 2026-11-28 : le prétest reste à faire, et tout défaut trouvé devient un ticket corrigé au jalon 3, classé selon le §5. Critère de sortie en face de ce qui est vérifié :
 

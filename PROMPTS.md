@@ -439,6 +439,33 @@ Avant de passer aux tickets suivants, je veux voir avec toi comment optimiser le
 - Une dépendance native liée dans un ticket entre au registre des licences dans le même ticket, même si le code qui l'appelle vient plus tard.
 - Une règle de données qui dépend d'une ligne supprimée en cascade ne se corrige pas dans une requête : il faut une trace dans le schéma (Q2, ticket 043).
 
+### Lot J3-3 (035, 037, 039) — 2026-11-28
+
+**Prompt clé** : séance de lancement du troisième lot du jalon 3 (pré-analyse, QCM, écarts de maquette, plans de 037 et 039 en zone sensible), trois agents de code en parallèle, revues de code et de sécurité, contradicteur, puis intégration.
+
+**Réponses du porteur au QCM du lot** :
+- 035 : bouton « Inscrire M membres à leur groupe » quand N = 0 et M > 0 ; phrase du résultat à six compteurs (une partie à 0 disparaît) ; même rangée de deux boutons dans la liste vide ; colonnes reconnues non affichées (idée dans `docs/IDEES.md`) ; textes absents de la maquette validés ;
+- 037 : plafond de 50 000 lignes ; textes des états (en cours, échec, groupe archivé, date) ;
+- 039 : police du système pour le PDF (exception dans `design/CHARTE.md` §4).
+
+**Réponses du porteur à la relecture** : 039 : légende P/R/E/A sous chaque tableau, « Aucun membre sur la période. », mention « Archivé », « Aucune présence comptée sur la période. » ; fusion de 037 et 039 validée.
+
+**Ce que l'IA a fait** :
+- **Développement** : 035 (`src/app/import/` : choix et refus, aperçu, résultat ; `FilterChip` en case à cocher) ; 037 (`useAttendanceExport.ts`, `src/app/stats/export.tsx`, plafond `MAX_EXPORT_ROWS`) ; 039 (`safeHtml.ts`, `reportHtml.ts`, `reportRepo.ts`, `rapport.ts`).
+- **Intégration** : PR #103, #104, #105 fusionnées dans le groupe ; 48 lignes ajoutées à `docs/DECISIONS.md` ; SEC-08, SEC-09, SEC-10, SEC-12 complétés ; reports vers 039b, 040, 041, 043 ; ticket 044 créé (caractères invisibles dans les noms de groupe) ; maquette complétée (doublon archivé, nom du fichier CSV, légende du rapport).
+
+**Ce qui a été corrigé par les revues** :
+- **aperçu périmé exporté** (037, revues de code et de sécurité) : un appui juste après un changement de groupe ou de date pouvait exporter l'ancienne période ; chaque aperçu retient le choix pour lequel il a été lu, et le bouton reste désactivé tant qu'il ne correspond pas aux champs affichés ; le plafond est revérifié sous le verrou ;
+- **repli silencieux sur « Tous les groupes »** (037, contradicteur) : un groupe sans séance sur la nouvelle période était remplacé par « Tous les groupes », ce qui élargissait l'export sans le dire ; le groupe reste choisi et l'état vide s'affiche, le repli ne vaut que pour un groupe supprimé ;
+- **CSS échappée** (039, revue) : le gabarit échappait les apostrophes de la CSP et le `>` des sélecteurs ; la CSP et `reportCss` passent dans un en-tête de confiance (texte fixe, couleurs vérifiées, refusée si elle contient « < »), et un contrôle statique refuse l'appel direct `html(` ;
+- **retours Android incohérents** (035, revue) : la touche Android menait aux membres depuis « Fichier non reconnu » et à l'écran de choix depuis le résultat, à l'inverse de la maquette ; retours alignés sur la maquette (`usePreventRemove`, `dismissTo` puis `push`).
+
+**Leçons** :
+- Un aperçu affiché à côté d'un bouton d'export doit dire pour quel choix il a été calculé ; sinon l'appui exporte ce qui était à l'écran une seconde plus tôt.
+- Un repli « par défaut » qui élargit une sortie de données n'est jamais silencieux.
+- Un gabarit qui échappe tout ne convient pas au CSS : le texte de confiance se sépare des données, puis un contrôle statique garde la frontière.
+- Le retour Android se teste sur chaque écran (bouton, geste, touche), pas seulement le bouton « ‹ ».
+
 ### [Étape] — [AAAA-MM-JJ]
 
 **Prompt**
