@@ -8,7 +8,7 @@ export const MAX_CSV_BYTES = 1024 * 1024;
 export type CsvEncoding = 'utf-8' | 'windows-1252';
 
 /** Refus du décodage : code seul, jamais de texte du fichier (ABS-04, SEC-12). */
-export type DecodeRefusal = { reason: 'EMPTY' | 'NOT_TEXT' | 'TOO_LARGE' };
+export type DecodeRefusal = { reason: 'EMPTY' | 'NOT_TEXT' | 'TOO_LARGE' | 'UNSUPPORTED_ENCODING' };
 
 export type DecodeResult = { text: string; encoding: CsvEncoding } | DecodeRefusal;
 
@@ -93,6 +93,27 @@ const decodeUtf8Strict = (bytes: Uint8Array, start: number): string | null => {
   return unitsToString(units);
 };
 
+// SEC-06 (décision du porteur du 2026-11-28) : « CSV (Macintosh) » d'Excel, en MacRoman, repéré
+// puis refusé. Heuristique, seulement pour un fichier qui n'est pas de l'UTF-8 valide : MacRoman
+// range ses lettres accentuées en 0x80–0x9F, Windows-1252 en 0xC0–0xFF. Octets comptés en
+// 0x80–0x9F : lettres françaises de MacRoman (Ç É á à â ç é è ê ï ô ù ü) qui, en Windows-1252,
+// sont des signes rares dans une liste de noms (‚ ƒ ‡ ˆ ‰ … Ž • ™ Ÿ, ou indéfinis). Les octets
+// vraiment utilisés par Windows-1252 (€ Œ œ ‘ ’ “ ” – — …) ne sont pas comptés. Le fichier est
+// MacRoman s'il a plus de ces octets que d'octets 0xC0–0xFF.
+const MAC_ROMAN_LETTERS = new Set([
+  0x82, 0x83, 0x87, 0x88, 0x89, 0x8d, 0x8e, 0x8f, 0x90, 0x95, 0x99, 0x9d, 0x9f,
+]);
+
+const looksMacRoman = (bytes: Uint8Array): boolean => {
+  let mac = 0;
+  let latin = 0;
+  for (const byte of bytes) {
+    if (byte >= 0xc0) latin += 1;
+    else if (MAC_ROMAN_LETTERS.has(byte)) mac += 1;
+  }
+  return mac > latin;
+};
+
 const hasUtf8Bom = (bytes: Uint8Array): boolean =>
   bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf;
 
@@ -101,7 +122,8 @@ const hasUtf16Bom = (bytes: Uint8Array): boolean =>
 
 /**
  * F-07, SEC-06 : octets d'un CSV en texte. BOM UTF-8 retiré ; sinon UTF-8 strict ; sinon
- * Windows-1252. UTF-16, octet nul, ou BOM UTF-8 suivi d'octets invalides : NOT_TEXT.
+ * Windows-1252, sauf MacRoman repéré (UNSUPPORTED_ENCODING). UTF-16, octet nul, ou BOM UTF-8
+ * suivi d'octets invalides : NOT_TEXT.
  */
 export const decodeCsv = (bytes: Uint8Array): DecodeResult => {
   if (bytes.length > MAX_CSV_BYTES) return { reason: 'TOO_LARGE' };
@@ -113,6 +135,7 @@ export const decodeCsv = (bytes: Uint8Array): DecodeResult => {
     result = { text, encoding: 'utf-8' };
   } else {
     const text = decodeUtf8Strict(bytes, 0);
+    if (text === null && looksMacRoman(bytes)) return { reason: 'UNSUPPORTED_ENCODING' };
     result =
       text === null
         ? { text: decodeWindows1252(bytes), encoding: 'windows-1252' }

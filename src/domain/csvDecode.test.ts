@@ -3,11 +3,14 @@ import {
   bomThenInvalid,
   FICTIVE_NAMES,
   fromHex,
+  MAC_ROMAN_TEXT,
   MEMBERS_TEXT,
+  membersMacRoman,
   membersUtf8,
   membersUtf8Bom,
   membersWindows1252,
   oversizeFile,
+  slavicWindows1252,
   utf16BeFile,
   utf16LeFile,
   xlsxHeader,
@@ -123,5 +126,45 @@ describe('SEC-06 refus du décodage, en valeur de retour', () => {
       expect(result).toMatch(/"reason"/);
       for (const name of FICTIVE_NAMES) expect(result).not.toContain(name);
     }
+  });
+});
+
+describe('SEC-06 « CSV (Macintosh) » d’Excel (MacRoman) repéré et refusé (décision du 2026-11-28)', () => {
+  const oracleMac = new TextDecoder('macintosh');
+
+  it('la fixture MacRoman écrite en hexadécimal dit bien Zoé, Françoise, Léo', () => {
+    expect(oracleMac.decode(membersMacRoman())).toBe(MAC_ROMAN_TEXT);
+  });
+
+  it('fichier MacRoman : UNSUPPORTED_ENCODING, sans texte du fichier', () => {
+    const result = decodeCsv(membersMacRoman());
+    expect(result).toEqual({ reason: 'UNSUPPORTED_ENCODING' });
+    for (const name of ['Zoé', 'Françoise', 'Léo', 'Martin']) {
+      expect(JSON.stringify(result)).not.toContain(name);
+    }
+  });
+
+  it('un seul é MacRoman (8E) sans lettre accentuée Windows-1252 : refusé', () => {
+    expect(decodeCsv(fromHex('4e 6f 6d 0d 0a 5a 6f 8e'))).toEqual({
+      reason: 'UNSUPPORTED_ENCODING',
+    });
+  });
+
+  it('Windows-1252 avec €, Œ, œ, ’, guillemets, tirets et … : toujours lu', () => {
+    const bytes = fromHex('80 8c 9c 92 91 93 94 96 97 85 3b 4e 6f 6d');
+    expect(decodeCsv(bytes)).toEqual({ text: oracle1252.decode(bytes), encoding: 'windows-1252' });
+    expect(decodeCsv(membersWindows1252())).toEqual({
+      text: MEMBERS_TEXT,
+      encoding: 'windows-1252',
+    });
+  });
+
+  it('Windows-1252 avec Ž et ž, mais plus de lettres accentuées en C0–FF : lu', () => {
+    const bytes = slavicWindows1252();
+    expect(decodeCsv(bytes)).toEqual({ text: oracle1252.decode(bytes), encoding: 'windows-1252' });
+  });
+
+  it('UTF-8 valide jamais soumis au repérage', () => {
+    expect(decodeCsv(new TextEncoder().encode('Zoé;Léo\n'))).toMatchObject({ encoding: 'utf-8' });
   });
 });

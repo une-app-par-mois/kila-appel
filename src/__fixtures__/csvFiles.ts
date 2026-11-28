@@ -65,6 +65,24 @@ export const membersWindows1252 = (): Uint8Array =>
     31 0d 0a
   `);
 
+/** Texte du fichier MacRoman ci-dessous. */
+export const MAC_ROMAN_TEXT =
+  'Nom;Prénom\r\nMartin;Zoé\r\nNoël;Françoise\r\nLefèvre;Léo\r\nL’Hôte;Zoé\r\n';
+
+/** « CSV (Macintosh) » d'Excel : MacRoman (é 8E, ë 91, ç 8D, è 8F, ô 99, ’ D5). Refusé (SEC-06). */
+export const membersMacRoman = (): Uint8Array =>
+  fromHex(`
+    4e 6f 6d 3b 50 72 8e 6e 6f 6d 0d 0a
+    4d 61 72 74 69 6e 3b 5a 6f 8e 0d 0a
+    4e 6f 91 6c 3b 46 72 61 6e 8d 6f 69 73 65 0d 0a
+    4c 65 66 8f 76 72 65 3b 4c 8e 6f 0d 0a
+    4c d5 48 99 74 65 3b 5a 6f 8e 0d 0a
+  `);
+
+/** Windows-1252 avec Ž et ž (8E, 9E) mais plus de lettres accentuées en C0–FF : « Žižek;Hélène ». */
+export const slavicWindows1252 = (): Uint8Array =>
+  fromHex('4e 6f 6d 3b 50 72 e9 6e 6f 6d 0d 0a 8e 69 9e 65 6b 3b 48 e9 6c e8 6e 65 0d 0a');
+
 /** « Texte Unicode » d'Excel : BOM UTF-16 LE, puis « Nom » sur deux octets par lettre. */
 export const utf16LeFile = (): Uint8Array => fromHex('ff fe 4e 00 6f 00 6d 00');
 
