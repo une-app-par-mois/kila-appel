@@ -15,7 +15,8 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 0 | Outillage et risques techniques | Voir `docs/PLAN.md` §2 | `groupe/jalon-0-outillage` | fait (PR #7) |
 | 1 | Organiser, appeler, retrouver | Voir `docs/PLAN.md` §2 | `groupe/jalon-1-organiser-appeler-retrouver` | fait (PR #63) |
 | 2 | Suivre l'assiduité (F-04, F-05, F-06) | Voir `docs/PLAN.md` §2 | `groupe/jalon-2-suivre-assiduite` | développement terminé : les 13 tickets (020 à 030, avec 028a, 028b et 028c) fusionnés dans le groupe (lots J2-1 à J2-4, puis 030 en PR #86) ; PR du jalon vers `main` à ouvrir, puis prétest sur l'A55 |
-| 3 à 7 | Détaillés au début du jalon précédent | `docs/PLAN.md` §2 | — | à faire |
+| 3 | Entrer et sortir les données (F-07, F-08, F-09) | Voir `docs/PLAN.md` §2 | `groupe/jalon-3-entrer-sortir-donnees` | découpé (tickets 031 à 042, 2026-11-28) |
+| 4 à 7 | Détaillés au début du jalon précédent | `docs/PLAN.md` §2 | — | à faire |
 
 ## Tickets
 
@@ -78,3 +79,15 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 028c | [Relance : appui et effacement](028c-relance-appui-effacement.md) | 2 | F-06 | oui | fusionné dans le groupe (PR #83) |
 | 029 | [Relance : réglage et demande de permission](029-relance-reglage.md) | 2 | F-06 | oui | fusionné dans le groupe (PR #82) |
 | 030 | [Campagne Maestro du jalon 2](030-maestro-jalon-2.md) | 2 | F-04 à F-06 | non | fusionné dans le groupe (PR #86) |
+| 031 | [Import CSV : décodage et lecture du fichier](031-csv-lecture.md) | 3 | F-07 | oui | à faire |
+| 032 | [Import CSV : règles de l'import et aperçu](032-import-regles.md) | 3 | F-07 | oui | à faire |
+| 033 | [Fichiers des échanges : adaptateur, verrou et nettoyage](033-fichiers-echanges.md) | 3 | F-07 à F-09 | oui | à faire |
+| 034 | [Import CSV : enregistrement et parcours](034-import-enregistrement.md) | 3 | F-07 | oui | à faire |
+| 035 | [Import CSV : écrans](035-import-ecrans.md) | 3 | F-07 | non | à faire |
+| 036 | [Export CSV des présences : contenu](036-export-csv-contenu.md) | 3 | F-08 | oui | à faire |
+| 037 | [Export CSV des présences : écran et partage](037-export-csv-ecran.md) | 3 | F-08 | oui | à faire |
+| 038 | [Rapport PDF : expo-print et garde-fous du binaire](038-rapport-dependance.md) | 3 | F-09 | oui | en attente du porteur |
+| 039 | [Rapport PDF : contenu et HTML](039-rapport-contenu.md) | 3 | F-09 | oui | à faire |
+| 040 | [Rapport PDF : production du fichier et partage](040-rapport-production.md) | 3 | F-09 | oui | en attente du porteur |
+| 041 | [Rapport PDF : écran](041-rapport-ecran.md) | 3 | F-09 | non | en attente du porteur |
+| 042 | [Campagne Maestro du jalon 3](042-maestro-jalon-3.md) | 3 | F-07 à F-09 | non | à faire |
