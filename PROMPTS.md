@@ -388,6 +388,31 @@ Avant de passer aux tickets suivants, je veux voir avec toi comment optimiser le
 - Durcir un contrôle de sécurité, c'est aussi relire ce qu'il vérifiait déjà : l'alerte sur une regex a fait trouver un contrôle d'`allowBackup` trop lâche, plus ancien que le jalon 2.
 - La file du porteur a tenu : 6 questions n'ont bloqué aucune fusion, et aucune réponse n'a demandé de correction.
 
+### Lot J3-1 (031, 032, 033) — 2026-11-28
+
+**Prompt clé** : séance de lancement du premier lot du jalon 3 (pré-analyse, QCM, plans des trois tickets en zone sensible), puis trois agents de code en parallèle, revues et intégration.
+
+**Réponses du porteur au QCM du lot** :
+- contrat commun 031 ↔ 032 (`parseCsv` → lignes numérotées comme dans le tableur, liste fermée des refus, `MAX_CSV_BYTES`) ;
+- caractères refusés dans nom et prénom élargis (U+0080 à U+009F, U+2028, U+2029, sens d'affichage), à l'import comme à la saisie ; même règle à la restauration (sauvegarde refusée en entier) ;
+- 033 : `eraseAll.test.tsx` ajouté ; découpage de `expoFiles.ts` autorisé d'avance (un seul fichier de plus dans la liste fermée).
+
+**Réponses du porteur en revue** : MacRoman repéré et refusé ; caractères invisibles supplémentaires refusés (U+061C, U+200B, U+200E, U+200F, U+FEFF, demi-caractères isolés ; U+200D accepté) ; doublon de l'appli laissé sur « Ignorer » inscrit au groupe du CSV et désarchivé (au 034) ; 032 et 033 gardés entiers à 12 fichiers ; fusion des trois tickets validée.
+
+**Ce que l'IA a fait** :
+- **Développement** : 031 (`csvDecode.ts`, `csvParse.ts`, fichiers piégés en octets) ; 032 (`importFields.ts`, `memberImport.ts`, `validateMember` à 100 points de code sans caractère invisible) ; 033 (`expoImportPicker`, `readFileBytes`, `expoExports.ts`, `fileLock.run`, `cache/exports/` vidé au démarrage et après Tout effacer).
+- **Intégration** : revues de code, contradicteur et revues de sécurité des trois tickets ; corrections renvoyées aux agents ; fusions une par une (PR #93, #94, #95) ; 50 décisions ajoutées à `docs/DECISIONS.md` ; SEC-01, SEC-06 et SEC-10 complétés ; maquette de l'aperçu et du refus « ancien format Mac » mise à jour ; reports vers 032b, 034, 035, 037 et 040.
+
+**Ce qui a été corrigé par les revues** :
+- **numéros de ligne** (031) : un champ sur plusieurs lignes faisait avancer le numéro, et `MALFORMED` donnait la ligne de l'éditeur de texte ; tout est compté en lignes du tableur (« Ligne 17 » de l'aperçu), directive `sep=` non comptée ;
+- **doublons quadratiques** (032) : chaque ligne était comparée à chaque membre (2 000 × 10 000 comparaisons figeaient l'aperçu) ; clé de nom rangée dans une `Map`, test de volume sous 2 s ;
+- **erreur d'effacement qui pouvait laisser fuir un nom de fichier** (033, revue de sécurité) : l'échec d'effacement de la copie du sélecteur remontait l'erreur native, qui peut citer le chemin ; code seul (`IMPORT_COPY_CLEAR_FAILED`, `RESTORE_COPY_CLEAR_FAILED`), copie reprise au démarrage ; erreurs de lecture, d'écriture et de partage remplacées par des messages sans chemin ;
+- **BOM écrits en caractère invisible** : l'outil d'écriture des agents a écrit un U+FEFF littéral (fiche du 031) au lieu de son nom ; retiré à l'intégration, à surveiller dans le code et les tests (préférer `\uFEFF` ou des octets).
+
+**Leçons** :
+- Un contrat entre deux tickets parallèles se fixe au lancement, avec un exemple chiffré (« Ligne 17 ») : les deux revues l'ont vérifié sans se parler.
+- Une boucle sur des données importées se mesure au volume maximal permis (2 000 lignes, base pleine), pas au fichier d'exemple.
+
 ### [Étape] — [AAAA-MM-JJ]
 
 **Prompt**

@@ -1,6 +1,6 @@
 # 032 — Import CSV : règles de l'import et aperçu
 
-Statut : en cours · Jalon : 3 · Zone sensible : **oui** (import CSV : données de mineurs qui entrent dans la base, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
+Statut : fusionné dans le groupe (PR #94) · Jalon : 3 · Zone sensible : **oui** (import CSV : données de mineurs qui entrent dans la base, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
 
 Dépend de : aucun (reçoit les lignes `{ line, cells }[]` du 031 : contrat commun ci-dessous, type déclaré structurellement dans `memberImport.ts`) · Fichiers touchés : `src/domain/memberImport.ts` et son test (nouveaux), `src/domain/importFields.ts` et son test (nouveaux : dates, téléphone, longueurs), `src/__fixtures__/importRows.ts` (nouveau), `src/domain/validation.ts` et son test (limite de nom et prénom, décision du porteur du 2026-11-28), `src/config/libelles/commun.ts` (messages des deux nouveaux codes) — 8 fichiers
 
@@ -120,6 +120,8 @@ Décisions automatiques de la pré-analyse (état « à relire », `docs/DECISIO
 ## Questions pour le porteur
 
 Aucune.
+
+- **Décision du porteur du 2026-11-28** : fusionné dans le groupe après sa relecture (PR #94).
 
 ## À reporter
 

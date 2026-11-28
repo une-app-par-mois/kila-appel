@@ -15,7 +15,7 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 0 | Outillage et risques techniques | Voir `docs/PLAN.md` §2 | `groupe/jalon-0-outillage` | fait (PR #7) |
 | 1 | Organiser, appeler, retrouver | Voir `docs/PLAN.md` §2 | `groupe/jalon-1-organiser-appeler-retrouver` | fait (PR #63) |
 | 2 | Suivre l'assiduité (F-04, F-05, F-06) | Voir `docs/PLAN.md` §2 | `groupe/jalon-2-suivre-assiduite` | fait (PR #88), sans le prétest sur l'A55 (décision du porteur du 2026-11-28) |
-| 3 | Entrer et sortir les données (F-07, F-08, F-09) | Voir `docs/PLAN.md` §2 | `groupe/jalon-3-entrer-sortir-donnees` | découpé (14 tickets : 031 à 042, avec 032b et 039b, 2026-11-28) ; plans validés par le porteur le 2026-11-28 |
+| 3 | Entrer et sortir les données (F-07, F-08, F-09) | Voir `docs/PLAN.md` §2 | `groupe/jalon-3-entrer-sortir-donnees` | découpé (14 tickets : 031 à 042, avec 032b et 039b, 2026-11-28) ; plans validés par le porteur le 2026-11-28 ; en cours : lot J3-1 (031, 032, 033) fusionné dans le groupe |
 | 4 à 7 | Détaillés au début du jalon précédent | `docs/PLAN.md` §2 | — | à faire |
 
 ## Tickets
@@ -79,10 +79,10 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 028c | [Relance : appui et effacement](028c-relance-appui-effacement.md) | 2 | F-06 | oui | fait |
 | 029 | [Relance : réglage et demande de permission](029-relance-reglage.md) | 2 | F-06 | oui | fait |
 | 030 | [Campagne Maestro du jalon 2](030-maestro-jalon-2.md) | 2 | F-04 à F-06 | non | fait |
-| 031 | [Import CSV : décodage et lecture du fichier](031-csv-lecture.md) | 3 | F-07 | oui | en cours |
-| 032 | [Import CSV : règles de l'import et aperçu](032-import-regles.md) | 3 | F-07 | oui | en cours |
+| 031 | [Import CSV : décodage et lecture du fichier](031-csv-lecture.md) | 3 | F-07 | oui | fusionné dans le groupe (PR #93) |
+| 032 | [Import CSV : règles de l'import et aperçu](032-import-regles.md) | 3 | F-07 | oui | fusionné dans le groupe (PR #94) |
 | 032b | [Fiche membre : nom et prénom de 100 caractères au plus](032b-saisie-longueur-nom.md) | 3 | F-01, SEC-06 | non | à faire |
-| 033 | [Fichiers des échanges : adaptateur, verrou et nettoyage](033-fichiers-echanges.md) | 3 | F-07 à F-09 | oui | en cours |
+| 033 | [Fichiers des échanges : adaptateur, verrou et nettoyage](033-fichiers-echanges.md) | 3 | F-07 à F-09 | oui | fusionné dans le groupe (PR #95) |
 | 034 | [Import CSV : enregistrement et parcours](034-import-enregistrement.md) | 3 | F-07 | oui | à faire |
 | 035 | [Import CSV : écrans](035-import-ecrans.md) | 3 | F-07 | non | à faire |
 | 036 | [Export CSV des présences : contenu](036-export-csv-contenu.md) | 3 | F-08 | oui | à faire |

@@ -1,6 +1,6 @@
 # 033 — Fichiers des échanges : adaptateur, verrou et nettoyage
 
-Statut : en cours · Jalon : 3 · Zone sensible : **oui** (fichiers en clair de données de mineurs dans le cache ; SEC-10 étendu aux échanges) · Trivial : non
+Statut : fusionné dans le groupe (PR #95) · Jalon : 3 · Zone sensible : **oui** (fichiers en clair de données de mineurs dans le cache ; SEC-10 étendu aux échanges) · Trivial : non
 
 Dépend de : aucun · Fichiers touchés : `src/data/expoFiles.ts`, `src/data/expoFiles.test.ts`, `src/hooks/fileLock.ts`, `src/hooks/fileLock.test.ts`, `src/hooks/cacheCopies.ts`, `src/hooks/useStartupCleanup.test.tsx`, `src/__fixtures__/expoModules.ts`, `src/appTests/eraseAll.test.tsx` (test seulement : `exports` dans les dossiers vidés après Tout effacer) — 8 fichiers ; si `expoFiles.ts` dépasse 300 lignes : un seul nouveau fichier de `src/data/` et `src/staticChecksFiles.test.ts` (`FILE_MODULE_OWNERS`), autorisé d'avance par le porteur le 2026-11-28
 
@@ -98,6 +98,8 @@ Décisions automatiques de la pré-analyse (état « à relire », `docs/DECISIO
 | Faux sélecteur | — | `fakeDocumentPicker` prend un nom de fichier (`choisi.db` par défaut) ; `FakeFile` gagne `create` et `write` | Copie `.csv` pour l'import ; écriture des exports | à relire |
 
 ## Questions pour le porteur
+
+- **Décision du porteur du 2026-11-28** : fusionné dans le groupe après sa relecture (PR #95).
 
 ## À reporter
 
