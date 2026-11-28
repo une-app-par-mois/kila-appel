@@ -48,6 +48,8 @@ Le rouge Marge n'est **jamais** utilisé pour une action normale. Les valeurs «
 
 Chaque statut porte toujours son **libellé écrit** et une **icône** (NF-06) : la couleur n'est jamais le seul signe. « Attendu » se distingue de « Présent » par son fond blanc à contour : une séance préparée ne doit jamais ressembler à un appel fait.
 
+PDF, grille séance par séance : teinte claire du fond du statut, lettre en texte foncé (décision du porteur du 2026-11-28).
+
 ### États de séance (EX-38)
 
 Séance **annulée** et **non planifiée** : dans l'historique et la frise, libellé écrit en Texte secondaire (« Annulée », « Non planifiée »), sans couleur de statut ; elles ne ressemblent ni à un appel fait ni à un appel manquant (qui est en Marge).

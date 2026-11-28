@@ -78,5 +78,7 @@ Reporté du lot J3-3 (2026-11-28, fiche 039) :
 
 ## À reporter
 
+- Reporté du lot J3-4 (039b, décision automatique 10) : `src/domain/reportGrid.ts` produit la table `groupId → SafeHtml[]` des pages de grille ; le 040 la branche dans `reportHtml` (pages après chaque groupe) et vérifie l'orientation paysage à la main.
+
 - CHANGELOG : rien (visible au 041).
 - Architecture : `src/data/expoPrint.ts` (seul importeur d'expo-print), `src/hooks/useReport.ts` ; `clearCacheCopies` vide aussi `cache/Print/`.
