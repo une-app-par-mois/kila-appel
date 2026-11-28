@@ -85,6 +85,12 @@ export const SUMMARY_PAGE = { name: 'portrait', size: 'A4 portrait' } as const;
 /** Orientation des pages de grille (ticket 039b, décision du porteur du 2026-11-28 : A4 paysage). */
 export const GRID_PAGE = { name: 'paysage', size: 'A4 landscape' } as const;
 
+const GRID_MARGIN_MM = 10;
+/** Largeur utile d'une page de grille : 297 mm moins les deux marges. */
+export const GRID_USABLE_MM = 297 - 2 * GRID_MARGIN_MM;
+/** Colonne « Nom Prénom » de la grille (maquette « Rapport PDF ») ; le reste va aux dates. */
+export const GRID_NAMES_MM = 40;
+
 const HEAD = `<!DOCTYPE html><html lang="fr"><head><meta http-equiv="Content-Security-Policy" content="${REPORT_CSP}"><meta charset="utf-8">`;
 
 const COLOR = /^#[0-9A-Fa-f]{6}$/;
@@ -139,12 +145,13 @@ export const reportCss = (p: ReportPalette): string => {
     '.members td:nth-child(n+3), .members th:nth-child(n+3) { text-align: right }',
     ...SHARE_ORDER.map((s) => `.s-${s} { background: ${checkColor(p.statuses[s])} }`),
     // Grille séance par séance (039b) : A4 paysage, police réduite, aucun style en ligne.
-    `@page ${GRID_PAGE.name} { size: ${GRID_PAGE.size}; margin: 10mm }`,
+    `@page ${GRID_PAGE.name} { size: ${GRID_PAGE.size}; margin: ${GRID_MARGIN_MM}mm }`,
     `.grid { page: ${GRID_PAGE.name}; break-before: page; page-break-before: always }`,
     '.grid table { font-size: 8pt }',
     '.grid th, .grid td { padding: 1mm 0.5mm }',
-    '.grid .who { width: 28mm }',
-    '.grid .c { text-align: center; overflow-wrap: normal }',
+    `.grid .who { width: ${GRID_NAMES_MM}mm; text-align: left; font-weight: normal }`,
+    '.grid .c { text-align: center; padding: 1mm 0; overflow-wrap: normal }',
+    '.grid th.c { font-weight: normal }',
     ...SHARE_ORDER.map(
       (s) => `.g-${s} { background: ${lightTint(p.statuses[s])}; color: ${checkColor(p.text)} }`,
     ),
@@ -165,7 +172,8 @@ const cols = (widths: number[]) =>
 
 const rateText = (counts: StatusCounts) => formatRate(attendanceRate(counts));
 
-const named = (name: string, archived: boolean, l: ReportLabels) =>
+/** Nom suivi de « Archivé » en texte secondaire (rapport et grille du 039b). */
+export const named = (name: string, archived: boolean, l: { archived: string }) =>
   archived ? html`${name} <span class="muted">${l.archived}</span>` : html`${name}`;
 
 /** NF-06 : barre par statut, chaque statut avec son libellé et son compte écrits. */

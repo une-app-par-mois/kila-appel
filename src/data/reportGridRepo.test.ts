@@ -34,14 +34,14 @@ const counting = (db: Db) => {
   return counter;
 };
 
-/** Lettres de chaque ligne d'un groupe, blocs mis bout à bout, lues dans le HTML rendu. */
+/** Lettres de chaque ligne d’un groupe (cases `td`, le nom est en `th`), blocs bout à bout. */
 const renderedRows = (pages: readonly string[]) => {
   const rows: string[][] = [];
   for (const page of pages) {
     const body = page.split('<tbody>')[1]?.split('</tbody>')[0] ?? '';
     [...body.matchAll(/<tr>(.*?)<\/tr>/g)].forEach((tr, i) => {
       const cells = [...(tr[1] ?? '').matchAll(/<td[^>]*>(.*?)<\/td>/g)].map((m) => m[1] ?? '');
-      rows[i] = [...(rows[i] ?? []), ...cells.slice(2)];
+      rows[i] = [...(rows[i] ?? []), ...cells];
     });
   }
   return rows;

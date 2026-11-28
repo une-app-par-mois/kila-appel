@@ -1,12 +1,22 @@
 // Rapport PDF, grille séance par séance (ticket 039b ; EX-32, NF-06, SEC-08) : pages de grille
 // générées à partir d'un groupe fictif écrit à la main (SEC-13 : aucune donnée réelle).
+
+import { commun } from '@/config/libelles/commun';
 import { rapport, rapportPalette } from '@/config/libelles/rapport';
-import { stats } from '@/config/libelles/stats';
-import type { StatusCounts } from '@/domain/attendanceRate';
-import { type GroupGrid, gridBlocks, gridPages, reportGrids } from '@/domain/reportGrid';
+import { SHARE_ORDER, type StatusCounts } from '@/domain/attendanceRate';
 import {
+  GRID_MAX_COLUMNS,
+  type GroupGrid,
+  gridBlocks,
+  gridPages,
+  reportGrids,
+} from '@/domain/reportGrid';
+import {
+  GRID_NAMES_MM,
   GRID_PAGE,
+  GRID_USABLE_MM,
   lightTint,
+  named,
   type Report,
   type ReportGroup,
   reportCss,
@@ -82,9 +92,9 @@ describe('Rapport PDF : grille séance par séance (EX-32, NF-06, SEC-08)', () =
     expect(pages).toHaveLength(3);
     for (const page of pages) {
       expect(page.startsWith('<section class="grid">')).toBe(true);
-      expect(page).toContain('<td>Blanc</td><td>Zoé</td>');
-      expect(page).toContain('<td>Moreau</td><td>Hugo</td>');
-      expect(page).toContain('<thead><tr><th class="who">Nom</th><th class="who">Prénom</th>');
+      expect(page).toContain('<tr><th class="who">Blanc Zoé</th><td class="c');
+      expect(page).toContain('<tr><th class="who">Moreau Hugo</th><td class="c');
+      expect(page).toContain('<thead><tr><th class="who"></th><th class="c">');
     }
     expect(pages[0]).toContain('<h2>Poussins · séances du 02/09/2026 au 17/02/2027</h2>');
     expect(pages[2]).toContain('<h2>Poussins · séances du 18/08/2027 au 20/10/2027</h2>');
@@ -112,9 +122,14 @@ describe('Rapport PDF : grille séance par séance (EX-32, NF-06, SEC-08)', () =
     );
   });
 
-  it('NF-06 légende sous chaque bloc : lettres en entier et case vide (texte de stats.ts)', () => {
-    expect(labels.gridLegend).toContain('P : présent · R : retard · E : excusé · A : absent.');
-    expect(labels.gridLegend.endsWith(stats.stats.memberScreen.legend)).toBe(true);
+  it('NF-06 CONV-16 légende de la maquette, construite à partir des lettres et des statuts', () => {
+    expect(labels.gridLegend).toBe(
+      'P : présent · R : retard · E : excusé · A : absent. Case vide : hors inscription ou sans statut.',
+    );
+    const built = SHARE_ORDER.map(
+      (s) => `${labels.letters[s]} : ${commun.statuses[s].toLocaleLowerCase('fr-FR')}`,
+    ).join(' · ');
+    expect(labels.gridLegend.startsWith(`${built}.`)).toBe(true);
     const pages = texts(gridPages(group([member(1, 'Blanc', 'Zoé')]), grid(weekly(60)), labels));
     for (const page of pages)
       expect(page).toContain(`<p class="muted">${labels.gridLegend}</p></section>`);
@@ -132,6 +147,25 @@ describe('Rapport PDF : grille séance par séance (EX-32, NF-06, SEC-08)', () =
     );
   });
 
+  it('EX-32 même JJ/MM sur deux années dans un bloc : année (AA) sous la date', () => {
+    const sessions = [
+      { sessionId: 1, date: '2025-06-10', startTime: '17:00' },
+      { sessionId: 2, date: '2025-06-17', startTime: '17:00' },
+      { sessionId: 3, date: '2026-06-10', startTime: '17:00' },
+    ];
+    const [page] = texts(gridPages(group([member(1, 'Blanc', 'Zoé')]), grid(sessions), labels));
+    expect(page).toContain(
+      '<th class="c">10/06<br>25</th><th class="c">17/06</th><th class="c">10/06<br>26</th>',
+    );
+  });
+
+  it('EX-32 aide « Archivé » unique, partagée avec le rapport', () => {
+    expect(safeHtmlText(named('Lou', true, { archived: 'Archivé' }))).toBe(
+      'Lou <span class="muted">Archivé</span>',
+    );
+    expect(safeHtmlText(named('<b>', false, { archived: 'Archivé' }))).toBe('&lt;b&gt;');
+  });
+
   it('EX-32 groupe archivé : mention sur chaque bloc ; membre archivé : mention sur sa ligne', () => {
     const pages = texts(
       gridPages(
@@ -143,7 +177,9 @@ describe('Rapport PDF : grille séance par séance (EX-32, NF-06, SEC-08)', () =
     expect(pages).toHaveLength(2);
     for (const page of pages) {
       expect(page).toMatch(/<h2>Poussins · séances du [^<]+ <span class="muted">Archivé<\/span>/);
-      expect(page).toContain('<td>Lefebvre <span class="muted">Archivé</span></td>');
+      expect(page).toContain(
+        '<th class="who">Lefebvre Jules <span class="muted">Archivé</span></th>',
+      );
     }
   });
 
@@ -215,6 +251,11 @@ describe('Rapport PDF : styles de la grille (SEC-08, NF-06, charte)', () => {
     expect(css).toContain('@page paysage { size: A4 landscape; margin: 10mm }');
     expect(css).toContain('.grid { page: paysage; break-before: page; page-break-before: always }');
     expect(css).toContain('.grid table { font-size: 8pt }');
+    expect(css).toContain(
+      `.grid .who { width: ${GRID_NAMES_MM}mm; text-align: left; font-weight: normal }`,
+    );
+    expect(css).toContain('.grid .c { text-align: center; padding: 1mm 0; overflow-wrap: normal }');
+    expect(css).toContain('.grid th.c { font-weight: normal }');
     expect(css).not.toContain('<');
   });
 
@@ -228,6 +269,13 @@ describe('Rapport PDF : styles de la grille (SEC-08, NF-06, charte)', () => {
       expect(luminance(tint)).toBeGreaterThan(luminance(color));
     }
     expect(lightTint('#1F3A93')).toBe('#C7CEE4');
+  });
+
+  it('EX-32 29 colonnes de dates : au moins 8 mm par case pour « JJ/MM » en 8 pt', () => {
+    expect(GRID_MAX_COLUMNS).toBe(29);
+    expect(GRID_USABLE_MM).toBe(277);
+    expect(GRID_NAMES_MM).toBe(40);
+    expect((GRID_USABLE_MM - GRID_NAMES_MM) / GRID_MAX_COLUMNS).toBeGreaterThanOrEqual(8);
   });
 
   it('SEC-08 couleur hors #RRGGBB refusée par la teinte', () => {
