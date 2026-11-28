@@ -36,7 +36,9 @@ export const MEMBERS_TABLE: readonly (readonly string[])[] = [
 ];
 
 /** Noms fictifs du tableau : aucun ne doit apparaître dans un refus (ABS-04, SEC-12). */
-export const FICTIVE_NAMES = ['Martin', 'Zoé', 'Lefèvre', 'Léo', 'Noël', 'Françoise', 'Œillet'];
+export const FICTIVE_NAMES: readonly string[] = MEMBERS_TABLE.slice(1).flatMap((row) =>
+  row.slice(0, 2),
+);
 
 /** Le tableau tel qu'Excel l'enregistre : `;` et CRLF. */
 export const MEMBERS_TEXT = `${MEMBERS_TABLE.map((row) => row.join(';')).join('\r\n')}\r\n`;

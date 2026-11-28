@@ -102,8 +102,13 @@ describe('SEC-06 refus du décodage, en valeur de retour', () => {
     expect(decodeCsv(fromHex('ef bb bf 20 0d 0a'))).toEqual({ reason: 'EMPTY' });
   });
 
-  it('BOM UTF-8 suivi d’octets invalides : MALFORMED, sans repli sur Windows-1252', () => {
-    expect(decodeCsv(bomThenInvalid())).toEqual({ reason: 'MALFORMED' });
+  it('BOM UTF-8 suivi d’octets invalides : NOT_TEXT, sans repli sur Windows-1252', () => {
+    expect(decodeCsv(bomThenInvalid())).toEqual({ reason: 'NOT_TEXT' });
+  });
+
+  it('les noms fictifs à chercher couvrent tous les noms et prénoms du tableau', () => {
+    expect(FICTIVE_NAMES).toEqual(expect.arrayContaining(['Maël', 'L’Hôte', 'Chloé', 'Zoé']));
+    expect(FICTIVE_NAMES).toHaveLength(10);
   });
 
   it('ABS-04 SEC-12 : aucun refus ne contient un texte du fichier', () => {

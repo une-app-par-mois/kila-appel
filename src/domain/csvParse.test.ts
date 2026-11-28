@@ -45,30 +45,38 @@ describe('F-07 EX-30 lecture d’un CSV : guillemets RFC 4180', () => {
     ]);
   });
 
-  it('espace avant un guillemet ouvrant : champ sans guillemets, gardé tel quel', () => {
-    expect(cellsOf('Nom;Prénom\n "Martin";Zoé\n')).toEqual([
+  it('espaces autour d’un champ entre guillemets ignorés (Martin, "Dupont, Léa" )', () => {
+    expect(cellsOf('Nom,Prénom\nMartin, "Dupont, Léa" \n "Noël"  ,Zoé\n')).toEqual([
       ['Nom', 'Prénom'],
-      [' "Martin"', 'Zoé'],
+      ['Martin', 'Dupont, Léa'],
+      ['Noël', 'Zoé'],
     ]);
   });
 
-  it('guillemet non fermé : MALFORMED avec la ligne où il s’ouvre', () => {
+  it('guillemet suivi d’espaces puis d’un autre texte : MALFORMED', () => {
+    expect(parseCsv('Nom;Prénom\n"Martin" x;Zoé\n')).toEqual({ reason: 'MALFORMED', line: 2 });
+  });
+
+  it('guillemet non fermé : MALFORMED avec la ligne du tableur où il s’ouvre', () => {
     expect(parseCsv('Nom;Prénom\nMartin;Zoé\n"Léo;Lefèvre\nNoël;Françoise\n')).toEqual({
       reason: 'MALFORMED',
       line: 3,
     });
   });
 
-  it('texte après un guillemet fermant : MALFORMED avec sa ligne', () => {
+  it('texte après un guillemet fermant : MALFORMED avec la ligne du tableur', () => {
     expect(parseCsv('Nom;Prénom\n"Martin"x;Zoé\n')).toEqual({ reason: 'MALFORMED', line: 2 });
-    expect(parseCsv('Nom;Prénom\n"a\nb" ;Zoé\n')).toEqual({ reason: 'MALFORMED', line: 3 });
+    expect(parseCsv('Nom;Prénom\n"a\nb"\n\n"c\nd"x;Zoé\n')).toEqual({
+      reason: 'MALFORMED',
+      line: 4,
+    });
   });
 });
 
 describe('F-07 numéros de ligne du tableur', () => {
   it('en-tête = 1, lignes vides comptées, un champ sur deux lignes compte pour une', () => {
     const text = 'Nom;Note\n"Martin";"deux\nlignes"\n\nNoël;x\r\n"a\r\n\r\nb";y\nZoé;z';
-    expect(linesOf(text)).toEqual([1, 2, 5, 6, 9]);
+    expect(linesOf(text)).toEqual([1, 2, 4, 5, 6]);
   });
 
   it('lignes faites seulement de séparateurs ou d’espaces : ignorées mais comptées', () => {
@@ -146,6 +154,13 @@ describe('F-07 détection du séparateur', () => {
     expect(parseCsv('\n\t\t\nNom,Prénom\n')).toMatchObject({ separator: ',' });
   });
 
+  it('mêmes règles de guillemets que la lecture : un guillemet en milieu de champ n’ouvre rien', () => {
+    expect(parseCsv('Taille 5",Nom,Prénom\n1,Martin,Zoé\n')).toMatchObject({ separator: ',' });
+    expect(parseCsv(' "a;b;c" ,Nom,x\n')).toMatchObject({ separator: ',' });
+    // Guillemet suivi d'un autre texte : gardé dans le champ pour la détection, refusé à la lecture.
+    expect(parseCsv('"a"b;c",Nom,x\n')).toEqual({ reason: 'MALFORMED', line: 1 });
+  });
+
   it('égalité : « ; » puis tabulation puis « , »', () => {
     expect(parseCsv('a;b,c\n')).toMatchObject({ separator: ';' });
     expect(parseCsv('a\tb,c\n')).toMatchObject({ separator: '\t' });
@@ -172,6 +187,15 @@ describe('F-07 détection du séparateur', () => {
       ],
     });
     expect(parseCsv('SEP=\t\nNom\tPrénom\n')).toMatchObject({ separator: '\t' });
+  });
+
+  it('directive suivie seulement de séparateurs ou d’espaces (sep=;;;; ou sep=; )', () => {
+    for (const directive of ['sep=;;;;', 'sep=; ', 'sep=;, \t']) {
+      expect(parseCsv(`${directive}\r\nNom,x;Prénom\r\n`)).toEqual({
+        separator: ';',
+        rows: [{ line: 1, cells: ['Nom,x', 'Prénom'] }],
+      });
+    }
   });
 
   it('une ligne « sep=… » qui n’est pas la directive reste une ligne de données', () => {

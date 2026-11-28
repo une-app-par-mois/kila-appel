@@ -51,6 +51,12 @@ describe('SEC-06 limite de 2 000 lignes de données', () => {
     expect(parseCsv(`${manyRowsText(2001)}"non fermé\n`)).toEqual({ reason: 'TOO_MANY_ROWS' });
   });
 
+  it('champ de près de 1 Mo fait de guillemets doublés : un guillemet par paire', () => {
+    const result = parseCsv(`Nom\n"${'""'.repeat(400_000)}"\n`);
+    if ('reason' in result) throw new Error(result.reason);
+    expect(result.rows[1]?.cells[0]).toBe('"'.repeat(400_000));
+  });
+
   it('en-tête sans données : pas un refus', () => {
     expect(parseCsv('Nom;Prénom\r\n')).toEqual({
       separator: ';',
@@ -65,13 +71,13 @@ describe('SEC-06 texte vide', () => {
     ['blancs seuls', ' \r\n\t\n'],
     ['séparateurs seuls', ';;;\r\n,,\r\n'],
     ['directive seule', 'sep=;\r\n'],
-    ['BOM seul', '﻿'],
+    ['BOM seul', '\uFEFF'],
   ])('%s : EMPTY', (_label, text) => {
     expect(parseCsv(text)).toEqual({ reason: 'EMPTY' });
   });
 
   it('BOM en tête d’un texte reçu tel quel : retiré', () => {
-    expect(parseCsv('﻿Nom;Prénom\n')).toMatchObject({
+    expect(parseCsv('\uFEFFNom;Prénom\n')).toMatchObject({
       rows: [{ line: 1, cells: ['Nom', 'Prénom'] }],
     });
   });

@@ -8,7 +8,7 @@ export const MAX_CSV_BYTES = 1024 * 1024;
 export type CsvEncoding = 'utf-8' | 'windows-1252';
 
 /** Refus du décodage : code seul, jamais de texte du fichier (ABS-04, SEC-12). */
-export type DecodeRefusal = { reason: 'EMPTY' | 'NOT_TEXT' | 'TOO_LARGE' | 'MALFORMED' };
+export type DecodeRefusal = { reason: 'EMPTY' | 'NOT_TEXT' | 'TOO_LARGE' };
 
 export type DecodeResult = { text: string; encoding: CsvEncoding } | DecodeRefusal;
 
@@ -101,7 +101,7 @@ const hasUtf16Bom = (bytes: Uint8Array): boolean =>
 
 /**
  * F-07, SEC-06 : octets d'un CSV en texte. BOM UTF-8 retiré ; sinon UTF-8 strict ; sinon
- * Windows-1252. UTF-16 ou octet nul : NOT_TEXT. BOM UTF-8 suivi d'octets invalides : MALFORMED.
+ * Windows-1252. UTF-16, octet nul, ou BOM UTF-8 suivi d'octets invalides : NOT_TEXT.
  */
 export const decodeCsv = (bytes: Uint8Array): DecodeResult => {
   if (bytes.length > MAX_CSV_BYTES) return { reason: 'TOO_LARGE' };
@@ -109,7 +109,7 @@ export const decodeCsv = (bytes: Uint8Array): DecodeResult => {
   let result: { text: string; encoding: CsvEncoding };
   if (hasUtf8Bom(bytes)) {
     const text = decodeUtf8Strict(bytes, 3);
-    if (text === null) return { reason: 'MALFORMED' };
+    if (text === null) return { reason: 'NOT_TEXT' };
     result = { text, encoding: 'utf-8' };
   } else {
     const text = decodeUtf8Strict(bytes, 0);
