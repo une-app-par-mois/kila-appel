@@ -80,8 +80,10 @@ describe('Onglet Statistiques (ticket 024, EX-27, RM-01)', () => {
     const veterans = await groupRow('Vétérans');
     expect(veterans.getByText(pct(100))).toBeTruthy();
     expect(veterans.getByText(t.archived)).toBeTruthy();
-    // Boutons d'export masqués jusqu'au jalon 3 (décision du porteur du 2026-11-27).
-    expect(screen.queryByText(/CSV|PDF/)).toBeNull();
+    // Boutons d'export masqués jusqu'au jalon 3 (décision du porteur du 2026-11-27) : « Exporter
+    // (CSV) » arrive au ticket 037, « Rapport PDF » au ticket 041.
+    expect(screen.getByRole('button', { name: labels.attendanceExport.open })).toBeTruthy();
+    expect(screen.queryByText(/PDF/)).toBeNull();
   });
 
   it('NF-06 barre par statut : libellé d’accessibilité des parts non nulles, légende affichée', async () => {
@@ -266,6 +268,8 @@ describe('Onglet Statistiques (ticket 024, EX-27, RM-01)', () => {
     const router = await open();
     expect(await screen.findByText(t.empty)).toBeTruthy();
     expect(screen.queryByRole('button', { name: t.periods.month })).toBeNull();
+    // Rien à exporter sans séance enregistrée (ticket 037).
+    expect(screen.queryByRole('button', { name: labels.attendanceExport.open })).toBeNull();
     expect(screen.queryByTestId('stats-rate')).toBeNull();
     expect(screen.queryByTestId('attendance-legend')).toBeNull();
     const start = await screen.findByRole('button', { name: t.start });
