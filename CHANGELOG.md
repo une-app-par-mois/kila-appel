@@ -6,6 +6,10 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Ajouté
 
+- Membres : import d'une liste depuis un fichier CSV, avec aperçu, doublons et lignes invalides signalés avant d'importer (F-07, EX-30) — ticket 035 (PR #105).
+- Statistiques : export des présences en CSV (une ligne par séance et par membre), sur une période et un groupe, par le partage du système (F-08, EX-31, SEC-09, SEC-10) — ticket 037 (PR #103).
+- Rapport PDF : page HTML de la synthèse et des taux par groupe et par membre, chaque valeur échappée, sans script ni ressource externe ; rien n'est encore branché à un écran (F-09, EX-32, SEC-08) — ticket 039 (PR #104).
+- Maquettes : écrans de l'import (liste vide, inscription des doublons, résultat à six compteurs), de l'export CSV (en cours, échec, plafond de 50 000 lignes, groupe archivé) et police du système pour le PDF dans la charte — séance de lancement du lot J3-3 (PR #102).
 - Import CSV : les membres de l'aperçu sont ajoutés d'un bloc, avec leur téléphone d'urgence et leur groupe ; un doublon déjà dans l'appli est inscrit au groupe du fichier, et désarchivé ; rien n'est encore branché à un écran (F-07, EX-30, SEC-10, SEC-12) — ticket 034 (PR #99).
 - Export CSV : contenu du fichier des présences (une ligne par séance et par membre, format d'Excel français, formules neutralisées dans toute cellule) ; rien n'est encore branché à un écran (F-08, EX-31, SEC-07) — ticket 036 (PR #98).
 - Rapport PDF : bibliothèque d'impression d'Expo, sans permission ni réseau ; mesures d'usage de la WebView d'Android refusées (F-09, ABS-01, ABS-07, SEC-08) — ticket 038 (PR #100).

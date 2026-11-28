@@ -1,6 +1,6 @@
 # 037 — Export CSV des présences : écran et partage
 
-Statut : à faire · Jalon : 3 · Zone sensible : **oui** (sortie de données de mineurs par le partage du système ; avertissement SEC-09) · Trivial : non
+Statut : fusionné dans le groupe (PR #103, après la relecture du porteur du 2026-11-28) · Jalon : 3 · Zone sensible : **oui** (sortie de données de mineurs par le partage du système ; avertissement SEC-09) · Trivial : non
 
 Dépend de : 033, 036 · Fichiers touchés : `src/hooks/useAttendanceExport.ts` et son test (nouveaux), `src/app/stats/export.tsx` (nouveau), `src/app/(tabs)/stats.tsx` (bouton « Exporter (CSV) »), `src/config/libelles/exports.ts` (nouveau, repris par 041), `src/config/libelles/index.ts` (une ligne, partagé avec 035), `src/appTests/attendanceExport.test.tsx` (nouveau) — 7 fichiers
 

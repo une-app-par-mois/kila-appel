@@ -1,6 +1,6 @@
 # 039 — Rapport PDF : synthèse et taux (HTML)
 
-Statut : à faire · Jalon : 3 · Zone sensible : **oui** (calculs affichés : taux de présence ; export de données de mineurs ; HTML échappé, SEC-08) · Trivial : non
+Statut : fusionné dans le groupe (PR #104, après la relecture du porteur du 2026-11-28) · Jalon : 3 · Zone sensible : **oui** (calculs affichés : taux de présence ; export de données de mineurs ; HTML échappé, SEC-08) · Trivial : non
 
 Dépend de : aucun (n'utilise pas expo-print : le HTML se teste seul ; la grille séance par séance vient au 039b) · Fichiers touchés : `src/domain/reportHtml.ts` et son test (nouveaux), `src/data/reportRepo.ts` et son test (nouveaux), `src/config/libelles/rapport.ts` (nouveau : textes du PDF, NF-07) — 5 fichiers
 

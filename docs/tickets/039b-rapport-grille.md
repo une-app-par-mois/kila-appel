@@ -51,6 +51,12 @@ Décision du porteur du 2026-11-28 : le rapport ajoute, pour chaque groupe, **la
   - Lettres P, A, R, E dans les cases (couleur de la charte en fond léger, en plus), case vide hors inscription.
   - Dernier bloc de moins de 5 séances fusionné avec le précédent, 29 colonnes au plus (pas de page presque vide ; « environ 25 » de la décision).
 
+Reporté du lot J3-3 (2026-11-28, fiche 039) :
+
+- La feuille de style est dans l'en-tête de confiance : `reportCss(palette)` de `src/domain/reportHtml.ts` (texte fixe, couleurs `#RRGGBB` vérifiées, refusée si elle contient « < »). Les styles de la grille et la page nommée `paysage` s'y ajoutent, jamais dans le gabarit (qui échapperait le `>` des sélecteurs).
+- Les pages de grille sont rendues en `SafeHtml` par le gabarit balisé `html` de `src/domain/safeHtml.ts` (chaque valeur échappée par `escapeHtml`) et passées telles quelles à `reportHtml`.
+- Contrôle statique : `src/domain/safeHtml.test.ts` refuse dans tout `src/` l'appel direct `html(…)`, `html.call`, `html.apply` et `as TemplateStringsArray` ; la grille n'utilise que la forme balisée ``html`…` ``.
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

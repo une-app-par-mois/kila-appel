@@ -422,6 +422,8 @@ aside.relecture label{color:#333}aside.relecture textarea{width:100%;height:120p
 <div class="carte compteur mono"><span>24 lignes</span><span>21 à importer</span><span class="rouge">1 invalide</span><span>2 doublons</span></div>
 <h3 class="section">Doublons</h3>
 <div class="carte "><div class="rang"><div><div class="l-titre">Léo Garcia</div><div class="l-sous mono">14/03/2017 · déjà dans l'appli</div></div><span class="filtre on">Ignorer</span></div><div class="rang"><div><div class="l-titre">Zoé Blanc</div><div class="l-sous mono">déjà dans l'appli</div></div><span class="filtre on">Ignorer</span></div><p class="l-sous">Un doublon ignoré déjà dans l'appli sera inscrit au groupe du fichier, et désarchivé s'il était archivé. Sans groupe trouvé, il reste tel quel.</p></div>
+<h3 class="section">Doublon archivé</h3>
+<div class="carte "><div class="rang"><div><div class="l-titre">Inès Petit</div><div class="l-sous mono">09/11/2015 · déjà dans l'appli (archivé)</div></div><span class="filtre on">Ignorer</span></div></div>
 <h3 class="section">Ligne invalide</h3>
 <div class="carte "><div class="rang"><div><div class="l-titre">Ligne 17</div><div class="l-sous">Prénom manquant</div></div></div></div>
 <h3 class="section">Groupe introuvable</h3>
@@ -463,15 +465,17 @@ aside.relecture label{color:#333}aside.relecture textarea{width:100%;height:120p
 <h3 class="section">Groupe archivé, date erronée</h3>
 <label>Groupe</label><div class="champ">Minimes 2025 · Archivé ▾</div>
 <label>Au</label><div class="champ mono">31/08/2026</div><p class="rouge">La fin doit tomber le jour du début ou après.</p>
+<p class="note">Fichier partagé : <span class="mono">kila-presences-2026-09-01-au-2026-11-26.csv</span> (début et fin de la période, ticket 037).</p>
 <p class="note">Bandeau SEC-09 jamais réduit, présent dans tous les états. Plafond de 50 000 lignes : export refusé, bouton désactivé, compteur affiché ; textes des états : décisions du porteur du 2026-11-28 (ticket 037).</p></div></section>
 <section class="ecran" id="e-rapport" hidden><div class="colonne">
 <div class="entete"><button class="retour" data-go="stats">‹</button><h1>Rapport PDF</h1></div>
 <label>Période</label><div class="champ">Saison 2026-2027 ▾</div>
 <label>Groupes</label><div class="champ">Tous les groupes ▾</div>
-<div class="carte "><div class="feuille"><div class="l-titre">Ki&La · Rapport de présence</div><div class="l-sous mono">01/09/2026 – 26/11/2026</div><div class="barre"><i class="s-present" style="width:80%"></i><i class="s-late" style="width:7%"></i><i class="s-excused" style="width:5%"></i><i class="s-absent" style="width:8%"></i></div><div class="l-sous">Synthèse, puis une page par groupe et sa grille…</div></div></div>
+<div class="carte "><div class="feuille"><div class="l-titre">Ki&La · Rapport de présence</div><div class="l-sous mono">01/09/2026 – 26/11/2026</div><div class="barre"><i class="s-present" style="width:80%"></i><i class="s-late" style="width:7%"></i><i class="s-excused" style="width:5%"></i><i class="s-absent" style="width:8%"></i></div><div class="l-sous">Synthèse, puis une page par groupe et sa grille…</div><div class="l-sous">Benjamins · Archivé</div><div class="l-sous">P : présent · R : retard · E : excusé · A : absent. « — » : aucune séance comptée.</div></div></div>
 <div class="carte bandeau"><p>Le fichier contient les noms des membres et leurs taux de présence, <b>en clair</b>. Partagez-le seulement avec qui doit le recevoir.</p></div>
 <button class="btn-p" data-go="rapport">Créer et partager le PDF</button>
-<p class="note">Format A4 : synthèse et taux par membre en portrait, puis la grille séance par séance de chaque groupe en paysage, par blocs d'environ 25 séances (décision du porteur du 2026-11-28, tickets 039 et 039b).</p></div></section>
+<p class="note">Format A4 : synthèse et taux par membre en portrait, puis la grille séance par séance de chaque groupe en paysage, par blocs d'environ 25 séances (décision du porteur du 2026-11-28, tickets 039 et 039b).</p>
+<p class="note">Sous chaque tableau des membres, la légende des lettres P, R, E, A ; « Archivé » en texte secondaire après un groupe ou un membre archivé ; « Aucun membre sur la période. » pour un groupe sans membre ; « Aucune présence comptée sur la période. » quand les séances n'ont aucune présence comptée (décisions du porteur du 2026-11-28, ticket 039).</p></div></section>
 <section class="ecran" id="e-creneau-ponctuel" hidden><div class="colonne">
 <div class="entete"><button class="retour" data-go="creneaux">‹</button><h1>Nouveau créneau</h1></div>
 <div class="bascule"><span>Chaque semaine</span><span class="on">À des dates précises</span></div>
