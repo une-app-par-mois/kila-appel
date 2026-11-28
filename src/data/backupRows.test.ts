@@ -110,6 +110,8 @@ describe('checkRows : toute ligne de la copie passe les règles de l’appli', (
     ['RM-04 date de séance invalide', "UPDATE sessions SET date = '2026-11'"],
     ['RM-04 heure de séance invalide', "UPDATE sessions SET start_time = '9h'"],
     ['EX-13 commentaire de séance trop long', `UPDATE sessions SET comment = '${long}'`],
+    ['RM-03 nombre de groupes de séance nul', 'UPDATE sessions SET group_count = 0'],
+    ['RM-03 nombre de groupes de séance négatif', 'UPDATE sessions SET group_count = -1'],
     ['EX-10 statut de présence inconnu', "UPDATE attendances SET status = 'peut-être'"],
     ['EX-14 date du brouillon invalide', "UPDATE roll_call_drafts SET date = 'hier'"],
     [
@@ -185,6 +187,23 @@ describe('checkRows : toute ligne de la copie passe les règles de l’appli', (
       );
       expect(await checkRows(db, TODAY)).toBe('INVALID_DATA');
     }
+  });
+
+  it('SEC-10 RM-03 refuse une séance qui a plus de groupes que son nombre figé (INVALID_DATA)', async () => {
+    // Séance du jeu fictif : un groupe ; un second groupe lui est ajouté.
+    await db.execute(
+      'INSERT INTO session_groups (session_id, group_id) SELECT id, 2 FROM sessions',
+    );
+    await db.execute('UPDATE sessions SET group_count = 1');
+    expect(await checkRows(db, TODAY)).toBe('INVALID_DATA');
+    await db.execute('UPDATE sessions SET group_count = 2');
+    expect(await checkRows(db, TODAY)).toBeNull();
+  });
+
+  it('SEC-10 RM-03 accepte un nombre figé inconnu (NULL) ou supérieur (groupe supprimé)', async () => {
+    expect(await checkRows(db, TODAY)).toBeNull();
+    await db.execute('UPDATE sessions SET group_count = 3');
+    expect(await checkRows(db, TODAY)).toBeNull();
   });
 
   it('SEC-06 accepte un nom et un prénom de 100 caractères', async () => {

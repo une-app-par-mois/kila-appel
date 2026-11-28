@@ -138,9 +138,10 @@ export const sessionsRepo = (db: Db, today: string) => ({
         );
         if (row?.n !== ids.length) throw new DataError('NOT_ENROLLED');
       }
+      // RM-03 (ticket 043) : nombre de groupes figé ici (un appel, un groupe), jamais changé ensuite.
       const { lastInsertRowId: id } = await tx.execute(
-        `INSERT INTO sessions (season_id, slot_id, date, start_time, state, comment)
-         VALUES (?, ?, ?, ?, 'recorded', ?)`,
+        `INSERT INTO sessions (season_id, slot_id, date, start_time, state, comment, group_count)
+         VALUES (?, ?, ?, ?, 'recorded', ?, 1)`,
         [group.season_id, call.slotId, call.date, call.startTime, call.comment],
       );
       await tx.execute('INSERT INTO session_groups (session_id, group_id) VALUES (?, ?)', [

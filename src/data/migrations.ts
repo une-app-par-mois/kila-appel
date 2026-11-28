@@ -172,7 +172,20 @@ const MIGRATION_1: string[] = [
   ) STRICT`,
 ];
 
-export const MIGRATIONS: Migration[] = [{ version: 1, statements: MIGRATION_1 }];
+// Ticket 043 (décision du porteur du 2026-11-28, ADR-003) : nombre de groupes de la séance, figé à
+// l'enregistrement par sessionsRepo.record (sans déclencheur) ; supprimer un groupe ne le change pas
+// (RM-03). Séances déjà enregistrées : leur nombre actuel de groupes, NULL sans groupe (un groupe
+// déjà supprimé ne se retrouve pas). Pas d'index : lu avec la séance.
+const MIGRATION_2: string[] = [
+  'ALTER TABLE sessions ADD COLUMN group_count INTEGER CHECK (group_count IS NULL OR group_count >= 1)',
+  `UPDATE sessions SET group_count =
+     (SELECT NULLIF(count(*), 0) FROM session_groups sg WHERE sg.session_id = sessions.id)`,
+];
+
+export const MIGRATIONS: Migration[] = [
+  { version: 1, statements: MIGRATION_1 },
+  { version: 2, statements: MIGRATION_2 },
+];
 
 export const LATEST_VERSION = MIGRATIONS.length;
 

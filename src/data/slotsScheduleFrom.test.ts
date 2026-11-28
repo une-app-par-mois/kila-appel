@@ -5,7 +5,7 @@
 // 2026-11-26). Fixée à la création, avancée quand le jour ou l'heure changent, jamais reculée.
 // Ajoutée à la migration 1, encore corrigeable avant la publication (ADR-003).
 import type { Db } from '@/data/db';
-import { LATEST_VERSION } from '@/data/migrations';
+import { MIGRATIONS } from '@/data/migrations';
 import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
 
@@ -27,8 +27,9 @@ describe('EX-08 slots.schedule_from garanti par la base', () => {
     await db.close();
   });
 
-  it('ADR-003 reste dans la migration 1, seule avant la publication', () => {
-    expect(LATEST_VERSION).toBe(1);
+  it('ADR-003 le déclencheur reste dans la migration 1 (la migration 2 vient du ticket 043)', () => {
+    const [first] = MIGRATIONS;
+    expect(first?.statements.some((sql) => sql.includes('slots_schedule_from_forward'))).toBe(true);
   });
 
   it('accepte un créneau avec sa date de création', async () => {
