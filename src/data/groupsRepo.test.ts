@@ -1,6 +1,7 @@
 /**
  * @jest-environment node
  */
+import { char, hexCodes } from '@/__fixtures__/codePoints';
 import { count, seed } from '@/__fixtures__/seed';
 import type { Db } from '@/data/db';
 import { groupsRepo } from '@/data/groupsRepo';
@@ -53,6 +54,38 @@ describe('Dépôt des groupes (EX-02)', () => {
       expect.objectContaining({ code: 'NAME_INVALID_CHAR' }),
     );
     expect((await repo.get(id))?.name).toBe('Poussins');
+  });
+
+  // Ticket 044b : points de code en clair, au milieu du nom, sans importer la liste du code.
+  it.each(hexCodes([0x00ad, 0x2060, 0x2064, 0xfff9, 0xfffb, 0xe0000, 0xe0061, 0xe007f]))(
+    'SEC-06 refuse U+%s à la création et au renommage, rien n’est écrit',
+    async (_hex, code) => {
+      const repo = groupsRepo(db);
+      const name = `Pous${char(code)}sins`;
+      await expect(repo.create(seasonId, name)).rejects.toMatchObject({
+        code: 'NAME_INVALID_CHAR',
+      });
+      expect(await count(db, 'groups')).toBe(0);
+      const id = await repo.create(seasonId, 'Poussins');
+      await expect(repo.rename(id, name)).rejects.toMatchObject({ code: 'NAME_INVALID_CHAR' });
+      expect((await repo.get(id))?.name).toBe('Poussins');
+    },
+  );
+
+  it('SEC-06 refuse le drapeau d’Écosse fait de tags', async () => {
+    const scotland = char(0x1f3f4, 0xe0067, 0xe0062, 0xe0073, 0xe0063, 0xe0074, 0xe007f);
+    await expect(groupsRepo(db).create(seasonId, `Poussins ${scotland}`)).rejects.toMatchObject({
+      code: 'NAME_INVALID_CHAR',
+    });
+  });
+
+  it('SEC-06 accepte le cœur rouge (U+FE0F), à la création et au renommage', async () => {
+    const repo = groupsRepo(db);
+    const heart = `Poussins ${char(0x2764, 0xfe0f)}`;
+    const id = await repo.create(seasonId, heart);
+    expect((await repo.get(id))?.name).toBe(heart);
+    await repo.rename(id, `${heart} mercredi`);
+    expect((await repo.get(id))?.name).toBe(`${heart} mercredi`);
   });
 
   it('SEC-06 accepte un émoji composé avec U+200D, à la création et au renommage', async () => {

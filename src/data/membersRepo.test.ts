@@ -1,6 +1,7 @@
 /**
  * @jest-environment node
  */
+import { hexCodes } from '@/__fixtures__/codePoints';
 import { count, type Seeded, seed } from '@/__fixtures__/seed';
 import type { Db } from '@/data/db';
 import { membersRepo } from '@/data/membersRepo';
@@ -224,5 +225,32 @@ describe('Dépôt des membres (EX-03)', () => {
       { firstName: 'Yanis', lastName: 'Colin', birthDate: null },
       { today: TODAY, startDate: '2099-01-01' },
     );
+  });
+
+  // Ticket 044b : points de code en clair, au milieu du nom, sans importer la liste du code.
+  it.each(hexCodes([0x00ad, 0x2060, 0x2064, 0xfff9, 0xfffb, 0xe0000, 0xe0061, 0xe007f]))(
+    'SEC-06 refuse U+%s à la création et à la modification, rien n’est écrit',
+    async (_hex, code) => {
+      const repo = membersRepo(db);
+      const name = `Ya${String.fromCodePoint(code)}nis`;
+      await expect(
+        repo.create({ firstName: name, lastName: 'Colin', birthDate: null }, { today: TODAY }),
+      ).rejects.toMatchObject({ code: 'NAME_INVALID_CHAR' });
+      expect(await count(db, 'members')).toBe(2);
+      await expect(
+        repo.update(s.memberId, { firstName: 'Alix', lastName: name, birthDate: null }, TODAY),
+      ).rejects.toMatchObject({ code: 'NAME_INVALID_CHAR' });
+      expect(await repo.get(s.memberId)).toMatchObject({ lastName: 'Exemple' });
+    },
+  );
+
+  it('SEC-06 accepte la famille (U+200D) et le cœur rouge (U+FE0F)', async () => {
+    const repo = membersRepo(db);
+    const name = `Ya${String.fromCodePoint(0x1f469, 0x200d, 0x1f467, 0x2764, 0xfe0f)}nis`;
+    const id = await repo.create(
+      { firstName: name, lastName: 'Colin', birthDate: null },
+      { today: TODAY },
+    );
+    expect(await repo.get(id)).toMatchObject({ firstName: name });
   });
 });

@@ -1,4 +1,5 @@
 // EX-30 : aperçu d'un import CSV calculé avant toute écriture (ticket 032).
+import { hexCodes } from '@/__fixtures__/codePoints';
 import { EXISTING, GROUPS, MOCKUP_ROWS, numbered, OPTIONS } from '@/__fixtures__/importRows';
 import { type ImportPreview, membersToWrite, previewImport } from '@/domain/memberImport';
 
@@ -77,6 +78,21 @@ describe('EX-30 SEC-06 lignes invalides', () => {
     const result = lines(cells);
     expect(result.invalid).toEqual([{ line: 2, field, code }]);
     expect(result.counts).toMatchObject({ rows: 1, toImport: 0, invalid: 1 });
+  });
+
+  // Ticket 044b : points de code en clair, au milieu du prénom, sans importer la liste du code.
+  it.each(hexCodes([0x00ad, 0x2060, 0x2064, 0x3164, 0xfff9, 0xfffb, 0xe0000, 0xe0061, 0xe007f]))(
+    'SEC-06 U+%s dans le prénom : ligne refusée (NAME_INVALID_CHAR)',
+    (_hex, code) => {
+      const result = lines(['Exemple', `Al${String.fromCodePoint(code)}ix`]);
+      expect(result.invalid).toEqual([{ line: 2, field: 'firstName', code: 'NAME_INVALID_CHAR' }]);
+      expect(result.counts).toMatchObject({ rows: 1, toImport: 0, invalid: 1 });
+    },
+  );
+
+  it('SEC-06 accepte un prénom avec la famille (U+200D) et le cœur rouge (U+FE0F)', () => {
+    const firstName = `Al${String.fromCodePoint(0x1f469, 0x200d, 0x1f467, 0x2764, 0xfe0f)}ix`;
+    expect(membersToWrite(lines(['Exemple', firstName]))[0]?.firstName).toBe(firstName);
   });
 
   it('SEC-06 accepte un nom et un prénom de 100 caractères', () => {
