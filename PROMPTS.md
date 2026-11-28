@@ -368,6 +368,26 @@ Avant de passer aux tickets suivants, je veux voir avec toi comment optimiser le
 - Un contrôle de test se vérifie en le faisant échouer une fois : sinon il peut ne rien vérifier.
 - Un jeu de test daté doit dire ce qu'il fait hors de ses dates, sans bloquer le reste.
 
+### Clôture du jalon 2 — 2026-11-28
+
+**Prompt clé** : PR du jalon 2 vers `main`, correction des alertes de la CI, campagne Maestro sur l'APK de la CI, fusion, puis séance de clôture (questions de `docs/QUESTIONS.md`, bilan des décisions).
+
+**Ce que l'IA a fait** :
+- **CI de la PR #88** : Semgrep (`detect-non-literal-regexp`) et CodeQL (espace de noms Android lu avec ses points comme jokers) signalaient `scripts/audit-apk.js` et des tests. Correctif par la branche `ticket/j2-correctif-analyse-statique` (PR #89, sans numéro de ticket, fusion validée par le porteur) : plus aucune RegExp construite dans le dépôt, espace de noms comparé tel quel ; aucune règle désactivée. Ensuite, CI toute verte sur le dernier commit (Semgrep, CodeQL, Android APK et audit, iOS simulateur, dépendances, gitleaks, tests).
+- **Campagne Maestro** sur l'APK de la CI (run 46110229001) : 7 parcours sur 7 en 15 min 17 s sur l'émulateur.
+- **Fusion** de la PR #88 en squash (`main` à `40d70bb`) ; tickets 020 à 030 passés à « fait ».
+- **Séance de clôture** : les 6 questions de la file posées ; lignes de confirmation ajoutées en bas de `docs/DECISIONS.md`, sans toucher aux lignes d'origine.
+
+**Ce qui a été corrigé par les revues** : la revue du correctif a trouvé un **défaut ancien** de l'audit SEC-02 : `allowBackup="false"` présent n'importe où dans la sortie de `aapt2` suffisait. L'attribut n'est plus lu que sur l'élément `application`, et doit valoir `false`.
+
+**Ce que j'ai corrigé ou refusé** : rien à corriger. Le porteur confirme les 6 options appliquées (023 : « Ce mois » sans saison active ; 021 : retour à l'accueil pour un membre sans alerte ; 027 : un appel libre ne retire pas la relance ; 028c : relance illisible, appli ouverte, rien ne s'ouvre ; 028b : lecture en échec, rien n'est annulé ; 028b : relance désactivée ou permission retirée, les relances affichées dont l'appel manque restent). Il décide de fusionner **sans le prétest sur l'A55** : le prétest reste à faire, et chaque défaut devient un ticket du jalon 3.
+
+**Bilan des décisions du jalon 2** : 204 décisions automatiques ; 11 changées après contradiction ; 0 contestée maintenue ; 0 annulée (2 depuis le début du projet, celles du 015b) ; 0 en attente.
+
+**Leçons** :
+- Durcir un contrôle de sécurité, c'est aussi relire ce qu'il vérifiait déjà : l'alerte sur une regex a fait trouver un contrôle d'`allowBackup` trop lâche, plus ancien que le jalon 2.
+- La file du porteur a tenu : 6 questions n'ont bloqué aucune fusion, et aucune réponse n'a demandé de correction.
+
 ### [Étape] — [AAAA-MM-JJ]
 
 **Prompt**

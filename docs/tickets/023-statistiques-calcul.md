@@ -1,6 +1,6 @@
 # 023 — Statistiques : calcul et données
 
-Statut : fusionné dans le groupe (PR #70) · Jalon : 2 · Zone sensible : **oui** (calcul affiché : taux de présence, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
+Statut : fait (PR #88 vers `main` ; PR #70 dans le groupe) · Jalon : 2 · Zone sensible : **oui** (calcul affiché : taux de présence, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
 
 Dépend de : aucun · Fichiers touchés : `src/domain/attendanceRate.ts` et son test (nouveaux), `src/domain/statsPeriod.ts` et son test (nouveaux), `src/data/statsRepo.ts` et son test (nouveaux), `src/hooks/useStats.ts` et son test (nouveaux) — 8 fichiers
 

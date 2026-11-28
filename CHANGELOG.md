@@ -70,6 +70,7 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - Outillage : minimatch forcé en 11.0.9 sur la plage vulnérable (>= 7.0.0) par `overrides`, alerte Dependabot n° 2 levée ; garde-fou `scripts/minimatch.test.js` — ticket 017.
 - Outillage : glob forcé en 14.0.6 sur la plage vulnérable (>= 9.0.0) par `overrides`, faille GHSA-3g3m-2fjr-6pw4 levée ; garde-fou `scripts/glob.test.js` ; comparaison de versions commune (`scripts/lock-versions.js`) et échec si une dépendance déclare glob >= 15 ou minimatch >= 12 (« ajuster l'override ») — ticket 018.
 - Sécurité : nom d'auteur du registre des licences sans reste de chevron ; test sans RegExp construite (019).
+- Outillage : audit de l'APK plus strict, `allowBackup` lu sur l'élément `application` seul et exigé à `false` ; espace de noms Android comparé tel quel ; plus aucune RegExp construite dans le dépôt (SEC-02, correctif de la PR du jalon 2, PR #89).
 
 ### Corrigé
 

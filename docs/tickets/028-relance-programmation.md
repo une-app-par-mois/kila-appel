@@ -2,7 +2,7 @@
 
 > Découpé le 2026-11-27 : ce fichier couvre le 028a ; la suite est dans 028b (`028b-relance-reprogrammation.md`).
 
-Statut : 028a fusionné dans le groupe (PR #79) ; 028b à faire · Jalon : 2 · Zone sensible : **oui** (notifications, ABS-01 : aucune fonction réseau d'expo-notifications ; ABS-04 ; effacement : Tout effacer annule les relances) · Trivial : non
+Statut : fait (PR #88 vers `main` ; 028a : PR #79 dans le groupe ; suite dans 028b et 028c) · Jalon : 2 · Zone sensible : **oui** (notifications, ABS-01 : aucune fonction réseau d'expo-notifications ; ABS-04 ; effacement : Tout effacer annule les relances) · Trivial : non
 
 Dépend de : 026 (dépendance installée), 027 (calcul et réglages) · Fichiers touchés : `src/data/expoNotifications.ts` (nouveau), `src/hooks/useReminders.ts` et son test (nouveaux), `src/app/_layout.tsx`, `src/hooks/useErase.ts`, `src/staticChecksFiles.test.ts`, `src/__fixtures__/expoModules.ts`, `src/config/licences.json`, `src/hooks/useEraseAll.test.tsx` — 9 fichiers
 

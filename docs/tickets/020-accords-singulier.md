@@ -1,6 +1,6 @@
 # 020 — Accords au singulier : purge et conservation (réponses du porteur)
 
-Statut : fusionné dans le groupe (PR #77) · Jalon : 2 · Zone sensible : non (textes seulement) · Trivial : non
+Statut : fait (PR #88 vers `main` ; PR #77 dans le groupe) · Jalon : 2 · Zone sensible : non (textes seulement) · Trivial : non
 
 Dépend de : 015b · Fichiers touchés : `src/config/libelles/effacement.ts`, `src/app/donnees.tsx`, `src/config/purgeTexts.test.ts`, `src/appTests/purge.test.tsx`
 

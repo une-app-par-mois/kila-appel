@@ -1,6 +1,6 @@
 # 022 — Alertes d'assiduité : écrans
 
-Statut : fusionné dans le groupe (PR #72) · Jalon : 2 · Zone sensible : non (affiche sans calculer : séries et alertes viennent du 021) · Trivial : non
+Statut : fait (PR #88 vers `main` ; PR #72 dans le groupe) · Jalon : 2 · Zone sensible : non (affiche sans calculer : séries et alertes viennent du 021) · Trivial : non
 
 Dépend de : 021 · Fichiers touchés : `src/app/(tabs)/index.tsx`, `src/ui/AttendanceAlerts.tsx` (nouveau), `src/app/alertes/[id].tsx` (nouveau), `src/app/assiduite.tsx` (nouveau), `src/app/(tabs)/parametres.tsx`, `src/config/libelles/alertes.ts` (nouveau), `src/config/libelles/index.ts`, `src/ui/SessionSquares.tsx` (nouveau, repris par le 025), `src/appTests/alerts.test.tsx` (nouveau) — 9 fichiers
 

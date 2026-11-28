@@ -1,6 +1,6 @@
 # 027 — Relance : calcul des relances et réglages
 
-Statut : fusionné dans le groupe (PR #74) · Jalon : 2 · Zone sensible : **oui** (notifications : aucun nom de membre, ABS-04, SEC-12 ; texte et moments calculés) · Trivial : non
+Statut : fait (PR #88 vers `main` ; PR #74 dans le groupe) · Jalon : 2 · Zone sensible : **oui** (notifications : aucun nom de membre, ABS-04, SEC-12 ; texte et moments calculés) · Trivial : non
 
 Dépend de : aucun (aucune dépendance installée : domaine pur et réglages) · Fichiers touchés : `src/domain/reminders.ts` et son test (nouveaux), `src/domain/occurrences.ts` (exports, après revue), `src/data/settingsRepo.ts`, `src/data/settingsRepo.test.ts`, `src/config/libelles/relance.ts` (nouveau), `src/config/libelles/index.ts`, `src/config/reminderTexts.test.ts` (nouveau) — 7 fichiers
 

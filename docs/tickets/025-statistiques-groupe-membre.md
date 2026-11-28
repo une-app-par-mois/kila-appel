@@ -1,6 +1,6 @@
 # 025 — Statistiques d'un groupe et d'un membre
 
-Statut : fusionné dans le groupe (PR #78) · Jalon : 2 · Zone sensible : non (affiche sans calculer : taux, cases et arrondi viennent du 023) · Trivial : non
+Statut : fait (PR #88 vers `main` ; PR #78 dans le groupe) · Jalon : 2 · Zone sensible : non (affiche sans calculer : taux, cases et arrondi viennent du 023) · Trivial : non
 
 Dépend de : 022 (`SessionSquares`), 023, 024 · Fichiers touchés : `src/app/stats/groupes/[id].tsx` (nouveau), `src/app/stats/membres/[id].tsx` (nouveau), `src/ui/SessionSquares.tsx` (case vide « hors inscription »), `src/config/libelles/stats.ts`, `src/appTests/statsGroup.test.tsx` (nouveau), `src/appTests/statsMember.test.tsx` (nouveau), `src/app/(tabs)/stats.tsx` (appui sur un groupe, report du 024) — 7 fichiers
 
