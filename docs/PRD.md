@@ -88,7 +88,7 @@ Priorité : toutes les exigences sont dans la v1 (décision du 2026-11-26). Le j
 | --- | --- | --- | --- |
 | EX-30 | F-07 | Importer des membres depuis un CSV | Colonnes nom et prénom obligatoires ; date de naissance, téléphone d'urgence et groupe facultatifs. Aperçu avant toute écriture ; lignes invalides signalées ; doublons (nom, prénom, date de naissance) repérés, avec le choix de les ignorer. Toute autre colonne est ignorée. |
 | EX-31 | F-08 | Exporter les présences en CSV | Une ligne par séance et par membre (date, créneau, groupe, nom, prénom, statut), sur une période et un groupe choisis ; partage par le sélecteur du système. |
-| EX-32 | F-09 | Produire un rapport PDF | Format A4 : synthèse de la période, puis taux par groupe et par membre ; partage par le sélecteur du système. |
+| EX-32 | F-09 | Produire un rapport PDF | Format A4 : synthèse de la période, puis taux par groupe et par membre (portrait), puis, pour chaque groupe, la grille séance par séance de chaque membre (paysage, par blocs d'environ 25 séances, noms répétés sur chaque bloc) ; ni date de naissance, ni contact, ni commentaire ; partage par le sélecteur du système. |
 | EX-33 | F-10 | Gérer les créneaux ponctuels | Un créneau sans jour de semaine, avec une ou plusieurs dates. Il réclame un appel pour chacune de ses dates passées. |
 | EX-34 | F-11 | Réunir plusieurs groupes dans un créneau | Un créneau peut avoir plusieurs groupes ; l'appel liste les membres de tous ses groupes ; chaque présence compte pour le groupe du membre. |
 | EX-35 | F-12 | Afficher la frise des séances | Sur l'accueil, les séances passées et à venir, chacune marquée faite, manquante ou à venir ; un appui ouvre l'appel ou la séance. |
@@ -142,9 +142,10 @@ Serveur, compte, synchronisation, chiffrement dans l'appli, verrouillage à l'ou
 ## 9. Questions ouvertes
 
 ~~Ordre des statuts au fil des appuis (EX-10)~~ : Présent → Absent → Retard → Excusé, tranché dans `design/CHARTE.md` le 2026-11-26.
-- Contenu exact du rapport PDF (EX-32). (→ ticket F-09)
+- ~~Contenu exact du rapport PDF (EX-32)~~ : tranché par le porteur le 2026-11-28 (option B, voir « Décisions du porteur » ; tickets 039 et 039b).
 
 ## Décisions du porteur
 
 - 2026-11-26 : EX-09 (créneau en cours ou le plus proche), EX-36 et EX-38 (version de l'ancienne appli), RM-01, RM-06, EX-21, EX-23, EX-06, NF-06 et NF-08 validés tels que proposés. EX-17 et EX-33 gardés ; tablette en portrait seul (NF-05) ; appel sans créneau ajouté (EX-39).
 - 2026-11-26 (revue du ticket 001) : RM-04 complétée, années acceptées de 1900 à 2100.
+- 2026-11-28 (séance de découpage du jalon 3) : contenu du rapport PDF (EX-32), option B : synthèse de la période (taux, séances, comptes par statut, tableau des groupes), puis une page par groupe avec le taux de chaque membre, en A4 portrait ; puis la grille séance par séance de chaque membre, en A4 paysage, coupée par blocs d'environ 25 séances, noms répétés sur chaque bloc. Ni date de naissance, ni contact, ni commentaire. Si la WebView ne mélange pas les orientations, tout le rapport passe en paysage (repli, à confirmer par le porteur).
