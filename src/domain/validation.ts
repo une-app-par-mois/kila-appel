@@ -59,7 +59,10 @@ export const MEMBER_NAME_MAX = 100;
 // SEC-06 (décisions du porteur du 2026-11-28) : refusés dans un nom, les caractères de contrôle
 // (C0, DEL, C1), les séparateurs de ligne et de paragraphe, les caractères de sens d'affichage
 // (dont U+061C, U+200E, U+200F), l'espace sans largeur U+200B, U+FEFF, et les demi-caractères
-// (surrogates) isolés, que `[...name]` rend seuls. U+200D (émojis composés) reste accepté.
+// (surrogates) isolés, que `[...name]` rend seuls. Liste élargie (ticket 044b) aux invisibles et
+// remplissages qui trompent l'affichage : U+00AD, U+034F, U+115F, U+1160, U+180E, U+2060 à U+2064,
+// U+3164, U+FFA0, U+FFF9 à U+FFFB et les étiquettes U+E0000 à U+E007F (drapeaux faits de tags
+// compris). U+200D et U+FE0F (émojis composés) restent acceptés.
 const isInvisible = (char: string) => {
   const c = char.codePointAt(0) ?? 0;
   return (
@@ -74,7 +77,17 @@ const isInvisible = (char: string) => {
     c === 0x200e ||
     c === 0x200f ||
     c === 0xfeff ||
-    (c >= 0xd800 && c <= 0xdfff)
+    (c >= 0xd800 && c <= 0xdfff) ||
+    c === 0x00ad ||
+    c === 0x034f ||
+    c === 0x115f ||
+    c === 0x1160 ||
+    c === 0x180e ||
+    (c >= 0x2060 && c <= 0x2064) ||
+    c === 0x3164 ||
+    c === 0xffa0 ||
+    (c >= 0xfff9 && c <= 0xfffb) ||
+    (c >= 0xe0000 && c <= 0xe007f)
   );
 };
 
