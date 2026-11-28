@@ -1,8 +1,8 @@
 # 033 — Fichiers des échanges : adaptateur, verrou et nettoyage
 
-Statut : à faire · Jalon : 3 · Zone sensible : **oui** (fichiers en clair de données de mineurs dans le cache ; SEC-10 étendu aux échanges) · Trivial : non
+Statut : en cours · Jalon : 3 · Zone sensible : **oui** (fichiers en clair de données de mineurs dans le cache ; SEC-10 étendu aux échanges) · Trivial : non
 
-Dépend de : aucun · Fichiers touchés : `src/data/expoFiles.ts`, `src/data/expoFiles.test.ts`, `src/hooks/fileLock.ts`, `src/hooks/fileLock.test.ts`, `src/hooks/cacheCopies.ts`, `src/hooks/useStartupCleanup.test.tsx`, `src/__fixtures__/expoModules.ts` — 7 fichiers
+Dépend de : aucun · Fichiers touchés : `src/data/expoFiles.ts`, `src/data/expoFiles.test.ts`, `src/hooks/fileLock.ts`, `src/hooks/fileLock.test.ts`, `src/hooks/cacheCopies.ts`, `src/hooks/useStartupCleanup.test.tsx`, `src/__fixtures__/expoModules.ts`, `src/appTests/eraseAll.test.tsx` (test seulement : `exports` dans les dossiers vidés après Tout effacer) — 8 fichiers ; si `expoFiles.ts` dépasse 300 lignes : un seul nouveau fichier de `src/data/` et `src/staticChecksFiles.test.ts` (`FILE_MODULE_OWNERS`), autorisé d'avance par le porteur le 2026-11-28
 
 Découpé le 2026-11-28 (séance de découpage du jalon 3).
 
@@ -18,13 +18,13 @@ L'import (034), l'export CSV (037) et le rapport PDF (040) lisent, écrivent et 
 
 ## Ce qui change
 
-- `expoPicker(os, maxBytes = MAX_BACKUP_BYTES)` : limite passée par l'appelant (1 Mo pour l'import, SEC-06) ; restauration inchangée.
-- `readFileBytes(path, maxBytes)` : taille réelle vérifiée **avant** la lecture (la taille annoncée par le sélecteur peut manquer) ; refus `TOO_LARGE`.
-- Dossier dédié `cache/exports/` (`expoStorage('exports')`), un sous-dossier neuf par fichier, comme les sauvegardes ; `writeFile(path, bytes | text)`.
-- `shareFile(path, { mimeType, uti })` : `text/csv` et `public.comma-separated-values-text`, `application/pdf` et `com.adobe.pdf` ; `shareBackup` inchangé.
-- `fileLock` : tâches `'import'`, `'csv'` et `'report'` ; jamais pendant une restauration, une purge, Tout effacer ou le nettoyage du démarrage.
-- `clearCacheCopies` : vide aussi `cache/exports/` (au démarrage, après Tout effacer) ; la copie du sélecteur de l'import est déjà couverte (`DocumentPicker/`, Inbox iOS).
-- `expoFiles.ts` reste sous 300 lignes ; s'il les dépasse, voir la question prévue.
+- `expoPicker(os, maxBytes = MAX_BACKUP_BYTES)` : limite passée par l'appelant (`MAX_CSV_BYTES` du 031 pour l'import, SEC-06) ; restauration inchangée.
+- `readFileBytes(path, maxBytes)` (limite en paramètre, sans valeur par défaut) : seulement un enfant direct d'un dossier du sélecteur ; taille réelle vérifiée **avant** la lecture (la taille annoncée par le sélecteur peut manquer), lecture bornée à `maxBytes + 1` ; refus `TOO_LARGE` ; la copie du sélecteur est effacée par la lecture elle-même, en réussite comme en refus. Codes de journal par usage (`IMPORT_PICK_PATH_REFUSED`, `IMPORT_REJECTED_TOO_LARGE`), ceux de la restauration inchangés.
+- Dossier dédié `cache/exports/` (`expoStorage('exports')`), un sous-dossier neuf par fichier, comme les sauvegardes, vidé au début de chaque export sous verrou ; sous-dossier effacé à la fermeture de la feuille de partage. `writeFile` (texte ou octets) limité à `<cache/exports>/<sous-dossier>/<nom>`, nom `^[a-z0-9-]+\.(csv|pdf)$`, erreur sans chemin.
+- `shareFile(path, 'csv' | 'pdf')`, liste fermée de types : `text/csv` et `public.comma-separated-values-text`, `application/pdf` et `com.adobe.pdf` ; `shareBackup` inchangé.
+- `fileLock` : tâches `'import'`, `'csv'` et `'report'` ; jamais pendant une restauration, une purge, Tout effacer ou le nettoyage du démarrage. `'import'` tenu du sélecteur à la fin de la lecture, jamais pendant l'aperçu (le 034 le reprendra pendant l'écriture) ; `'csv'` et `'report'` tenus de l'écriture à la fermeture de la feuille de partage. `useReminderTap.ts` inchangé.
+- `clearCacheCopies` : vide aussi `cache/exports/` (au démarrage, après Tout effacer), quatre dossiers dans le même `Promise.allSettled` ; la copie du sélecteur de l'import est déjà couverte (`DocumentPicker/`, Inbox iOS).
+- `expoFiles.ts` reste sous 300 lignes ; s'il les dépasse, il est découpé en un seul nouveau fichier de `src/data/`, ajouté à `FILE_MODULE_OWNERS` (`src/staticChecksFiles.test.ts`), la liste restant fermée (autorisé par le porteur le 2026-11-28, à relire avant la fusion).
 
 ## Critères d'acceptation
 
@@ -38,6 +38,8 @@ L'import (034), l'export CSV (037) et le rapport PDF (040) lisent, écrivent et 
 
 - `src/data/expoFiles.test.ts` (faux modules de `src/__fixtures__/expoModules.ts`) : limites, chemins refusés, types de partage.
 - `src/hooks/fileLock.test.ts`, `src/hooks/useStartupCleanup.test.tsx` : nouvelles tâches, dossier vidé.
+- `src/appTests/eraseAll.test.tsx` : `exports` dans les dossiers vidés après Tout effacer.
+- Non vérifié sur appareil, à noter dans la PR : `File.size` d'une copie absente, BOM conservé par `File.write(string)`, `text/csv` accepté par Drive et Gmail.
 
 ## Hors périmètre
 
@@ -56,6 +58,23 @@ Séance de découpage du jalon 3 (2026-11-28), réponses du porteur :
 - Plan validé par le porteur le 2026-11-28 ; ticket du premier lot du jalon (031, 032, 033).
 - Décisions d'office ci-dessus appliquées, notées dans `docs/DECISIONS.md` (état « à relire »).
 - Relecture du porteur avant la fusion dans le groupe (zone sensible).
+
+Séance de lancement du lot J3-1 (2026-11-28), réponses du porteur :
+
+- **`src/appTests/eraseAll.test.tsx` ajouté** au ticket : 8 fichiers, test seulement (`exports` dans la liste des dossiers vidés après Tout effacer).
+- **Découpage de `expoFiles.ts` autorisé d'avance** (SEC-03) : s'il dépasse 300 lignes, un seul nouveau fichier de `src/data/` est ajouté à `FILE_MODULE_OWNERS` dans `src/staticChecksFiles.test.ts` ; la liste reste fermée ; à relire par le porteur avant la fusion du 033.
+
+Décisions automatiques de la pré-analyse (état « à relire », `docs/DECISIONS.md`) :
+
+- Limite de lecture reçue en paramètre (`MAX_CSV_BYTES` du 031), sans valeur par défaut.
+- Verrou `'import'` tenu du sélecteur à la fin de la lecture, jamais pendant l'aperçu (le 034 le reprendra pendant l'écriture) ; `'csv'` et `'report'` tenus de l'écriture à la fermeture de la feuille de partage ; `useReminderTap.ts` inchangé.
+- `readFileBytes` : enfant direct d'un dossier du sélecteur, taille réelle, lecture bornée à `maxBytes + 1`, `TOO_LARGE` ; copie du sélecteur effacée par la lecture elle-même, en réussite comme en refus.
+- Codes de journal par usage (`IMPORT_PICK_PATH_REFUSED`, `IMPORT_REJECTED_TOO_LARGE`), ceux de la restauration inchangés.
+- `writeFile` limité à `<cache/exports>/<sous-dossier>/<nom>`, nom `^[a-z0-9-]+\.(csv|pdf)$`, erreur sans chemin ; texte ou octets.
+- `shareFile(path, 'csv' | 'pdf')`, liste fermée de types.
+- `cache/exports/` vidé au début de chaque export sous verrou ; sous-dossier effacé à la fermeture du partage.
+- `clearCacheCopies` : quatre dossiers dans le même `Promise.allSettled`.
+- Non vérifié sur appareil : `File.size` d'une copie absente, BOM conservé par `File.write(string)`, `text/csv` accepté par Drive et Gmail.
 
 ## Décisions
 

@@ -79,10 +79,10 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 028c | [Relance : appui et effacement](028c-relance-appui-effacement.md) | 2 | F-06 | oui | fait |
 | 029 | [Relance : réglage et demande de permission](029-relance-reglage.md) | 2 | F-06 | oui | fait |
 | 030 | [Campagne Maestro du jalon 2](030-maestro-jalon-2.md) | 2 | F-04 à F-06 | non | fait |
-| 031 | [Import CSV : décodage et lecture du fichier](031-csv-lecture.md) | 3 | F-07 | oui | à faire |
-| 032 | [Import CSV : règles de l'import et aperçu](032-import-regles.md) | 3 | F-07 | oui | à faire |
+| 031 | [Import CSV : décodage et lecture du fichier](031-csv-lecture.md) | 3 | F-07 | oui | en cours |
+| 032 | [Import CSV : règles de l'import et aperçu](032-import-regles.md) | 3 | F-07 | oui | en cours |
 | 032b | [Fiche membre : nom et prénom de 100 caractères au plus](032b-saisie-longueur-nom.md) | 3 | F-01, SEC-06 | non | à faire |
-| 033 | [Fichiers des échanges : adaptateur, verrou et nettoyage](033-fichiers-echanges.md) | 3 | F-07 à F-09 | oui | à faire |
+| 033 | [Fichiers des échanges : adaptateur, verrou et nettoyage](033-fichiers-echanges.md) | 3 | F-07 à F-09 | oui | en cours |
 | 034 | [Import CSV : enregistrement et parcours](034-import-enregistrement.md) | 3 | F-07 | oui | à faire |
 | 035 | [Import CSV : écrans](035-import-ecrans.md) | 3 | F-07 | non | à faire |
 | 036 | [Export CSV des présences : contenu](036-export-csv-contenu.md) | 3 | F-08 | oui | à faire |

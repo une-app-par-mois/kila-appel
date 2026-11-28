@@ -1,10 +1,12 @@
 # 031 — Import CSV : décodage et lecture du fichier
 
-Statut : à faire · Jalon : 3 · Zone sensible : **oui** (import CSV : fichier extérieur lu, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
+Statut : en cours · Jalon : 3 · Zone sensible : **oui** (import CSV : fichier extérieur lu, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
 
-Dépend de : aucun · Fichiers touchés : `src/domain/csvDecode.ts` et son test (nouveaux), `src/domain/csvParse.ts` et son test (nouveaux), `src/__fixtures__/csvFiles.ts` (nouveau : fichiers fictifs et piégés, en octets) — 5 fichiers
+Dépend de : aucun · Fichiers touchés : `src/domain/csvDecode.ts` et son test (nouveaux), `src/domain/csvParse.ts` et son test (nouveaux), `src/__fixtures__/csvFiles.ts` (nouveau : fichiers fictifs et piégés, en octets) — 5 fichiers (6 si `csvParse.test.ts` dépasse 300 lignes : second fichier de test)
 
 Découpé le 2026-11-28 (séance de découpage du jalon 3).
+
+**Contrat commun 031 ↔ 032** (séance de lancement du lot J3-1, 2026-11-28) : `parseCsv(text)` rend `{ separator, rows: { line: number; cells: string[] }[] }`, l'en-tête en `rows[0]` ; `line` est le numéro de ligne du tableur (en-tête = 1, lignes vides comptées dans la numérotation, un champ sur deux lignes compte pour une). Le 032 déclare ce type structurellement chez lui (`memberImport.ts`), le 034 unifiera. Refus du 031 en valeur de retour, liste fermée : `EMPTY`, `NOT_TEXT`, `TOO_LARGE`, `TOO_MANY_ROWS`, `MALFORMED` (avec le numéro de ligne), sans texte du fichier (ABS-04, SEC-12). `MAX_CSV_BYTES = 1024 * 1024` est exporté par `csvDecode.ts` ; le 033 reçoit la limite en paramètre (pas de valeur par défaut).
 
 ## Contexte
 
@@ -22,12 +24,15 @@ F-07 (EX-30) commence par lire un fichier que l'appli ne maîtrise pas : un CSV 
   - BOM UTF-8 (`EF BB BF`) : retiré, UTF-8.
   - Sinon, UTF-8 **strict** valide (séquences courtes, surrogates et sur-longues refusés) : UTF-8.
   - Sinon : Windows-1252, par une table écrite à la main (0x80 à 0x9F selon WHATWG, le reste identique à Latin-1).
-  - BOM UTF-16 (`FF FE`, `FE FF`, « Texte Unicode » d'Excel) ou octet nul : refus `NOT_TEXT`. Fichier vide : refus `EMPTY`.
-- `src/domain/csvParse.ts` : `parseCsv(text)` → `{ rows: string[][], separator }` ou refus.
-  - Séparateur détecté sur la ligne d'en-tête, hors guillemets : `;` (Excel français), tabulation ou `,`, le plus fréquent.
-  - Guillemets RFC 4180 : `""` dans un champ entre guillemets, séparateur et retour à la ligne permis dans un champ entre guillemets ; guillemet non fermé : refus `MALFORMED`.
-  - Fins de ligne CRLF, LF ou CR seul ; lignes entièrement vides ignorées et non comptées.
-  - SEC-06 : plus de 2 000 lignes de données (en-tête non comptée) : refus `TOO_MANY_ROWS`, sans lire la suite.
+  - BOM UTF-16 (`FF FE`, `FE FF`, « Texte Unicode » d'Excel) ou octet nul : refus `NOT_TEXT`. Fichier de 0 octet, BOM seul ou blancs seuls : refus `EMPTY`.
+  - BOM UTF-8 suivi d'octets invalides : refus `MALFORMED`, sans repli sur Windows-1252.
+  - `MAX_CSV_BYTES = 1024 * 1024` exporté.
+- `src/domain/csvParse.ts` : `parseCsv(text)` → `{ separator, rows: { line, cells }[] }` (contrat ci-dessus) ou refus.
+  - Séparateur détecté sur la première ligne non vide, hors guillemets : `;` (Excel français), tabulation ou `,`, le plus fréquent ; égalité : `;` puis tabulation puis `,` ; aucun : `;`. Directive `sep=` en première ligne respectée, et non lue comme en-tête.
+  - Guillemets RFC 4180 : `""` dans un champ entre guillemets, séparateur et retour à la ligne permis dans un champ entre guillemets ; guillemet non fermé, ou texte après un guillemet fermant : refus `MALFORMED` ; un guillemet au milieu d'un champ sans guillemets (`O"Brien`) est gardé.
+  - Fins de ligne CRLF, LF ou CR seul ; lignes vides ou faites seulement de séparateurs et d'espaces ignorées, mais comptées dans la numérotation.
+  - Champs rendus tels quels : ni `trim()` ni complétion des cellules manquantes (032).
+  - SEC-06 : plus de 2 000 lignes de données (en-tête et lignes vides non comptées) : refus `TOO_MANY_ROWS`, sans lire la suite.
   - Chaque ligne garde son numéro dans le fichier (pour « Ligne 17 » de l'aperçu, ticket 032).
 - La limite de 1 Mo est vérifiée avant la lecture (ticket 034) ; `decodeCsv` la revérifie sur la longueur reçue (`TOO_LARGE`).
 - Aucune erreur ne contient un morceau du fichier : code et numéro de ligne seulement (ABS-04, SEC-12).
@@ -44,7 +49,7 @@ F-07 (EX-30) commence par lire un fichier que l'appli ne maîtrise pas : un CSV 
 
 - `src/domain/csvDecode.test.ts` : les 256 octets de Windows-1252 comparés au `TextDecoder('windows-1252')` de Node (oracle des tests seulement : l'appli n'en dépend pas) ; UTF-8 invalide (octet de suite isolé, séquence tronquée, sur-longue, surrogate) → Windows-1252 ; BOM.
 - `src/domain/csvParse.test.ts` : RFC 4180, séparateurs, limites, lignes vides, guillemet non fermé.
-- Fichiers fictifs dans `src/__fixtures__/csvFiles.ts`, réutilisés par 032, 034 et la campagne Maestro (042).
+- Fichiers fictifs dans `src/__fixtures__/csvFiles.ts`, réutilisés par 032, 034 et la campagne Maestro (042) ; fichiers Windows-1252 écrits en hexadécimal (le `TextDecoder` de Node sert seulement à vérifier ces fixtures) ; gros fichiers fabriqués par une fonction.
 
 ## Hors périmètre
 
@@ -63,6 +68,25 @@ Séance de découpage du jalon 3 (2026-11-28), réponses du porteur :
 - Plan validé par le porteur le 2026-11-28 ; ticket du premier lot du jalon (031, 032, 033).
 - Décisions d'office ci-dessus appliquées, notées dans `docs/DECISIONS.md` (état « à relire »).
 - Relecture du porteur avant la fusion dans le groupe (zone sensible).
+
+Séance de lancement du lot J3-1 (2026-11-28), réponses du porteur :
+
+- SEC-06 (règle appliquée au 032, dans `validateMember`) : nom et prénom refusent aussi U+0080 à U+009F, U+2028, U+2029 et les caractères de sens d'affichage U+202A à U+202E et U+2066 à U+2069, en plus de U+0000 à U+001F et U+007F, à l'import comme à la saisie. Le 031 rend les champs tels quels.
+
+Décisions automatiques de la pré-analyse (état « à relire », `docs/DECISIONS.md`) :
+
+- Contrat commun 031 ↔ 032 (en tête de la fiche) : type de `parseCsv`, numérotation des lignes, liste fermée des refus, `MAX_CSV_BYTES`.
+- Lignes faites seulement de séparateurs ou d'espaces : ignorées, mais numérotées.
+- Séparateur détecté sur la première ligne non vide ; égalité `;` > tabulation > `,` ; aucun séparateur : `;`.
+- Directive `sep=` en première ligne respectée et non lue comme en-tête.
+- `O"Brien` gardé ; texte après un guillemet fermant : `MALFORMED`.
+- BOM UTF-8 suivi d'octets invalides : `MALFORMED`, sans repli sur Windows-1252.
+- 0 octet, BOM seul ou blancs seuls : `EMPTY` ; en-tête sans données : pas un refus (le 032 rend un aperçu à zéro).
+- Champs non retouchés (ni `trim()` ni complétion).
+- Fixtures Windows-1252 écrites en hexadécimal, `TextDecoder` de Node seulement pour les vérifier ; gros fichiers fabriqués par une fonction.
+- Octet nul : `NOT_TEXT`.
+- `csvParse.test.ts` au-delà de 300 lignes : second fichier de test (6 fichiers).
+- Non vérifié, à noter dans la PR : un fichier ISO-8859-15 ou MacRoman est lu comme Windows-1252, sans signal.
 
 ## Décisions
 

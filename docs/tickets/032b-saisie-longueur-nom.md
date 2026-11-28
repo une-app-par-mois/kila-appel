@@ -20,7 +20,7 @@ Décision du porteur du 2026-11-28 (SEC-06) : nom et prénom d'un membre de 100 
 
 - Les deux formulaires montrent sous le champ le message de `NAME_TOO_LONG` ou de `NAME_INVALID_CHAR`, comme `NAME_REQUIRED` aujourd'hui ; « Enregistrer » ne part pas tant qu'un champ est en erreur.
 - `maxLength={100}` sur les champs Nom et Prénom (le clavier s'arrête à 100) ; le contrôle reste celui du domaine pour un texte collé.
-- Un membre déjà enregistré avec un nom plus long (restauré d'une sauvegarde) s'affiche tel quel ; sa modification demande de raccourcir le nom.
+- Un membre au nom plus long ne peut pas venir d'une sauvegarde : la restauration refuse en entier une sauvegarde dont un nom est hors de la règle (décision du porteur du 2026-11-28, ticket 032).
 
 ## Critères d'acceptation
 
