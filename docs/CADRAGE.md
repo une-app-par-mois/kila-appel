@@ -90,7 +90,7 @@ Un mot par notion. Le terme du code (en anglais, décision du 2026-11-26) est le
 | Présences (statut par membre et par séance) | Oui | Non | Base locale | 3 saisons, réglable | Sauvegarde, export CSV, rapport PDF ; effacées avec le membre |
 | Commentaire de séance (pas de membre) | Non, en principe | Non | Base locale | Idem | Sauvegarde |
 | Alertes traitées : membre, longueur de la série, date (EX-26 ; décision du porteur du 2026-11-27) | Oui | Non | Base locale | Jusqu'à la suppression du membre (purge comprise) | Sauvegarde ; effacées avec le membre |
-| Saisons, groupes, créneaux (dont la date d'effet de leur horaire, EX-07, EX-08), réglages | Non | Non | Base locale et préférences | Jusqu'à suppression | Sauvegarde |
+| Saisons, groupes, créneaux (dont la date d'effet de leur horaire, EX-07, EX-08, et dont le nombre de groupes d'une séance), réglages | Non | Non | Base locale et préférences | Jusqu'à suppression | Sauvegarde |
 | Sauvegarde exportée | Oui (tout ce qui précède) | Non | Là où l'encadrant la dépose ; **en clair**, avec avertissement à l'export | Sous la garde de l'encadrant | Hors de l'appli |
 
 ## Zones sensibles
@@ -127,6 +127,7 @@ Les parties du code où une erreur touche les données, la sécurité ou l'exact
 
 ## Décisions du porteur
 
+- 2026-11-28 (séance de lancement du lot J3-5, ticket 043, ABS-08) : ligne « Saisons, groupes, créneaux… » du tableau « Données manipulées » complétée par le nombre de groupes d'une séance (`sessions.group_count`) : donnée d'organisation, non personnelle, sauvegardée.
 - 2026-11-27 (séance de découpage du jalon 2) : ligne « Alertes traitées » ajoutée au tableau « Données manipulées » (table `alert_acks`, ADR-003, EX-26) : personnelle, non sensible, effacée avec le membre.
 - 2026-11-26 : révision du glossaire, ajout de séance enregistrée, préparée, annulée, non planifiée et du libellé « Attendu » (suite au PRD, EX-36 et EX-38).
 - 2026-11-26 : niveau renforcé ; dépôt public `une-app-par-mois/kila-appel` ; besoin, utilisateur, contexte et niveau technique ; périmètre F-01 à F-14 dans la v1, par jalons ; import par photo en boîte à idées ; Expo + React Native + TypeScript ; termes du code en anglais (glossaire validé tel quel) ; mode de CI par jalon ; pas de chiffrement dans l'appli ; données et conservation comme l'ancienne version ; zones sensibles ; critères de réussite (iOS sur simulateur) ; risques ; pas de verrouillage ; français seul ; nouvelle appli avec nouveau nom de paquet.

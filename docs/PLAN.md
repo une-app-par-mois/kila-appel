@@ -21,15 +21,15 @@ Le plus gros risque technique d'abord (jalon 0). Chaque jalon se termine par un 
 | 0 | Outillage et risques techniques | — | CI verte avec un premier test du domaine et un test de données sur `node:sqlite` ; APK de développement construit par la CI et installé sur le téléphone ; build iOS de test réussi sur le runner macOS (non signé) | 4 | 6 |
 | 1 | Organiser, appeler, retrouver | F-01, F-02, F-03, EX-39 | Prétest : appel de 20 membres en moins de 30 s ; appel retrouvé après fermeture forcée ; sauvegarde → tout effacer → restauration identique ; campagne Maestro verte | 12 | 19 |
 | 2 | Suivre l'assiduité | F-04, F-05, F-06 | Prétest : alerte levée puis traitée ; taux exacts sur un jeu fictif vérifié à la main ; relance reçue sur le téléphone, sans nom de membre | 13 | 18 |
-| 3 | Entrer et sortir les données | F-07, F-08, F-09 | Prétest : import d'un CSV fictif Excel (UTF-8 et Windows-1252) ; CSV et PDF ouverts sur l'ordinateur | 17 (découpé le 2026-11-28 : 031 à 042, avec 032b et 039b ; 043, 044 et 044b ajoutés le 2026-11-28) | 6 |
+| 3 | Entrer et sortir les données | F-07, F-08, F-09 | Prétest : import d'un CSV fictif Excel (UTF-8 et Windows-1252) ; CSV et PDF ouverts sur l'ordinateur | 20 (découpé le 2026-11-28 : 031 à 042, avec 032b et 039b ; 043, 044 et 044b ajoutés le 2026-11-28 ; 040b, 043b et 044c découpés le 2026-11-28) | 6 |
 | 4 | Calendrier complet | F-10, F-11, F-13 | Prétest : stage sur 3 dates à 2 groupes ; séance préparée puis enregistrée ; séance annulée puis rétablie | 4 | 7 |
 | 5 | Confort | F-12, F-14 | Prétest : frise et podium conformes aux maquettes | 2 | 3 |
 | 6 | Publication Android | EX-40 à EX-42 | Pages légales et GitHub Pages en ligne ; audit adverse sans problème critique ou élevé ouvert ; `CHECKLIST-RELEASE.md` coché ; AAB signé par la CI déposé en test interne puis en production | 4 | 10 |
 | 7 | Publication iOS | — | Test sur un vrai iPhone ; IPA signé par la CI sur TestFlight puis en production | 2 | 5 |
 
-Total jusqu'à la publication Android (jalons 0 à 6) : **56 tickets, environ 69 h de porteur**, hors marge (total recompté le 2026-11-28 à la séance de lancement du lot J3-4 : 4 + 12 + 13 + 17 + 4 + 2 + 4).
+Total jusqu'à la publication Android (jalons 0 à 6) : **59 tickets, environ 69 h de porteur**, hors marge (total recompté le 2026-11-28 à la séance de lancement du lot J3-5 : 4 + 12 + 13 + 20 + 4 + 2 + 4).
 
-**Jalon 3 en cours (2026-11-28, intégration du lot J3-4)** : **12 tickets sur 17** fusionnés dans `groupe/jalon-3-entrer-sortir-donnees` (031, 032, 032b, 033, 034, 035, 036, 037, 038, 039, 039b, 044) ; restent 040, 041, 043, 044b, puis 042 (campagne Maestro). Découpage du 044b en 044b et 044c proposé (liste SEC-06 élargie), à valider à la séance de lancement du lot J3-5 : le jalon passerait à 18 tickets.
+**Jalon 3 en cours (2026-11-28, séance de lancement du lot J3-5)** : **12 tickets sur 20** fusionnés dans `groupe/jalon-3-entrer-sortir-donnees` (031, 032, 032b, 033, 034, 035, 036, 037, 038, 039, 039b, 044) ; lot J3-5 lancé (040a, 040b, 043, 043b, 044b) ; restent ensuite 041, 044c, puis 042 (campagne Maestro). Découpages du 040, du 043 et du 044b validés par le porteur : le jalon passe à 20 tickets.
 
 **Jalon 2 fait (2026-11-28)** : PR #88 fusionnée dans `main` en squash (`40d70bb`), CI toute verte sur le dernier commit, campagne Maestro sur l'APK de la CI 7 parcours sur 7. **Fusionné sans le prétest sur l'A55**, sur décision du porteur du 2026-11-28 : le prétest reste à faire, et tout défaut trouvé devient un ticket corrigé au jalon 3, classé selon le §5. Critère de sortie en face de ce qui est vérifié :
 
@@ -88,6 +88,7 @@ Démarches hors code, à lancer tôt à cause des délais.
 
 ## Décisions du porteur
 
+- 2026-11-28 (séance de lancement du lot J3-5) : découpages validés par le porteur, plus de 10 fichiers en zone sensible : 040 en 040a (adaptateur et nettoyage) et 040b (cycle du rapport) ; 043 en 043 (schéma, écriture, sauvegarde) et 043b (règle RM-03) ; 044b en 044b (liste SEC-06 élargie) et 044c (saison, créneau, contact, après le 043) ; jalon 3 : 20 tickets au lieu de 17, total jusqu'au jalon 6 : 59 tickets ; heures du porteur inchangées (6 h pour le jalon 3).
 - 2026-11-28 (séance de lancement du lot J3-4) : ticket 044b créé (saison, créneau, libellé de contact : même règle SEC-06 que les noms de groupe du 044) ; jalon 3 : 17 tickets au lieu de 16, total jusqu'au jalon 6 : 56 tickets ; heures du porteur inchangées (6 h pour le jalon 3).
 - 2026-11-28 (fin du jalon 2) : jalon 2 fusionné dans `main` (PR #88) sans le prétest sur l'A55 ; le prétest reste à faire, tout défaut trouvé devient un ticket corrigé au jalon 3 (classement du §5).
 - 2026-11-27 (séance de lancement du lot J2-4) : ticket 028b découpé en 028b (programmation) et 028c (appui sur la notification, Tout effacer, restauration), plus de 10 fichiers en zone sensible ; jalon 2 : 13 tickets au lieu de 12, total jusqu'au jalon 6 : 43 tickets ; heures du porteur inchangées (18 h pour le jalon 2).
