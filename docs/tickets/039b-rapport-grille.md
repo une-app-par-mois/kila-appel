@@ -2,7 +2,7 @@
 
 Statut : à faire · Jalon : 3 · Zone sensible : **oui** (export de données de mineurs ; HTML échappé, SEC-08 ; statuts affichés) · Trivial : non
 
-Dépend de : 039 (`reportHtml.ts`, fonction d'échappement, libellés `rapport.ts`) · Fichiers touchés : `src/domain/reportGrid.ts` et son test (nouveaux), `src/data/reportGridRepo.ts` et son test (nouveaux), `src/domain/reportHtml.ts` (place les pages de grille), `src/config/libelles/rapport.ts` (légende) — 6 fichiers
+Dépend de : 039 (`reportHtml.ts`, fonction d'échappement, libellés `rapport.ts`) · Fichiers touchés : `src/domain/reportGrid.ts` et son test (nouveaux), `src/data/reportGridRepo.ts` et son test (nouveaux), `src/domain/reportHtml.ts` (styles de la grille dans `reportCss` ; branchement des pages au 040), `src/config/libelles/rapport.ts` (légende) — 7 fichiers d'après le plan du lot J3-4
 
 Découpé le 2026-11-28 (réponses du porteur au découpage du jalon 3 : contenu du rapport, option B).
 
@@ -21,7 +21,7 @@ Décision du porteur du 2026-11-28 : le rapport ajoute, pour chaque groupe, **la
 - `src/data/reportGridRepo.ts` : `grid(period, groupId | null)` : pour chaque groupe, ses séances enregistrées de la période (date, heure) et le statut de chaque membre à chacune, **en une requête** (NF-08) ; même attribution RM-03 que les statistiques ; case vide si le membre n'était pas inscrit ce jour-là.
 - `src/domain/reportGrid.ts` : `gridPages(groupGrid, labels)` :
   - blocs de 25 séances ; un dernier bloc de moins de 5 séances est fusionné avec le précédent (29 colonnes au plus) ;
-  - une page `paysage` par bloc (`@page paysage { size: A4 landscape }`, `page: paysage`), titre « Groupe · séances du JJ/MM au JJ/MM » ;
+  - une page `paysage` par bloc (`@page paysage { size: A4 landscape }`, `page: paysage`), titre « Groupe · séances du JJ/MM/AAAA au JJ/MM/AAAA » (décision 6 du lot J3-4) ;
   - lignes : nom et prénom répétés sur chaque bloc ; colonnes : date `JJ/MM` ; cellules : lettre du statut (P, A, R, E), jamais la couleur seule (NF-06), légende en pied de page ;
   - grande liste de membres : la page continue sur la suivante, l'en-tête des dates répété (`thead`).
 - Chaque valeur passe par la fonction d'échappement du 039 (SEC-08) ; aucune nouvelle source de texte.
@@ -48,7 +48,7 @@ Décision du porteur du 2026-11-28 : le rapport ajoute, pour chaque groupe, **la
 - Aucune réservée : contenu et mise en page décidés par le porteur le 2026-11-28.
 - **Risque à vérifier** (040) : pages d'orientations mélangées (`@page` nommées) dans un même PDF. Sur Android, `printToFileAsync` fixe une seule taille de média pour tout le document et la WebView pourrait ignorer les `@page` nommées ; sur iOS, la taille de page est aussi unique. Si le mélange ne tient pas, **repli appliqué d'office : tout le rapport en A4 paysage** (synthèse et taux compris), noté « en attente du porteur ».
 - Décisions automatiques proposées :
-  - Lettres P, A, R, E dans les cases (couleur de la charte en fond léger, en plus), case vide hors inscription.
+  - Lettres P, A, R, E dans les cases (couleur de la charte en fond léger, en plus), case vide hors inscription. Fond léger précisé par le porteur le 2026-11-28 : teinte claire calculée, lettre en texte foncé.
   - Dernier bloc de moins de 5 séances fusionné avec le précédent, 29 colonnes au plus (pas de page presque vide ; « environ 25 » de la décision).
 
 Reporté du lot J3-3 (2026-11-28, fiche 039) :
@@ -61,6 +61,20 @@ Reporté du lot J3-3 (2026-11-28, fiche 039) :
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
+| Couleur des cases P/R/E/A | Fond plein de la charte ; `color-mix` ; teinte calculée | Teinte claire calculée en TypeScript à partir du fond `#RRGGBB` de la charte, lettre en couleur de texte foncée ; pas de `color-mix` ; ligne ajoutée à `design/CHARTE.md` | Lisible à l'impression, aucune fonction CSS récente dans la WebView | décidée par le porteur le 2026-11-28 |
+| 1. Source du statut d'une case | — | Uniquement `credits` | Même attribution RM-03 que les statistiques | à relire |
+| 2. Lignes de la grille | — | Les membres de `report.groups[i].members` du 039 | Mêmes lignes que les taux du rapport | à relire |
+| 3. Requête | — | Une seule requête (NF-08) ; colonnes égales à `g.sessions` | Comptes cohérents avec le 039 | à relire |
+| 4. Case vide et légende | — | Case vide : hors inscription ou sans statut ; légende reprise par référence du texte de `stats.ts` | Un seul texte pour la même notion | à relire |
+| 5. Ordre et en-tête des colonnes | — | Tri par date, heure, id ; en-tête `JJ/MM`, avec l'heure seulement si plusieurs séances tombent le même jour | Colonnes distinctes sans surcharge | à relire |
+| 6. Titre d'un bloc | « du JJ/MM au JJ/MM » ; avec l'année | « Groupe · séances du JJ/MM/AAAA au JJ/MM/AAAA » | Une période peut couvrir deux années | à relire |
+| 7. Groupe archivé ou sans membre | — | « Archivé » sur les blocs ; un groupe sans membre n'a pas de grille | Même mention qu'au 039 ; pas de page vide | à relire |
+| 8. Place de la légende | Pied de page ; sous le bloc | Un paragraphe sous chaque bloc | Pied de page non fiable dans la WebView | à relire |
+| 9. Styles | — | Constante `GRID_PAGE` ; tous les styles dans `reportCss` ; police 8 pt ; aucun style en ligne | Feuille de confiance du 039 (SEC-08) | à relire |
+| 10. Sortie du module | Pages placées par `reportHtml` ; table | `reportGrid.ts` produit la table `groupId → SafeHtml[]` ; le branchement dans le rapport se fait au 040 (reporté dans la fiche 040) | Garder le 039b sous 10 fichiers | à relire |
+| 11. Oracle EX-32 | Valeurs écrites en dur ; `statsRepo.member` | Comparaison à `statsRepo.member`, y compris après la suppression d'un groupe ; aucun test RM-03 Q2 écrit en dur | Une seule vérité, celle des statistiques | à relire |
+| 12. Volume (NF-08) | — | Une requête en moins de 2 s ; taille du HTML journalisée sans seuil | Mesure indicative, pas de seuil arbitraire | à relire |
+| Nombre de fichiers | — | 7 fichiers | Sous 10 | à relire |
 
 ## Questions pour le porteur
 

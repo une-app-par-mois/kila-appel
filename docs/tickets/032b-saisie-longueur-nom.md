@@ -18,8 +18,8 @@ Décision du porteur du 2026-11-28 (SEC-06) : nom et prénom d'un membre de 100 
 
 ## Ce qui change
 
-- Les deux formulaires montrent sous le champ le message de `NAME_TOO_LONG` ou de `NAME_INVALID_CHAR`, comme `NAME_REQUIRED` aujourd'hui ; « Enregistrer » ne part pas tant qu'un champ est en erreur.
-- `maxLength={100}` sur les champs Nom et Prénom (le clavier s'arrête à 100) ; le contrôle reste celui du domaine pour un texte collé.
+- Les deux formulaires montrent sous le champ le message de `NAME_TOO_LONG` ou de `NAME_INVALID_CHAR`, comme `NAME_REQUIRED` aujourd'hui ; « Enregistrer » reste actif mais n'enregistre pas tant qu'un champ est en erreur.
+- Pas de `maxLength` sur Nom et Prénom (décision changée après contradiction, 2026-11-28) : `validateMemberName` contrôle chaque champ avant l'enregistrement.
 - Un membre au nom plus long ne peut pas venir d'une sauvegarde : la restauration refuse en entier une sauvegarde dont un nom est hors de la règle (décision du porteur du 2026-11-28, ticket 032).
 
 ## Critères d'acceptation
@@ -40,17 +40,23 @@ Décision du porteur du 2026-11-28 (SEC-06) : nom et prénom d'un membre de 100 
 ## Questions prévues
 
 - Aucune : règle décidée par le porteur le 2026-11-28.
-- Décision automatique proposée : `maxLength` sur les champs en plus du contrôle (le clavier s'arrête, le collage est contrôlé).
+- Décision automatique proposée : `maxLength` sur les champs en plus du contrôle (le clavier s'arrête, le collage est contrôlé). Changée après contradiction à la séance de lancement du lot J3-4 : pas de `maxLength` (voir « Décisions »).
 
 Reporté du lot J3-1 (2026-11-28) :
 
-- La limite du domaine compte en points de code (après `trim()`), alors que `maxLength={100}` de React Native compte en unités UTF-16 : un nom avec des émojis ou des caractères hors du plan de base est coupé par le clavier avant 100 points de code. Sans gravité (plus strict que le domaine, jamais plus permissif) ; à dire dans la PR et dans le test des 100 caractères (caractères du plan de base).
+- La limite du domaine compte en points de code (après `trim()`), alors que `maxLength={100}` de React Native compte en unités UTF-16 : un nom avec des émojis ou des caractères hors du plan de base est coupé par le clavier avant 100 points de code. Sans gravité (plus strict que le domaine, jamais plus permissif) ; sans objet depuis l'abandon de `maxLength` (lot J3-4), le test des 100 caractères reste en caractères du plan de base.
 - Message de `NAME_INVALID_CHAR` : la liste des caractères refusés a été élargie à la relecture du 032 (U+061C, U+200B, U+200E, U+200F, U+FEFF, demi-caractères isolés ; U+200D accepté).
 
 ## Décisions
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
+| Limite dans les formulaires | `maxLength={100}` et contrôle ; contrôle seul | Contrôle seul, pas de `maxLength` (décision précédente « changée après contradiction ») | `maxLength` coupe un texte collé sans rien dire, le message n'apparaîtrait jamais, et il compte en unités UTF-16 | à relire |
+| Moment du contrôle | À l'enregistrement par le dépôt ; avant, champ par champ | `validateMemberName` champ par champ avant l'enregistrement, message sous le champ | Message au bon endroit, rien d'écrit | à relire |
+| Bouton « Enregistrer » | Désactivé ; actif | Actif ; l'appui montre l'erreur | Un bouton grisé n'explique rien | à relire |
+| Fiche `[id].tsx`, enregistrement en quittant (`updateOnLeave`) | Enregistrer ; écarter | Un nom invalide est écarté aussi | Jamais d'écriture hors règle | à relire |
+| Texte de `NAME_INVALID_CHAR` | — | Inchangé | Même texte à l'import et à la saisie | à relire |
+| Tests des 100 caractères | — | 100 caractères du plan de base, puis 100 entourés d'espaces (`trim()`) ; `accessibilityRole="alert"` vérifié ; nouveau fichier de test ; 3 fichiers | Limite comptée après `trim()`, en points de code | à relire |
 
 ## Questions pour le porteur
 

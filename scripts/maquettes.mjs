@@ -530,14 +530,26 @@ ${section('Groupe archivé, date erronée')}
 <p class="note">Fichier partagé : <span class="mono">kila-presences-2026-09-01-au-2026-11-26.csv</span> (début et fin de la période, ticket 037).</p>
 <p class="note">Bandeau SEC-09 jamais réduit, présent dans tous les états. Plafond de 50 000 lignes : export refusé, bouton désactivé, compteur affiché ; textes des états : décisions du porteur du 2026-11-28 (ticket 037).</p>`);
 
+// Grille du rapport (039b) : teinte claire du fond du statut, lettre en texte foncé
+// (décision du porteur du 2026-11-28). Mélange indicatif à 25 % du fond sur blanc.
+const clair = (hex) => '#' + [1, 3, 5].map((i) => Math.round(255 - (255 - parseInt(hex.slice(i, i + 2), 16)) * 0.25).toString(16).padStart(2, '0')).join('');
+const caseGrille = (k) => k ? `<td style="background:${clair(st[k].fond)};color:${c.texte}">${{ present: 'P', late: 'R', excused: 'E', absent: 'A' }[k]}</td>` : '<td></td>';
+const grilleApercu = `<table class="grille-pdf"><thead><tr><th></th>${['02/09', '04/09', '09/09', '11/09', '16/09'].map((d) => `<th class="mono">${d}</th>`).join('')}</tr></thead><tbody>${[
+  ['Bernard Adam', ['present', 'present', 'late', 'present', 'absent']],
+  ['Petit Alice', ['present', 'excused', 'present', 'present', 'present']],
+  ['Robert Arthur', [null, null, 'present', 'absent', 'present']],
+].map(([n, ks]) => `<tr><th>${n}</th>${ks.map(caseGrille).join('')}</tr>`).join('')}</tbody></table>`;
+
 ecran('rapport', 2, 'Rapport PDF', 'EX-32', 'stats', `
 ${titre('Rapport PDF', 'stats')}
 <label>Période</label><div class="champ">Saison 2026-2027 ▾</div>
 <label>Groupes</label><div class="champ">Tous les groupes ▾</div>
 ${carte(`<div class="feuille"><div class="l-titre">Ki&La · Rapport de présence</div><div class="l-sous mono">01/09/2026 – 26/11/2026</div><div class="barre"><i class="s-present" style="width:80%"></i><i class="s-late" style="width:7%"></i><i class="s-excused" style="width:5%"></i><i class="s-absent" style="width:8%"></i></div><div class="l-sous">Synthèse, puis une page par groupe et sa grille…</div><div class="l-sous">Benjamins · Archivé</div><div class="l-sous">P : présent · R : retard · E : excusé · A : absent. « — » : aucune séance comptée.</div></div>`)}
+${carte(`<div class="l-titre">Benjamins · séances du 02/09/2026 au 16/09/2026</div>${grilleApercu}<div class="l-sous">P : présent · R : retard · E : excusé · A : absent. Case vide : hors inscription ou sans statut.</div>`)}
 ${carte(`<p>Le fichier contient les noms des membres et leurs taux de présence, <b>en clair</b>. Partagez-le seulement avec qui doit le recevoir.</p>`, 'bandeau')}
 ${go('rapport', 'Créer et partager le PDF')}
 <p class="note">Format A4 : synthèse et taux par membre en portrait, puis la grille séance par séance de chaque groupe en paysage, par blocs d'environ 25 séances (décision du porteur du 2026-11-28, tickets 039 et 039b).</p>
+<p class="note">Grille séance par séance (aperçu d'un bloc en paysage) : case en teinte claire du fond du statut, lettre en texte foncé, jamais la couleur seule (décision du porteur du 2026-11-28, ticket 039b) ; la teinte exacte est calculée au 039b.</p>
 <p class="note">Sous chaque tableau des membres, la légende des lettres P, R, E, A ; « Archivé » en texte secondaire après un groupe ou un membre archivé ; « Aucun membre sur la période. » pour un groupe sans membre ; « Aucune présence comptée sur la période. » quand les séances n'ont aucune présence comptée (décisions du porteur du 2026-11-28, ticket 039).</p>`);
 
 // F-10, F-11 — Créneau ponctuel et plusieurs groupes
@@ -656,7 +668,7 @@ ${Object.entries(st).map(([k, v]) => `.s-${k}{background:${v.fond};color:${v.tex
 .verrou{background:#1b2233;margin:-16px -20px 0 -44px;padding:60px 20px;min-height:500px}.verrou .heure{color:#fff;font-size:56px;text-align:center;margin-bottom:24px}
 .exemple{font-size:11px;border-collapse:collapse;width:100%;margin:8px 0}.exemple th,.exemple td{border:1px solid var(--quad);padding:3px}
 .bascule{display:flex;border:1.5px solid var(--quad);border-radius:12px;overflow:hidden;margin:8px 0}.bascule span{flex:1;text-align:center;padding:10px;background:#fff}.bascule .on{background:var(--encre);color:#fff;font-weight:600}
-.feuille{border:1px solid var(--quad);padding:12px;aspect-ratio:1/1.41;max-height:240px}.btn-s.choix{color:var(--texte);text-align:left}
+.feuille{border:1px solid var(--quad);padding:12px;aspect-ratio:1/1.41;max-height:240px}.grille-pdf{border-collapse:collapse;font-size:11px;margin:6px 0;width:100%}.grille-pdf th,.grille-pdf td{border:1px solid var(--quad);padding:2px 4px;text-align:center}.grille-pdf tbody th{text-align:left;font-weight:400}.btn-s.choix{color:var(--texte);text-align:left}
 .carre{display:inline-block;width:10px;height:10px;margin-right:5px;border-radius:2px}
 .compteur{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px}
 .brouillon{font-size:13px;color:var(--texte2);margin:4px 0 8px}

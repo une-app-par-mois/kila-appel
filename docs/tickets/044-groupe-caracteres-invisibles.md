@@ -34,7 +34,7 @@ Créé le 2026-11-28 à l'intégration du lot J3-3 (« À reporter » de la fich
 
 ## Hors périmètre
 
-- Longueur maximale d'un nom de groupe (question à poser à la pré-analyse si besoin) ; noms de saison et de créneau.
+- Longueur maximale d'un nom de groupe (D6) ; noms de saison, de créneau et libellé de contact (ticket 044b) ; migration des groupes déjà en base.
 
 ## Questions prévues
 
@@ -46,6 +46,17 @@ Créé le 2026-11-28 à l'intégration du lot J3-3 (« À reporter » de la fich
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
+| Sauvegarde avec un nom de groupe hors règle (SEC-10) | Refusée en entier ; nom nettoyé | Refusée en entier par le refus existant `INVALID_DATA`, sans dire quelle ligne | Même règle que les noms de membre (032) | décidée par le porteur le 2026-11-28 |
+| Groupes déjà en base avec un caractère invisible | Migration ; aucune migration | Aucune migration ; le prochain renommage force la correction | Appli non publiée ; pas de migration en zone sensible sans besoin | décidée par le porteur le 2026-11-28 |
+| Plan du ticket (zone sensible) | — | Plan validé, avec les décisions automatiques D1 à D7 | Séance de lancement du lot J3-4 | décidée par le porteur le 2026-11-28 |
+| Saison, créneau (`name`, `place`), libellé de contact | Dans ce ticket ; ticket séparé | Ticket 044b, même règle et même refus de sauvegarde | Garder le 044 sous 10 fichiers | décidée par le porteur le 2026-11-28 |
+| D1 : forme de la règle | Modifier `validateName` ; nouvelle fonction | `validateGroupName` exporté : `validateName` puis `NAME_INVALID_CHAR` (via `isInvisible`) ; `validateName` inchangé | Ne pas toucher aux autres noms (saison, créneau : 044b) | à relire |
+| D2 : où appliquer la règle | Écran ; dépôt | `groupsRepo.create` et `groupsRepo.rename` appellent `validateGroupName` | Un seul point de contrôle, comme les membres | à relire |
+| D3 : restauration | — | `backupRows.groups` utilise `same(validateGroupName(...))` ; tests SEC-06 et SEC-10 avec U+202E (refusé) et un émoji avec U+200D (accepté) | Même mécanisme que les autres règles de `backupRows` | à relire |
+| D4 : texte d'erreur | Nouveau texte ; texte existant | Message de `NAME_INVALID_CHAR` inchangé | Même texte pour membres et groupes | à relire |
+| D5 : écrans du groupe | `maxLength` ou contrôle local ; erreur du dépôt | Pas de `maxLength` ni de contrôle local ; l'erreur s'affiche sous le champ ; un test d'écran | La règle reste dans le domaine | à relire |
+| D6 : longueur maximale | 100 ; aucune | Pas de longueur maximale | Hors périmètre du ticket, non demandée | à relire |
+| D7 : tests du domaine | `validation.test.ts` ; nouveau fichier | Nouveau fichier de test du domaine ; ABS-04 vérifié (aucun nom dans l'erreur ni le journal) ; 7 fichiers ; `isInvisible` et l'ordre des contrôles de `validateMemberName` inchangés | `validation.test.ts` déjà long ; aucune régression sur les membres | à relire |
 
 ## Questions pour le porteur
 
