@@ -92,6 +92,15 @@ describe('checkRows : toute ligne de la copie passe les règles de l’appli', (
     ['ticket 008 téléphone d’un contact invalide', "UPDATE emergency_contacts SET phone = '12'"],
     ['ticket 008 contact sans nom', 'UPDATE emergency_contacts SET label = NULL'],
     ['EX-02 nom de groupe vide', "UPDATE groups SET name = ' '"],
+    // SEC-06, SEC-10 (ticket 044, décision du porteur du 2026-11-28) : refus en entier.
+    [
+      'SEC-06 sens d’affichage (U+202E) dans un nom de groupe',
+      "UPDATE groups SET name = 'Pous' || char(8238) || 'sins'",
+    ],
+    [
+      'SEC-06 tabulation dans un nom de groupe',
+      "UPDATE groups SET name = 'Pous' || char(9) || 'sins'",
+    ],
     ['EX-02 date d’archivage d’un groupe invalide', "UPDATE groups SET archived_at = '2026-13-01'"],
     ['EX-04 début d’inscription invalide', "UPDATE enrollments SET start_date = '01/09/2026'"],
     ['EX-04 fin d’inscription invalide', "UPDATE enrollments SET end_date = '2026-09-31'"],
@@ -182,6 +191,13 @@ describe('checkRows : toute ligne de la copie passe les règles de l’appli', (
     await db.execute('UPDATE members SET last_name = ?, first_name = ?', [
       'x'.repeat(100),
       '😀'.repeat(100),
+    ]);
+    expect(await checkRows(db, TODAY)).toBeNull();
+  });
+
+  it('SEC-06, SEC-10 accepte un nom de groupe avec un émoji composé (U+200D)', async () => {
+    await db.execute('UPDATE groups SET name = ?', [
+      `Poussins ${String.fromCodePoint(0x1f469, 0x200d, 0x1f467)}`,
     ]);
     expect(await checkRows(db, TODAY)).toBeNull();
   });

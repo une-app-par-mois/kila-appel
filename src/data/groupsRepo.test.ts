@@ -41,6 +41,29 @@ describe('Dépôt des groupes (EX-02)', () => {
     expect(await count(db, 'groups')).toBe(0);
   });
 
+  it('SEC-06 refuse un caractère invisible (U+202E) à la création et au renommage', async () => {
+    const repo = groupsRepo(db);
+    const reversed = `Pous${String.fromCodePoint(0x202e)}sins`;
+    await expect(repo.create(seasonId, reversed)).rejects.toThrow(
+      expect.objectContaining({ code: 'NAME_INVALID_CHAR' }),
+    );
+    expect(await count(db, 'groups')).toBe(0);
+    const id = await repo.create(seasonId, 'Poussins');
+    await expect(repo.rename(id, reversed)).rejects.toThrow(
+      expect.objectContaining({ code: 'NAME_INVALID_CHAR' }),
+    );
+    expect((await repo.get(id))?.name).toBe('Poussins');
+  });
+
+  it('SEC-06 accepte un émoji composé avec U+200D, à la création et au renommage', async () => {
+    const repo = groupsRepo(db);
+    const team = `Poussins ${String.fromCodePoint(0x1f469, 0x200d, 0x1f467)}`;
+    const id = await repo.create(seasonId, team);
+    expect((await repo.get(id))?.name).toBe(team);
+    await repo.rename(id, `${team} mercredi`);
+    expect((await repo.get(id))?.name).toBe(`${team} mercredi`);
+  });
+
   it('lit un groupe par son identifiant (ses inscrits viennent du dépôt des inscriptions, ticket 007c)', async () => {
     const s = await seed(db);
     const repo = groupsRepo(db);
