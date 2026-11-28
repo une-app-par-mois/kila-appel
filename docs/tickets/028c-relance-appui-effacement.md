@@ -1,6 +1,6 @@
 # 028c — Relance : appui et effacement
 
-Statut : fusionné dans le groupe (PR #83) · Jalon : 2 · Zone sensible : **oui** (notifications, ABS-04 ; effacement : Tout effacer annule et retire les relances, ABS-05 ; restauration ; SEC-11) · Trivial : non
+Statut : fait (PR #88 vers `main` ; PR #83 dans le groupe) · Jalon : 2 · Zone sensible : **oui** (notifications, ABS-04 ; effacement : Tout effacer annule et retire les relances, ABS-05 ; restauration ; SEC-11) · Trivial : non
 
 Dépend de : 028a (adaptateur `src/data/expoNotifications.ts` : `lastReminderTarget`, `onReminderTarget`, `cancelAllReminders`, `dismissAllReminders`), 027 (calcul et réglages) ; pas du 028b, qui tourne en parallèle · Fichiers touchés : `src/app/_layout.tsx` (cible de l'appui), `src/hooks/useErase.ts`, `src/app/tout-effacer.tsx`, `src/hooks/useEraseAll.test.tsx`, `src/hooks/useRestore.ts` et `src/hooks/useRestore.test.tsx`, `src/hooks/useRecovery.ts` et `src/hooks/useRecovery.test.tsx`, un test d'écran de l'appui dans `src/appTests/` (nouveau) — environ 9 fichiers. Seul fichier commun avec le 028b : `_layout.tsx` (un petit ajout chacun).
 
