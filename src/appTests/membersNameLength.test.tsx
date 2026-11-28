@@ -106,19 +106,53 @@ describe('Nom et prénom de 100 caractères au plus, sans caractère invisible (
     expect(await count(db, 'members', "first_name = 'Alix' AND id = ?", [s.memberId])).toBe(1);
   });
 
-  it('SEC-06 fiche : en quittant l’écran, un nom invalide est écarté, le prénom valide enregistré', async () => {
+  it('SEC-06 texte de NAME_INVALID_CHAR : dit quoi faire, sans demander de voir l’invisible', () => {
+    expect(t.errors.NAME_INVALID_CHAR).toBe(
+      'Le nom contient un caractère invisible : effacez le champ et retapez le nom.',
+    );
+  });
+
+  it('SEC-06 fiche : un nom ancien de 120 caractères, quitté sans changement → aucune alerte', async () => {
+    const old = 'B'.repeat(120);
+    await db.execute('UPDATE members SET last_name = ? WHERE id = ?', [old, s.memberId]);
+    await open(`/membres/${s.memberId}`);
+    const field = await screen.findByLabelText(t.memberForm.lastName);
+    await waitFor(() => expect(screen.getByLabelText(t.memberForm.lastName).props.value).toBe(old));
+    await fireEvent(field, 'focus');
+    await fireEvent(field, 'blur');
+    await waitFor(() => expect(screen.queryByRole('alert')).toBeNull());
+    expect(screen.queryByText(t.errors.NAME_TOO_LONG)).toBeNull();
+  });
+
+  /** Fiche d'Alix ouverte depuis la liste : prénom « Léa », un autre champ changé, puis retour. */
+  const leaveWith = async (label: string, value: string) => {
     const router = await open('/membres');
     await fireEvent.press(await screen.findByRole('button', { name: /Alix Exemple/ }));
     await fireEvent.changeText(await screen.findByLabelText(t.memberForm.firstName), 'Léa');
-    await fireEvent.changeText(screen.getByLabelText(t.memberForm.lastName), NAME_101);
+    await fireEvent.changeText(screen.getByLabelText(label), value);
     await fireEvent.press(screen.getByRole('button', { name: t.common.back }));
     await waitFor(() => expect(router.getPathname()).toBe('/membres'));
+  };
+  const saved = (where: string) => count(db, 'members', `${where} AND id = ?`, [s.memberId]);
+
+  it.each([
+    ['de 101 caractères', NAME_101],
+    ['vide', ''],
+    ['fait d’espaces', '   '],
+  ])(
+    'SEC-06 fiche : nom %s puis sortie de l’écran → nom gardé, prénom enregistré',
+    async (_, value) => {
+      await leaveWith(t.memberForm.lastName, value);
+      await waitFor(async () =>
+        expect(await saved("first_name = 'Léa' AND last_name = 'Exemple'")).toBe(1),
+      );
+    },
+  );
+
+  it('EX-03 fiche : date future non quittée puis sortie → date écartée, prénom enregistré', async () => {
+    await leaveWith(t.memberForm.birthDate, '01/01/2099');
     await waitFor(async () =>
-      expect(
-        await count(db, 'members', "first_name = 'Léa' AND last_name = 'Exemple' AND id = ?", [
-          s.memberId,
-        ]),
-      ).toBe(1),
+      expect(await saved("first_name = 'Léa' AND birth_date = '2015-03-14'")).toBe(1),
     );
   });
 });
