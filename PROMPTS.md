@@ -350,6 +350,24 @@ Avant de passer aux tickets suivants, je veux voir avec toi comment optimiser le
 - Une passe asynchrone qui écrit dans le système doit revérifier ses conditions avant chaque écriture, pas seulement au départ.
 - Tout point d'entrée qu'une autre appli peut atteindre (activité, notification) se traite comme une entrée non fiable.
 
+### Ticket 030 et fin du développement du jalon 2 — 2026-11-27
+
+**Prompt clé** : lancement du 030 (campagne Maestro du jalon 2, fiche `docs/tickets/030-maestro-jalon-2.md`) par un agent de code, puis revues, contradicteur, fusion (PR #86) et intégration documentaire.
+
+**Réponses du porteur** : émulateur seul (`emulator-5554`, jamais `--appareil-reel`, A55 « non vérifié ») ; dialogue de permission du système piloté par Maestro (pas maintenant, autoriser, refuser) ; NF-08 relevé sur une sauvegarde de volume, sans seuil, à titre indicatif, jugé à l'œil sur l'A55 au prétest ; ticket gardé entier à 14 fichiers.
+
+**Ce que l'IA a fait** : quatre parcours du jalon 2 (`alerte-traitee`, `statistiques`, `relance-reglage`, `volume-nf08`) après ceux du jalon 1, une sauvegarde fictive par parcours écrite par `e2eBackup.ts`, restauration commune en sous-parcours ; campagne **7/7 verte** sur l'émulateur (Android 16, API 36), appel de 20 membres en 25,4 s ; NF-08 indicatif sur 500 membres et 930 séances : accueil 1,07 s, Stats 2,95 s ; 1752 tests ; 19 décisions ajoutées à `docs/DECISIONS.md`, aucune question en file.
+
+**Ce qui a été corrigé par les revues** :
+- **campagne bloquée hors des dates** : un émulateur réglé hors du jeu du 023 (avant le 2026-11-25 ou après le 2027-07-31) faisait refuser toute la campagne ; seule la sauvegarde des statistiques n'est plus écrite et `e2e.sh` saute le parcours `statistiques` avec un avertissement (contradicteur) ;
+- **contrôle de l'interrupteur qui ne vérifiait rien** : `checked: false` trouvait le titre, un texte jamais coché, donc toujours vrai ; l'état se lit sur la ligne « Relance » de Paramètres, et le contrôle a été vu en échec en l'inversant ;
+- **contrôles des statistiques qui pouvaient attraper une ligne de groupe** : « 87 % » ou « 21 » cherchés par leur seul texte pouvaient tomber sur une ligne de groupe ; ils sont lus par position, sous leur titre et au-dessus de « Par groupe » ;
+- **séances futures dans la sauvegarde de volume** : `volumeSeed` contenait 270 séances après le jour de l'appareil, que l'appli n'enregistre jamais ; elles sont retirées et la mesure porte sur 930 séances.
+
+**Leçons** :
+- Un contrôle de test se vérifie en le faisant échouer une fois : sinon il peut ne rien vérifier.
+- Un jeu de test daté doit dire ce qu'il fait hors de ses dates, sans bloquer le reste.
+
 ### [Étape] — [AAAA-MM-JJ]
 
 **Prompt**

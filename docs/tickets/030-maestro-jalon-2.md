@@ -1,6 +1,6 @@
 # 030 — Campagne Maestro du jalon 2
 
-Statut : à faire · Jalon : 2 · Zone sensible : non (parcours de test, aucun code de l'appli) · Trivial : non
+Statut : fusionné dans le groupe (PR #86) · Jalon : 2 · Zone sensible : non (parcours de test, aucun code de l'appli) · Trivial : non
 
 Dépend de : 022, 024, 025 (et 029 pour le dernier parcours) · Fichiers touchés : `.maestro/alerte-traitee.yaml` (nouveau), `.maestro/statistiques.yaml` (nouveau), `.maestro/relance-reglage.yaml` (nouveau), `src/__fixtures__/e2eBackup.ts`, `scripts/e2e/sauvegarde-fictive.test.ts`, `scripts/e2e.sh` — 6 fichiers
 
@@ -25,9 +25,9 @@ Parcours de bout en bout de fin de jalon (`docs/CONVENTIONS.md` §5.2), sur l'AP
 
 ## Critères d'acceptation
 
-- [ ] Les trois parcours verts sur l'émulateur, puis sur l'APK de la CI de la PR du jalon.
-- [ ] Taux affichés égaux au tableau vérifié à la main (023).
-- [ ] Le parcours de la campagne du jalon 1 reste vert.
+- [ ] Les trois parcours verts sur l'émulateur, puis sur l'APK de la CI de la PR du jalon. (Émulateur : fait, 7/7 avec `volume-nf08` ; APK de la CI : à faire à la PR du jalon.)
+- [x] Taux affichés égaux au tableau vérifié à la main (023).
+- [x] Le parcours de la campagne du jalon 1 reste vert.
 
 ## Tests attendus
 
@@ -71,7 +71,7 @@ Reports de l'intégration du lot J2-2 (2026-11-27) :
 | Ordre et départ des parcours | — | Après ceux du jalon 1 (`flowsOrder`), chacun part d'un `clearState` ; restauration commune dans `sous-parcours/restaurer.yaml` (`FICHIER`, `RESUME`) | Mêmes règles que le 016 | à relire |
 | Variante « Ne pas autoriser » | Parcours à part ; même parcours | Même parcours `relance-reglage.yaml`, après un second `launchApp` avec `clearState` | Un refus ne se défait pas sans effacer l'appli ; un fichier de moins | à relire |
 | Mesure de l'accueil (NF-08) | Après la restauration ; lancement à froid | Du lancement à froid (`stopApp`, puis `launchApp` sans effacer) jusqu'à la section « Alertes d'assiduité » ; Stats : de l'appui sur l'onglet jusqu'au taux | L'accueil est déjà monté après la restauration ; le lancement à froid est ce que voit l'encadrant | à relire |
-| Taille du ticket | Découper ; garder | Gardé : 14 fichiers (au lieu de 6 prévus) — 4 parcours et 2 sous-parcours de plus que prévu (restauration commune, ouverture du réglage, volume), le second fichier de test, le `.mjs`, la configuration, le README et cette fiche | Tous des fichiers de test ou d'outillage, une seule session | posée au porteur (voir « Questions pour le porteur ») |
+| Taille du ticket | Découper ; garder | Gardé : 14 fichiers (au lieu de 6 prévus) — 4 parcours et 2 sous-parcours de plus que prévu (restauration commune, ouverture du réglage, volume), le second fichier de test, le `.mjs`, la configuration, le README et cette fiche | Tous des fichiers de test ou d'outillage, une seule session | décidée par le porteur le 2026-11-27 : gardé entier à 14 fichiers |
 | État de l'interrupteur de la relance (revue) | `checked` sur le libellé ; `testID` sur le `Switch` ; ligne « Relance » de Paramètres | Ligne de Paramètres : « Relance, Désactivée », « Relance, Activée · 30 min », « Relance, Refusée par le téléphone » | `checked: false` trouvait le titre (un texte, jamais coché) : toujours vrai. Un `testID` serait du code de l'appli en zone sensible. Contrôle vérifié en l'inversant une fois (« Désactivée » attendue après « Autoriser ») : le parcours échoue | à relire |
 | Chiffres de la synthèse des statistiques (revue) | Texte seul ; `childOf` ou `containsDescendants` de la carte ; position | Position : « 87 % » sous « Taux de présence », « 21 » sous « Séances », tous deux au-dessus de « Par groupe » | Les cartes `stats-rate` et `stats-sessions` n'ont aucun descendant dans la hiérarchie d'Android (vue aplatie) : `childOf` et `containsDescendants` échouent même quand le chiffre est affiché (essayés). Contrôle vérifié en attendant 88 % une fois : échec | à relire |
 | Séances après le jour dans la sauvegarde de volume (revue) | `volumeSeed` tel quel ; séances arrêtées au jour | Les séances datées après le jour de l'appareil sont retirées (présences et liens compris) : 930 séances le 2026-11-27 (130 de la saison active, 800 des deux passées) au lieu de 1 200 ; le résumé attendu dans le parcours ne fixe plus ce nombre | L'appli n'enregistre jamais de séance future ; la mesure ne dépend plus de séances qui ne peuvent pas exister | à relire |
@@ -79,7 +79,7 @@ Reports de l'intégration du lot J2-2 (2026-11-27) :
 
 ## Questions pour le porteur
 
-- **Taille du ticket** (en attente du porteur, ticket gardé tel quel) : 14 fichiers au lieu des 6 prévus, au-delà de la limite de 10. Options : 1) garder le ticket en un seul morceau (recommandé : tous des fichiers de test ou d'outillage, faits en une session, déjà relus) ; 2) le découper après coup (sauvegardes et générateur, puis parcours).
+- **Taille du ticket** (répondue le 2026-11-27 : gardé entier à 14 fichiers) : 14 fichiers au lieu des 6 prévus, au-delà de la limite de 10. Options : 1) garder le ticket en un seul morceau (recommandé : tous des fichiers de test ou d'outillage, faits en une session, déjà relus) ; 2) le découper après coup (sauvegardes et générateur, puis parcours).
 
 ## À reporter
 
