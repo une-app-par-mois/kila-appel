@@ -56,6 +56,12 @@ F-08 (EX-31) : une ligne par séance et par membre (date, créneau, groupe, nom,
   - Groupes archivés et d'une autre saison exportés s'ils ont une séance dans la période (même règle que les statistiques, plan du 023 point 4).
   - Neutralisation SEC-07 sur les champs texte seulement (nom, prénom, groupe, créneau), pas sur la date ni le statut, que l'appli produit.
 
+Séance de découpage du jalon 3 (2026-11-28), réponses du porteur :
+
+- Plan validé par le porteur le 2026-11-28.
+- Décisions d'office ci-dessus appliquées, notées dans `docs/DECISIONS.md` (état « à relire »).
+- Relecture du porteur avant la fusion dans le groupe (zone sensible).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

@@ -49,6 +49,12 @@ EX-31 : choisir un groupe et une période, voir le nombre de lignes, lire l'aver
   - Nom du fichier : `kila-presences-AAAA-MM-JJ.csv` (date du jour, comme la sauvegarde), sans nom de groupe ni période (un nom court et stable ; le contenu dit le reste).
   - Comme pour la sauvegarde, un partage annulé ne se détecte pas : aucun message de réussite après la feuille de partage.
 
+Séance de découpage du jalon 3 (2026-11-28), réponses du porteur :
+
+- Plan validé par le porteur le 2026-11-28.
+- Décisions d'office ci-dessus appliquées, notées dans `docs/DECISIONS.md` (état « à relire »).
+- Relecture du porteur avant la fusion dans le groupe (zone sensible).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

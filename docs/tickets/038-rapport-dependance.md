@@ -1,8 +1,8 @@
 # 038 — Rapport PDF : expo-print et garde-fous du binaire
 
-Statut : **en attente du porteur** (nouvelle dépendance, ABS-01, ABS-07, SEC-08) · Jalon : 3 · Zone sensible : **oui** (dépendance et rendu par WebView : règle « aucun réseau », `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
+Statut : à faire (dépendance accordée par le porteur le 2026-11-28, version exacte 58.0.9) · Jalon : 3 · Zone sensible : **oui** (dépendance et rendu par WebView : règle « aucun réseau », `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
 
-Dépend de : aucun (mais **rien n'est installé avant la réponse du porteur** sur la dépendance) · Fichiers touchés : `package.json`, `package-lock.json`, `app.json`, `plugins/withoutWebViewMetrics.js` et son test (nouveaux), `scripts/audit-apk.js`, `scripts/audit-apk.test.js`, `src/staticChecksPrint.test.ts` (nouveau), `docs/SECURITE.md` (SEC-08), `docs/CONFORMITE.md` (§3, §8) — 10 fichiers
+Dépend de : aucun · Fichiers touchés : `package.json`, `package-lock.json`, `app.json`, `plugins/withoutWebViewMetrics.js` et son test (nouveaux), `scripts/audit-apk.js`, `scripts/audit-apk.test.js`, `src/staticChecksPrint.test.ts` (nouveau) — 8 fichiers (`docs/SECURITE.md` et `docs/CONFORMITE.md` : à l'intégration du lot, voir « À reporter »)
 
 Découpé le 2026-11-28 (séance de découpage du jalon 3).
 
@@ -31,13 +31,12 @@ Relevé du 2026-11-28 (lecture seule : `npm view`, paquet décompressé hors du 
 - `plugins/withoutWebViewMetrics.js` : ajoute au manifeste `<meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true"/>` et `…EnableSafeBrowsing` à `false` ; placée dans `app.json`.
 - `scripts/audit-apk.js` : échoue si ces deux méta-données manquent dans le manifeste compilé ; permissions toujours **exactement** `config/permissions-attendues.txt` (inchangé).
 - `src/staticChecksPrint.test.ts` : seul `src/data/expoPrint.ts` (créé au 040) importe expo-print, et seulement `printToFileAsync` ; refusés partout : `printAsync`, `selectPrinterAsync`, `Orientation`, l'option `uri`, l'option `base64`, tout sous-chemin du paquet.
-- `docs/SECURITE.md` : SEC-08 complétée (liste fermée d'expo-print ; CSP `default-src 'none'; style-src 'unsafe-inline'; img-src data:` en tête du HTML ; `cache/Print/` vidé après chaque rapport, au démarrage et après Tout effacer).
-- `docs/CONFORMITE.md` : §3 (rapport et export partagés par l'encadrant : même interprétation que la sauvegarde, à décrire dans la politique au jalon 6, ABS-08) ; §8 (module natif expo-print, MIT ; aucune bibliothèque tierce).
+- `docs/SECURITE.md` et `docs/CONFORMITE.md` : complétés à l'intégration du lot par l'IA principale (voir « À reporter »).
 - Registre des licences (`src/config/licences.json`, EX-42) : régénéré au 040, quand le paquet entre dans le bundle.
 
 ## Critères d'acceptation
 
-- [ ] Réponse datée du porteur sur la dépendance, notée dans `docs/ARCHITECTURE.md` (décisions du porteur) avant l'installation.
+- [ ] Réponse datée du porteur (2026-11-28) notée dans `docs/ARCHITECTURE.md` (décisions du porteur, à l'intégration) ; version installée exactement 58.0.9.
 - [ ] APK : permissions **exactement** celles de `config/permissions-attendues.txt` (SEC-02) ; INTERNET absente (ABS-01, NF-03) ; méta-données WebView présentes.
 - [ ] Build iOS : `scripts/audit-ios.js` inchangé et vert (aucune habilitation, aucun scheme).
 - [ ] `npm audit` sans vulnérabilité haute ; version exacte ; licence MIT dans la liste acceptée.
@@ -57,6 +56,14 @@ Relevé du 2026-11-28 (lecture seule : `npm view`, paquet décompressé hors du 
 
 Toutes réservées au porteur (nouvelle dépendance, ABS-01, ABS-07, SEC-08, zone sensible) : voir les questions du découpage (dépendance et solution de rechange, méta-données WebView, SEC-08, conformité).
 
+Séance de découpage du jalon 3 (2026-11-28), réponses du porteur :
+
+- Dépendance : **expo-print 58.0.9 accordée, installée verrouillée** (option A, en entier : seul `src/data/expoPrint.ts` l'importe, `printToFileAsync` avec du HTML seulement ; `printAsync`, `selectPrinterAsync`, `uri` et `base64` refusés par le contrôle statique ; CSP ; `cache/Print/` vidé), décision du porteur du 2026-11-28.
+- WebView d'Android : **mesures d'usage et Safe Browsing coupées, et audités** (`plugins/withoutWebViewMetrics.js`, contrôle dans `scripts/audit-apk.js`), décision du porteur du 2026-11-28. Le changement de l'audit est validé dans son principe ; sa fusion reste soumise à la relecture du porteur (contrôle de sécurité).
+- SEC-08 : **complétée** (option A), modification de `docs/SECURITE.md` à l'intégration du lot du 038.
+- Conformité (ABS-08) : **déclarations des stores inchangées**, note à `docs/CONFORMITE.md` §3 (la politique du jalon 6 décrira l'import CSV, l'export CSV et le rapport PDF), à l'intégration.
+- Plan validé par le porteur le 2026-11-28 ; relecture du porteur avant la fusion dans le groupe (zone sensible).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |
@@ -68,4 +75,5 @@ Toutes réservées au porteur (nouvelle dépendance, ABS-01, ABS-07, SEC-08, zon
 
 - CHANGELOG : Rapport PDF : bibliothèque d'impression d'Expo, sans permission ni réseau ; mesures d'usage de la WebView d'Android refusées (F-09, ABS-01, ABS-07).
 - Architecture : §2 expo-print installé (version exacte) ; §6 extension `plugins/withoutWebViewMetrics.js`, audit des méta-données WebView.
-- SECURITE : SEC-08 complétée (liste fermée, CSP, `cache/Print/` vidé).
+- SECURITE (à l'intégration) : SEC-08 complétée : expo-print importé par `src/data/expoPrint.ts` seul, `printToFileAsync` avec du HTML seulement (`printAsync`, `selectPrinterAsync`, `uri`, `base64` refusés) ; CSP `default-src 'none'; style-src 'unsafe-inline'; img-src data:` en tête du HTML ; `cache/Print/` vidé après chaque rapport, au démarrage et après Tout effacer ; méta-données `MetricsOptOut` et `EnableSafeBrowsing` vérifiées sur l'APK.
+- CONFORMITE (à l'intégration) : §3, rapport et export partagés par l'encadrant, même interprétation que la sauvegarde, à décrire dans la politique au jalon 6 (ABS-08), déclarations inchangées ; §8, module natif expo-print (MIT), aucune bibliothèque tierce nouvelle.

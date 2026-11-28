@@ -58,6 +58,12 @@ F-07 (EX-30) commence par lire un fichier que l'appli ne maîtrise pas : un CSV 
   - Fichier UTF-16 refusé (« Fichier non reconnu ») plutôt que décodé : Excel ne le produit que par « Texte Unicode », qui n'est pas un CSV.
   - 2 000 lignes de **données**, en-tête et lignes vides non comptées.
 
+Séance de découpage du jalon 3 (2026-11-28), réponses du porteur :
+
+- Plan validé par le porteur le 2026-11-28 ; ticket du premier lot du jalon (031, 032, 033).
+- Décisions d'office ci-dessus appliquées, notées dans `docs/DECISIONS.md` (état « à relire »).
+- Relecture du porteur avant la fusion dans le groupe (zone sensible).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

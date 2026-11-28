@@ -51,6 +51,12 @@ L'import (034), l'export CSV (037) et le rapport PDF (040) lisent, écrivent et 
   - Sélecteur ouvert sur tous les types (`*/*`), le contenu étant validé ensuite (031) : un CSV venu de Drive ou de Gmail arrive souvent avec un type inattendu (`application/vnd.ms-excel`, `text/plain`).
   - Un dossier `exports/` commun au CSV et au PDF.
 
+Séance de découpage du jalon 3 (2026-11-28), réponses du porteur :
+
+- Plan validé par le porteur le 2026-11-28 ; ticket du premier lot du jalon (031, 032, 033).
+- Décisions d'office ci-dessus appliquées, notées dans `docs/DECISIONS.md` (état « à relire »).
+- Relecture du porteur avant la fusion dans le groupe (zone sensible).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

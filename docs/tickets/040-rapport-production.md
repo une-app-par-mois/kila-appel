@@ -1,8 +1,8 @@
 # 040 — Rapport PDF : production du fichier et partage
 
-Statut : **en attente du porteur** (dépend du 038 : expo-print non validé) · Jalon : 3 · Zone sensible : **oui** (sortie de données de mineurs ; WebView ; copies en clair dans le cache) · Trivial : non
+Statut : à faire (expo-print accordé par le porteur le 2026-11-28) · Jalon : 3 · Zone sensible : **oui** (sortie de données de mineurs ; WebView ; copies en clair dans le cache) · Trivial : non
 
-Dépend de : 033, 038, 039 · Fichiers touchés : `src/data/expoPrint.ts` et son test (nouveaux), `src/hooks/useReport.ts` et son test (nouveaux), `src/hooks/cacheCopies.ts` (`cache/Print/`), `src/hooks/useStartupCleanup.test.tsx`, `src/__fixtures__/expoModules.ts` (faux expo-print), `src/config/licences.json` (régénéré) — 8 fichiers
+Dépend de : 033, 038, 039, 039b · Fichiers touchés : `src/data/expoPrint.ts` et son test (nouveaux), `src/hooks/useReport.ts` et son test (nouveaux), `src/hooks/cacheCopies.ts` (`cache/Print/`), `src/hooks/useStartupCleanup.test.tsx`, `src/__fixtures__/expoModules.ts` (faux expo-print), `src/config/licences.json` (régénéré) — 8 fichiers
 
 Découpé le 2026-11-28 (séance de découpage du jalon 3).
 
@@ -30,7 +30,8 @@ Transforme le HTML du 039 en PDF A4 par expo-print (038), le range dans le dossi
 - [ ] SEC-08 : l'adaptateur n'accepte que du HTML produit par `reportHtml` (type marqué) ; aucun appel avec `uri`.
 - [ ] Verrou commun respecté (export, restauration, purge, Tout effacer).
 - [ ] EX-42 : expo-print listé dans les licences, avec sa mention MIT.
-- [ ] **À la main sur l'émulateur puis l'A55** : PDF A4 de 1 + N pages, accents justes, sauts de page avant chaque groupe ; `adb logcat` sans tentative de connexion pendant le rendu ; PDF ouvert sur l'ordinateur (critère de sortie).
+- [ ] **Orientations** : pages de synthèse et de taux en portrait, pages de grille en paysage dans le même PDF, vérifié sur l'émulateur dès le début du ticket ; sinon repli (tout en paysage, `width: 842, height: 595`), appliqué d'office et noté « en attente du porteur ».
+- [ ] **À la main sur l'émulateur puis l'A55** : PDF A4, accents justes, sauts de page avant chaque groupe et chaque bloc de grille ; `adb logcat` sans tentative de connexion pendant le rendu ; PDF ouvert sur l'ordinateur (critère de sortie).
 
 ## Tests attendus
 
@@ -44,6 +45,11 @@ Transforme le HTML du 039 en PDF A4 par expo-print (038), le range dans le dossi
 
 - Plan ci-dessus à valider à la séance de lancement (zone sensible), après la réponse du porteur au 038.
 - Décision automatique proposée : PDF copié sous un nom lisible avant le partage (expo-print le nomme `<uuid>.pdf`), le fichier d'origine effacé aussitôt.
+
+Séance de découpage du jalon 3 (2026-11-28), réponses du porteur :
+
+- expo-print accordé (038) ; plan validé par le porteur le 2026-11-28 ; relecture du porteur avant la fusion dans le groupe (zone sensible).
+- **Risque à vérifier en premier** : pages d'orientations mélangées (`@page` nommées, portrait et paysage) dans un même PDF. Sur Android, `printToFileAsync` fixe une seule taille de média (`width`, `height`) pour tout le document, et la WebView d'Android pourrait ne pas suivre les `@page` nommées ; sur iOS, le rendu par `UIPrintPageRenderer` a lui aussi une taille de page unique. Si le mélange ne tient pas, **repli appliqué d'office : tout le rapport en A4 paysage**, noté « en attente du porteur » dans `docs/DECISIONS.md`.
 
 ## Décisions
 

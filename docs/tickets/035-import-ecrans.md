@@ -19,7 +19,7 @@ Les quatre écrans de la maquette : choisir le fichier, aperçu, résultat, fich
 ## Ce qui change
 
 - `src/app/import/index.tsx` : explication et tableau d'exemple de la maquette, « Choisir le fichier… » ; en cas de refus, l'état « Fichier non reconnu » (bandeau, « Choisir un autre fichier ») avec le texte de la cause.
-- `src/app/import/apercu.tsx` : compteur (lignes, à importer, invalides, doublons), section « Doublons » (bascule « Ignorer » par doublon), section « Ligne invalide » (« Ligne 17 · Prénom manquant »), bouton « Importer N membres » (N suit les bascules ; désactivé à 0).
+- `src/app/import/apercu.tsx` : compteur (lignes, à importer, invalides, doublons), section « Doublons » (bascule « Ignorer » par doublon), section « Ligne invalide » (« Ligne 17 · Prénom manquant »), section « Groupe introuvable » (décision du porteur du 2026-11-28), bouton « Importer N membres » (N suit les bascules ; désactivé à 0).
 - `src/app/import/resultat.tsx` : « 21 membres importés », phrase de la maquette, « Voir les membres ».
 - `src/app/membres/index.tsx` : rangée de deux boutons de la maquette (« Importer (CSV) » un tiers, « Nouveau membre » deux tiers).
 - Tous les textes dans `src/config/libelles/import.ts` (NF-07), accords au singulier (« 1 membre importé », « 1 doublon »).
@@ -49,6 +49,13 @@ Les quatre écrans de la maquette : choisir le fichier, aperçu, résultat, fich
   - illisible : « Ce fichier n'a pas pu être lu (guillemet non fermé ?). Rien n'a été importé. »
 - **Réservée (écart de maquette)** : section « Groupe introuvable » de l'aperçu, si le porteur la retient au 032.
 - Décision automatique proposée : trois routes empilées (retour Android naturel) et l'aperçu passé par `importSession` (034), plutôt qu'un seul écran à étapes.
+
+Séance de découpage du jalon 3 (2026-11-28), réponses du porteur :
+
+- Refus de l'import : **même écran « Fichier non reconnu », un texte par cause**, les trois textes ci-dessus tels quels (écart de maquette validé le 2026-11-28).
+- Section **« Groupe introuvable »** de l'aperçu retenue (écart de maquette validé le 2026-11-28) : « Ligne 12 · « Poussin mercredi » : importé sans groupe ».
+- Maquette et `scripts/maquettes.mjs` à mettre à jour pour ces deux écarts (à l'intégration, comme au jalon 2), avant la comparaison de la PR.
+- Décisions d'office ci-dessus appliquées, notées dans `docs/DECISIONS.md` (état « à relire »).
 
 ## Décisions
 

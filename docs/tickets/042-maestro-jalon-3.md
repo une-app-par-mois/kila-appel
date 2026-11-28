@@ -45,6 +45,11 @@ Parcours de bout en bout de fin de jalon (`docs/CONVENTIONS.md` §5.2), sur l'é
 - Aucune réservée : mêmes réponses du porteur que le 016 et le 030 (émulateur, fichiers fictifs générés, A55 « non vérifié » s'il n'est pas disponible).
 - Décision automatique proposée : exports vérifiés jusqu'à la feuille de partage seulement ; contenu vérifié par Jest et à la main (voir « Hors périmètre »).
 
+Séance de découpage du jalon 3 (2026-11-28), réponses du porteur :
+
+- Aucune question nouvelle ; à la main sur l'A55, en plus : pages de grille du PDF (paysage, blocs d'environ 25 séances, noms répétés) lisibles sur l'ordinateur.
+- Décision d'office ci-dessus appliquée, notée dans `docs/DECISIONS.md` (état « à relire »).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

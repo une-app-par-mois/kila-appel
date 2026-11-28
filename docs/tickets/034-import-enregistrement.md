@@ -54,6 +54,12 @@ Relie les morceaux de l'import : choisir le fichier, le lire, le décoder et l'a
   - Groupe archivé ou supprimé entre l'aperçu et la confirmation : import refusé en entier, message « Les groupes ont changé : recommencez l'import. », rien d'écrit.
   - Aperçu gardé en mémoire seulement (jamais écrit sur le disque) ; perdu si l'appli est fermée : on recommence.
 
+Séance de découpage du jalon 3 (2026-11-28), réponses du porteur :
+
+- Plan validé par le porteur le 2026-11-28.
+- Décisions d'office ci-dessus appliquées, notées dans `docs/DECISIONS.md` (état « à relire »).
+- Relecture du porteur avant la fusion dans le groupe (zone sensible).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |
