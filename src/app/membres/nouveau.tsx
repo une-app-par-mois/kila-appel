@@ -19,7 +19,7 @@ import { useGroups } from '@/hooks/useGroups';
 import { useMemberCreation } from '@/hooks/useMembers';
 import { useSeasons } from '@/hooks/useSeasons';
 import { Button } from '@/ui/Button';
-import { errorMessage } from '@/ui/errorMessage';
+import { errorMessage, memberNameError } from '@/ui/errorMessage';
 import { Screen } from '@/ui/Screen';
 import { Select } from '@/ui/Select';
 import { TextField } from '@/ui/TextField';
@@ -30,8 +30,10 @@ type Field = 'firstName' | 'lastName' | 'birthDate';
 /** Erreurs de saisie par champ, avant d'écrire (le dépôt valide de nouveau). */
 const checkInput = (firstName: string, lastName: string, birth: string) => {
   const errors: Partial<Record<Field, string>> = {};
-  if (firstName.trim() === '') errors.firstName = labels.errors.NAME_REQUIRED;
-  if (lastName.trim() === '') errors.lastName = labels.errors.NAME_REQUIRED;
+  const first = memberNameError(firstName);
+  const last = memberNameError(lastName);
+  if (first !== undefined) errors.firstName = first;
+  if (last !== undefined) errors.lastName = last;
   if (birth.trim() !== '' && parseDisplayDate(birth) === null)
     errors.birthDate = labels.errors.DATE_INVALID;
   return errors;

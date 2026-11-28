@@ -105,6 +105,26 @@ describe('Écrans des groupes (EX-02)', () => {
     expect(await screen.findByRole('header', { name: 'Poussins mercredi' })).toBeTruthy();
   });
 
+  // SEC-06 (ticket 044) : U+202E renverse l'affichage ; le dépôt le refuse, l'écran le dit.
+  const reversed = `Pous${String.fromCodePoint(0x202e)}sins`;
+  it('SEC-06 un caractère invisible à la création : erreur sous le champ', async () => {
+    await open('/groupes/nouveau');
+    await fireEvent.changeText(await screen.findByLabelText(t.groupForm.name), reversed);
+    await fireEvent.press(screen.getByRole('button', { name: t.groupForm.create }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(t.errors.NAME_INVALID_CHAR);
+    expect(await count(db, 'groups', 'name = ?', [reversed])).toBe(0);
+  });
+
+  it('SEC-06 un caractère invisible au renommage : erreur sous le champ', async () => {
+    await open(`/groupes/${s.groupId}/modifier`);
+    const name = await screen.findByLabelText(t.groupForm.name);
+    await waitFor(() => expect(name.props.value).toBe('Poussins'));
+    await fireEvent.changeText(name, reversed);
+    await fireEvent.press(screen.getByRole('button', { name: t.common.save }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(t.errors.NAME_INVALID_CHAR);
+    expect(await count(db, 'groups', 'id = ? AND name = ?', [s.groupId, 'Poussins'])).toBe(1);
+  });
+
   it('EX-02 la suppression dit ce qui sera effacé ; séances et présences restent', async () => {
     const router = await open(`/groupes/${s.groupId}/modifier`);
     await fireEvent.press(await screen.findByRole('button', { name: t.groupForm.delete }));
