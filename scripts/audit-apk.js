@@ -3,7 +3,7 @@
 // Usage : node scripts/audit-apk.js <fichier.apk>
 // Compare `aapt2 dump permissions` à config/permissions-attendues.txt et vérifie le manifeste
 // compilé (allowBackup=false, aucun lien profond, aucun composant Firebase ni datatransport,
-// composants gms limités à config/composants-google-attendus.txt).
+// composants gms limités à config/composants-google-attendus.txt, méta-données de la WebView).
 // Échoue (code 1) au moindre écart.
 const { execFileSync } = require('node:child_process');
 const { existsSync, readdirSync, readFileSync } = require('node:fs');
@@ -138,6 +138,71 @@ const auditManifest = (xmltree, allowedGoogle = []) => {
   return [...problems, ...componentProblems(components, allowedGoogle)];
 };
 
+// ABS-01 : méta-données de la WebView d'Android posées par plugins/withoutWebViewMetrics.js
+// (décision du porteur du 2026-11-28, ticket 038). Valeur attendue : booléen littéral.
+const WEBVIEW_METADATA = [
+  { name: 'android.webkit.WebView.MetricsOptOut', value: 'true' },
+  { name: 'android.webkit.WebView.EnableSafeBrowsing', value: 'false' },
+];
+
+/** Valeur d'un attribut sans guillemets (booléen, entier, référence) ; une chaîne garde les siens. */
+const typedValue = (line, name) => {
+  const value = attribute(line, name);
+  if (value === undefined) return undefined;
+  const text = line.trimStart();
+  return text.slice(text.indexOf(')=') + 2).startsWith('"') ? `"${value}"` : value;
+};
+
+/**
+ * Écarts des méta-données WebView : chacune présente une seule fois, enfant direct de
+ * <application>, de valeur booléenne littérale ; une chaîne "true", une référence ou un entier
+ * sont refusés. Une meta-data nommée par référence ne se lit pas : refusée (échec fermé).
+ */
+const auditWebViewMetadata = (xmltree) => {
+  const stack = [];
+  const entries = [];
+  for (const line of xmltree.split('\n')) {
+    const depth = line.length - line.trimStart().length;
+    const element = line.match(/^\s*E: ([\w-]+)/);
+    if (element) {
+      while (stack.length > 0 && stack[stack.length - 1].depth >= depth) stack.pop();
+      const parent = stack[stack.length - 1]?.element;
+      const entry = { depth, element: element[1] };
+      if (entry.element === 'meta-data') {
+        entry.meta = { parent };
+        entries.push(entry.meta);
+      }
+      stack.push(entry);
+      continue;
+    }
+    // Un attribut appartient au dernier élément ouvert.
+    const meta = stack[stack.length - 1]?.meta;
+    if (meta) {
+      meta.name = attribute(line, 'name') ?? meta.name;
+      meta.value = typedValue(line, 'value') ?? meta.value;
+    }
+  }
+  const references = entries
+    .filter((m) => isReference(m.name))
+    .map(() => 'Référence de ressource refusée : android:name d’une meta-data');
+  return [
+    ...references,
+    ...WEBVIEW_METADATA.flatMap(({ name, value }) => {
+      const found = entries.filter((m) => m.name === name);
+      if (found.length === 0) return [`Méta-donnée WebView absente : ${name}`];
+      return [
+        ...(found.length > 1 ? [`Méta-donnée WebView en double : ${name}`] : []),
+        ...(found.some((m) => m.parent !== 'application')
+          ? [`Méta-donnée WebView hors de application : ${name}`]
+          : []),
+        ...(found.some((m) => m.value !== value)
+          ? [`Méta-donnée WebView : ${name} doit valoir le booléen ${value}`]
+          : []),
+      ];
+    }),
+  ];
+};
+
 /** Plus haute version stable (x.y.z), en ordre numérique ; les rc et autres dossiers sont ignorés. */
 const latestVersion = (names) =>
   names
@@ -165,12 +230,11 @@ const main = (apk) => {
   const readList = (file) =>
     parseExpected(readFileSync(join(__dirname, '..', 'config', file), 'utf8'));
   const dump = run('dump', 'permissions', apk);
+  const xmltree = run('dump', 'xmltree', '--file', 'AndroidManifest.xml', apk);
   const problems = [
     ...auditPermissions(dump, readList('permissions-attendues.txt')),
-    ...auditManifest(
-      run('dump', 'xmltree', '--file', 'AndroidManifest.xml', apk),
-      readList('composants-google-attendus.txt'),
-    ),
+    ...auditManifest(xmltree, readList('composants-google-attendus.txt')),
+    ...auditWebViewMetadata(xmltree),
   ];
   console.log(dump);
   if (problems.length > 0) {
@@ -186,4 +250,10 @@ if (require.main === module) {
   process.exitCode = main(process.argv[2]);
 }
 
-module.exports = { auditManifest, auditPermissions, latestVersion, parseExpected };
+module.exports = {
+  auditManifest,
+  auditPermissions,
+  auditWebViewMetadata,
+  latestVersion,
+  parseExpected,
+};

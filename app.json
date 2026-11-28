@@ -65,7 +65,8 @@
         }
       ],
       "./plugins/withoutUrlScheme.js",
-      "./plugins/withoutFirebase.js"
+      "./plugins/withoutFirebase.js",
+      "./plugins/withoutWebViewMetrics.js"
     ]
   }
 }

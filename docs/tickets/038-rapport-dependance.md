@@ -41,12 +41,12 @@ Relevé du 2026-11-28 (lecture seule : `npm view`, paquet décompressé hors du 
 
 ## Critères d'acceptation
 
-- [ ] Réponse datée du porteur (2026-11-28) notée dans `docs/ARCHITECTURE.md` (décisions du porteur, à l'intégration) ; version installée exactement 58.0.9.
-- [ ] APK : permissions **exactement** celles de `config/permissions-attendues.txt` (SEC-02) ; INTERNET absente (ABS-01, NF-03) ; méta-données WebView présentes.
-- [ ] Build iOS : `scripts/audit-ios.js` inchangé et vert (aucune habilitation, aucun scheme).
-- [ ] `npm audit` sans vulnérabilité haute ; version exacte ; licence MIT dans la liste acceptée.
-- [ ] Contrôle statique : un import fictif de `printAsync` ou un appel avec `uri` dans un fichier de test fait échouer le contrôle.
-- [ ] L'appli démarre et fonctionne comme avant sur l'émulateur.
+- [ ] Réponse datée du porteur (2026-11-28) notée dans `docs/ARCHITECTURE.md` (décisions du porteur, à l'intégration) ; version installée exactement 58.0.9 — version faite (`package.json` et `package-lock.json` : `58.0.9`) ; ARCHITECTURE à l'intégration.
+- [x] APK : permissions **exactement** celles de `config/permissions-attendues.txt` (SEC-02) ; INTERNET absente (ABS-01, NF-03) ; méta-données WebView présentes — APK de production local, audit conforme (voir « À reporter ») ; APK de la CI non vérifié.
+- [ ] Build iOS : `scripts/audit-ios.js` inchangé et vert (aucune habilitation, aucun scheme) — non vérifié : pas de build iOS sur ce poste ; `audit-ios.js` inchangé ; expo-print n'a pas d'extension de configuration (`app.plugin.js` absent).
+- [x] `npm audit` sans vulnérabilité haute ; version exacte ; licence MIT dans la liste acceptée.
+- [x] Contrôle statique : un import fictif de `printAsync` ou un appel avec `uri` dans un fichier de test fait échouer le contrôle.
+- [x] L'appli démarre et fonctionne comme avant sur l'émulateur — démarrage seul (écran Bienvenue, `DB_READY`) ; parcours complet non rejoué.
 
 ## Tests attendus
 
@@ -90,6 +90,13 @@ Décisions automatiques de la pré-analyse (état « à relire », `docs/DECISIO
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
+| Où placer le contrôle des méta-données dans `audit-apk.js` | dans `auditManifest` ; fonction à part appelée par `main` | fonction `auditWebViewMetadata` à part, appelée sans condition par `main` sur le même `xmltree` ; `auditManifest` et `scripts/audit-apk.test.js` inchangés (9ᵉ fichier évité) | les tests existants appellent `auditManifest` sur des manifestes sans méta-données ; les refus existants ne bougent pas | à relire |
+| Distinguer le booléen `true` de la chaîne `"true"` | réécrire `attribute` ; petite fonction qui s'appuie sur elle | `typedValue` réutilise `attribute` et garde les guillemets d'une chaîne ; format lu sur l'APK local : booléen `=true`, chaîne `="…" (Raw: "…")`, référence `=@0x7f…` | `attribute` (contrôle existant) n'est pas modifiée | à relire |
+| `meta-data` nommée par référence de ressource | ignorer ; refuser | refusée (échec fermé), quel que soit son nom | une référence peut cacher l'un des deux noms ; même règle que les composants (ticket 026) ; aucune dans l'APK actuel | à relire |
+| Références à `printToFileAsync` autres qu'un appel | permises ; refusées partout ; refusées hors des tests | appel contrôlé partout, tests compris ; autre référence (variable, réexport local, `{ printToFileAsync }`, `.call`, déstructuration) refusée hors des tests ; dans un test, clé d'une simulation et `expect(printToFileAsync)` permises | sinon `const f = printToFileAsync; f({ uri })` contourne le contrôle de l'argument ; le 040 doit pouvoir simuler le module | à relire |
+| Formes d'import permises dans l'adaptateur | — | `import { printToFileAsync } from 'expo-print'` seul : alias (`as`), `import type`, défaut, effet de bord, `require`, `import()`, réexport refusés | « seul `printToFileAsync` peut être importé » ; un alias échappe au contrôle des appels | à relire |
+| « Même écrits en chaîne » | chaîne égale au nom ; chaîne qui le contient | chaîne entière égale au nom (`'printAsync'`, `requireNativeModule('ExpoPrint')`, `m['selectPrinterAsync']`) | une sous-chaîne refuserait des textes sans rapport ; limite : nom calculé (`print${'Async'}`) non vu, écrite en tête du test | à relire |
+| Méta-donnée déjà déclarée par une bibliothèque | garder les deux ; remplacer | l'extension retire toute déclaration de ces deux noms sous `<application>` et ajoute la sienne | idempotence, aucun doublon ; `tools:replace` règle la fusion avec les bibliothèques | à relire |
 
 ## Questions pour le porteur
 
@@ -99,3 +106,19 @@ Décisions automatiques de la pré-analyse (état « à relire », `docs/DECISIO
 - Architecture : §2 expo-print installé (version exacte) ; §6 extension `plugins/withoutWebViewMetrics.js`, audit des méta-données WebView.
 - SECURITE (à l'intégration du 038, décisions du porteur du 2026-11-28) : SEC-08 complétée : expo-print importé par `src/data/expoPrint.ts` seul, `printToFileAsync` seul, argument écrit en entier avec les clés `html`, `width`, `height`, `margins` seulement (`printAsync`, `selectPrinterAsync`, `ExpoPrint`, `uri`, `base64`, `useMarkupFormatter` refusés) ; CSP `default-src 'none'; style-src 'unsafe-inline'; img-src data:` en tête du HTML (Vérification : « à venir, 039 ») ; `cache/Print/` vidé après chaque rapport, au démarrage et après Tout effacer (Vérification : « à venir, 040 ») ; méta-données `MetricsOptOut` et `EnableSafeBrowsing` vérifiées sur l'APK. SEC-02 : ligne « méta-données de la WebView vérifiées par `audit-apk.js` ». SEC-01 : ligne `src/staticChecksPrint.test.ts`. Limite : `MetricsOptOut` ne couvre que les mesures d'usage.
 - CONFORMITE (à l'intégration) : §3, rapport et export partagés par l'encadrant, même interprétation que la sauvegarde, à décrire dans la politique au jalon 6 (ABS-08), déclarations inchangées ; §8, module natif expo-print (MIT), aucune bibliothèque tierce nouvelle.
+- Relevé du 2026-11-28, APK de production construit en local avant et après l'installation (`expo prebuild --clean`, `gradlew assembleRelease`), `aapt2` 37.0.0 :
+  - Installation : `npx expo install expo-print` a écrit `~58.0.9`, ramené à `58.0.9` ; une seule entrée ajoutée au verrou (`node_modules/expo-print`, MIT, aucune dépendance npm) ; `npm audit` : 0 vulnérabilité. Manifeste de l'AAR `expo.modules.print-58.0.9` : aucune permission, aucun composant ; dépendances Maven `kotlin-stdlib-jdk7` 2.2.10, `annotations` 23.0.0, `pika-api` 1.1.0.
+  - `aapt2 dump permissions` : **identique** avant et après (`RECEIVE_BOOT_COMPLETED`, `POST_NOTIFICATIONS`, `com.jitavision.kila.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` déclarée et utilisée). INTERNET absente.
+  - `aapt2 dump xmltree --file AndroidManifest.xml`, diff sans les numéros de ligne (`(line=…)`) : seules les deux méta-données sont ajoutées sous `<application>` ; 8 composants avant, 8 après, identiques.
+    ```
+    63a64,69
+    >             A: http://schemas.android.com/apk/res/android:name(0x01010003)="android.webkit.WebView.EnableSafeBrowsing" (Raw: "android.webkit.WebView.EnableSafeBrowsing")
+    >             A: http://schemas.android.com/apk/res/android:value(0x01010024)=false
+    >           E: meta-data
+    >             A: http://schemas.android.com/apk/res/android:name(0x01010003)="android.webkit.WebView.MetricsOptOut" (Raw: "android.webkit.WebView.MetricsOptOut")
+    >             A: http://schemas.android.com/apk/res/android:value(0x01010024)=true
+    >           E: meta-data
+    ```
+  - `node scripts/audit-apk.js` : APK d'avant, 2 écarts (« Méta-donnée WebView absente » pour chacune) ; APK d'après, « Audit du binaire : conforme (SEC-02) ».
+  - Émulateur `emulator-5554` : APK d'après installé, `pm clear`, lancé : `DB_READY` (version 1), écran **Bienvenue**, aucun plantage.
+  - Contrôle statique vu en échec : chacune des 10 règles de `src/staticChecksPrint.test.ts` neutralisée tour à tour fait échouer au moins un test ; un fichier fictif `src/fictif038.test.ts` (import de `printAsync`, appel avec `uri`) fait échouer le balayage du dépôt (« nom refusé », « clé refusée »), puis retiré.
