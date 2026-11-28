@@ -1,4 +1,12 @@
-// SEC-08 (ticket 039) : échappement et gabarit balisé du HTML du rapport PDF.
+/**
+ * @jest-environment node
+ */
+// SEC-08 (ticket 039) : échappement et gabarit balisé du HTML du rapport PDF ; contrôle statique
+// (défense en profondeur) : `html` n'est appelé que comme gabarit balisé dans tout src/.
+import { readFileSync } from 'node:fs';
+import { join, relative } from 'node:path';
+import ts from 'typescript';
+import { scriptKind, walkSources } from '@/__fixtures__/sourceFiles';
 import { escapeHtml, html, isSafeHtml, joinHtml, safeHtmlText } from '@/domain/safeHtml';
 
 describe('SEC-08 échappement du HTML', () => {
@@ -40,5 +48,49 @@ describe('SEC-08 échappement du HTML', () => {
   it('SEC-08 un fragment sûr est figé', () => {
     const fragment = html`<p>${'x'}</p>`;
     expect(Object.isFrozen(fragment)).toBe(true);
+  });
+});
+
+/** Appels interdits : `html(…)`, `html.call(…)`, `html.apply(…)`, et `as TemplateStringsArray`. */
+const forbiddenUses = (file: string, text: string): string[] => {
+  const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, scriptKind(file));
+  const found: string[] = [];
+  const visit = (node: ts.Node): void => {
+    if (ts.isCallExpression(node)) {
+      const callee = node.expression;
+      const target = ts.isPropertyAccessExpression(callee) ? callee.expression : callee;
+      if (ts.isIdentifier(target) && target.text === 'html') found.push(node.getText(source));
+    }
+    if (
+      (ts.isAsExpression(node) || ts.isTypeAssertionExpression(node)) &&
+      node.type.getText(source) === 'TemplateStringsArray'
+    )
+      found.push(node.getText(source));
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return found;
+};
+
+describe('SEC-08 contrôle statique du gabarit', () => {
+  const root = join(__dirname, '..', '..');
+
+  it('SEC-08 le contrôle voit un appel direct, un appel par call et un faux gabarit', () => {
+    const sample = [
+      "html(['<b>'] as unknown as TemplateStringsArray);",
+      'html.call(null, x);',
+      'const t = <TemplateStringsArray>y;',
+      'html`<p>x</p>`;',
+    ].join('\n');
+    expect(forbiddenUses('exemple.ts', sample)).toHaveLength(4);
+  });
+
+  it('SEC-08 dans src/, html n’est appelé que comme gabarit balisé', () => {
+    const offenders = walkSources(join(root, 'src')).flatMap((file) =>
+      forbiddenUses(file, readFileSync(file, 'utf8')).map(
+        (use) => `${relative(root, file)} : ${use}`,
+      ),
+    );
+    expect(offenders).toEqual([]);
   });
 });

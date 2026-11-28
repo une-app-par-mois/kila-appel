@@ -58,6 +58,7 @@ export type ReportLabels = {
   legend: string;
   groupSummary: (sessions: number, rate: string) => string;
   noSession: string;
+  noAttendance: string;
   noMember: string;
 };
 
@@ -90,9 +91,13 @@ const checkColor = (color: string): string => {
   return color;
 };
 
-/** Feuille de style : texte fixe, couleurs vérifiées une à une. */
-const css = (p: ReportPalette): string =>
-  [
+/**
+ * Feuille de style de l'en-tête de confiance (hors gabarit, comme la CSP) : texte fixe écrit ici,
+ * couleurs vérifiées une à une ; aucune donnée de l'utilisateur. Un « < » la refuse : elle ne
+ * peut pas fermer la balise `<style>`.
+ */
+export const reportCss = (p: ReportPalette): string => {
+  const css = [
     `@page { size: ${SUMMARY_PAGE.size}; margin: 15mm }`,
     `@page ${SUMMARY_PAGE.name} { size: ${SUMMARY_PAGE.size}; margin: 15mm }`,
     'html { -webkit-print-color-adjust: exact; print-color-adjust: exact }',
@@ -108,7 +113,7 @@ const css = (p: ReportPalette): string =>
     '.figures strong { display: block; font-size: 18pt }',
     `.bar { display: flex; height: 4mm; border-radius: 1mm; overflow: hidden; margin: 3mm 0 2mm; background: ${checkColor(p.rule)} }`,
     '.bar i { display: block; height: 100% }',
-    '.legend span { margin-right: 5mm; white-space: nowrap }',
+    '.legend > span { margin-right: 5mm; white-space: nowrap }',
     '.key { display: inline-block; width: 3mm; height: 3mm; margin-right: 1mm; vertical-align: middle }',
     'table { width: 100%; border-collapse: collapse; table-layout: fixed; margin: 3mm 0 2mm }',
     `th, td { text-align: left; padding: 1.5mm 1mm; border-bottom: 0.3mm solid ${checkColor(p.rule)}; overflow-wrap: anywhere }`,
@@ -118,6 +123,9 @@ const css = (p: ReportPalette): string =>
     '.members td:nth-child(n+3), .members th:nth-child(n+3) { text-align: right }',
     ...SHARE_ORDER.map((s) => `.s-${s} { background: ${checkColor(p.statuses[s])} }`),
   ].join('\n');
+  if (css.includes('<')) throw new Error('Feuille de style refusée dans le rapport (SEC-08)');
+  return css;
+};
 
 /** Largeur en % : entier de 0 à 100 vérifié avant d'entrer dans un attribut de style. */
 const width = (percent: number): SafeHtml => {
@@ -146,6 +154,13 @@ const statusBar = (counts: StatusCounts, l: ReportLabels) => {
   return html`<div class="bar">${segments}</div><p class="legend">${legend}</p>`;
 };
 
+/** Sans séance, ou séances sans aucune présence comptée (rapport filtré, RM-03) : texte clair. */
+const notice = (sessions: number, counts: StatusCounts, l: ReportLabels) => {
+  if (sessions === 0) return html`<p>${l.noSession}</p>`;
+  const total = SHARE_ORDER.reduce((sum, s) => sum + counts[s], 0);
+  return total === 0 ? html`<p>${l.noAttendance}</p>` : html``;
+};
+
 const summary = (r: Report, l: ReportLabels) => {
   const rows = r.groups.map(
     (g) =>
@@ -158,7 +173,7 @@ const summary = (r: Report, l: ReportLabels) => {
     l.rate
   }</span><strong>${rateText(r.counts)}</strong></div><div><span class="muted">${
     l.sessions
-  }</span><strong>${r.sessions}</strong></div></div>${r.sessions === 0 ? html`<p>${l.noSession}</p>` : html``}${statusBar(
+  }</span><strong>${r.sessions}</strong></div></div>${notice(r.sessions, r.counts, l)}${statusBar(
     r.counts,
     l,
   )}<h3>${l.byGroup}</h3><table class="groups">${cols([60, 20, 20])}<thead><tr><th>${l.group}</th><th>${
@@ -185,7 +200,7 @@ const groupPage = (g: ReportGroup, l: ReportLabels, grids: readonly SafeHtml[]) 
   html`<section class="page group"><h2>${named(g.name, g.archived, l)}</h2><p class="muted">${l.groupSummary(
     g.sessions,
     rateText(g.counts),
-  )}</p>${memberTable(g.members, l)}</section>${grids}`;
+  )}</p>${notice(g.sessions, g.counts, l)}${memberTable(g.members, l)}</section>${grids}`;
 
 /**
  * EX-32 : synthèse de la période, puis une page par groupe qui a des séances. `grids` : pages de
@@ -197,13 +212,13 @@ export const reportHtml = (
   palette: ReportPalette,
   grids: ReadonlyMap<number, readonly SafeHtml[]> = new Map(),
 ): ReportHtml => {
-  const style = css(palette);
+  const head = `${HEAD}<style>${reportCss(palette)}</style>`;
   const pages = report.groups
     .filter((g) => g.sessions > 0)
     .map((g) => groupPage(g, labels, grids.get(g.groupId) ?? []));
-  const rest = html`<title>${labels.title}</title><style>${style}</style></head><body>${summary(
+  const rest = html`<title>${labels.title}</title></head><body>${summary(
     report,
     labels,
   )}${joinHtml(pages)}</body></html>`;
-  return (HEAD + safeHtmlText(rest)) as ReportHtml;
+  return (head + safeHtmlText(rest)) as ReportHtml;
 };

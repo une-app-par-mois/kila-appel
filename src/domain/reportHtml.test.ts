@@ -1,8 +1,10 @@
 // Rapport PDF, synthèse et taux (ticket 039 ; EX-32, RM-01, NF-06, SEC-08) : page HTML générée
 // à partir d'un rapport fictif écrit à la main (SEC-13 : aucune donnée réelle).
+import { commun } from '@/config/libelles/commun';
 import { rapport, rapportPalette } from '@/config/libelles/rapport';
+import { theme } from '@/config/theme';
 import { NBSP, type StatusCounts } from '@/domain/attendanceRate';
-import { REPORT_CSP, type Report, reportHtml, SUMMARY_PAGE } from '@/domain/reportHtml';
+import { REPORT_CSP, type Report, reportCss, reportHtml, SUMMARY_PAGE } from '@/domain/reportHtml';
 import { html } from '@/domain/safeHtml';
 
 const c = (present: number, late: number, excused: number, absent: number): StatusCounts => ({
@@ -149,6 +151,46 @@ describe('Rapport PDF : HTML de la synthèse et des taux (EX-32, SEC-08)', () =>
         statuses: { ...rapportPalette.statuses, late: 'red;}body{x:y' },
       }),
     ).toThrow('SEC-08');
+  });
+
+  it('SEC-08 feuille de style dans l’en-tête de confiance, sans « < » ni « </style »', () => {
+    const css = reportCss(rapportPalette);
+    expect(css).not.toContain('<');
+    expect(css.toLowerCase()).not.toContain('</style');
+    const doc = render();
+    expect(doc).toContain(`<meta charset="utf-8"><style>${css}</style><title>`);
+  });
+
+  it('CONV-16 NF-07 couleurs tirées du thème, noms des statuts tirés de commun', () => {
+    expect(rapportPalette).toEqual({
+      text: theme.colors.texte,
+      muted: theme.colors.texteSecondaire,
+      rule: theme.colors.quadrillage,
+      statuses: {
+        present: theme.statuses.present.fond,
+        late: theme.statuses.late.fond,
+        excused: theme.statuses.excused.fond,
+        absent: theme.statuses.absent.fond,
+      },
+    });
+    expect(rapport.report.statuses).toBe(commun.statuses);
+  });
+
+  it('NF-06 légende : le carré de couleur reste collé à son libellé', () => {
+    const css = reportCss(rapportPalette);
+    expect(css).toContain('.legend > span { margin-right: 5mm');
+    expect(css).not.toMatch(/\.legend span\b/);
+  });
+
+  it('RM-01 RM-03 séances sans présence comptée : texte clair, synthèse et page du groupe', () => {
+    const empty = {
+      ...(REPORT.groups[1] as Report['groups'][number]),
+      counts: c(0, 0, 0, 0),
+      members: [member(30, 'Petit', 'Lou', c(0, 0, 0, 0))],
+    };
+    const doc = render({ ...REPORT, sessions: 4, counts: c(0, 0, 0, 0), groups: [empty] });
+    expect(doc.split(rapport.report.noAttendance)).toHaveLength(3);
+    expect(render()).not.toContain(rapport.report.noAttendance);
   });
 
   it('SEC-08 compte invalide (non entier) refusé avant tout rendu', () => {

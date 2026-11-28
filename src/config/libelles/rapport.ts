@@ -1,7 +1,9 @@
 // Textes et couleurs du rapport PDF (tickets 039 et 039b ; EX-32, RM-01, NF-06, NF-07). Passés au
 // générateur `src/domain/reportHtml.ts`, qui échappe chacun (SEC-08) : le domaine n'importe pas
-// la configuration. Couleurs tirées de design/jetons.json, aucune valeur recopiée (CONV-16).
-import jetons from '../../../design/jetons.json';
+// la configuration. Couleurs tirées du thème et noms des statuts de `commun`, aucune valeur
+// recopiée (CONV-16, NF-07).
+import { theme } from '../theme';
+import { commun } from './commun';
 import { plural } from './outils';
 
 export const rapport = {
@@ -18,7 +20,7 @@ export const rapport = {
     firstName: 'Prénom',
     /** Groupe archivé ou d'une autre saison, membre archivé (mêmes mots que les statistiques). */
     archived: 'Archivé',
-    statuses: { present: 'Présent', late: 'Retard', excused: 'Excusé', absent: 'Absent' },
+    statuses: commun.statuses,
     /** Colonnes du tableau des membres ; la légende les écrit en entier (NF-06). */
     letters: { present: 'P', late: 'R', excused: 'E', absent: 'A' },
     legend: 'P : présent · R : retard · E : excusé · A : absent. « — » : aucune séance comptée.',
@@ -26,19 +28,21 @@ export const rapport = {
     groupSummary: (sessions: number, rate: string) =>
       `${plural(sessions, 'séance', 'séances')} · taux de présence ${rate}`,
     noSession: 'Aucune séance sur la période.',
+    /** Séances sans présence comptée (rapport filtré, RM-03) : le taux « — » s'explique. */
+    noAttendance: 'Aucune présence comptée sur la période.',
     noMember: 'Aucun membre sur la période.',
   },
 } as const;
 
 /** Couleurs du rapport : texte, texte secondaire, filets et fond de chaque statut (charte). */
 export const rapportPalette = {
-  text: jetons.couleurs.texte,
-  muted: jetons.couleurs.texteSecondaire,
-  rule: jetons.couleurs.quadrillage,
+  text: theme.colors.texte,
+  muted: theme.colors.texteSecondaire,
+  rule: theme.colors.quadrillage,
   statuses: {
-    present: jetons.statuts.present.fond,
-    late: jetons.statuts.late.fond,
-    excused: jetons.statuts.excused.fond,
-    absent: jetons.statuts.absent.fond,
+    present: theme.statuses.present.fond,
+    late: theme.statuses.late.fond,
+    excused: theme.statuses.excused.fond,
+    absent: theme.statuses.absent.fond,
   },
 } as const;

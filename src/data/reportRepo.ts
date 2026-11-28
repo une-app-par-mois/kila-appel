@@ -48,8 +48,9 @@ const REPORT = `WITH ${RECORDED}, ${credits('(?4 IS NULL OR sg.group_id = ?4)')}
       THEN (se.is_active = 1 AND g.archived_at IS NULL) OR pg.n IS NOT NULL
       ELSE g.id = ?4 END),
   listed AS (SELECT group_id, member_id FROM credits
-    UNION SELECT sh.id, m.id FROM shown sh JOIN members m ON ${enrolledInPeriod('m', 'sh.id')}
-    WHERE sh.n > 0),
+    UNION SELECT en.group_id, m.id FROM enrollments en
+    JOIN shown sh ON sh.id = en.group_id AND sh.n > 0 JOIN members m ON m.id = en.member_id
+    WHERE ${enrolledInPeriod('m', 'sh.id')}),
   group_counts AS (SELECT group_id, ${COUNT_COLUMNS('cr')} FROM credits cr GROUP BY group_id),
   member_counts AS (SELECT l.group_id, l.member_id, ${COUNT_COLUMNS('cr')} FROM listed l
     LEFT JOIN credits cr ON cr.group_id = l.group_id AND cr.member_id = l.member_id
