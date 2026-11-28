@@ -64,13 +64,43 @@ describe('Manifeste du binaire (ABS-07, sauvegarde système)', () => {
       ...attrs.map((a) => `    A: ${ANDROID}:${a}`),
     ].join('\n');
 
-  it('ne signale rien avec allowBackup=false et sans lien profond', () => {
+  it('SEC-02 ne signale rien avec allowBackup=false et sans lien profond', () => {
     expect(auditManifest(manifest('allowBackup(0x01010280)=false'))).toEqual([]);
   });
 
-  it('signale allowBackup absent ou vrai', () => {
+  it('SEC-02 signale allowBackup absent ou vrai', () => {
     expect(auditManifest(manifest())).toEqual(['allowBackup doit valoir false']);
     expect(auditManifest(manifest('allowBackup(0x01010280)=true'))).toEqual([
+      'allowBackup doit valoir false',
+    ]);
+  });
+
+  // Seul l'attribut porté par <application> compte : un « false » ailleurs ne le remplace pas.
+  const backup = (where) => `A: ${ANDROID}:allowBackup(0x01010280)=${where}`;
+  it('SEC-02 refuse allowBackup=true sur application, même avec un false sur une autre ligne', () => {
+    const text = [
+      'E: manifest (line=2)',
+      `  ${backup('false')}`,
+      '  E: application (line=10)',
+      `    ${backup('true')}`,
+      '    E: activity (line=19)',
+      `      ${backup('false')}`,
+    ].join('\n');
+    expect(auditManifest(text)).toEqual(['allowBackup doit valoir false']);
+  });
+
+  it('SEC-02 refuse allowBackup absent de application et présent sur un autre élément', () => {
+    const text = [
+      'E: manifest (line=2)',
+      '  E: application (line=10)',
+      '    E: activity (line=19)',
+      `      ${backup('false')}`,
+    ].join('\n');
+    expect(auditManifest(text)).toEqual(['allowBackup doit valoir false']);
+  });
+
+  it('SEC-02 refuse allowBackup donné par référence à une ressource', () => {
+    expect(auditManifest(manifest('allowBackup(0x01010280)=@0x7f050002'))).toEqual([
       'allowBackup doit valoir false',
     ]);
   });
@@ -108,6 +138,31 @@ describe('Manifeste du binaire (ABS-07, sauvegarde système)', () => {
   it('ABS-07 signale aussi un scheme donné par référence à une ressource', () => {
     const text = tree('x').replace('="x" (Raw: "x")', '=@0x7f0e0012');
     expect(auditManifest(text)).toEqual(['Lien profond déclaré : @0x7f0e0012']);
+  });
+
+  // L'espace de noms est comparé tel quel : ses points ne sont pas des jokers (CodeQL).
+  it.each([
+    'http://schemasXandroidXcom/apk/res/android',
+    'http://schemas/android/com/apk/res/android',
+  ])('ABS-07/SEC-02 ne lit pas un attribut d’un autre espace de noms : %s', (namespace) => {
+    const line = ':scheme(0x01010027)="kila"';
+    const text = tree('kila').replace(`${ANDROID}${line}`, `${namespace}${line}`);
+    expect(text).toContain(`A: ${namespace}${line}`);
+    expect(auditManifest(text)).toEqual([]);
+  });
+
+  it('ABS-07/SEC-02 lit une valeur sans guillemets jusqu’au premier blanc', () => {
+    const text = tree('x').replace('="x" (Raw: "x")', '=@0x7f0e0012\t(Raw: "y")');
+    expect(auditManifest(text)).toEqual(['Lien profond déclaré : @0x7f0e0012']);
+  });
+
+  it('ABS-07/SEC-02 ne lit pas un attribut sans identifiant de ressource hexadécimal', () => {
+    expect(auditManifest(tree('x').replace('scheme(0x01010027)="x"', 'scheme(0x)="x"'))).toEqual(
+      [],
+    );
+    expect(auditManifest(tree('x').replace('scheme(0x01010027)="x"', 'scheme(0xZZ)="x"'))).toEqual(
+      [],
+    );
   });
 });
 
