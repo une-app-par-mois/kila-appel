@@ -98,9 +98,8 @@ const componentProblems = (components, allowedGoogle) =>
  */
 const auditManifest = (xmltree, allowedGoogle = []) => {
   const problems = [];
-  if (!xmltree.includes(`${ANDROID_NS}:allowBackup(0x01010280)=false`)) {
-    problems.push('allowBackup doit valoir false');
-  }
+  // Sauvegarde système : seul l'attribut porté par <application> compte ; absent, l'audit échoue.
+  let allowBackup;
   // Un lien profond entrant est un android:scheme sous un intent-filter. Celui d'un bloc
   // <queries> sert seulement à voir les navigateurs installés : il n'ouvre aucune entrée.
   const stack = [];
@@ -120,6 +119,9 @@ const auditManifest = (xmltree, allowedGoogle = []) => {
     }
     // Un attribut appartient au dernier élément ouvert.
     const top = stack[stack.length - 1];
+    if (top?.element === 'application') {
+      allowBackup = attribute(line, 'allowBackup') ?? allowBackup;
+    }
     const inIntentFilter = stack.some((e) => e.element === 'intent-filter');
     const scheme = attribute(line, 'scheme');
     if (scheme !== undefined && inIntentFilter) problems.push(`Lien profond déclaré : ${scheme}`);
@@ -132,6 +134,7 @@ const auditManifest = (xmltree, allowedGoogle = []) => {
       problems.push(`Intent-filter de messagerie : ${name}`);
     }
   }
+  if (allowBackup !== 'false') problems.unshift('allowBackup doit valoir false');
   return [...problems, ...componentProblems(components, allowedGoogle)];
 };
 

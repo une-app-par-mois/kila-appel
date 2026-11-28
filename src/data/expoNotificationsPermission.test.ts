@@ -70,14 +70,24 @@ describe('EX-29 demande de la permission (ticket 029)', () => {
 
 describe('EX-29 un seul chemin vers la demande de permission (ticket 029, SEC-03)', () => {
   const ROOT = join(__dirname, '..', '..');
-  // Identifiants du texte, découpés par un motif littéral (pas de motif construit : Semgrep).
-  const identifiers = (text: string) => new Set(text.match(/[A-Za-z_$][\w$]*/g));
+  // Mots du texte, découpés comme `\b` par un motif littéral (pas de motif construit : Semgrep) :
+  // `$requestReminderPermission` donne `requestReminderPermission`.
+  const identifiers = (text: string) => new Set(text.match(/\w+/g));
   const filesNaming = (name: string) =>
     walkSources(join(ROOT, 'src'))
       .filter((file) => !TEST_FILE.test(file))
       .filter((file) => identifiers(readFileSync(file, 'utf8')).has(name))
       .map((file) => relative(ROOT, file))
       .sort();
+
+  it('EX-29 découpage : un nom précédé de `$` est trouvé, un nom plus long ne compte pas', () => {
+    const names = identifiers(
+      'const a = $requestReminderPermission; requestReminderPermissionX();',
+    );
+    expect(names.has('requestReminderPermission')).toBe(true);
+    expect(names.has('requestReminderPermissionX')).toBe(true);
+    expect(identifiers('confirmPermissionLater()').has('confirmPermission')).toBe(false);
+  });
 
   it('EX-29 `requestReminderPermission` : défini par l’adaptateur, appelé par le hook seul', () => {
     expect(filesNaming('requestReminderPermission')).toEqual([
