@@ -1,6 +1,7 @@
 /**
  * @jest-environment node
  */
+import { volumeSeed } from '@/__fixtures__/statsSeed';
 import type { Db } from '@/data/db';
 import { LATEST_VERSION, MIGRATIONS, migrate } from '@/data/migrations';
 import { openNodeDb } from '@/data/nodeDb';
@@ -167,5 +168,87 @@ describe('Brouillon : heure de début (ticket 011, ADR-003 : migration 1 corrig�
     expect(await db.query('SELECT started_at FROM roll_call_drafts')).toEqual([
       { started_at: '09:05' },
     ]);
+  });
+});
+
+describe('Migration 2 : nombre de groupes figé de la séance (ticket 043, RM-03)', () => {
+  let db: Db;
+  // Base de la version 1 : la migration 1 seule, comme sur un appareil d'avant le ticket 043.
+  const v1 = async () => {
+    const base = openNodeDb();
+    await base.execute('PRAGMA foreign_keys = ON');
+    await migrate(base, MIGRATIONS.slice(0, 1));
+    return base;
+  };
+  const schema = async (base: Db) =>
+    (await base.query('SELECT type, name, tbl_name, sql FROM sqlite_schema'))
+      .map((row) => JSON.stringify(row))
+      .sort();
+  beforeEach(async () => {
+    db = await v1();
+    await db.execute(
+      "INSERT INTO seasons (name, start_date, end_date, is_active) VALUES ('S', '2026-09-01', '2027-07-31', 1)",
+    );
+    await db.execute(
+      "INSERT INTO groups (season_id, name) VALUES (1, 'Poussins'), (1, 'Benjamins')",
+    );
+    for (const [id, date] of [
+      [1, '2026-11-04'],
+      [2, '2026-11-11'],
+      [3, '2026-11-18'],
+    ] as const) {
+      await db.execute(
+        "INSERT INTO sessions (id, season_id, date, start_time, state) VALUES (?, 1, ?, '17:30', 'recorded')",
+        [id, date],
+      );
+    }
+    // Séance 1 : deux groupes ; séance 2 : un groupe ; séance 3 : aucun (groupe supprimé).
+    await db.execute(
+      'INSERT INTO session_groups (session_id, group_id) VALUES (1, 1), (1, 2), (2, 1)',
+    );
+  });
+  afterEach(async () => {
+    await db.close();
+  });
+
+  it('RM-03 remplit group_count avec le nombre actuel de groupes, NULL sans groupe', async () => {
+    await migrate(db);
+    expect(await userVersion(db)).toBe(LATEST_VERSION);
+    expect(await db.query('SELECT id, group_count FROM sessions ORDER BY id')).toEqual([
+      { id: 1, group_count: 2 },
+      { id: 2, group_count: 1 },
+      { id: 3, group_count: null },
+    ]);
+  });
+
+  it('le schéma d’une base migrée depuis la version 1 est celui d’une base neuve', async () => {
+    await migrate(db);
+    const fresh = await prepareDatabase(openNodeDb());
+    expect(await schema(db)).toEqual(await schema(fresh));
+    await fresh.close();
+  });
+
+  it('RM-03 group_count : NULL ou entier de 1 ou plus (0, -1 et texte refusés)', async () => {
+    await migrate(db);
+    const set = (value: number | string | null) =>
+      db.execute('UPDATE sessions SET group_count = ? WHERE id = 2', [value]);
+    for (const bad of [0, -1, 'deux']) await expect(set(bad)).rejects.toThrow();
+    await set(null);
+    await set(3);
+    expect(await db.query('SELECT group_count FROM sessions WHERE id = 2')).toEqual([
+      { group_count: 3 },
+    ]);
+  });
+
+  it('NF-08 migre 500 membres et 3 saisons de séances à deux groupes en moins de 2 s', async () => {
+    const volume = await v1();
+    await volumeSeed(volume, { twoGroups: true });
+    const start = Date.now();
+    await migrate(volume);
+    expect(Date.now() - start).toBeLessThan(2000);
+    expect(
+      await volume.query('SELECT group_count, count(*) AS n FROM sessions GROUP BY group_count'),
+    ).toEqual([{ group_count: 2, n: 1200 }]);
+    await volume.close();
   });
 });

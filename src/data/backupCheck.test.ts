@@ -9,7 +9,7 @@ import { seed } from '@/__fixtures__/seed';
 import { exportBackup } from '@/data/backup';
 import { MAX_BACKUP_BYTES, SAME_PATH, verifyBackup } from '@/data/backupCheck';
 import type { Db } from '@/data/db';
-import { MIGRATIONS, type Migration } from '@/data/migrations';
+import { LATEST_VERSION, MIGRATIONS, migrate } from '@/data/migrations';
 import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
 
@@ -60,7 +60,7 @@ describe('EX-20 SEC-10 vérification d’une sauvegarde', () => {
         today: '2026-11-27',
       },
     });
-    expect(log).toHaveBeenCalledWith('RESTORE_VERIFIED', { version: 1 });
+    expect(log).toHaveBeenCalledWith('RESTORE_VERIFIED', { version: LATEST_VERSION });
   });
 
   it('le résumé ne compte que les séances enregistrées', async () => {
@@ -262,8 +262,6 @@ describe('EX-20 SEC-10 vérification d’une sauvegarde', () => {
 });
 
 describe('EX-20 migrations d’une sauvegarde plus ancienne', () => {
-  const first = MIGRATIONS[0] as Migration;
-  const second = { version: 2, statements: ['CREATE TABLE nouveautes (id INTEGER PRIMARY KEY)'] };
   let dir: ReturnType<typeof tempDir>;
   beforeEach(() => {
     dir = tempDir();
@@ -271,18 +269,22 @@ describe('EX-20 migrations d’une sauvegarde plus ancienne', () => {
   afterEach(() => dir.remove());
   const verify = (path: string, d: typeof deps = deps) => verifyIn(dir)(path, d);
 
-  it('migre la copie avant de l’accepter, sans toucher au fichier choisi', async () => {
+  it('EX-20 RM-03 migre une copie de la version 1, sans toucher au fichier choisi', async () => {
     const backup = dir.path('ancienne.db');
-    const db = await prepareDatabase(openNodeDb());
+    const db = openNodeDb();
+    await migrate(db, MIGRATIONS.slice(0, 1));
+    await seed(db);
     await exportBackup(db, backup, '2026-10-22');
     await db.close();
     const original = readFileSync(backup);
     const copyPath = dir.path('verif.db');
-    const migrations = [first, second];
-    const result = await verifyBackup(backup, copyPath, { ...deps, migrations });
+    const result = await verifyBackup(backup, copyPath, deps);
     expect(result.ok).toBe(true);
+    expect(log).toHaveBeenCalledWith('RESTORE_VERIFIED', { version: 1 });
     const copy = openNodeDb(copyPath);
-    expect(await copy.query('PRAGMA user_version')).toEqual([{ user_version: 2 }]);
+    expect(await copy.query('PRAGMA user_version')).toEqual([{ user_version: LATEST_VERSION }]);
+    // Migration 2 : la séance du jeu fictif a un groupe.
+    expect(await copy.query('SELECT group_count FROM sessions')).toEqual([{ group_count: 1 }]);
     await copy.close();
     // Le fichier choisi n'est jamais ouvert ni migré : ses octets restent les mêmes.
     expect(readFileSync(backup)).toEqual(original);

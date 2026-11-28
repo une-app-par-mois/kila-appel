@@ -8,6 +8,7 @@ import { failingDetach, tempDir } from '@/__fixtures__/backupFiles';
 import { seed } from '@/__fixtures__/seed';
 import { exportBackup } from '@/data/backup';
 import type { Db } from '@/data/db';
+import { LATEST_VERSION } from '@/data/migrations';
 import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
 import { settingsRepo } from '@/data/settingsRepo';
@@ -34,7 +35,7 @@ describe('EX-19 export de la sauvegarde', () => {
     expect(new TextDecoder().decode(readFileSync(path).slice(0, 15))).toBe('SQLite format 3');
     const copy = openNodeDb(path);
     expect(await settingsRepo(copy).lastBackupDate()).toBe('2026-11-27');
-    expect(await copy.query('PRAGMA user_version')).toEqual([{ user_version: 1 }]);
+    expect(await copy.query('PRAGMA user_version')).toEqual([{ user_version: LATEST_VERSION }]);
     await copy.close();
     // La base de l'appareil n'est pas touchée : 014b note la date une fois le fichier partagé.
     expect(await settingsRepo(db).lastBackupDate()).toBeNull();

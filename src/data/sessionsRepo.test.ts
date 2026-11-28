@@ -68,6 +68,27 @@ describe('Dépôt des séances (EX-15, RM-03, RM-05)', () => {
     );
   });
 
+  it('RM-03 fige le nombre de groupes de la séance ; supprimer le groupe ne le change pas', async () => {
+    const id = await sessionsRepo(db, TODAY).record(call());
+    const groupCount = () => db.query('SELECT group_count FROM sessions WHERE id = ?', [id]);
+    expect(await groupCount()).toEqual([{ group_count: 1 }]);
+    await db.execute('DELETE FROM groups WHERE id = ?', [s.groupId]);
+    expect(await count(db, 'session_groups', 'session_id = ?', [id])).toBe(0);
+    expect(await groupCount()).toEqual([{ group_count: 1 }]);
+  });
+
+  it('RM-03 F-11 group_count suit les groupes écrits pour la séance, pas une valeur fixe', async () => {
+    // Écriture d'un second groupe simulée par un déclencheur de test (séances à plusieurs groupes).
+    await db.execute(
+      `CREATE TRIGGER test_second_group AFTER INSERT ON session_groups WHEN NEW.group_id = ${s.groupId}
+       BEGIN INSERT INTO session_groups (session_id, group_id) VALUES (NEW.session_id, 2); END`,
+    );
+    const id = await sessionsRepo(db, TODAY).record(call());
+    expect(await db.query('SELECT group_count FROM sessions WHERE id = ?', [id])).toEqual([
+      { group_count: 2 },
+    ]);
+  });
+
   it('RM-05 une seule séance par créneau et par date ; sans créneau (EX-39), plusieurs possibles', async () => {
     const repo = sessionsRepo(db, TODAY);
     // La séance du jeu fictif : créneau du jeu, le 2026-11-25.
