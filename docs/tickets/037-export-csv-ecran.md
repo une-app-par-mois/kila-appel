@@ -81,10 +81,18 @@ Reporté du lot J3-2 (2026-11-28, fiche 036) :
 | Bandeau SEC-09 | — | Texte de la maquette au caractère près, testé | Pré-analyse du lot J3-3 ; SEC-09 | à relire |
 | Place des textes | — | Textes de l'écran dans `exports.ts` ; ceux du fichier restent dans `stats.csv` ; `labels.weekdays` passé tel quel | Pré-analyse du lot J3-3 ; NF-07 | à relire |
 | Cycle de l'export | — | `fileLock.run('csv')` ; `clear` ; `newDir` ; `writeFile` vers `kila-presences-AAAA-MM-JJ.csv` ; `shareFile` ; `removeDir` dans un `finally` ; codes `CSV_*` ; aucun message de réussite ; bouton désactivé sous le verrou | Pré-analyse du lot J3-3 ; modèle `useBackupExport`, SEC-10 | à relire |
+| Nombre du bouton (développement du lot J3-3) | Espace simple ; espace fine insécable (`toLocaleString`) ; espace insécable | « 2 418 » avec une espace insécable U+00A0, posée à la main ; « 1 ligne » au singulier | Même caractère que « 87 % » (`attendanceRate.ts`) ; rendu identique sur Hermes et Node, sans dépendre d'`Intl` | à relire |
+| Bouton quand le nombre est inconnu (dates à corriger, première lecture) | Masqué ; « Exporter (0 ligne) » ; « Exporter (CSV) » désactivé | « Exporter (CSV) » désactivé | Ne montre pas un faux compte ; même libellé que le bouton de Stats | à relire |
+| Moment de l'erreur de date (pas de bouton « Appliquer » sur cet écran) | À chaque frappe ; date entière (10 caractères) ou sortie du champ | Date entière ou sortie du champ ; aucune lecture tant qu'une date est fausse | Pas d'erreur rouge pendant la frappe d'une date | à relire |
+| Place de l'état vide et de « Trop de lignes » | — | Sous le bandeau SEC-09, juste avant le bouton ; « Trop de lignes… » en Marge, comme un message d'échec | Le bandeau reste entier et avant le bouton dans tous les cas | à relire |
+| Plafond au moment de l'export | Seulement sur l'aperçu ; revérifié sur les lignes lues | Revérifié : au-delà de 50 000 lignes lues, échec (`CSV_EXPORT_FAILED`, message d'échec), aucun fichier écrit | Les données peuvent changer entre l'aperçu et l'appui | à relire |
+| Codes du journal | — | `CSV_SHARED`, `CSV_EXPORT_FAILED`, `CSV_CLEAR_FAILED`, `CSV_CLEANUP_FAILED`, `CSV_PREVIEW_LOAD_FAILED`, sans détail | ABS-04, SEC-12 ; modèle de la sauvegarde | à relire |
+| Nom de l'objet de libellés | `exports` ; `exportScreens` | `exportScreens` (fichier `exports.ts`), clé `labels.attendanceExport` | `exports` est un nom réservé de CommonJS après la compilation par Babel | à relire |
+| Fichiers touchés : 8 au lieu de 7 | — | `src/appTests/stats.test.tsx` modifié : l'assertion « aucun bouton CSV ni PDF » (masqués jusqu'au jalon 3) devient « Exporter (CSV) présent, PDF absent », et l'état vide vérifie l'absence du bouton | Assertion rendue fausse par le ticket même ; justifié (9 au plus) | à relire |
 
 ## Questions pour le porteur
 
 ## À reporter
 
 - CHANGELOG : Statistiques : export des présences en CSV (une ligne par séance et par membre), sur une période et un groupe, par le partage du système (F-08, EX-31).
-- Architecture : `src/hooks/useAttendanceExport.ts`, `src/app/stats/export.tsx`, libellés `exports.ts`.
+- Architecture : `src/hooks/useAttendanceExport.ts` (aperçu, plafond `MAX_EXPORT_ROWS`, export sous le verrou `'csv'`), `src/app/stats/export.tsx` (écran « Exporter les présences »), libellés `src/config/libelles/exports.ts` (`labels.attendanceExport`, repris par 041).

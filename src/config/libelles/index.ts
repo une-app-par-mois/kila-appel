@@ -7,6 +7,7 @@ import { commun } from './commun';
 import { creneaux } from './creneaux';
 import { donnees } from './donnees';
 import { effacement } from './effacement';
+import { exportScreens } from './exports';
 import { historique } from './historique';
 import { membres } from './membres';
 import { organisation } from './organisation';
@@ -33,4 +34,5 @@ export const labels = {
   ...relance,
   ...stats,
   ...alertes,
+  ...exportScreens,
 } as const;
