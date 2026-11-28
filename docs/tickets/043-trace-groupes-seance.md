@@ -1,10 +1,10 @@
-# 043 — Trace des groupes d'une séance après la suppression d'un groupe
+# 043 — Trace des groupes d'une séance : schéma, écriture et sauvegarde
 
-Statut : à faire · Jalon : 3 · Zone sensible : **oui** (migration du schéma ; règle RM-03 des statistiques et de l'export, données de mineurs qui sortent de l'appareil) · Trivial : non
+Statut : à faire (plan validé par le porteur le 2026-11-28) · Jalon : 3 · Zone sensible : **oui** (migration du schéma ; sauvegarde et restauration) · Trivial : non
 
-Dépend de : 036 (fusionné) · Fichiers touchés : `src/data/migrations.ts` et son test, `src/data/statsSql.ts`, `src/data/sessionsRepo.ts` ou le dépôt de l'appel (écriture de la trace à l'enregistrement), `src/data/backupRows.ts` (restauration d'une sauvegarde avec la nouvelle colonne ou table), `src/data/attendanceExportRepo.test.ts`, `src/data/statsRepo.test.ts` — environ 8 fichiers, à préciser à la pré-analyse
+Dépend de : 036 (fusionné) · Fichiers touchés : `src/data/migrations.ts` et son test, `src/data/sessionsRepo.ts` et son test, `src/data/backupRows.ts` et son test, `src/data/backupCheck.test.ts`, `src/data/backup.test.ts` — 8 fichiers
 
-Créé le 2026-11-28 à l'intégration du lot J3-2 (réponse du porteur à la Q2 du 036).
+Créé le 2026-11-28 à l'intégration du lot J3-2 (réponse du porteur à la Q2 du 036). Découpé le 2026-11-28 à la séance de lancement du lot J3-5 (décision du porteur) : **043** (schéma, écriture, sauvegarde) et **043b** (règle RM-03 et tests « RM-03 Q2 » inversés, `043b-regle-rm03-groupes.md`), qui dépend du 043 et s'enchaîne dans le même lot.
 
 ## Contexte
 
@@ -19,51 +19,54 @@ Quand un groupe est supprimé, sa ligne de `session_groups` et les inscriptions 
 
 ## Ce qui change
 
-- Migration (à choisir au plan, recommandation à donner par la pré-analyse) :
-  - option A : `sessions.group_count`, nombre de groupes de la séance figé à l'enregistrement de l'appel ;
-  - option B : ligne de `session_groups` gardée avec `group_id` NULL (`ON DELETE SET NULL` au lieu de `CASCADE`), clé primaire à revoir.
-- `src/data/statsSql.ts` : le repli « un seul groupe » de RM-03 ne vaut que si la séance n'a jamais eu qu'un groupe. La règle corrigée sert aux statistiques **et** à l'export (une seule règle, dans `credits`).
-- Une présence qui ne compte plus pour aucun groupe : « Sans groupe » dans l'export « Tous les groupes », absente d'un export filtré et des statistiques du groupe restant (décision du porteur du 2026-11-28 au 036).
-- Séances déjà enregistrées avant la migration : **non reconstituées** (aucune trace à retrouver) ; elles gardent le comportement actuel. À écrire comme limite.
-- Sauvegarde et restauration : la nouvelle colonne ou table est sauvegardée et vérifiée à la restauration (SEC-10) ; une sauvegarde d'avant la migration reste lisible.
+Plan validé par le porteur le 2026-11-28 (option A, migration 2).
+
+- `src/data/migrations.ts` : **migration 2** (et non une correction de la migration 1 ; ADR-003 et ARCHITECTURE §4.2 portent la mention datée) : colonne `sessions.group_count INTEGER CHECK (group_count IS NULL OR group_count >= 1)` ; remplissage à la migration : chaque séance existante reçoit le nombre actuel de ses lignes `session_groups` (`NULL` si elle n'en a plus aucune). Pas d'index.
+- `src/data/sessionsRepo.ts` : `record` écrit `group_count`, figé à l'enregistrement de l'appel, **sans déclencheur** ; il ne change plus ensuite, même si un groupe est supprimé.
+- `src/data/backupRows.ts` : `group_count` sauvegardé et vérifié à la restauration (SEC-10) ; **contrôle de cohérence** : une séance dont `group_count` est inférieur à son nombre de lignes `session_groups` est refusée par `INVALID_DATA` (sauvegarde refusée en entier, sans dire quelle ligne).
+- Sauvegarde ancienne (version 1) : **migrée à la vérification** (`verifyBackup` applique la migration 2 sur la copie temporaire, ARCHITECTURE §4.3), puis restaurée sans perte.
+- Séances déjà enregistrées avant la migration : la migration ne reconstitue pas un groupe déjà supprimé (aucune trace à retrouver) ; elles reçoivent le compte actuel. À écrire comme limite.
 
 ## Critères d'acceptation
 
-- [ ] RM-03 : séance à deux groupes enregistrée après la migration, puis un groupe supprimé : la présence d'un membre du seul groupe supprimé ne compte plus pour le groupe restant, ni dans `statsRepo.overview`, ni dans l'export filtré ; elle sort en « Sans groupe » dans l'export « Tous les groupes ».
-- [ ] RM-03 : séance d'un seul groupe : comportement inchangé (repli du groupe unique).
-- [ ] Les tests « RM-03 Q2 » de `src/data/attendanceExportRepo.test.ts` sont **inversés** (ils fixent aujourd'hui le passage au groupe restant).
-- [ ] Séance enregistrée avant la migration : comportement actuel, testé et écrit comme limite.
-- [ ] Migration testée sur une base de la version précédente ; sauvegarde d'avant la migration restaurée sans perte.
-- [ ] SEC-05 : requêtes paramétrées ; NF-08 : durées des statistiques et de l'export inchangées sur `volumeSeed` (< 2 s).
+- [ ] Migration 2 testée sur une base de la version 1 (`migrations.test.ts`) : colonne ajoutée, `group_count` égal au nombre de lignes `session_groups` de chaque séance ; schéma identique entre une base neuve et une base migrée (un test le vérifie).
+- [ ] `CHECK` : `group_count` à 0 refusé ; `NULL` accepté.
+- [ ] `sessionsRepo.record` : séance à deux groupes → `group_count = 2` ; après la suppression d'un groupe, `group_count` reste à 2.
+- [ ] SEC-10 : sauvegarde avec `group_count` inférieur au nombre de groupes de la séance refusée en entier (`INVALID_DATA`) ; sauvegarde de la version 1 migrée puis restaurée sans perte ; sauvegarde de version future (`LATEST_VERSION + 1`) refusée.
+- [ ] SEC-05 : requêtes paramétrées.
 
 ## Tests attendus
 
-- `src/data/migrations.test.ts` (base de la version précédente migrée), `src/data/attendanceExportRepo.test.ts` (« RM-03 Q2 » inversés), `src/data/statsRepo.test.ts` (même cas dans les statistiques), test de restauration d'une sauvegarde d'avant la migration.
+- `src/data/migrations.test.ts` (base de la version 1 migrée, schéma neuf égal au schéma migré), `src/data/sessionsRepo.test.ts`, `src/data/backupRows.test.ts` (cohérence, `SEC-10`), `src/data/backupCheck.test.ts` (sauvegarde ancienne migrée à la vérification), `src/data/backup.test.ts` (version future : `LATEST_VERSION + 1`).
 
 ## Hors périmètre
 
+- Règle RM-03 des statistiques, de l'export et du rapport, et tests « RM-03 Q2 » inversés : ticket 043b.
 - Reconstituer la trace des séances déjà enregistrées ; changer RM-03 pour les séances d'un seul groupe.
 
 ## Questions prévues
 
-- Plan à valider à la séance de lancement (zone sensible, migration) : option A ou B.
-- ABS-08 : une colonne d'organisation (nombre de groupes) n'est pas une donnée personnelle ; à confirmer pour la politique de confidentialité.
+- ~~Plan à valider à la séance de lancement (zone sensible, migration) : option A ou B.~~ Option A, migration 2, plan validé par le porteur le 2026-11-28 ; relecture du porteur avant la fusion dans le groupe (zone sensible).
+- ~~ABS-08~~ : donnée d'organisation, non personnelle, stockée sur l'appareil et sauvegardée ; `docs/CADRAGE.md` (« Données manipulées ») et `docs/CONFORMITE.md` mis à jour le 2026-11-28 à la séance de lancement ; stores inchangés (« aucune donnée collectée »).
+- Décisions automatiques prévues par la pré-analyse (« à relire ») : pas d'index ; `backup.test.ts` passe à `LATEST_VERSION + 1` ; un test vérifie que le schéma est identique entre une base neuve et une base migrée.
 
 Reporté du lot J3-3 (2026-11-28, fiche 039) :
 
-- Inverser le test « RM-03 Q2 séance à deux groupes dont l'un est supprimé : la présence passe au groupe restant (actuel) » de `src/data/reportRepo.test.ts`, comme ceux de `attendanceExportRepo.test.ts`.
+- Inverser le test « RM-03 Q2 séance à deux groupes dont l'un est supprimé : la présence passe au groupe restant (actuel) » de `src/data/reportRepo.test.ts`, comme ceux de `attendanceExportRepo.test.ts`. **Passé au 043b** (2026-11-28).
 
 ## Décisions
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
+| Forme de la trace | A : `sessions.group_count` ; B : `session_groups.group_id` NULL | A : `group_count INTEGER CHECK (group_count IS NULL OR group_count >= 1)`, figé par `sessionsRepo.record`, sans déclencheur | Une colonne, aucune clé primaire à revoir | décidée par le porteur le 2026-11-28 |
+| Migration | Corriger la migration 1 ; migration 2 | Migration 2 ; ADR-003 et ARCHITECTURE §4.2 annotés ; sauvegardes antérieures migrées à la vérification | Décision datée du porteur | décidée par le porteur le 2026-11-28 |
+| Remplissage et cohérence | — | Nombre actuel de lignes `session_groups` ; `group_count` inférieur au nombre de groupes refusé par `INVALID_DATA` (SEC-10) | Aucune trace à retrouver ; refus d'une sauvegarde incohérente | décidée par le porteur le 2026-11-28 |
+| Découpage | Un ticket ; 043 et 043b | 043 : schéma, écriture, sauvegarde ; 043b : RM-03 | Plus de 10 fichiers en zone sensible | décidée par le porteur le 2026-11-28 |
 
 ## Questions pour le porteur
 
 ## À reporter
 
-- CHANGELOG : Statistiques et export : une présence d'un groupe supprimé ne compte plus pour l'autre groupe de la séance (RM-03).
-- Architecture : §4.1 (colonne ou table nouvelle), §4.2 (migration), `statsSql.ts` (`credits`).
-- Reporté de la pré-analyse du 039 (lot J3-3) : test « RM-03 Q2 » de `src/data/reportRepo.test.ts` (039) à inverser, comme ceux de `attendanceExportRepo.test.ts`.
-- Reporté de la pré-analyse du 039 (lot J3-3) : requête de la grille du 039b : même règle corrigée de RM-03.
-- Reporté de la pré-analyse du 039 (lot J3-3) : `MEMBER` de `src/data/statsRepo.ts` recopie `x.groups = 1` hors de `credits` : à ramener dans la règle unique.
+- CHANGELOG : rien (visible au 043b).
+- Architecture : §4.1, colonne `sessions.group_count` (nombre de groupes figé à l'enregistrement) ; §4.2, migration 2.
+- Reportés au 043b : tests « RM-03 Q2 » de `attendanceExportRepo.test.ts` et de `reportRepo.test.ts` à inverser ; requête de la grille du 039b (`reportGridRepo`) sous la même règle ; `MEMBER` de `src/data/statsRepo.ts` (`x.groups = 1` hors de `credits`) ramené dans la règle unique.

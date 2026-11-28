@@ -546,7 +546,7 @@ ${titre('Rapport PDF', 'stats')}
 <label>Groupes</label><div class="champ">Tous les groupes ▾</div>
 ${carte(`<div class="feuille"><div class="l-titre">Ki&La · Rapport de présence</div><div class="l-sous mono">01/09/2026 – 26/11/2026</div><div class="barre"><i class="s-present" style="width:80%"></i><i class="s-late" style="width:7%"></i><i class="s-excused" style="width:5%"></i><i class="s-absent" style="width:8%"></i></div><div class="l-sous">Synthèse, puis une page par groupe et sa grille…</div><div class="l-sous">Benjamins · Archivé</div><div class="l-sous">P : présent · R : retard · E : excusé · A : absent. « — » : aucune séance comptée.</div></div>`)}
 ${carte(`<div class="l-titre">Benjamins · séances du 02/09/2026 au 16/09/2026</div>${grilleApercu}<div class="l-sous">P : présent · R : retard · E : excusé · A : absent. Case vide : hors inscription ou sans statut.</div>`)}
-${carte(`<p>Le fichier contient les noms des membres et leurs taux de présence, <b>en clair</b>. Partagez-le seulement avec qui doit le recevoir.</p>`, 'bandeau')}
+${carte(`<p>Le fichier contient les noms des membres et leurs présences, <b>en clair</b>. Partagez-le seulement avec qui doit le recevoir.</p>`, 'bandeau')}
 ${go('rapport', 'Créer et partager le PDF')}
 <p class="note">Format A4 : synthèse et taux par membre en portrait, puis la grille séance par séance de chaque groupe en paysage, par blocs d'environ 25 séances (décision du porteur du 2026-11-28, tickets 039 et 039b).</p>
 <p class="note">Grille séance par séance (aperçu d'un bloc en paysage) : case en teinte claire du fond du statut, lettre en texte foncé, jamais la couleur seule (décision du porteur du 2026-11-28, ticket 039b) ; la teinte exacte est calculée au 039b.</p>

@@ -2,7 +2,7 @@
 
 Statut : à faire · Jalon : 3 · Zone sensible : non (écran ; production et nettoyage au 040) · Trivial : non
 
-Dépend de : 037 (`stats.tsx`, libellés `exports.ts`), 040 · Fichiers touchés : `src/app/stats/rapport.tsx` (nouveau), `src/app/(tabs)/stats.tsx` (bouton « Rapport PDF »), `src/config/libelles/exports.ts`, `src/appTests/report.test.tsx` (nouveau) — 4 fichiers
+Dépend de : 037 (`stats.tsx`, libellés `exports.ts`), 040a, 040b · Fichiers touchés : `src/app/stats/rapport.tsx` (nouveau), `src/app/(tabs)/stats.tsx` (bouton « Rapport PDF »), `src/config/libelles/exports.ts`, `src/appTests/report.test.tsx` (nouveau) — 4 fichiers
 
 Découpé le 2026-11-28 (séance de découpage du jalon 3).
 
@@ -18,8 +18,9 @@ L'écran « Rapport PDF » de la maquette : période, groupes, aperçu de la feu
 ## Ce qui change
 
 - `src/app/(tabs)/stats.tsx` : bouton « Rapport PDF » (deux tiers de la rangée), qui passe la période affichée.
-- `src/app/stats/rapport.tsx` : « Période » (Saison, Ce mois, Dates…, comme l'onglet ; période reçue par défaut), « Groupes » (« Tous les groupes » ou un groupe), aperçu de la feuille de la maquette (titre, période, barre de la synthèse), **bandeau d'avertissement** « Le fichier contient les noms des membres et leurs taux de présence, **en clair**. Partagez-le seulement avec qui doit le recevoir. » avant le bouton (SEC-09, écart de maquette validé le 2026-11-28), « Créer et partager le PDF » (indicateur pendant le rendu ; désactivé à 0 séance avec le texte « Aucune séance enregistrée sur cette période : rien à mettre dans le rapport. », écart de maquette validé le 2026-11-28).
+- `src/app/stats/rapport.tsx` : « Période » (Saison, Ce mois, Dates…, comme l'onglet ; période reçue par défaut), « Groupes » (« Tous les groupes » ou un groupe), aperçu de la feuille de la maquette (titre, période, barre de la synthèse), **bandeau d'avertissement** « Le fichier contient les noms des membres et leurs présences, **en clair**. Partagez-le seulement avec qui doit le recevoir. » avant le bouton, identique à celui de l'export CSV (SEC-09, écart de maquette validé le 2026-11-28 ; texte fixé par le porteur le 2026-11-28, séance de lancement du lot J3-5), « Créer et partager le PDF » (indicateur pendant le rendu ; désactivé à 0 séance avec le texte « Aucune séance enregistrée sur cette période : rien à mettre dans le rapport. », écart de maquette validé le 2026-11-28).
 - Textes ajoutés à `src/config/libelles/exports.ts`.
+- Refus du 040b (`'tooLarge'`, `REPORT_REJECTED_TOO_LARGE`) : « Rapport trop long : réduisez la période ou choisissez un groupe » (décision du porteur du 2026-11-28), dans `src/config/libelles/exports.ts`.
 
 ## Critères d'acceptation
 
@@ -27,6 +28,7 @@ L'écran « Rapport PDF » de la maquette : période, groupes, aperçu de la feu
 - [ ] SEC-09 : avertissement présent et entier avant le bouton, test d'écran.
 - [ ] Bouton désactivé pendant le rendu et pendant une autre opération sur les fichiers (verrou).
 - [ ] Période sans séance : bouton désactivé, texte d'état vide.
+- [ ] Rapport trop long (040b) : texte du refus affiché, test d'écran.
 - [ ] NF-05, NF-06 ; écran comparé à la maquette, écarts listés dans la PR.
 
 ## Tests attendus
@@ -39,13 +41,13 @@ L'écran « Rapport PDF » de la maquette : période, groupes, aperçu de la feu
 
 ## Questions prévues
 
-- **Réservée (écart de maquette et SEC-09)** : la maquette « Rapport PDF » n'a pas le bandeau « en clair » qu'exige SEC-09 (« avant toute sortie de données […] PDF »). Proposé : le même bandeau que l'export CSV, « Le fichier contient les noms des membres et leurs taux de présence, **en clair**. Partagez-le seulement avec qui doit le recevoir. », placé avant le bouton.
+- **Réservée (écart de maquette et SEC-09)** : la maquette « Rapport PDF » n'a pas le bandeau « en clair » qu'exige SEC-09 (« avant toute sortie de données […] PDF »). Proposé : le même bandeau que l'export CSV, « Le fichier contient les noms des membres et leurs taux de présence, **en clair**. Partagez-le seulement avec qui doit le recevoir. », placé avant le bouton (texte remplacé le 2026-11-28 par « … leurs présences, **en clair**… », voir plus bas).
 - **Réservée (écart de maquette)** : état vide de l'écran Rapport (absent de la maquette) : « Aucune séance enregistrée sur cette période : rien à mettre dans le rapport. », sur le modèle de l'état vide de l'export.
 - Décision automatique proposée : « Période » propose les mêmes choix que l'onglet Stats (Saison, Ce mois, Dates…), la maquette n'en montrant qu'un (« Saison 2026-2027 ▾ »).
 
 Séance de découpage du jalon 3 (2026-11-28), réponses du porteur :
 
-- Bandeau SEC-09 : **comme l'export CSV, avant le bouton**, texte proposé tel quel (écart de maquette validé le 2026-11-28).
+- Bandeau SEC-09 : **comme l'export CSV, avant le bouton**, texte proposé tel quel (écart de maquette validé le 2026-11-28). Texte corrigé par le porteur le 2026-11-28 (séance de lancement du lot J3-5) : « Le fichier contient les noms des membres et leurs présences, **en clair**. Partagez-le seulement avec qui doit le recevoir. », identique à celui du CSV ; maquette corrigée et régénérée à cette séance.
 - État vide : **bouton désactivé et texte d'état vide** proposé (écart de maquette validé le 2026-11-28).
 - Maquette « Rapport PDF » et `scripts/maquettes.mjs` à mettre à jour (bandeau ; état vide dans « États vides » ; aperçu de la feuille : « Synthèse, puis une page par groupe et sa grille… »), à l'intégration, comme au jalon 2, avant la comparaison de la PR.
 - Décision d'office ci-dessus appliquée, notée dans `docs/DECISIONS.md` (état « à relire »).
@@ -59,6 +61,8 @@ Reporté du lot J3-3 (2026-11-28, fiches 037 et 039) :
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
+| Texte du bandeau SEC-09 | « … leurs taux de présence, en clair… » ; identique au CSV | « Le fichier contient les noms des membres et leurs présences, en clair. Partagez-le seulement avec qui doit le recevoir. » | Le PDF contient aussi la grille des présences ; un seul texte pour les deux exports | décidée par le porteur le 2026-11-28 |
+| Texte du refus « trop long » (040b) | — | « Rapport trop long : réduisez la période ou choisissez un groupe » | Dit quoi faire | décidée par le porteur le 2026-11-28 |
 
 ## Questions pour le porteur
 

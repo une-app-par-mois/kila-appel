@@ -15,7 +15,7 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 0 | Outillage et risques techniques | Voir `docs/PLAN.md` §2 | `groupe/jalon-0-outillage` | fait (PR #7) |
 | 1 | Organiser, appeler, retrouver | Voir `docs/PLAN.md` §2 | `groupe/jalon-1-organiser-appeler-retrouver` | fait (PR #63) |
 | 2 | Suivre l'assiduité (F-04, F-05, F-06) | Voir `docs/PLAN.md` §2 | `groupe/jalon-2-suivre-assiduite` | fait (PR #88), sans le prétest sur l'A55 (décision du porteur du 2026-11-28) |
-| 3 | Entrer et sortir les données (F-07, F-08, F-09) | Voir `docs/PLAN.md` §2 | `groupe/jalon-3-entrer-sortir-donnees` | découpé (14 tickets : 031 à 042, avec 032b et 039b, 2026-11-28), plus 043 (créé à l'intégration du lot J3-2) 044 (créé à l'intégration du lot J3-3) et 044b (créé à la séance de lancement du lot J3-4) ; plans validés par le porteur le 2026-11-28 ; en cours : lots J3-1 (031, 032, 033), J3-2 (034, 036, 038), J3-3 (035, 037, 039) et J3-4 (039b, 032b, 044) fusionnés dans le groupe, 12 tickets sur 17 |
+| 3 | Entrer et sortir les données (F-07, F-08, F-09) | Voir `docs/PLAN.md` §2 | `groupe/jalon-3-entrer-sortir-donnees` | découpé (14 tickets : 031 à 042, avec 032b et 039b, 2026-11-28), plus 043 (créé à l'intégration du lot J3-2) 044 (créé à l'intégration du lot J3-3) et 044b (créé à la séance de lancement du lot J3-4), plus 040b, 043b et 044c (découpés du 040, du 043 et du 044b à la séance de lancement du lot J3-5) ; plans validés par le porteur le 2026-11-28 ; en cours : lots J3-1 (031, 032, 033), J3-2 (034, 036, 038), J3-3 (035, 037, 039) et J3-4 (039b, 032b, 044) fusionnés dans le groupe, 12 tickets sur 20 ; lot J3-5 (040a, 040b, 043, 043b, 044b) lancé |
 | 4 à 7 | Détaillés au début du jalon précédent | `docs/PLAN.md` §2 | — | à faire |
 
 ## Tickets
@@ -90,9 +90,12 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 038 | [Rapport PDF : expo-print et garde-fous du binaire](038-rapport-dependance.md) | 3 | F-09 | oui | fusionné dans le groupe (PR #100) |
 | 039 | [Rapport PDF : synthèse et taux (HTML)](039-rapport-contenu.md) | 3 | F-09 | oui | fusionné dans le groupe (PR #104) |
 | 039b | [Rapport PDF : grille séance par séance](039b-rapport-grille.md) | 3 | F-09 | oui | fusionné dans le groupe (PR #110) |
-| 040 | [Rapport PDF : production du fichier et partage](040-rapport-production.md) | 3 | F-09 | oui | à faire |
+| 040a | [Rapport PDF : adaptateur expo-print et nettoyage](040-rapport-production.md) (ancien 040, redécoupé le 2026-11-28) | 3 | F-09 | oui | à faire |
+| 040b | [Rapport PDF : cycle du rapport (verrou, grille, plafond, orientation)](040b-rapport-cycle.md) | 3 | F-09 | oui | à faire |
 | 041 | [Rapport PDF : écran](041-rapport-ecran.md) | 3 | F-09 | non | à faire |
 | 042 | [Campagne Maestro du jalon 3](042-maestro-jalon-3.md) | 3 | F-07 à F-09 | non | à faire |
-| 043 | [Trace des groupes d'une séance après la suppression d'un groupe](043-trace-groupes-seance.md) | 3 | F-05, F-08, RM-03 | oui | à faire |
+| 043 | [Trace des groupes d'une séance : schéma, écriture et sauvegarde](043-trace-groupes-seance.md) | 3 | F-05, F-08, RM-03 | oui | à faire |
+| 043b | [Trace des groupes d'une séance : règle RM-03](043b-regle-rm03-groupes.md) | 3 | F-05, F-08, RM-03 | oui | à faire |
 | 044 | [Noms de groupe : refuser les caractères invisibles](044-groupe-caracteres-invisibles.md) | 3 | F-01, SEC-06 | oui | fusionné dans le groupe (PR #108) |
-| 044b | [Saison, créneau, contact : refuser les caractères invisibles](044b-noms-caracteres-invisibles.md) | 3 | F-01, SEC-06 | oui | à faire |
+| 044b | [Noms : liste SEC-06 des caractères invisibles élargie](044b-noms-caracteres-invisibles.md) | 3 | F-01, SEC-06 | oui | à faire |
+| 044c | [Saison, créneau, contact : refuser les caractères invisibles](044c-saison-creneau-contact-invisibles.md) | 3 | F-01, SEC-06, SEC-07 | oui | à faire |

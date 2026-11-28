@@ -8,7 +8,7 @@ L'ancienne version a enchaîné 8 migrations avant sa publication, dont 3 sur le
 
 ## Décision
 
-Le schéma couvre F-01 à F-14 dès la migration 1 (créneaux ponctuels, plusieurs groupes, états de séance, brouillon, alertes traitées), même si les écrans arrivent plus tard. Avant la publication, la migration 1 peut être corrigée ; après, jamais.
+Le schéma couvre F-01 à F-14 dès la migration 1 (créneaux ponctuels, plusieurs groupes, états de séance, brouillon, alertes traitées), même si les écrans arrivent plus tard. Avant la publication, la migration 1 peut être corrigée ; après, jamais. Exception datée (décision du porteur du 2026-11-28 : migration 2 pour le ticket 043 ; les sauvegardes antérieures sont migrées à la vérification).
 
 ## Options écartées
 

@@ -121,7 +121,7 @@ Les identifiants suivent le glossaire du cadrage (colonne « Terme du code »).
 
 ### 4.2 Migrations
 
-Numérotées, appliquées dans une transaction, version dans `PRAGMA user_version`, **jamais réécrites une fois publiées**. Avant la publication, la migration 1 reste la seule (ADR-003). Zone sensible. Jamais de `REPLACE INTO` ni d'`INSERT OR REPLACE` : ils suppriment puis recréent la ligne, contournent les déclencheurs (`slots.schedule_from`) et déclenchent les cascades.
+Numérotées, appliquées dans une transaction, version dans `PRAGMA user_version`, **jamais réécrites une fois publiées**. Avant la publication, la migration 1 reste la seule (ADR-003), sauf exception datée (décision du porteur du 2026-11-28 : migration 2 pour le ticket 043 ; les sauvegardes antérieures sont migrées à la vérification). Zone sensible. Jamais de `REPLACE INTO` ni d'`INSERT OR REPLACE` : ils suppriment puis recréent la ligne, contournent les déclencheurs (`slots.schedule_from`) et déclenchent les cascades.
 
 ### 4.3 Sauvegarde et restauration (zone sensible)
 
