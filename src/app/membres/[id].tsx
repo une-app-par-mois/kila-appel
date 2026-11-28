@@ -15,7 +15,7 @@ import { useMember } from '@/hooks/useMembers';
 import { useSeasons } from '@/hooks/useSeasons';
 import { Button } from '@/ui/Button';
 import { ConfirmDialog } from '@/ui/ConfirmDialog';
-import { errorMessage } from '@/ui/errorMessage';
+import { errorMessage, memberNameError } from '@/ui/errorMessage';
 import { MemberContacts } from '@/ui/MemberContacts';
 import { MemberGroups } from '@/ui/MemberGroups';
 import { Screen } from '@/ui/Screen';
@@ -86,7 +86,7 @@ export default function MemberSheet() {
     setFilledId(member.id);
   }, [member, filledId]);
 
-  // En quittant l'écran : les champs valides pas encore enregistrés le sont.
+  // En quittant l'écran : les champs valides pas encore enregistrés le sont, les autres écartés.
   useEffect(
     () => () => {
       const start = saved.current;
@@ -94,7 +94,9 @@ export default function MemberSheet() {
       let input = start;
       for (const field of FIELDS) {
         const next = withField(input, field, current.current[field]);
-        if (next && next.firstName !== '' && next.lastName !== '') input = next;
+        // SEC-06 : un nom ou prénom hors de la règle est écarté, jamais écrit.
+        if (next && field !== 'birthDate' && memberNameError(next[field]) !== undefined) continue;
+        if (next) input = next;
       }
       if (!same(input, start)) updateOnLeave(input);
     },
@@ -118,6 +120,12 @@ export default function MemberSheet() {
       const input = withField(base, field, current.current[field]);
       if (input === undefined) {
         setErrors((e) => ({ ...e, [field]: labels.errors.DATE_INVALID }));
+        return;
+      }
+      // SEC-06 : nom ou prénom contrôlé avant l'enregistrement, message sous le champ.
+      const nameError = field === 'birthDate' ? undefined : memberNameError(input[field]);
+      if (nameError !== undefined) {
+        setErrors((e) => ({ ...e, [field]: nameError }));
         return;
       }
       if (same(input, base)) return;

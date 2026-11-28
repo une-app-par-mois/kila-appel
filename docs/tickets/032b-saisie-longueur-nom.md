@@ -57,6 +57,7 @@ Reporté du lot J3-1 (2026-11-28) :
 | Fiche `[id].tsx`, enregistrement en quittant (`updateOnLeave`) | Enregistrer ; écarter | Un nom invalide est écarté aussi | Jamais d'écriture hors règle | à relire |
 | Texte de `NAME_INVALID_CHAR` | — | Inchangé | Même texte à l'import et à la saisie | à relire |
 | Tests des 100 caractères | — | 100 caractères du plan de base, puis 100 entourés d'espaces (`trim()`) ; `accessibilityRole="alert"` vérifié ; nouveau fichier de test ; 3 fichiers | Limite comptée après `trim()`, en points de code | à relire |
+| Où placer le contrôle partagé par les deux formulaires | Fonction locale dans chaque écran ; export depuis un fichier de route ; `memberNameError` dans `src/ui/errorMessage.ts` | `memberNameError` dans `src/ui/errorMessage.ts` (4e fichier, 5 au plus) | Une seule règle (`validateMemberName`, inchangée) et un seul message ; expo-router lit les exports d'une route, on n'y exporte rien d'autre | à relire |
 
 ## Questions pour le porteur
 
