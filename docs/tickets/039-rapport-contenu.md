@@ -74,11 +74,24 @@ Séance de découpage du jalon 3 (2026-11-28), réponses du porteur :
 | Mise en page | — | Largeurs en entiers et en % ; `print-color-adjust` ; sauts de page ; orientation dans une seule constante | Pré-analyse du lot J3-3 ; repli paysage possible (039b) | à relire |
 | Données du rapport | — | Une requête qui réutilise `credits` ; mêmes groupes et mêmes membres que les écrans de statistiques ; une page par groupe seulement s'il a des séances ; période sans séance : page valide ; `today` en paramètre | Pré-analyse du lot J3-3 ; mêmes nombres que les écrans (EX-32, RM-01) | à relire |
 | Tests de règles | — | Test « RM-03 Q2 » qui fixe le comportement actuel (inversé au 043) ; ABS-03 testé | Pré-analyse du lot J3-3 | à relire |
+| Synthèse d'un rapport filtré sur un groupe | Toutes les présences des séances du groupe ; celles qui comptent pour le groupe (RM-03) | Celles qui comptent pour le groupe : séances et taux de la synthèse égalent la ligne du groupe (Benjamins : 7 séances, 78 %) | Mêmes nombres que la page du groupe et que l'écran « Statistiques d'un groupe » ; une présence d'un autre groupe d'une séance commune n'entre pas dans un rapport Benjamins | à relire |
+| Filtre sur un groupe archivé, d'une autre saison ou sans séance | Rapport refusé ; rapport rendu | Rapport rendu : synthèse à 0 séance, « — », le groupe dans le tableau, sans page de groupe ; groupe introuvable ou identifiant invalide : `null` | Même règle que l'écran d'un groupe (tout groupe existant) ; période sans séance : page valide | à relire |
+| Couleurs du rapport | Recopiées dans le domaine ; passées par l'appelant | `rapportPalette` dans `src/config/libelles/rapport.ts`, tirée de `design/jetons.json` ; le domaine refuse toute couleur hors `#RRGGBB` (SEC-08) | CONV-16 (aucune valeur recopiée) ; le domaine n'importe pas la configuration ; aucune valeur libre dans le style | à relire |
+| Libellés du rapport dans `libelles/index.ts` | Ajoutés maintenant ; ajoutés par l'écran (041) | Pas ajoutés : `rapport.ts` est importé directement | `index.ts` hors de la liste des fichiers ; aucun écran ne les lit avant le 041 | à relire |
+| Membre ou groupe archivé dans le rapport | Rien ; mention « Archivé » | « Archivé » en texte secondaire après le nom (tableau des groupes, titre de page, ligne de membre) | Mêmes mots que les écrans de statistiques ; jamais la couleur seule | à relire |
+| Barre par statut | Segments à 0 dessinés ; omis | Segments à 0 omis ; légende toujours écrite avec les quatre comptes (« Présent 0 ») ; aucune présence : barre vide et « Aucune séance sur la période. » | NF-06 : le compte écrit porte l'information ; parts de `statusShares` (somme 100) | à relire |
+| Lettres P, R, E, A des colonnes | Sans légende ; légende sous chaque tableau | Légende sous chaque tableau des membres (« P : présent · R : retard… ») | NF-06 : une lettre seule ne se lit pas sans clé | à relire |
+| Place de la CSP | Dans le gabarit ; en constante avant le gabarit | En-tête fixe (`<!DOCTYPE>`, `<html lang="fr">`, CSP, `<meta charset>`) concaténé avant le gabarit ; tout le reste, CSS comprise, passe par `html` | Le gabarit échapperait les apostrophes de la CSP ; la CSS ne contient aucun caractère échappé et n'a que des couleurs vérifiées | à relire |
+| Orientation | Portrait ; repli paysage dès maintenant | Portrait (`SUMMARY_PAGE`), repli non appliqué : il dépend du rendu réel (040) | Décision du porteur du 2026-11-28 ; changer la constante suffit | à relire |
+| Date de création invalide | `DataError` ; erreur de programme | `Error` (« Date de création invalide (RM-04) »), sans la valeur | `today` vient de l'horloge, pas d'une saisie ; ABS-04 | à relire |
 
 ## Questions pour le porteur
 
 ## À reporter
 
 - CHANGELOG : rien (visible au 041).
-- Architecture : `src/domain/reportHtml.ts`, `src/data/reportRepo.ts`, libellés `rapport.ts`.
+- Architecture : `src/domain/reportHtml.ts` (page HTML du rapport, type `ReportHtml`, CSP, `SUMMARY_PAGE`), `src/domain/safeHtml.ts` (gabarit balisé `html`, `escapeHtml`, type `SafeHtml`), `src/data/reportRepo.ts` (une requête : synthèse, groupes, membres), libellés et couleurs `src/config/libelles/rapport.ts`.
+- SECURITE (à l'intégration) : SEC-08, colonne Vérification, « échappement et CSP : à venir, 039 » devient `src/domain/safeHtml.test.ts` et `src/domain/reportHtml.test.ts` (« SEC-08 … », ticket 039).
+- NF-08 mesuré le 2026-11-28 (`volumeSeed`, machine de développement) : une requête ; saison, un groupe par séance : requête 74 ms, HTML 3 ms, 57 Ko ; 3 saisons, séances à deux groupes : requête 550 ms, HTML 8 ms, 166 Ko. Limite du test : 2 s.
+- 040 : `printToFileAsync` reçoit un `ReportHtml` (seul `reportHtml` en produit) ; `reportRepo(db).report(period, groupId, today)` rend `null` pour un groupe introuvable.
 - PRD (à l'intégration) : §9, question « Contenu exact du rapport PDF » close : synthèse, taux par groupe et par membre, grille séance par séance (décision du porteur du 2026-11-28).
