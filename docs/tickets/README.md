@@ -14,7 +14,7 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | --- | --- | --- | --- | --- |
 | 0 | Outillage et risques techniques | Voir `docs/PLAN.md` §2 | `groupe/jalon-0-outillage` | fait (PR #7) |
 | 1 | Organiser, appeler, retrouver | Voir `docs/PLAN.md` §2 | `groupe/jalon-1-organiser-appeler-retrouver` | fait (PR #63) |
-| 2 | Suivre l'assiduité (F-04, F-05, F-06) | Voir `docs/PLAN.md` §2 | `groupe/jalon-2-suivre-assiduite` | en cours : découpé (tickets 020 à 030, 2026-11-27 ; 028 découpé en 028a et 028b, puis 028b en 028b et 028c ; 13 tickets), lots J2-1 (021, 023, 026), J2-2 (022, 024, 027), J2-3 (020, 025, 028a) et J2-4 (028b, 028c, 029) fusionnés dans le groupe |
+| 2 | Suivre l'assiduité (F-04, F-05, F-06) | Voir `docs/PLAN.md` §2 | `groupe/jalon-2-suivre-assiduite` | développement terminé : les 13 tickets (020 à 030, avec 028a, 028b et 028c) fusionnés dans le groupe (lots J2-1 à J2-4, puis 030 en PR #86) ; PR du jalon vers `main` à ouvrir, puis prétest sur l'A55 |
 | 3 à 7 | Détaillés au début du jalon précédent | `docs/PLAN.md` §2 | — | à faire |
 
 ## Tickets
@@ -77,4 +77,4 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 028b | [Relance : programmation](028b-relance-reprogrammation.md) | 2 | F-06 | oui | fusionné dans le groupe (PR #84) |
 | 028c | [Relance : appui et effacement](028c-relance-appui-effacement.md) | 2 | F-06 | oui | fusionné dans le groupe (PR #83) |
 | 029 | [Relance : réglage et demande de permission](029-relance-reglage.md) | 2 | F-06 | oui | fusionné dans le groupe (PR #82) |
-| 030 | [Campagne Maestro du jalon 2](030-maestro-jalon-2.md) | 2 | F-04 à F-06 | non | à faire |
+| 030 | [Campagne Maestro du jalon 2](030-maestro-jalon-2.md) | 2 | F-04 à F-06 | non | fusionné dans le groupe (PR #86) |

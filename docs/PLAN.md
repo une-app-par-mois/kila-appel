@@ -29,6 +29,16 @@ Le plus gros risque technique d'abord (jalon 0). Chaque jalon se termine par un 
 
 Total jusqu'à la publication Android (jalons 0 à 6) : **43 tickets, environ 69 h de porteur**, hors marge.
 
+**Jalon 2, développement terminé (2026-11-28)** : les 13 tickets sont fusionnés dans `groupe/jalon-2-suivre-assiduite` ; PR du jalon vers `main` à ouvrir. Critère de sortie en face de ce qui est vérifié :
+
+| Critère de sortie | Vérifié | Reste à vérifier sur l'A55 (prétest) |
+| --- | --- | --- |
+| Alerte levée puis traitée | Campagne Maestro sur l'émulateur (`alerte-traitee` : alerte levée, traitée, revenue après une absence de plus ; retour Android) | Écran d'alerte sur le téléphone : focus, retour Android |
+| Taux exacts sur un jeu fictif vérifié à la main | Tests sur `node:sqlite` et campagne sur l'émulateur (`statistiques` : 87 %, 88 %, 78 %, 64 %, tableau du 023) | Requêtes des statistiques par expo-sqlite sur le téléphone ; NF-08 jugé à l'œil sur la sauvegarde de volume (indicatif sur l'émulateur : accueil 1,07 s, Stats 2,95 s) |
+| Relance reçue sur le téléphone, sans nom de membre | Réglage et dialogue de permission pilotés sur l'émulateur (`relance-reglage` : pas maintenant, autoriser, refuser) | Relance reçue à l'heure, écran verrouillé sans nom de membre, appui vers l'appel, après redémarrage, en mode avion (liste de recette de `ETAT.md`) |
+
+Reste aussi : la campagne sur l'APK de la CI de la PR du jalon.
+
 ## 3. Calendrier estimé
 
 | Semaine | Jalon |
