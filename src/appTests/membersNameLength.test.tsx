@@ -2,6 +2,7 @@
 // plus après trim(), sans caractère invisible ; message sous le champ, annoncé, rien d'enregistré.
 // Vraie base node:sqlite et jeu fictif (SEC-13).
 import { fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
+import { hexCodes } from '@/__fixtures__/codePoints';
 import { count, type Seeded, seed } from '@/__fixtures__/seed';
 import Member from '@/app/membres/[id]';
 import Members from '@/app/membres/index';
@@ -104,6 +105,27 @@ describe('Nom et prénom de 100 caractères au plus, sans caractère invisible (
     await editField(t.memberForm.firstName, 'Al\tix');
     expect(await fieldAlert(t.errors.NAME_INVALID_CHAR)).toBeTruthy();
     expect(await count(db, 'members', "first_name = 'Alix' AND id = ?", [s.memberId])).toBe(1);
+  });
+
+  // Ticket 044b : liste élargie, points de code en clair au milieu du nom.
+  it.each(hexCodes([0x2060, 0xe0061]))(
+    'SEC-06 NF-06 création et fiche : U+%s dans Nom → message annoncé, rien d’écrit',
+    async (_hex, code) => {
+      const name = `Co${String.fromCodePoint(code)}lin`;
+      await fillNew('Yanis', name);
+      expect(await fieldAlert(t.errors.NAME_INVALID_CHAR)).toBeTruthy();
+      expect(await count(db, 'members')).toBe(2);
+      await open(`/membres/${s.memberId}`);
+      await editField(t.memberForm.lastName, name);
+      expect(await fieldAlert(t.errors.NAME_INVALID_CHAR)).toBeTruthy();
+      expect(await count(db, 'members', "last_name = 'Exemple' AND id = ?", [s.memberId])).toBe(1);
+    },
+  );
+
+  it('SEC-06 création : la famille (U+200D) et le cœur rouge (U+FE0F) dans Nom → enregistré', async () => {
+    const name = `Co${String.fromCodePoint(0x1f469, 0x200d, 0x1f467, 0x2764, 0xfe0f)}lin`;
+    await fillNew('Yanis', name);
+    await waitFor(async () => expect(await count(db, 'members', 'last_name = ?', [name])).toBe(1));
   });
 
   it('SEC-06 texte de NAME_INVALID_CHAR : dit quoi faire, sans demander de voir l’invisible', () => {

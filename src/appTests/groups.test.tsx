@@ -1,5 +1,6 @@
 // Écrans des groupes (ticket 006d, EX-02), sur une vraie base node:sqlite et le jeu fictif (SEC-13).
 import { fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
+import { char, hexCodes } from '@/__fixtures__/codePoints';
 import { count, type Seeded, seed } from '@/__fixtures__/seed';
 import GroupDetail from '@/app/groupes/[id]/index';
 import GroupEdit from '@/app/groupes/[id]/modifier';
@@ -123,6 +124,45 @@ describe('Écrans des groupes (EX-02)', () => {
     await fireEvent.press(screen.getByRole('button', { name: t.common.save }));
     expect(await screen.findByRole('alert')).toHaveTextContent(t.errors.NAME_INVALID_CHAR);
     expect(await count(db, 'groups', 'id = ? AND name = ?', [s.groupId, 'Poussins'])).toBe(1);
+  });
+
+  const createWith = async (value: string) => {
+    await open('/groupes/nouveau');
+    await fireEvent.changeText(await screen.findByLabelText(t.groupForm.name), value);
+    await fireEvent.press(screen.getByRole('button', { name: t.groupForm.create }));
+  };
+  const renameTo = async (value: string) => {
+    await open(`/groupes/${s.groupId}/modifier`);
+    const name = await screen.findByLabelText(t.groupForm.name);
+    await waitFor(() => expect(name.props.value).toBe('Poussins'));
+    await fireEvent.changeText(name, value);
+    await fireEvent.press(screen.getByRole('button', { name: t.common.save }));
+  };
+
+  // Ticket 044b : liste élargie, points de code en clair au milieu du nom.
+  it.each(hexCodes([0x2060, 0x2064, 0xfff9, 0xfffb, 0xe0000, 0xe0061, 0xe007f]))(
+    'SEC-06 U+%s à la création puis au renommage : erreur sous le champ, rien d’écrit',
+    async (_hex, code) => {
+      const value = `Pous${char(code)}sins`;
+      await createWith(value);
+      expect(await screen.findByRole('alert')).toHaveTextContent(t.errors.NAME_INVALID_CHAR);
+      expect(await count(db, 'groups', 'name = ?', [value])).toBe(0);
+      await renameTo(value);
+      expect(await screen.findByRole('alert')).toHaveTextContent(t.errors.NAME_INVALID_CHAR);
+      expect(await count(db, 'groups', 'id = ? AND name = ?', [s.groupId, 'Poussins'])).toBe(1);
+    },
+  );
+
+  it('SEC-06 le cœur rouge (U+FE0F) à la création puis au renommage : enregistré', async () => {
+    const value = `Poussins ${char(0x2764, 0xfe0f)}`;
+    await createWith(value);
+    await waitFor(async () => expect(await count(db, 'groups', 'name = ?', [value])).toBe(1));
+    await renameTo(`${value} mercredi`);
+    await waitFor(async () =>
+      expect(
+        await count(db, 'groups', 'id = ? AND name = ?', [s.groupId, `${value} mercredi`]),
+      ).toBe(1),
+    );
   });
 
   it('EX-02 la suppression dit ce qui sera effacé ; séances et présences restent', async () => {
