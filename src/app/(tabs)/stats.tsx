@@ -182,6 +182,21 @@ export default function StatsScreen() {
             )}
           </Card>
           <AttendanceLegend />
+          {/* Rangée de la maquette : « Exporter (CSV) » un tiers ; « Rapport PDF » au ticket 041. */}
+          <View style={styles.exports}>
+            <Button
+              label={labels.attendanceExport.open}
+              variant="secondary"
+              flex={1}
+              onPress={() =>
+                router.push({
+                  pathname: '/stats/export',
+                  params: choice ? choiceParams(choice) : periodParams(shown.period),
+                })
+              }
+            />
+            <View style={styles.reserved} />
+          </View>
         </>
       )}
     </Screen>
@@ -200,6 +215,8 @@ const styles = StyleSheet.create({
   // Côte à côte, l'une sous l'autre quand le texte est agrandi.
   figure: { flexGrow: 1, flexBasis: 140 },
   number: { fontFamily: theme.fonts.digits, fontSize: 26, color: theme.colors.encre },
+  exports: { flexDirection: 'row', gap: theme.spacing * 2, marginTop: theme.spacing * 3 },
+  reserved: { flex: 2 },
   group: { paddingVertical: theme.spacing * 2.5, minHeight: theme.minTouchTarget },
   pressed: { opacity: 0.6 },
   row: {
