@@ -4,7 +4,7 @@
 // useMemberImport (ticket 034, EX-30, SEC-06, SEC-10, SEC-12 ; zone sensible) : vrai adaptateur
 // (expoFiles.ts) sur des modules natifs imités (node:fs, src/__fixtures__/expoModules.ts), vraie
 // base node:sqlite. Rien n'est écrit avant `confirm` ; verrou commun ; copie du sélecteur effacée ;
-// session en mémoire vidée à l'abandon et après Tout effacer ; journal sans nom. Données fictives.
+// journal sans nom. Session (abandon, Tout effacer, minimisation) : useMemberImportSession.test.tsx.
 import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react-native';
@@ -14,7 +14,7 @@ import { MOCKUP_ROWS } from '@/__fixtures__/importRows';
 import { dump } from '@/__fixtures__/restoreFiles';
 import { count } from '@/__fixtures__/seed';
 import type { Db } from '@/data/db';
-import { notifyDataErased, onDataChanged } from '@/hooks/dataChanged';
+import { onDataChanged } from '@/hooks/dataChanged';
 import { type FileTask, fileLock } from '@/hooks/fileLock';
 import { importSession } from '@/hooks/importSession';
 import { useMemberImport } from '@/hooks/useMemberImport';
@@ -163,7 +163,7 @@ describe('EX-30 confirm : écriture d’un bloc', () => {
     const changed = jest.fn();
     const off = onDataChanged(changed);
     const { result } = await chosen();
-    await act(() => result.current.confirm([]));
+    await act(() => result.current.confirm(result.current.preview, []));
     off();
     expect(result.current.state).toEqual({
       step: 'done',
@@ -185,7 +185,10 @@ describe('EX-30 confirm : écriture d’un bloc', () => {
   it('double appui : une seule écriture', async () => {
     const { result } = await chosen();
     await act(async () => {
-      await Promise.all([result.current.confirm([]), result.current.confirm([])]);
+      await Promise.all([
+        result.current.confirm(result.current.preview, []),
+        result.current.confirm(result.current.preview, []),
+      ]);
     });
     expect(await count(base.db, 'members')).toBe(23);
   });
@@ -194,7 +197,7 @@ describe('EX-30 confirm : écriture d’un bloc', () => {
     const { result } = await chosen();
     fileLock.acquire('restore');
     try {
-      await act(() => result.current.confirm([]));
+      await act(() => result.current.confirm(result.current.preview, []));
     } finally {
       fileLock.release('restore');
     }
@@ -209,20 +212,11 @@ describe('EX-30 confirm : écriture d’un bloc', () => {
       "UPDATE groups SET archived_at = '2026-11-28' WHERE name = 'Adultes jeudi'",
     );
     const before = await dump(base.db);
-    await act(() => result.current.confirm([]));
+    await act(() => result.current.confirm(result.current.preview, []));
     expect(result.current.state).toEqual({ step: 'stale' });
     expect(await dump(base.db)).toEqual(before);
     expect(result.current.preview).toBeNull();
     expect(log).toHaveBeenCalledWith('IMPORT_STALE');
-  });
-
-  it('Tout effacer survenu depuis l’aperçu : session vidée, stale, rien d’écrit', async () => {
-    const { result } = await chosen();
-    await act(async () => notifyDataErased());
-    expect(result.current.preview).toBeNull();
-    await act(() => result.current.confirm([]));
-    expect(result.current.state).toEqual({ step: 'stale' });
-    expect(await count(base.db, 'members')).toBe(2);
   });
 
   it('écriture en échec : failed, IMPORT_WRITE_FAILED, session gardée', async () => {
@@ -230,11 +224,30 @@ describe('EX-30 confirm : écriture d’un bloc', () => {
     await base.db.execute(
       `CREATE TRIGGER fail_all BEFORE INSERT ON members BEGIN SELECT RAISE(ABORT, 'Rose André'); END`,
     );
-    await act(() => result.current.confirm([]));
+    await act(() => result.current.confirm(result.current.preview, []));
     expect(result.current.state).toEqual({ step: 'failed' });
     expect(log).toHaveBeenCalledWith('IMPORT_WRITE_FAILED');
     expect(result.current.preview).not.toBeNull();
     expect(await count(base.db, 'members')).toBe(2);
+  });
+
+  // Décision du porteur du 2026-11-28 : désarchivé dès que le groupe du fichier est trouvé.
+  it('doublon archivé déjà inscrit : désarchivé seulement, les écrans sont prévenus', async () => {
+    await base.db.execute(
+      'INSERT INTO enrollments (member_id, group_id, start_date) VALUES (?, ?, ?)',
+      [base.blanc, base.adultes, '2026-09-01'],
+    );
+    willChoose(new TextEncoder().encode('nom;prenom;groupe\r\nBlanc;Zoé;Adultes jeudi\r\n'));
+    const changed = jest.fn();
+    const off = onDataChanged(changed);
+    const { result } = await chosen();
+    await act(() => result.current.confirm(result.current.preview, []));
+    off();
+    expect(result.current.state).toMatchObject({
+      step: 'done',
+      result: { added: 0, duplicatesEnrolled: 0, unarchived: 1 },
+    });
+    expect(changed).toHaveBeenCalled();
   });
 
   it('rien à écrire : aucune notification', async () => {
@@ -242,34 +255,10 @@ describe('EX-30 confirm : écriture d’un bloc', () => {
     const changed = jest.fn();
     const off = onDataChanged(changed);
     const { result } = await chosen();
-    await act(() => result.current.confirm([]));
+    await act(() => result.current.confirm(result.current.preview, []));
     off();
     expect(result.current.state).toMatchObject({ step: 'done', result: { added: 0 } });
     expect(changed).not.toHaveBeenCalled();
-  });
-});
-
-describe('SEC-10 session : en mémoire seulement, vidée à l’abandon', () => {
-  it('abandon : aperçu effacé', async () => {
-    const { result } = await chosen();
-    await act(async () => result.current.abandon());
-    expect(result.current.preview).toBeNull();
-    expect(importSession.get()).toBeNull();
-  });
-
-  it('écran de choix démonté : aperçu effacé ; un autre écran ne l’efface pas', async () => {
-    const other = await start();
-    const owner = await chosen(true);
-    await other.unmount();
-    expect(importSession.get()).not.toBeNull();
-    await owner.unmount();
-    expect(importSession.get()).toBeNull();
-  });
-
-  it('un second écran lit le même aperçu', async () => {
-    await chosen();
-    const { result } = await start();
-    expect(result.current.preview?.counts.toImport).toBe(21);
   });
 });
 
@@ -277,7 +266,7 @@ describe('SEC-12 journal', () => {
   it('codes seulement, aucun nom ni détail', async () => {
     willChoose(membersUtf8Bom());
     const { result } = await chosen();
-    await act(() => result.current.confirm([]));
+    await act(() => result.current.confirm(result.current.preview, []));
     await waitFor(() => expect(result.current.state.step).toBe('done'));
     for (const call of log.mock.calls) {
       expect(call).toHaveLength(1);

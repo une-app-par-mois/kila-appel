@@ -2,13 +2,14 @@
  * @jest-environment node
  */
 // Doublons ignorés de source `app` à l'import (ticket 034, EX-30, EX-04 ; zone sensible) : inscrits
-// au groupe du fichier, désarchivés seulement s'ils y sont inscrits (décision du porteur du
-// 2026-11-28), sans réécrire ni nom, ni date, ni contact. NF-08 : volume. Données fictives.
+// au groupe du fichier, désarchivés dès que ce groupe est trouvé (décision du porteur du
+// 2026-11-28), sans réécrire ni nom, ni date, ni contact. ABS-03 : colonnes gardées. NF-08 : volume.
 import { type ImportDb, importDb, previewOn } from '@/__fixtures__/importDb';
-import { numbered } from '@/__fixtures__/importRows';
+import { MOCKUP_ROWS, numbered } from '@/__fixtures__/importRows';
 import { count } from '@/__fixtures__/seed';
 import { importMembers } from '@/data/memberImportRepo';
 import type { CsvRow } from '@/domain/csvParse';
+import { keepImportColumns } from '@/domain/memberImport';
 
 const TODAY = '2026-11-28';
 const HEADER = ['nom', 'prenom', 'telephone', 'groupe'];
@@ -103,14 +104,16 @@ describe('EX-30 doublon ignoré de source app', () => {
     expect(await enrollments(base.garcia)).toHaveLength(2);
   });
 
-  it('archivé et déjà inscrit au groupe : rien n’est inscrit, il reste archivé', async () => {
+  // Décision du porteur du 2026-11-28 : désarchivé dès que le groupe du fichier est trouvé.
+  it('archivé et déjà inscrit au groupe : désarchivé, pas d’inscription en double', async () => {
     await base.db.execute(
       'INSERT INTO enrollments (member_id, group_id, start_date) VALUES (?, ?, ?)',
       [base.blanc, base.adultes, '2026-09-01'],
     );
     const outcome = await run(numbered(HEADER, ['Blanc', 'Zoé', '', 'Adultes jeudi']));
-    expect(outcome).toMatchObject({ ok: true, result: { duplicatesEnrolled: 0, unarchived: 0 } });
-    expect(await archivedAt(base.blanc)).toBe('2026-06-30');
+    expect(outcome).toMatchObject({ ok: true, result: { duplicatesEnrolled: 0, unarchived: 1 } });
+    expect(await archivedAt(base.blanc)).toBeNull();
+    expect(await enrollments(base.blanc)).toHaveLength(1);
   });
 
   it('même membre sur plusieurs lignes : un désarchivage, une inscription par groupe distinct', async () => {
@@ -155,6 +158,25 @@ describe('EX-30 doublon ignoré de source app', () => {
       ok: true,
       result: { added: 1, enrolled: 1, duplicatesIgnored: 1, duplicatesEnrolled: 0 },
     });
+  });
+});
+
+describe('ABS-03 keepImportColumns', () => {
+  it('colonnes inconnues retirées, en-tête compris ; même aperçu et même écriture', async () => {
+    const rows = numbered(
+      ['Allergies', 'nom', 'prenom', 'groupe', 'nom'],
+      ['Arachides', 'Neuf', 'Alix', 'Adultes jeudi', 'Autre'],
+    );
+    const kept = keepImportColumns(rows);
+    expect(kept).toEqual(numbered(['nom', 'prenom', 'groupe'], ['Neuf', 'Alix', 'Adultes jeudi']));
+    expect(await previewOn(base.db, kept, TODAY)).toEqual(await previewOn(base.db, rows, TODAY));
+    const mockup = keepImportColumns(MOCKUP_ROWS);
+    expect(JSON.stringify(mockup)).not.toMatch(/licence|L-001/);
+    const preview = await previewOn(base.db, mockup, TODAY);
+    expect(preview).toEqual(await previewOn(base.db, MOCKUP_ROWS, TODAY));
+    expect(
+      await importMembers(base.db, { rows: mockup, preview, kept: [], today: TODAY }),
+    ).toMatchObject({ ok: true, result: { added: 21 } });
   });
 });
 

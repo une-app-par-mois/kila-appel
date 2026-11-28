@@ -109,8 +109,9 @@ const ignoredEnrollments = (preview: ImportPreview, kept: readonly number[]) => 
 };
 
 /**
- * EX-04 : inscrit le doublon aux groupes où il n'a pas d'inscription pas finie (règle de `enroll`) ;
- * désarchivé d'abord, seulement s'il est inscrit quelque part (décision du porteur du 2026-11-28).
+ * Doublon au groupe trouvé : désarchivé d'abord s'il était archivé, même déjà inscrit (décision du
+ * porteur du 2026-11-28), puis inscrit aux groupes où il n'a pas d'inscription pas finie (EX-04,
+ * règle de `enroll`). Rend vrai s'il a été inscrit à au moins un groupe.
  */
 const enrollDuplicate = async (
   tx: Db,
@@ -126,7 +127,6 @@ const enrollDuplicate = async (
     );
     if (!taken) missing.push(groupId);
   }
-  if (missing.length === 0) return false;
   if (archived)
     expectChanged(
       await tx.execute('UPDATE members SET archived_at = NULL WHERE id = ?', [memberId]),
@@ -139,7 +139,7 @@ const enrollDuplicate = async (
       startDate,
     ]);
   }
-  return true;
+  return missing.length > 0;
 };
 
 /** Nouveau membre, son contact (position 0) et son inscription ; rend vrai s'il est inscrit. */
@@ -166,12 +166,20 @@ const addMember = async (tx: Db, member: ImportMember, today: string, startDate:
   return true;
 };
 
+/** Aperçu recalculé sur `db` différent de celui montré (classement, membre, groupe, doublon). */
+const changed = async (db: Db, { rows, preview, today }: ImportRequest) => {
+  const context = await importContext(db);
+  const fresh = previewImport(rows, { ...context, today });
+  // Mêmes lignes et même code : un aperçu identique se sérialise à l'identique.
+  return { context, stale: !fresh.ok || JSON.stringify(fresh.preview) !== JSON.stringify(preview) };
+};
+
 /**
- * EX-30 : écrit l'import confirmé, d'un bloc. Rien à écrire : ni transaction. Aperçu recalculé
- * différent de celui montré (classement, membre ou groupe trouvé, doublon) : STALE, rien d'écrit.
+ * EX-30 : écrit l'import confirmé, d'un bloc. Aperçu recalculé différent de celui montré : STALE,
+ * rien d'écrit. Rien à écrire : aperçu revérifié quand même, sans transaction.
  */
 export const importMembers = async (db: Db, request: ImportRequest): Promise<ImportOutcome> => {
-  const { rows, preview, kept, today } = request;
+  const { preview, kept, today } = request;
   const members = membersToWrite(preview, kept);
   const duplicates = ignoredEnrollments(preview, kept);
   const result: ImportResult = {
@@ -182,18 +190,17 @@ export const importMembers = async (db: Db, request: ImportRequest): Promise<Imp
     duplicatesEnrolled: 0,
     unarchived: 0,
   };
-  if (members.length === 0 && duplicates.size === 0) return { ok: true, result };
+  if (members.length === 0 && duplicates.size === 0)
+    return (await changed(db, request)).stale
+      ? { ok: false, reason: 'STALE' }
+      : { ok: true, result };
   return db.transaction(async (tx): Promise<ImportOutcome> => {
-    const context = await importContext(tx);
-    const fresh = previewImport(rows, { ...context, today });
-    // Mêmes lignes et même code : un aperçu identique se sérialise à l'identique.
-    if (!fresh.ok || JSON.stringify(fresh.preview) !== JSON.stringify(preview))
-      return { ok: false, reason: 'STALE' };
+    const { context, stale } = await changed(tx, request);
+    if (stale) return { ok: false, reason: 'STALE' };
     const startDate = startInSeason(today, context.season);
     // Doublons d'abord : un échec plus loin annule aussi leur désarchivage.
     for (const [memberId, entry] of duplicates) {
-      if (!(await enrollDuplicate(tx, memberId, entry, startDate))) continue;
-      result.duplicatesEnrolled += 1;
+      if (await enrollDuplicate(tx, memberId, entry, startDate)) result.duplicatesEnrolled += 1;
       if (entry.archived) result.unarchived += 1;
     }
     for (const member of members)

@@ -29,14 +29,14 @@ Relie les morceaux de l'import : choisir le fichier, le lire, le décoder et l'a
 
 ## Critères d'acceptation
 
-- [x] EX-30 : rien n'est écrit avant `confirm` (base comparée avant et après `choose`).
-- [x] EX-30 : après `confirm`, le fichier fictif donne 21 membres, leurs contacts et 18 inscriptions nouvelles, 2 doublons inscrits, et 1 désarchivé seulement s'il est inscrit ; « Voir les membres » les montre (`notifyDataChanged`).
-- [x] Une erreur au 15e membre (contrainte forcée dans le test) : aucune ligne écrite, doublons désarchivés compris.
-- [x] Une restauration entre l'aperçu et la confirmation : `IMPORT_STALE`, rien d'écrit.
-- [x] SEC-10 : la copie du sélecteur est effacée après la lecture (par `readFileBytes`), en réussite, en refus et en erreur, le test vérifie que le dossier est vide ; l'aperçu est effacé à l'abandon.
-- [x] Verrou : `choose` ne fait rien pendant une restauration, une purge ou Tout effacer.
-- [x] NF-08 : 2 000 lignes importées en moins de 2 s sur `node:sqlite` (mesure indicative dans le test), 500 membres déjà présents.
-- [x] SEC-12 : journal sans nom (test qui relit les codes journalisés).
+- [ ] EX-30 : rien n'est écrit avant `confirm` (base comparée avant et après `choose`).
+- [ ] EX-30 : après `confirm`, le fichier fictif donne 21 membres, leurs contacts et 18 inscriptions nouvelles, 2 doublons inscrits, et 1 désarchivé seulement s'il est inscrit ; « Voir les membres » les montre (`notifyDataChanged`).
+- [ ] Une erreur au 15e membre (contrainte forcée dans le test) : aucune ligne écrite, doublons désarchivés compris.
+- [ ] Une restauration entre l'aperçu et la confirmation : `IMPORT_STALE`, rien d'écrit.
+- [ ] SEC-10 : la copie du sélecteur est effacée après la lecture (par `readFileBytes`), en réussite, en refus et en erreur, le test vérifie que le dossier est vide ; l'aperçu est effacé à l'abandon.
+- [ ] Verrou : `choose` ne fait rien pendant une restauration, une purge ou Tout effacer.
+- [ ] NF-08 : 2 000 lignes importées en moins de 2 s sur `node:sqlite` (mesure indicative dans le test), 500 membres déjà présents.
+- [ ] SEC-12 : journal sans nom (test qui relit les codes journalisés).
 
 ## Tests attendus
 
@@ -95,18 +95,22 @@ Décisions automatiques de la pré-analyse (état « à relire », `docs/DECISIO
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
-| Doublon ignoré de source `app`, archivé, déjà inscrit (inscription pas finie) au groupe du fichier | Reste archivé, rien d'inscrit ; désarchivé quand même | Reste archivé, rien d'inscrit, non compté | Lecture stricte de la décision du porteur : désarchivé seulement s'il est inscrit pendant cet import ; ajustement d'une décision du porteur, facile à défaire | en attente du porteur |
+| Doublon ignoré de source `app`, archivé, déjà inscrit (inscription pas finie) au groupe du fichier | Reste archivé ; désarchivé dès que le groupe du fichier est trouvé | Désarchivé dès que le groupe du fichier est trouvé, inscrit ou non, compté dans `unarchived` ; pas d'inscription en double ; sans groupe trouvé, rien ne change ; `notifyDataChanged` aussi si `unarchived > 0` | Décision du porteur à l'intégration (remplace la lecture stricte d'abord appliquée) | décidée par le porteur le 2026-11-28 |
 | Comparaison de l'aperçu à la confirmation | Classement et identifiants seulement ; aperçu entier | Aperçu recalculé comparé en entier (sérialisation), drapeau `archived` compris : un doublon désarchivé entre-temps donne `IMPORT_STALE` | Mêmes lignes et même code : un aperçu identique se sérialise à l'identique ; critère complet et simple, au prix de refus prudents | à relire |
 | Code de journal d'une lecture impossible (sélecteur, lecture native, base) | Nouveau code ; `IMPORT_WRITE_FAILED` | `IMPORT_READ_FAILED`, sans détail ; `IMPORT_CANCELLED` non journalisé | La liste de la fiche ne couvrait pas la lecture ; même modèle que `RESTORE_PICK_FAILED` | à relire |
+| Confirmation sans session, ou d'un aperçu qui n'est plus celui de la session | `IMPORT_STALE` ; code distinct | `IMPORT_NO_SESSION`, état `stale`, rien d'écrit ; `IMPORT_STALE` réservé à l'aperçu recalculé différent | Distinguer une session perdue d'un changement de données (revue) | changée après contradiction |
 | Copies du sélecteur restées d'un arrêt brutal | Laissées au nettoyage du démarrage ; vidées avant le sélecteur | Vidées sous le verrou `'import'` avant le sélecteur (`clearPicked`), échec : `IMPORT_COPY_CLEAR_FAILED` | Même modèle que la restauration (SEC-10) | à relire |
 | Place du libellé « Contact importé » | `src/config/libelles/` ; constante du dépôt | `IMPORTED_CONTACT_LABEL` dans `memberImportRepo.ts` | Donnée enregistrée en base, pas un texte d'écran ; aucun fichier hors de la liste touché | à relire |
 | Session après une écriture en échec | Vidée ; gardée | Gardée (rien n'a été écrit, l'encadrant peut réessayer) ; vidée après une réussite ou `IMPORT_STALE` | Pas de perte de l'aperçu sur une erreur passagère | à relire |
-| Tout effacer survenu depuis l'aperçu | Écriture ; refus | `erasedCount()` noté avant la lecture du contexte de l'aperçu ; session périmée vidée, `confirm` rend `stale` et journalise `IMPORT_STALE`, rien d'écrit | Décision de la pré-analyse appliquée ; aucune écriture sur des données remplacées | à relire |
-| Forme du hook | Deux hooks ; un hook avec option | `useMemberImport(os = Platform.OS, { owner })` : `owner` (écran de choix) vide la session au démontage ; états `idle`, `reading`, `ready`, `rejected`, `failed`, `busy`, `writing`, `stale`, `done` ; `preview` lu dans la session partagée ; `abandon()` | Le même hook sert aux deux écrans du 035 ; `os` passé comme `readFileBytes` pour les tests | à relire |
-| Notification après l'import | Toujours ; seulement si quelque chose est écrit | Seulement si `added > 0` ou `duplicatesEnrolled > 0` | « Rien à écrire : ni transaction ni notification » étendu au cas où tous les doublons sont déjà inscrits | à relire |
+| Tout effacer survenu depuis l'aperçu | Masquer la session ; la libérer | `erasedCount()` noté avant la lecture du contexte ; écouteur `onDataChanged` au niveau du module qui libère aussitôt les lignes (`importSession.held()` faux) ; `confirm` rend `stale` avec `IMPORT_NO_SESSION`, rien d'écrit | Les lignes ne restent pas en mémoire après Tout effacer (revue de sécurité) | changée après contradiction |
+| Forme du hook | Deux hooks ; un hook avec option | `useMemberImport(os = Platform.OS, { owner })` : `owner` (écran de choix) vide la session au démontage ; états `idle`, `reading`, `ready`, `rejected`, `failed`, `busy`, `writing`, `stale`, `done` ; `preview` lu dans la session partagée ; `abandon()` ; `confirm(aperçu affiché, kept)` rend `stale` si l'aperçu affiché n'est plus celui de la session | Le même hook sert aux deux écrans du 035 ; `os` passé comme `readFileBytes` pour les tests ; jeton de session demandé à la revue | changée après contradiction |
+| Abandon ou écran démonté pendant la lecture | Session gardée ; lecture annulée | Génération de la session changée par chaque `clear` (abandon, démontage de l'écran de choix, nouveau choix, Tout effacer) ; `choose` vérifie la génération et le montage avant `importSession.set` et avant chaque état ; écran démonté, propriétaire ou non : jamais de session | SEC-10 : aucun aperçu laissé en mémoire après un abandon (revue) | changée après contradiction |
+| Rien à écrire à la confirmation | Résultat rendu sans vérifier ; aperçu revérifié | Aperçu revérifié sur `importContext(db)` sans transaction, `STALE` s'il a changé ; seules l'écriture et la notification sont sautées | Le résultat montré ne doit pas reposer sur des données remplacées (revue) | changée après contradiction |
+| Minimisation des lignes en mémoire (ABS-03, SEC-06) | Lignes lues entières ; colonnes reconnues seulement | `keepImportColumns` (domaine) réduit chaque ligne, en-tête compris, aux colonnes reconnues avant l'aperçu et la session ; aperçu et recalcul faits sur ces lignes ; une ligne remplie seulement dans des colonnes inconnues devient vide (ignorée) | Une colonne « Allergies » ne reste jamais en mémoire (revue de sécurité) | changée après contradiction |
+| Notification après l'import | Toujours ; seulement si quelque chose est écrit | Seulement si `added`, `duplicatesEnrolled` ou `unarchived` est positif | « Rien à écrire : ni transaction ni notification » étendu au cas où tous les doublons sont déjà inscrits | à relire |
 | Compte `duplicatesEnrolled` | Membres ; inscriptions | Membres inscrits au moins une fois | « 2 doublons inscrits » de la maquette compte des membres | à relire |
 | Dates de la saison pour `startInSeason` | Troisième requête ; dans la requête des groupes | `importContext` lit la saison active avec ses groupes (`LEFT JOIN`) : saison connue même sans groupe, toujours deux requêtes | NF-08, deux requêtes | à relire |
-| 8e fichier | Test de `importSession` à part ; base fictive partagée | `src/__fixtures__/importDb.ts` (base fictive de la maquette et aperçu calculé sur la base), partagé par les trois fichiers de test ; `importSession` testé dans `useMemberImport.test.tsx` ; 8 fichiers | Pas de duplication de la base fictive ; plafond de 8 fichiers respecté | à relire |
+| Fichiers du ticket | 8 ; 9 | 9 fichiers : `src/__fixtures__/importDb.ts` (base fictive partagée) et, après la revue, `src/hooks/useMemberImportSession.test.tsx` (tests de la session : abandon, démontage, Tout effacer, jeton, minimisation), car `useMemberImport.test.tsx` aurait dépassé 300 lignes ; `keepImportColumns` ajouté à `src/domain/memberImport.ts`, déjà dans la liste | Fichiers de 300 lignes au plus ; sous le seuil de 10 fichiers | changée après contradiction |
 
 ## Questions pour le porteur
 
@@ -117,4 +121,6 @@ Aucune.
 - CHANGELOG : Import CSV : les membres de l'aperçu sont ajoutés d'un bloc, avec leur téléphone d'urgence et leur groupe (F-07, EX-30).
 - Architecture : `src/data/memberImportRepo.ts` (`importContext`, `importMembers` : une transaction, aperçu recalculé avec `tx`, `IMPORT_STALE`), `src/hooks/useMemberImport.ts` (verrou `'import'` autour du sélecteur et de la lecture, puis de l'écriture), `src/hooks/importSession.ts` (lignes et aperçu en mémoire, périmés après Tout effacer).
 - `docs/DECISIONS.md` : les lignes de la section « Décisions » ci-dessus (date 2026-11-28, ticket 034).
-- Codes de journal ajoutés : `IMPORT_READ_FAILED`, `IMPORT_STALE`, `IMPORT_WRITE_FAILED`, `IMPORT_DONE`, `IMPORT_REJECTED_<raison>` (SEC-12).
+- Codes de journal ajoutés : `IMPORT_READ_FAILED`, `IMPORT_STALE`, `IMPORT_NO_SESSION`, `IMPORT_WRITE_FAILED`, `IMPORT_DONE`, `IMPORT_REJECTED_<raison>` (SEC-12).
+- Pour le 035 : afficher les compteurs `duplicatesEnrolled` et `unarchived` du résultat ; écart avec la maquette (quatre compteurs seulement), à poser au porteur.
+- Pour le 035 : passer l'aperçu affiché à `confirm(preview, kept)` ; `owner: true` sur l'écran de choix.

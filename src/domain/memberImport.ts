@@ -227,6 +227,16 @@ export const previewImport = (rows: CsvRow[], options: ImportOptions): PreviewRe
   return { ok: true, preview: result };
 };
 
+/**
+ * ABS-03, SEC-06 : lignes réduites aux cellules des colonnes reconnues, en-tête compris (première
+ * colonne de chaque sorte) ; une colonne « Allergies » ne reste pas en mémoire. L'aperçu se calcule
+ * sur ces lignes : une ligne remplie seulement dans des colonnes inconnues y devient vide.
+ */
+export const keepImportColumns = (rows: CsvRow[]): CsvRow[] => {
+  const kept = Object.values(readHeader(rows[0]?.cells ?? [])).sort((a, b) => a - b);
+  return rows.map(({ line, cells }) => ({ line, cells: kept.map((i) => cells[i] ?? '') }));
+};
+
 /** EX-30 : membres à écrire, dans l'ordre du fichier ; doublons ignorés sauf ceux de `kept`. */
 export const membersToWrite = (
   preview: ImportPreview,

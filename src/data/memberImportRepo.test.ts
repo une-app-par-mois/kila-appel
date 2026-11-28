@@ -198,6 +198,18 @@ describe('EX-30 importMembers : fichier de la maquette', () => {
   });
 });
 
+describe('EX-30 importMembers : rien à écrire, aperçu revérifié quand même', () => {
+  it('restauration entre l’aperçu et la confirmation : STALE, sans transaction', async () => {
+    const rows = numbered(['nom', 'prenom'], ['Garcia', 'Léo']);
+    const preview = await previewOn(base.db, rows, TODAY);
+    await base.db.execute("DELETE FROM members WHERE last_name = 'Garcia'");
+    const transaction = jest.spyOn(base.db, 'transaction');
+    const outcome = await importMembers(base.db, { rows, preview, kept: [], today: TODAY });
+    expect(outcome).toEqual({ ok: false, reason: 'STALE' });
+    expect(transaction).not.toHaveBeenCalled();
+  });
+});
+
 describe('EX-30 importMembers : tout ou rien', () => {
   it('erreur au 15e membre : aucune ligne écrite, doublons désarchivés compris', async () => {
     // Contrainte forcée : la 15e insertion de cet import (2 membres déjà là) échoue.

@@ -12,7 +12,7 @@ import { type ImportResult, importContext, importMembers } from '@/data/memberIm
 import { decodeCsv, MAX_CSV_BYTES } from '@/domain/csvDecode';
 import { parseCsv } from '@/domain/csvParse';
 import { toIsoDate } from '@/domain/formats';
-import { previewImport } from '@/domain/memberImport';
+import { type ImportPreview, keepImportColumns, previewImport } from '@/domain/memberImport';
 import { erasedCount, notifyDataChanged } from '@/hooks/dataChanged';
 import { fileLock } from '@/hooks/fileLock';
 import { importSession, useImportSession } from '@/hooks/importSession';
@@ -48,6 +48,11 @@ export type ImportState =
 
 type Picked = { bytes: Uint8Array } | { reason: 'TOO_LARGE' } | null;
 
+const reject = (rejection: ImportRejection, show: (next: ImportState) => void) => {
+  log(`IMPORT_REJECTED_${rejection.reason}`);
+  show({ step: 'rejected', ...rejection });
+};
+
 /**
  * `os` : dossier du sélecteur (Android ou iOS). `owner` : l'écran de choix, dont le démontage
  * vide la session (abandon du parcours) ; l'écran d'aperçu ne la vide pas.
@@ -74,60 +79,62 @@ export const useMemberImport = (
     };
   }, [owner]);
 
-  const reject = useCallback(
-    (rejection: ImportRejection) => {
-      log(`IMPORT_REJECTED_${rejection.reason}`);
-      show({ step: 'rejected', ...rejection });
-    },
-    [show],
-  );
-
   const choose = useCallback(async () => {
     if (!db || running.current) return;
     running.current = true;
+    let from = -1;
+    // Écran démonté, ou abandon (clear) depuis le début de la lecture : plus rien à montrer.
+    const live = () => mounted.current && from === importSession.generation();
+    const showLive = (next: ImportState) => {
+      if (live()) setState(next);
+    };
     try {
       const picker = expoImportPicker(os, MAX_CSV_BYTES);
       // Verrou du sélecteur à la fin de la lecture, jamais pendant l'aperçu (ticket 033).
       const locked = await fileLock.run('import', async (): Promise<Picked> => {
         importSession.clear();
+        from = importSession.generation();
         // Copies restées d'un arrêt brutal, vidées sous le verrou (comme la restauration).
         await picker.clearPicked().catch(() => log('IMPORT_COPY_CLEAR_FAILED'));
         const choice = await picker.pick();
         if (choice === null || 'reason' in choice) return choice;
-        show({ step: 'reading' });
+        showLive({ step: 'reading' });
         return readFileBytes(choice.path, MAX_CSV_BYTES, os);
       });
       if (!locked.ran) return;
       const picked = locked.value;
-      if (picked === null) return show({ step: 'idle' });
+      if (picked === null) return showLive({ step: 'idle' });
       // TOO_LARGE du sélecteur ou de la lecture : déjà journalisé par l'adaptateur.
-      if ('reason' in picked) return show({ step: 'rejected', reason: 'TOO_LARGE' });
+      if ('reason' in picked) return showLive({ step: 'rejected', reason: 'TOO_LARGE' });
       const decoded = decodeCsv(picked.bytes);
-      if ('reason' in decoded) return reject(decoded);
+      if ('reason' in decoded) return reject(decoded, showLive);
       const parsed = parseCsv(decoded.text);
-      if ('reason' in parsed) return reject(parsed);
+      if ('reason' in parsed) return reject(parsed, showLive);
+      // ABS-03 : seules les colonnes reconnues restent en mémoire ; l'aperçu se calcule dessus.
+      const rows = keepImportColumns(parsed.rows);
       const erased = erasedCount();
       const context = await importContext(db);
-      const preview = previewImport(parsed.rows, { ...context, today: toIsoDate(new Date()) });
-      if (!preview.ok) return reject(preview);
-      // Écran de choix fermé pendant la lecture : l'aperçu n'est pas gardé.
-      if (owner && !mounted.current) return;
-      importSession.set({ rows: parsed.rows, preview: preview.preview }, erased);
-      show({ step: 'ready' });
+      const preview = previewImport(rows, { ...context, today: toIsoDate(new Date()) });
+      if (!preview.ok) return reject(preview, showLive);
+      // Écran fermé ou abandon pendant la lecture : l'aperçu n'est pas gardé.
+      if (!live()) return;
+      if (importSession.set({ rows, preview: preview.preview }, erased, from))
+        showLive({ step: 'ready' });
     } catch {
       log('IMPORT_READ_FAILED');
-      show({ step: 'failed' });
+      showLive({ step: 'failed' });
     } finally {
       running.current = false;
     }
-  }, [db, os, owner, reject, show]);
+  }, [db, os]);
 
+  /** `shown` : l'aperçu affiché ; s'il n'est plus celui de la session, rien n'est écrit. */
   const confirm = useCallback(
-    async (kept: readonly number[]) => {
+    async (shown: ImportPreview | null, kept: readonly number[]) => {
       if (!db || running.current) return;
       const current = importSession.get();
-      if (current === null) {
-        log('IMPORT_STALE');
+      if (current === null || current.preview !== shown) {
+        log('IMPORT_NO_SESSION');
         return show({ step: 'stale' });
       }
       running.current = true;
@@ -144,7 +151,8 @@ export const useMemberImport = (
           log('IMPORT_STALE');
           return show({ step: 'stale' });
         }
-        if (outcome.result.added > 0 || outcome.result.duplicatesEnrolled > 0) notifyDataChanged();
+        const { added, duplicatesEnrolled, unarchived } = outcome.result;
+        if (added > 0 || duplicatesEnrolled > 0 || unarchived > 0) notifyDataChanged();
         log('IMPORT_DONE');
         show({ step: 'done', result: outcome.result });
       } catch {
