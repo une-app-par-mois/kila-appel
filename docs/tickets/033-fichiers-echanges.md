@@ -4,6 +4,11 @@ Statut : en cours · Jalon : 3 · Zone sensible : **oui** (fichiers en clair de 
 
 Dépend de : aucun · Fichiers touchés : `src/data/expoFiles.ts`, `src/data/expoFiles.test.ts`, `src/hooks/fileLock.ts`, `src/hooks/fileLock.test.ts`, `src/hooks/cacheCopies.ts`, `src/hooks/useStartupCleanup.test.tsx`, `src/__fixtures__/expoModules.ts`, `src/appTests/eraseAll.test.tsx` (test seulement : `exports` dans les dossiers vidés après Tout effacer) — 8 fichiers ; si `expoFiles.ts` dépasse 300 lignes : un seul nouveau fichier de `src/data/` et `src/staticChecksFiles.test.ts` (`FILE_MODULE_OWNERS`), autorisé d'avance par le porteur le 2026-11-28
 
+Fichiers réellement touchés (après la revue du 2026-11-28) : 12 fichiers et cette fiche.
+- Liste validée : `src/data/expoFiles.ts`, `src/hooks/fileLock.ts`, `src/hooks/fileLock.test.ts`, `src/hooks/cacheCopies.ts`, `src/hooks/useStartupCleanup.test.tsx`, `src/__fixtures__/expoModules.ts`, `src/appTests/eraseAll.test.tsx` (`src/data/expoFiles.test.ts` n'a pas eu à changer).
+- Découpage autorisé d'avance : `src/data/expoExports.ts` (nouveau) et `src/staticChecksFiles.test.ts` (`FILE_MODULE_OWNERS` seulement).
+- **Hors de la liste validée, soumis au porteur à la relecture** : `src/data/expoFilesExchange.test.ts` et `src/data/expoExports.test.ts` (nouveaux fichiers de test), `src/hooks/useStartupCleanup.ts` (commentaire d'en-tête seulement : `exports/`).
+
 Découpé le 2026-11-28 (séance de découpage du jalon 3).
 
 ## Contexte
@@ -80,14 +85,16 @@ Décisions automatiques de la pré-analyse (état « à relire », `docs/DECISIO
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
-| Codes de journal selon l'usage du sélecteur | Déduits de la limite ; paramètre d'usage | `expoPicker(os, maxBytes = MAX_BACKUP_BYTES, usage: 'restore' \| 'import' = 'restore')` ; la restauration garde sa limite et ses codes | Codes par usage décidés à la séance ; aucun appel existant modifié | à relire |
+| Codes de journal selon l'usage du sélecteur | Paramètre d'usage libre ; fabrique séparée | `expoPicker(os)` inchangé pour la restauration ; `expoImportPicker(os, maxBytes)`, sans valeur par défaut, fixe les codes `IMPORT_…` | Un appel ne peut plus mélanger la limite d'un usage et les codes de l'autre (revue) | changée après contradiction |
 | Dossier du sélecteur pour `readFileBytes` | `Platform.OS` seul ; paramètre | `readFileBytes(path, maxBytes, os = Platform.OS)` | Même contrôle de chemin que `expoPicker(os)`, testable pour iOS | à relire |
 | Verrou rendu après une erreur | Laisser chaque appelant faire `acquire`/`release` ; aide commune | `fileLock.run(task, work)` : rien n'est lancé si le verrou est pris, rendu dans un `finally`, erreur remontée ; `acquire`/`release` inchangés | 034, 037 et 040 ne peuvent pas oublier de rendre le verrou | à relire |
-| Erreurs du module natif à la lecture et à l'écriture | Telles quelles ; remplacées | Remplacées par « Lecture du fichier impossible » / « Écriture du fichier impossible » | Elles peuvent citer le chemin, donc le nom du fichier choisi (ABS-04) | à relire |
+| Erreurs du module natif à la lecture, à l'écriture et au partage | Telles quelles ; remplacées | Remplacées par « Lecture du fichier impossible », « Écriture du fichier impossible », « Partage du fichier impossible » (partage ajouté après la revue) | Elles peuvent citer le chemin, donc le nom du fichier choisi (ABS-04) | à relire |
+| Effacement de la copie du sélecteur en échec (M1, revue de sécurité) | Erreur native remontée ; code seul | Jamais d'erreur : code seul `IMPORT_COPY_CLEAR_FAILED` ou `RESTORE_COPY_CLEAR_FAILED`, copie reprise par le nettoyage du démarrage ; le résultat de `readFileBytes` et l'erreur « Chemin de fichier refusé » ne sont plus masqués ; idem dans `pick` (restauration comprise) | ABS-04 : l'erreur native peut citer le nom du fichier | changée après contradiction |
+| `writeFile` : `write()` en échec après `create()` | Fichier laissé ; effacé | Effacé dans un `try` silencieux, puis « Écriture du fichier impossible » | Aucun fichier partiel laissé (SEC-10) | changée après contradiction |
 | `writeFile` sur un fichier existant | Écraser ; refuser | Refuser (`create()` puis `write()`) | Le sous-dossier est neuf : un second fichier du même nom est une erreur d'appel | à relire |
 | `shareFile` : contrôle du chemin | Type seul ; type et chemin | Même contrôle que `writeFile` (`<cache/exports>/<sous-dossier>/<nom>`), extension égale au type partagé | Aucun fichier hors de `exports/` partagé par cette fonction | à relire |
-| Tests des échanges | Dans `expoFiles.test.ts` ; second fichier | `src/data/expoFilesExchange.test.ts` (test seulement, 9 fichiers en tout) | `expoFiles.test.ts` aurait dépassé 300 lignes | à relire |
-| Découpage de `expoFiles.ts` | Découper (autorisé) ; resserrer | Resserré à 299 lignes (`readHead` et l'effacement de la copie mis en commun) ; pas de découpage, `src/staticChecksFiles.test.ts` inchangé | Le contrôle statique reste tel quel | à relire |
+| Tests des échanges | Dans `expoFiles.test.ts` ; fichiers à part | `src/data/expoFilesExchange.test.ts` (sélecteur de l'import, `readFileBytes`) et `src/data/expoExports.test.ts` (exports) : nouveaux fichiers de test hors de la liste validée, soumis au porteur à la relecture | `expoFiles.test.ts` aurait dépassé 300 lignes | à relire |
+| Découpage de `expoFiles.ts` | Resserrer ; découper (autorisé d'avance) | Découpé après la revue : `writeFile`, `shareFile` et les types de partage dans `src/data/expoExports.ts`, seul fichier ajouté à `FILE_MODULE_OWNERS` (liste fermée, rien d'autre de touché dans les contrôles statiques) ; `expoFiles.ts` exporte `checkChild` et `refused`, fonctions pures sans accès natif | Les corrections de la revue dépassaient 300 lignes ; décision du porteur du 2026-11-28, à relire avant la fusion | changée après contradiction |
 | Faux sélecteur | — | `fakeDocumentPicker` prend un nom de fichier (`choisi.db` par défaut) ; `FakeFile` gagne `create` et `write` | Copie `.csv` pour l'import ; écriture des exports | à relire |
 
 ## Questions pour le porteur
@@ -95,6 +102,8 @@ Décisions automatiques de la pré-analyse (état « à relire », `docs/DECISIO
 ## À reporter
 
 - CHANGELOG : rien (aucun changement visible).
-- Architecture : `expoFiles.ts` : `readFileBytes(path, maxBytes, os)`, `writeFile`, `shareFile(path, 'csv' | 'pdf')`, `expoPicker(os, maxBytes, usage)`, dossier `cache/exports/` ; `fileLock` : tâches `'import'`, `'csv'`, `'report'` et `fileLock.run(task, work)` (verrou rendu même après une erreur) ; `clearCacheCopies` vide `exports/`.
+- Architecture : `expoFiles.ts` : `readFileBytes(path, maxBytes, os)`, `expoImportPicker(os, maxBytes)`, dossier `cache/exports/` ; `expoExports.ts` (nouveau, second fichier admis à importer les modules de fichiers) : `writeFile`, `shareFile(path, 'csv' | 'pdf')` ; `fileLock` : tâches `'import'`, `'csv'`, `'report'` et `fileLock.run(task, work)` (verrou rendu même après une erreur) ; `clearCacheCopies` vide `exports/`.
 - SECURITE : SEC-10, les copies des échanges (`exports/`) sont vidées comme celles de la sauvegarde.
 - Non vérifié sur appareil : `File.size` d'une copie absente (0 selon la doc), BOM conservé par `File.write(string)`, `File.create()` puis `write()` dans un sous-dossier neuf, `text/csv` accepté par Drive et Gmail, UTI `public.comma-separated-values-text` et `com.adobe.pdf` sur iOS.
+- Pour le 034 : tenir le verrou `'import'` autour de `pick` et de `readFileBytes` avec `fileLock.run` ; revérifier les doublons à la confirmation si une restauration ou Tout effacer a eu lieu depuis l'aperçu ; ne jamais afficher ni journaliser `error.message`.
+- Pour le 037 et le 040 : vérifier sur l'A55 qu'un envoi différé vers Drive lit bien le fichier avant l'effacement du sous-dossier à la fermeture du partage.

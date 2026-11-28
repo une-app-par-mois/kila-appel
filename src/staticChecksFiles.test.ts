@@ -20,8 +20,11 @@ import {
 } from '@/__fixtures__/expoAccess';
 import { scriptKind, TEST_FILE, walkSources } from '@/__fixtures__/sourceFiles';
 
-/** Seul fichier autorisé à importer ces modules de fichiers (liste testée). */
-const FILE_MODULE_OWNERS = ['src/data/expoFiles.ts'];
+/**
+ * Seuls fichiers autorisés à importer ces modules de fichiers (liste testée et fermée) ;
+ * expoExports.ts : découpage autorisé par le porteur le 2026-11-28 (ticket 033).
+ */
+const FILE_MODULE_OWNERS = ['src/data/expoExports.ts', 'src/data/expoFiles.ts'];
 const FILE_MODULES = /^(expo-file-system|expo-sharing|expo-document-picker)$/;
 // Sous-chemin d'un de ces modules (legacy, next, build/…) : refusé partout, adaptateur compris.
 const SUBPATH = /^(expo-file-system|expo-sharing|expo-document-picker)\//;

@@ -1,8 +1,8 @@
 // Nettoyage des dossiers temporaires au démarrage de l'appli (ticket 014c ; revues de sécurité du
 // 014b et du 014e) : après un arrêt brutal pendant un partage ou une restauration, des copies en
-// clair resteraient dans le cache (`sauvegardes/`, `restauration/`, `DocumentPicker/`) ou, sur
-// iOS, dans `tmp/<identifiant>-Inbox/`. Une fois par processus, sous le verrou commun : jamais
-// pendant une opération en cours, qui efface elle-même ses copies.
+// clair resteraient dans le cache (`sauvegardes/`, `restauration/`, `exports/`, `DocumentPicker/`)
+// ou, sur iOS, dans `tmp/<identifiant>-Inbox/`. Une fois par processus, sous le verrou commun :
+// jamais pendant une opération en cours, qui efface elle-même ses copies.
 import { useEffect, useState } from 'react';
 import { log } from '@/data/log';
 import { clearCacheCopies } from '@/hooks/cacheCopies';

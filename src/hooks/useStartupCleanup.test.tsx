@@ -2,7 +2,7 @@
 // 014e) : une fois par processus, sous le verrou commun, jamais pendant une opération en cours.
 import { act, renderHook } from '@testing-library/react-native';
 import { Platform } from 'react-native';
-import { fileLock } from '@/hooks/fileLock';
+import { type FileTask, fileLock } from '@/hooks/fileLock';
 import {
   cleanupAtStartup,
   resetStartupCleanupForTests,
@@ -42,7 +42,8 @@ describe('Nettoyage au démarrage (ticket 014c)', () => {
     }
   });
   afterEach(() => {
-    for (const task of ['export', 'restore', 'cleanup'] as const) fileLock.release(task);
+    const tasks: FileTask[] = ['export', 'restore', 'cleanup', 'erase', 'import', 'csv', 'report'];
+    for (const task of tasks) fileLock.release(task);
   });
 
   it('vide sauvegardes, restauration, exports (033) et les copies du sélecteur, une fois', async () => {

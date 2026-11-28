@@ -1,12 +1,13 @@
 // Adaptateur expo-file-system, expo-sharing et expo-document-picker de la sauvegarde et de la
-// restauration (tickets 014b et 014e, EX-19, EX-20). Seul fichier qui importe ces modules
-// (src/staticChecksFiles.test.ts) ; leurs fonctions réseau et leurs sous-chemins y sont refusés
+// restauration (tickets 014b et 014e, EX-19, EX-20). Seul fichier, avec expoExports.ts (exports CSV
+// et PDF, ticket 033), qui importe ces modules (src/staticChecksFiles.test.ts) ; leurs fonctions réseau et leurs sous-chemins y sont refusés
 // comme partout (ABS-01, décisions du porteur du 2026-11-27).
 // Les fichiers vivent dans des sous-dossiers dédiés du cache, exclu de la sauvegarde du système :
 // `sauvegardes` (export) et `restauration` (copie vérifiée), jamais vidés l'un par l'autre. Le
 // fichier choisi est copié par le sélecteur dans `cache/DocumentPicker/` (Android) ou dans
 // `tmp/<identifiant>-Inbox/` (iOS). ABS-06 : copies en clair. Ticket 033 : l'import lit un fichier
-// choisi (lecture bornée, SEC-06) ; l'export CSV et le rapport PDF écrivent dans `exports/`.
+// choisi (lecture bornée, SEC-06) ; l'export CSV et le rapport PDF écrivent dans `exports/`
+// (expoExports.ts).
 import { getDocumentAsync } from 'expo-document-picker';
 import { Directory, File, FileMode, Paths } from 'expo-file-system';
 import { shareAsync } from 'expo-sharing';
@@ -23,24 +24,23 @@ export const IOS_INBOX = 'com.jitavision.kila-Inbox';
 const IOS_CACHES = '/Library/Caches';
 // Type générique : sur iOS, un type connu ajouterait son extension (« .db.sqlite »).
 const SHARE_MIME_TYPE = 'application/octet-stream';
-const refused = () => new Error('Chemin de fichier refusé');
-// Erreurs du module natif remplacées : elles peuvent citer le chemin, donc le nom du fichier (ABS-04).
+export const refused = () => new Error('Chemin de fichier refusé');
+// Erreur du module natif remplacée : elle peut citer le chemin, donc le nom du fichier (ABS-04).
 const unreadable = () => new Error('Lecture du fichier impossible');
-const unwritable = () => new Error('Écriture du fichier impossible');
-// Fichiers des exports : nom fixe en minuscules, extension du type partagé (ticket 033).
-const EXPORT_NAME = /^[a-z0-9-]+\.(csv|pdf)$/;
-/** Types de partage, liste fermée : MIME pour Android, UTI pour iOS. */
-const EXCHANGE_TYPES = {
-  csv: { mimeType: 'text/csv', UTI: 'public.comma-separated-values-text' },
-  pdf: { mimeType: 'application/pdf', UTI: 'com.adobe.pdf' },
-} as const;
-export type ExchangeKind = keyof typeof EXCHANGE_TYPES;
-/** Usage du sélecteur : il choisit les codes de journal (ticket 033). */
-export type PickUsage = 'restore' | 'import';
+/** Codes de journal du sélecteur selon l'usage : restauration ou import (ticket 033). */
 const PICK_CODES = {
-  restore: { path: 'RESTORE_PICK_PATH_REFUSED', tooLarge: 'RESTORE_REJECTED_TOO_LARGE' },
-  import: { path: 'IMPORT_PICK_PATH_REFUSED', tooLarge: 'IMPORT_REJECTED_TOO_LARGE' },
+  restore: {
+    path: 'RESTORE_PICK_PATH_REFUSED',
+    tooLarge: 'RESTORE_REJECTED_TOO_LARGE',
+    clear: 'RESTORE_COPY_CLEAR_FAILED',
+  },
+  import: {
+    path: 'IMPORT_PICK_PATH_REFUSED',
+    tooLarge: 'IMPORT_REJECTED_TOO_LARGE',
+    clear: 'IMPORT_COPY_CLEAR_FAILED',
+  },
 } as const;
+type PickCodes = (typeof PICK_CODES)[keyof typeof PICK_CODES];
 
 /** URI d'expo-file-system (`file:///…`) → chemin du système, attendu par SQLite. */
 export const uriToPath = (uri: string): string => {
@@ -93,7 +93,7 @@ const canonical = (path: string) =>
   path.startsWith('/private/') ? path.slice('/private'.length) : path;
 
 /** `path` doit être un enfant direct du dossier `root` ; sinon erreur, sans le chemin (ABS-04). */
-const checkChild = (root: string, path: string) => {
+export const checkChild = (root: string, path: string) => {
   const parent = canonical(root);
   const child = canonical(checkSystemPath(path));
   const name = child.slice(parent.length + 1);
@@ -156,12 +156,23 @@ const clearPickedDirs = async (os: string) => {
   const dirs = os === 'ios' ? [pickerDir(), new Directory(pathToUri(iosInbox()))] : [pickerDir()];
   for (const dir of dirs) if (dir.exists) dir.delete();
 };
-/** Efface une copie du sélecteur ; si elle résiste, vide les dossiers du sélecteur. */
-const dropPicked = async (os: string, path: string) => {
+/**
+ * Vide les dossiers du sélecteur sans jamais lever : l'erreur native peut citer le nom du fichier
+ * (ABS-04). Un échec écrit un code seul ; le nettoyage du démarrage reprendra la copie (SEC-10).
+ */
+const clearPickedQuietly = async (os: string, codes: PickCodes) => {
+  try {
+    await clearPickedDirs(os);
+  } catch {
+    log(codes.clear);
+  }
+};
+/** Efface une copie du sélecteur ; si elle résiste, vide les dossiers du sélecteur. Ne lève pas. */
+const dropPicked = async (os: string, path: string, codes: PickCodes) => {
   try {
     deleteFile(path);
   } catch {
-    await clearPickedDirs(os);
+    await clearPickedQuietly(os, codes);
   }
 };
 
@@ -171,17 +182,10 @@ const dropPicked = async (os: string, path: string) => {
  * le fichier dans l'Inbox (`asCopy`) ; une seconde copie dans le cache laisserait celle-ci derrière
  * nous, donc l'adaptateur la prend telle quelle (revue du 014e). Une copie à un endroit inattendu
  * vide les dossiers du sélecteur avant l'erreur ; une taille annoncée au-delà de la limite est
- * refusée tout de suite, copie effacée. Limite et codes de journal selon l'usage (ticket 033) :
- * la restauration garde `MAX_BACKUP_BYTES` et ses codes.
+ * refusée tout de suite, copie effacée. L'effacement d'une copie ne lève jamais (ticket 033).
  */
-export const expoPicker = (
-  os: string,
-  maxBytes: number = MAX_BACKUP_BYTES,
-  usage: PickUsage = 'restore',
-): PickerAccess => {
+const picker = (os: string, maxBytes: number, codes: PickCodes): PickerAccess => {
   const ios = os === 'ios';
-  const codes = PICK_CODES[usage];
-  const clearPicked = () => clearPickedDirs(os);
   return {
     pick: async () => {
       const result = await getDocumentAsync({
@@ -199,12 +203,12 @@ export const expoPicker = (
       } catch (error) {
         // Code à part : un chemin inattendu n'est pas une panne du sélecteur (revue du 014e).
         log(codes.path);
-        await clearPicked();
+        await clearPickedQuietly(os, codes);
         throw error;
       }
       if (asset.size !== undefined && asset.size > maxBytes) {
         log(codes.tooLarge);
-        await dropPicked(os, path);
+        await dropPicked(os, path, codes);
         return { reason: 'TOO_LARGE' };
       }
       return { path };
@@ -213,9 +217,17 @@ export const expoPicker = (
       checkChild(pickedRoot(os), path);
       deleteFile(path);
     },
-    clearPicked,
+    clearPicked: () => clearPickedDirs(os),
   };
 };
+
+/** Sélecteur de la restauration : limite `MAX_BACKUP_BYTES`, codes `RESTORE_…`. */
+export const expoPicker = (os: string): PickerAccess =>
+  picker(os, MAX_BACKUP_BYTES, PICK_CODES.restore);
+
+/** Sélecteur de l'import (ticket 033) : limite de l'appelant (SEC-06), codes `IMPORT_…`. */
+export const expoImportPicker = (os: string, maxBytes: number): PickerAccess =>
+  picker(os, maxBytes, PICK_CODES.import);
 
 /** Octets d'un fichier choisi, ou refus : plus de `maxBytes` octets. */
 export type ReadResult = { bytes: Uint8Array } | { reason: 'TOO_LARGE' };
@@ -235,7 +247,7 @@ export const readFileBytes = async (
     checkChild(pickedRoot(os), path);
   } catch (error) {
     log(PICK_CODES.import.path);
-    await clearPickedDirs(os);
+    await clearPickedQuietly(os, PICK_CODES.import);
     throw error;
   }
   try {
@@ -252,38 +264,8 @@ export const readFileBytes = async (
     }
     return { bytes };
   } finally {
-    await dropPicked(os, path);
+    await dropPicked(os, path, PICK_CODES.import);
   }
-};
-
-/** `path` : `<cache/exports>/<sous-dossier>/<nom>`, nom de `EXPORT_NAME` ; rend l'extension. */
-const checkExportPath = (path: string): string => {
-  const file = checkSystemPath(path);
-  const cut = file.lastIndexOf('/');
-  const name = file.slice(cut + 1);
-  const match = EXPORT_NAME.exec(name);
-  if (match === null) throw refused();
-  checkChild(uriToPath(new Directory(Paths.cache, 'exports').uri), file.slice(0, cut));
-  return match[1] ?? '';
-};
-
-/** Écrit un export (texte, BOM compris, ou octets) dans `cache/exports/` ; jamais par-dessus. */
-export const writeFile = async (path: string, content: string | Uint8Array): Promise<void> => {
-  checkExportPath(path);
-  try {
-    const file = fileAt(path);
-    file.create();
-    await file.write(content);
-  } catch {
-    throw unwritable();
-  }
-};
-
-/** Partage un export de `cache/exports/` ; se termine quand la feuille de partage se ferme. */
-export const shareFile = async (path: string, kind: ExchangeKind): Promise<void> => {
-  // L'extension (csv ou pdf, EXPORT_NAME) doit être celle du type partagé.
-  if (checkExportPath(path) !== kind) throw refused();
-  await shareAsync(pathToUri(path), { ...EXCHANGE_TYPES[kind] });
 };
 
 export const expoBackupDeps: BackupDeps = {

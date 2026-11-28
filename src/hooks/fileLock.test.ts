@@ -13,15 +13,18 @@ describe('fileLock : une seule opération sur les fichiers à la fois', () => {
     for (const task of TASKS) fileLock.release(task);
   });
 
-  it.each(PAIRS)('%s tient le verrou : %s ne le prend pas ni ne le rend', (first, second) => {
-    expect(fileLock.acquire(first)).toBe(true);
-    expect(fileLock.acquire(second)).toBe(false);
-    if (second !== first) fileLock.release(second);
-    expect(fileLock.holder()).toBe(first);
-    fileLock.release(first);
-    expect(fileLock.holder()).toBeNull();
-    expect(fileLock.acquire(second)).toBe(true);
-  });
+  it.each(PAIRS)(
+    '014e/015b/033 %s tient le verrou : %s ne le prend pas ni ne le rend',
+    (first, second) => {
+      expect(fileLock.acquire(first)).toBe(true);
+      expect(fileLock.acquire(second)).toBe(false);
+      if (second !== first) fileLock.release(second);
+      expect(fileLock.holder()).toBe(first);
+      fileLock.release(first);
+      expect(fileLock.holder()).toBeNull();
+      expect(fileLock.acquire(second)).toBe(true);
+    },
+  );
 
   it('release(export) pendant que la restauration tient le verrou : il reste pris', () => {
     expect(fileLock.acquire('restore')).toBe(true);
@@ -68,11 +71,14 @@ describe('033 fileLock.run : verrou pris pendant le travail, rendu même après 
     expect(fileLock.holder()).toBeNull();
   });
 
-  it.each(PAIRS)('%s en cours : %s n’est pas lancé, le verrou reste au premier', async (a, b) => {
-    expect(fileLock.acquire(a)).toBe(true);
-    const work = jest.fn(async () => undefined);
-    expect(await fileLock.run(b, work)).toEqual({ ran: false });
-    expect(work).not.toHaveBeenCalled();
-    expect(fileLock.holder()).toBe(a);
-  });
+  it.each(PAIRS)(
+    '033 run : %s en cours, %s n’est pas lancé, le verrou reste au premier',
+    async (a, b) => {
+      expect(fileLock.acquire(a)).toBe(true);
+      const work = jest.fn(async () => undefined);
+      expect(await fileLock.run(b, work)).toEqual({ ran: false });
+      expect(work).not.toHaveBeenCalled();
+      expect(fileLock.holder()).toBe(a);
+    },
+  );
 });
