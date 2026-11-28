@@ -88,6 +88,16 @@ export const validateMemberName = (text: string): string => {
 };
 
 /**
+ * SEC-06 (ticket 044) : nom de groupe non vide après trim(), sans caractère invisible (même liste
+ * que les noms de membre) ; pas de longueur maximale. Même règle à la saisie et à la restauration.
+ */
+export const validateGroupName = (text: string): string => {
+  const name = validateName(text);
+  if ([...name].some(isInvisible)) throw new InputError('NAME_INVALID_CHAR');
+  return name;
+};
+
+/**
  * EX-03, SEC-06 : nom et prénom non vides, bornés, sans caractère invisible ; date de naissance
  * facultative, RM-04, pas après `today`. Même règle à la saisie, à l'import et à la restauration.
  */

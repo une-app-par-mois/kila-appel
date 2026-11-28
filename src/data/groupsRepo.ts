@@ -1,7 +1,7 @@
 // Dépôt des groupes d'une saison (EX-02). Requêtes paramétrées seulement.
 import type { Db } from '@/data/db';
 import { expectChanged, expectFound } from '@/data/errors';
-import { validateDate, validateName } from '@/domain/validation';
+import { validateDate, validateGroupName } from '@/domain/validation';
 
 export type Group = { id: number; seasonId: number; name: string; archivedAt: string | null };
 
@@ -89,17 +89,18 @@ export const groupsRepo = (db: Db) => ({
     return row ? toGroup(row) : null;
   },
 
+  /** SEC-06 : nom refusé s'il est vide ou contient un caractère invisible (ticket 044). */
   create: async (seasonId: number, name: string): Promise<number> =>
     (
       await db.execute('INSERT INTO groups (season_id, name) VALUES (?, ?)', [
         seasonId,
-        validateName(name),
+        validateGroupName(name),
       ])
     ).lastInsertRowId,
 
   rename: async (id: number, name: string): Promise<void> => {
     expectChanged(
-      await db.execute('UPDATE groups SET name = ? WHERE id = ?', [validateName(name), id]),
+      await db.execute('UPDATE groups SET name = ? WHERE id = ?', [validateGroupName(name), id]),
     );
   },
 
