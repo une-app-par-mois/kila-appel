@@ -56,8 +56,10 @@ export type MemberInput = { firstName: string; lastName: string; birthDate: stri
 
 /** SEC-06 : nom et prénom d'un membre, 100 caractères au plus (décision du porteur du 2026-11-28). */
 export const MEMBER_NAME_MAX = 100;
-// SEC-06 : caractères de contrôle (C0, DEL, C1), séparateurs de ligne et de paragraphe, et
-// caractères de sens d'affichage, refusés dans un nom (décisions du porteur du 2026-11-28).
+// SEC-06 (décisions du porteur du 2026-11-28) : refusés dans un nom, les caractères de contrôle
+// (C0, DEL, C1), les séparateurs de ligne et de paragraphe, les caractères de sens d'affichage
+// (dont U+061C, U+200E, U+200F), l'espace sans largeur U+200B, U+FEFF, et les demi-caractères
+// (surrogates) isolés, que `[...name]` rend seuls. U+200D (émojis composés) reste accepté.
 const isInvisible = (char: string) => {
   const c = char.codePointAt(0) ?? 0;
   return (
@@ -66,7 +68,13 @@ const isInvisible = (char: string) => {
     c === 0x2028 ||
     c === 0x2029 ||
     (c >= 0x202a && c <= 0x202e) ||
-    (c >= 0x2066 && c <= 0x2069)
+    (c >= 0x2066 && c <= 0x2069) ||
+    c === 0x061c ||
+    c === 0x200b ||
+    c === 0x200e ||
+    c === 0x200f ||
+    c === 0xfeff ||
+    (c >= 0xd800 && c <= 0xdfff)
   );
 };
 

@@ -92,9 +92,11 @@ describe('EX-03 validateMember', () => {
     );
   });
 
-  // U+0000 à U+001F, U+007F à U+009F, U+2028, U+2029, U+202A à U+202E, U+2066 à U+2069.
+  // U+0000 à U+001F, U+007F à U+009F, U+2028, U+2029, U+202A à U+202E, U+2066 à U+2069 ; et
+  // (porteur, 2026-11-28) U+061C, U+200B, U+200E, U+200F, U+FEFF, demi-caractères isolés.
   it.each([
     0x00, 0x09, 0x0a, 0x0d, 0x1f, 0x7f, 0x80, 0x9f, 0x2028, 0x2029, 0x202a, 0x202e, 0x2066, 0x2069,
+    0x061c, 0x200b, 0x200e, 0x200f, 0xfeff, 0xd800, 0xdbff, 0xdc00, 0xdfff,
   ])('SEC-06 refuse le caractère invisible de code %i dans un nom (NAME_INVALID_CHAR)', (code) => {
     const char = String.fromCodePoint(code);
     expect(() => member(`Al${char}ix`)).toThrow(
@@ -105,7 +107,12 @@ describe('EX-03 validateMember', () => {
     );
   });
 
-  it.each([0x20, 0xa0, 0xe9, 0x2019, 0x202f, 0x2065, 0x206a])(
+  it('SEC-06 accepte U+200D dans un émoji composé (paire de demi-caractères complète)', () => {
+    const family = String.fromCodePoint(0x1f469, 0x200d, 0x1f467);
+    expect(member(`Alix ${family}`).firstName).toBe(`Alix ${family}`);
+  });
+
+  it.each([0x20, 0xa0, 0xe9, 0x2019, 0x202f, 0x2065, 0x206a, 0x061b, 0x200c, 0x200d, 0x2010])(
     'SEC-06 accepte le caractère de code %i au milieu d’un nom (voisins des plages refusées)',
     (code) => {
       expect(member(`Al${String.fromCodePoint(code)}ix`).firstName).toHaveLength(5);

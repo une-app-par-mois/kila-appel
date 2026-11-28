@@ -195,6 +195,8 @@ describe('EX-04 groupe de l’import', () => {
     );
     expect(result.unknownGroups).toEqual([]);
     expect(result.duplicates.map((d) => d.unknownGroup)).toEqual(['Poussin mercredi', null]);
+    // Décision du porteur du 2026-11-28 : groupe trouvé porté par le doublon (inscription au 034).
+    expect(result.duplicates.map((d) => d.member.groupId)).toEqual([null, 3]);
   });
 
   it("EX-04 groupe comparé comme un nom : espaces réduits, ’ ramené à '", () => {

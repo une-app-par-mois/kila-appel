@@ -114,6 +114,8 @@ Décisions automatiques de la pré-analyse (état « à relire », `docs/DECISIO
 | En-têtes `constructor`, `__proto__` (revue) | Objet ; `Map` | `Map` : aucun en-tête hérité d'`Object.prototype` n'est une colonne (testé) | Un objet littéral reconnaissait `constructor` | à relire |
 | Téléphone `33` sans `+` (revue) | Refus ; `+` remis | `33` suivi de 9 chiffres commençant par 1 à 9 → `+33…` puis `parsePhone` ; `0033…` toujours refusé | Excel retire le `+` d'un numéro saisi comme un nombre | à relire |
 | Fichiers du ticket (corrections de revue) | 10 ; 12 | 12 : `memberImportColumns.test.ts` (tests d'en-têtes sortis de `memberImport.test.ts`, règle des 300 lignes) et `memberImportVolume.test.ts` en plus | Corrections demandées à l'intégration | à relire |
+| Autres caractères invisibles dans nom et prénom (SEC-06) | Règle du lancement seule ; plus large | Aussi U+061C, U+200B, U+200E, U+200F, U+FEFF et les demi-caractères isolés (U+D800 à U+DFFF rendus seuls par `[...name]`) : `NAME_INVALID_CHAR` ; U+200D accepté (émojis composés, testé) | Réponse du porteur (cas réservé : SEC-06) | décidée par le porteur le 2026-11-28 |
+| Doublon de l'appli à la rentrée | Ignoré seulement ; inscrit et désarchivé | Un doublon de source `app` laissé sur « Ignorer » sera inscrit au groupe du CSV s'il ne l'est pas déjà, et désarchivé s'il était archivé ; nom, date et contact jamais réécrits. Au 032 : le groupe trouvé est déjà porté par le doublon (`member.groupId`, testé), avec `memberId`, `archived` et `unknownGroup` | Réponse du porteur | décidée par le porteur le 2026-11-28 |
 
 ## Questions pour le porteur
 
@@ -123,9 +125,12 @@ Aucune.
 
 - CHANGELOG : Import CSV : colonnes reconnues, lignes invalides et doublons repérés avant toute écriture (F-07, EX-30).
 - Architecture : `src/domain/importFields.ts`, `src/domain/memberImport.ts` ; `validateMember` : 100 caractères, sans caractère de contrôle ni invisible.
-- SECURITE : SEC-06, nom et prénom de 100 caractères au plus (points de code, après `trim()`), sans caractère de U+0000 à U+001F, U+007F à U+009F, U+2028, U+2029, U+202A à U+202E ni U+2066 à U+2069, à l'import comme à la saisie (décisions du porteur du 2026-11-28).
+- SECURITE : SEC-06, nom et prénom de 100 caractères au plus (points de code, après `trim()`), sans caractère de U+0000 à U+001F, U+007F à U+009F, U+2028, U+2029, U+202A à U+202E, U+2066 à U+2069, ni U+061C, U+200B, U+200E, U+200F, U+FEFF, ni demi-caractère (surrogate) isolé ; U+200D accepté (émojis composés) ; à l'import, à la saisie et à la restauration (décisions du porteur du 2026-11-28).
 - SECURITE : SEC-10, une sauvegarde dont un nom ou un prénom est hors de cette règle est refusée en entier à la restauration (décision du porteur du 2026-11-28).
 - Pour le 035 : montrer dans l'aperçu les colonnes reconnues (et celles ignorées).
 - Pour le 035 : la cellule « groupe » d'un groupe introuvable s'affiche sur une seule ligne, tronquée à 100 points de code avec une ellipse.
 - Pour le 035 : un doublon gardé dont `unknownGroup` n'est pas nul est importé sans groupe ; l'écran le dit.
 - SECURITE : SEC-10, limite connue : une sauvegarde faite avant le 032 qui contient un nom hors règle est refusée en entier, et un tel membre ne peut plus être modifié dans l'appli (l'appli n'est pas publiée).
+- Pour le 034 : un doublon de source `app` laissé sur « Ignorer » est inscrit au groupe du CSV (`member.groupId`) s'il ne l'est pas déjà, et désarchivé s'il était archivé (`memberId`, `archived`), dans la même transaction que l'import ; nom, date de naissance et contact jamais réécrits (décision du porteur du 2026-11-28).
+- Pour le 035 : l'aperçu dit qu'un doublon ignoré sera inscrit à son groupe et, s'il est archivé, désarchivé.
+- Maquette : « Import CSV : aperçu », écart validé par le porteur le 2026-11-28 (doublon ignoré inscrit et désarchivé), à ajouter à l'intégration.
