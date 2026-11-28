@@ -76,6 +76,8 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Sécurité
 
+- Membres : nom et prénom limités à 100 caractères, sans caractère invisible, à la saisie comme à l'import ; le message s'affiche sous le champ, rien n'est enregistré (SEC-06) — ticket 032b (PR #109).
+- Groupes : un nom de groupe avec un caractère invisible est refusé à la création, au renommage et à la restauration (SEC-06, SEC-10) — ticket 044 (PR #108).
 - Permissions : notifications (demandées seulement à l'activation de la relance) et redémarrage de l'appareil (relances reprogrammées) ; aucune connexion réseau, INTERNET toujours absente ; Firebase retiré du binaire et refusé par l'audit (F-06, ABS-01, ABS-07, SEC-02) — ticket 026.
 - Outillage : minimatch forcé en 11.0.9 sur la plage vulnérable (>= 7.0.0) par `overrides`, alerte Dependabot n° 2 levée ; garde-fou `scripts/minimatch.test.js` — ticket 017.
 - Outillage : glob forcé en 14.0.6 sur la plage vulnérable (>= 9.0.0) par `overrides`, faille GHSA-3g3m-2fjr-6pw4 levée ; garde-fou `scripts/glob.test.js` ; comparaison de versions commune (`scripts/lock-versions.js`) et échec si une dépendance déclare glob >= 15 ou minimatch >= 12 (« ajuster l'override ») — ticket 018.
@@ -84,6 +86,7 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Corrigé
 
+- Fiche d'un membre : une date de naissance future en quittant l'écran ne fait plus perdre les autres champs valides — ticket 032b (PR #109).
 - Fiche d’un membre : une sortie de champ juste après la frappe enregistre la nouvelle saisie, pas celle du rendu précédent — ticket 008b.
 
 

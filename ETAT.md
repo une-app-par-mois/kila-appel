@@ -6,23 +6,22 @@ Dernière mise à jour : 2026-11-28
 
 ## En cours
 
-**Jalon 3 en cours** (Entrer et sortir les données : F-07 import CSV, F-08 export CSV, F-09 rapport PDF), branche `groupe/jalon-3-entrer-sortir-donnees`, partie de `main` ; 16 tickets (031 à 042, avec 032b et 039b, plus 043 créé au lot J3-2 et 044 créé au lot J3-3), plans validés par le porteur le 2026-11-28 (sauf 043 et 044).
+**Jalon 3 en cours** (Entrer et sortir les données : F-07 import CSV, F-08 export CSV, F-09 rapport PDF), branche `groupe/jalon-3-entrer-sortir-donnees`, partie de `main` ; 17 tickets (031 à 042, avec 032b et 039b, plus 043, 044 et 044b), **12 fusionnés dans le groupe** ; plans validés par le porteur le 2026-11-28 (sauf 043 et 044b).
 
-**Lot J3-3 fait** : fusionné dans le groupe le 2026-11-28 : 035 (écrans de l'import, PR #105), 037 (écran et partage de l'export CSV, PR #103) et 039 (HTML du rapport : synthèse et taux, PR #104), ces deux derniers après la relecture du porteur. Intégration : branche `ticket/lot-j3-3-integration` (48 lignes ajoutées à `docs/DECISIONS.md` ; SEC-08, SEC-09, SEC-10, SEC-12 complétés ; maquette complétée ; ticket 044 créé). File du porteur : une question (035, nom lu par le lecteur d'écran sur la bascule, `docs/QUESTIONS.md`).
+**Lot J3-4 intégré** : fusionné dans le groupe le 2026-11-28 : 039b (grille séance par séance du rapport, PR #110) et 044 (caractères invisibles dans les noms de groupe, PR #108), après la relecture du porteur ; 032b (nom et prénom de 100 caractères au plus à la saisie, PR #109). Intégration : branche `ticket/lot-j3-4-integration` (19 lignes ajoutées à `docs/DECISIONS.md` ; SEC-06, SEC-08, SEC-10 complétés ; reports vers 040 et 044b). Rendu de la grille : **visible seulement au 040** (non branchée dans `reportHtml` avant). File du porteur : une question (035, `docs/QUESTIONS.md`), rien de nouveau.
 
-**Lots J3-1 et J3-2 fusionnés dans le groupe** (031, 032, 033 : PR #93, #94, #95 ; 034, 036, 038 : PR #99, #98, #100).
+**Lots J3-1, J3-2 et J3-3 fusionnés dans le groupe** (031, 032, 033 : PR #93, #94, #95 ; 034, 036, 038 : PR #99, #98, #100 ; 035, 037, 039 : PR #105, #103, #104).
 
 Jalon 2 fait (PR #88, `main` à `40d70bb`, sans le prétest sur l'A55, décision du porteur du 2026-11-28 : tout défaut trouvé au prétest devient un ticket du jalon 3) ; jalon 1 fait (PR #63) ; jalon 0 fait (PR #7).
 
 ## Prochaines étapes
 
-1. **Lots suivants** (séance de lancement : pré-analyse, QCM, plans en zone sensible) :
-   - **039b** (grille séance par séance) : CSS dans l'en-tête de confiance (`reportCss`), `SafeHtml`, contrôle statique de `html(` ;
-   - **040** (production du PDF) : risque des orientations mélangées à vérifier en premier ; NF-08 mesuré sur l'A55 ; CSP en rendu réel sur iOS ; effacement de `cache/Print/` ;
-   - **041** (écran du rapport) : `rapport.ts` dans `libelles/index.ts` ; bouton « Rapport PDF » sur les deux tiers restants de la rangée de Stats ;
-   - **032b** (saisie du nom, 100 caractères) ; **042** (Maestro du jalon 3) ;
+1. **Prochain lot J3-5 : 040, 041, 043 et 044b, puis 042** (séance de lancement : pré-analyse, QCM, plans en zone sensible) :
+   - **040** (production du PDF) : brancher `reportGrids` dans `reportHtml`, même période et même filtre pour le rapport et la grille ; orientation `@page paysage` sur iOS et Android, repli « tout en paysage » à reposer au porteur ; plafond de taille du rapport à mesurer sur l'A55 (refus clair ou période bornée) ; `cache/Print/` vidé aussi après un arrêt brutal ; légende d'un grand bloc ; NF-08 et CSP sur iOS ;
+   - **041** (écran du rapport) : `rapport.ts` dans `libelles/index.ts` ; bouton « Rapport PDF » ;
    - **043** (trace des groupes d'une séance, migration, zone sensible) : inverser aussi le test « RM-03 Q2 » de `reportRepo.test.ts` ;
-   - **044** (caractères invisibles dans les noms de groupe, zone sensible) : U+202E renverse le nom dans le PDF.
+   - **044b** (liste SEC-06 élargie, décision du porteur du 2026-11-28 ; saison, créneau, contact) : environ 15 fichiers, **découpage en 044b et 044c proposé** dans la fiche, à valider (zone sensible) ;
+   - **042** (Maestro du jalon 3) en dernier.
 2. **Prétest des jalons 2 et 3 sur l'A55**, à faire par le porteur (désinstaller Ki&La avant d'installer l'APK de la CI) :
    - jalon 2 : base abîmée et restauration depuis l'écran de récupération (014f) ; bandeau des 30 jours (014d) ; `scripts/e2e.sh --appareil-reel` ; écrans des alertes, de la période, de la conservation, statistiques d'un groupe et d'un membre (tablette, TalkBack) ; relances (permission Android 13+, refus puis réglages, relance sans nom sur l'écran verrouillé, appui appli fermée et ouverte, Tout effacer, Doze, redémarrage) ; NF-08 sur la sauvegarde de volume du 030 ;
    - jalon 3 : import d'un CSV d'Excel (UTF-8, Windows-1252, MacRoman refusé) venu de Drive et de Gmail, aperçu, bascules au lecteur d'écran, retours Android ; export CSV ouvert dans Excel ou LibreOffice (colonnes, accents, dates) ; `text/csv` accepté par Drive et Gmail.
@@ -37,6 +36,8 @@ Jalon 2 fait (PR #88, `main` à `40d70bb`, sans le prétest sur l'A55, décision
 - **Mémoire et durée de l'export CSV à mesurer sur l'A55** (sauvegarde fictive de 120 000 lignes, à préparer) ; `attendanceExportRepo.groups(period)` passe par la requête `OVERVIEW` des statistiques : durée à mesurer aussi.
 - **Envoi différé vers Drive** : une appli qui lit le fichier après la fermeture de la feuille de partage pourrait trouver le sous-dossier déjà effacé (037, 040) ; à essayer sur l'A55 avant la clôture du jalon.
 - Limite connue (035) : M de « Inscrire M membres à leur groupe » compte aussi un membre déjà inscrit au groupe trouvé (l'aperçu du 034 ne connaît pas les inscriptions) ; le bouton peut être actif sans rien écrire. Correction possible dans le domaine ou le dépôt du 034, sur un ticket.
+- Limite connue (032b) : un membre dont le nom stocké dépasse 100 caractères ne peut plus être modifié sur un autre champ (le dépôt revalide tout le membre), et le message s'affiche sous le champ modifié ; données de recette seulement.
+- Limite connue (044, acceptée par le porteur le 2026-11-28) : un groupe déjà en base avec un caractère invisible bloque l'export et la restauration de la sauvegarde tant qu'il n'est pas renommé (SEC-10).
 - Limite connue (Q2 du 036) : une présence d'une séance à deux groupes dont l'un est supprimé passe au groupe restant (statistiques, export, rapport), jusqu'au ticket 043.
 - Test NF-08 du rapport (039) : limite de 2 s, marge d'environ 4 fois ; un runner de CI chargé pourrait le rendre instable.
 - Outil d'écriture des agents : un U+FEFF littéral a été écrit dans une fiche au lot J3-1 ; à surveiller (écrire `\uFEFF` ou des octets).
@@ -61,6 +62,7 @@ Jalon 2 fait (PR #88, `main` à `40d70bb`, sans le prétest sur l'A55, décision
 - Requêtes métier sur le module natif `expo-sqlite` : vues sur l'émulateur (016) ; requêtes des jalons 2 et 3 (séries d'absences, statistiques, import, export, rapport) vérifiées sur `node:sqlite` seulement.
 - **Écrans des jalons 2 et 3 jamais vus sur un téléphone** : statistiques, alertes, relances ; import (035), export CSV (037) testés avec le routeur simulé de Jest seulement (retours Android, lecteur d'écran, tablette).
 - **Relances (028a à 029)** : aucune relance programmée ni délivrée sur un appareil ; iOS : build simulateur de la CI seulement. `expoNotifications.ts` et `staticChecksNotifications.test.ts` à 300 lignes.
-- **Lot J3-3** : vérifié par Jest et `node:sqlite` ; aucun APK de la CI construit avec ces écrans ; HTML du rapport jamais rendu en PDF (040) ; NF-08 mesuré sur le poste seulement.
+- **Lots J3-3 et J3-4** : vérifiés par Jest et `node:sqlite` ; aucun APK de la CI construit avec ces écrans ; HTML du rapport et grille jamais rendus en PDF (040) ; NF-08 mesuré sur le poste seulement.
+- **À vérifier sur le téléphone (lot J3-4)** : coller 101 caractères, puis une tabulation, dans le nom d'un membre (message annoncé, rien d'enregistré) ; créer un groupe avec un caractère invisible collé (message sous le champ).
 - Couleurs nommées (`'red'`) non détectées par le contrôle CONV-16.
 - Habilitations iOS contrôlées sur le projet généré, pas sur un binaire signé : à revoir avec la signature (jalon 6). Polices IBM Plex absentes du poste : les maquettes s'affichent dans la police du système.

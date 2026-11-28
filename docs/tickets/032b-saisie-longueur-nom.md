@@ -1,6 +1,6 @@
 # 032b — Fiche membre : nom et prénom de 100 caractères au plus
 
-Statut : à faire · Jalon : 3 · Zone sensible : non (formulaire ; la règle est posée et testée dans le domaine au 032) · Trivial : non
+Statut : fusionné dans le groupe (PR #109) · Jalon : 3 · Zone sensible : non (formulaire ; la règle est posée et testée dans le domaine au 032) · Trivial : non
 
 Dépend de : 032 (`validateMember`, codes `NAME_TOO_LONG` et `NAME_INVALID_CHAR`, messages dans `commun.ts`) · Fichiers touchés : `src/app/membres/nouveau.tsx`, `src/app/membres/[id].tsx`, `src/appTests/membersNameLength.test.tsx` (nouveau : `members.test.tsx` fait déjà 286 lignes) — 3 fichiers
 

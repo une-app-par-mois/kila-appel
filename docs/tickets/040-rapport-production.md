@@ -69,6 +69,14 @@ Reporté du lot J3-3 (2026-11-28, fiche 039) :
 - Vérifier la CSP en rendu réel sur iOS (`WKWebView` d'expo-print, JavaScript activé) : aucune ressource chargée, styles en ligne appliqués.
 - `printToFileAsync` reçoit un `ReportHtml` (seul `reportHtml` en produit) ; `report(…)` rend `null` pour un groupe introuvable.
 
+Reporté du lot J3-4 (2026-11-28, fiche 039b) :
+
+- **Brancher la grille** : appeler `reportGrids(report, grid, rapport.report)` (`src/domain/reportGrid.ts`, table `groupId → SafeHtml[]`) dans `reportHtml`, pages de grille après chaque groupe ; `reportGridRepo(db).grid(period, groupId)` reçoit **exactement la même période et le même filtre de groupe** que `reportRepo(db).report(…)` (un test le vérifie). Jusqu'ici, `reportGrids` et `reportGridRepo` ne sont appelés que par les tests (décision 10 du 039b, voulu).
+- **Orientation** : vérifier `@page paysage` et `page: paysage` (`GRID_PAGE`) dans la WebView d'Android et dans la `WKWebView` d'iOS ; si l'orientation n'est pas respectée, repli « tout le rapport en paysage » appliqué d'office et **reposé au porteur** (« en attente du porteur »).
+- **Plafond de taille du rapport** (revue de sécurité du 039b, F1) : mesurer sur l'A55 le rendu d'une saison complète (environ 650 000 caractères de HTML pour 500 membres) et du cas à trois saisons (environ 3,9 millions de caractères) ; puis fixer un plafond avec un refus clair (code et texte, comme `CSV_REJECTED_TOO_MANY`), ou borner la période.
+- **`cache/Print/` après un arrêt brutal** : le vider aussi au démarrage suivant (nettoyage du 014c, sous le verrou `'cleanup'`), pas seulement après le partage.
+- **Légende d'un grand bloc** : limite connue, la légende n'apparaît que sous la dernière page physique d'un bloc dont la liste de membres tient sur plusieurs pages ; à vérifier sur le PDF, et à reposer au porteur si elle gêne.
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

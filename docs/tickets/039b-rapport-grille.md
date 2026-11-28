@@ -1,6 +1,6 @@
 # 039b — Rapport PDF : grille séance par séance
 
-Statut : à faire · Jalon : 3 · Zone sensible : **oui** (export de données de mineurs ; HTML échappé, SEC-08 ; statuts affichés) · Trivial : non
+Statut : fusionné dans le groupe (PR #110, après la relecture du porteur du 2026-11-28) · Jalon : 3 · Zone sensible : **oui** (export de données de mineurs ; HTML échappé, SEC-08 ; statuts affichés) · Trivial : non
 
 Dépend de : 039 (`reportHtml.ts`, fonction d'échappement, libellés `rapport.ts`) · Fichiers touchés : `src/domain/reportGrid.ts` et son test (nouveaux), `src/data/reportGridRepo.ts` et son test (nouveaux), `src/domain/reportHtml.ts` (styles de la grille dans `reportCss` ; branchement des pages au 040), `src/config/libelles/rapport.ts` (légende) — 7 fichiers d'après le plan du lot J3-4
 
