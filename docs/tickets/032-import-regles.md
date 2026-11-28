@@ -1,10 +1,12 @@
 # 032 — Import CSV : règles de l'import et aperçu
 
-Statut : à faire · Jalon : 3 · Zone sensible : **oui** (import CSV : données de mineurs qui entrent dans la base, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
+Statut : en cours · Jalon : 3 · Zone sensible : **oui** (import CSV : données de mineurs qui entrent dans la base, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
 
-Dépend de : aucun (reçoit des lignes `string[][]` : le format de sortie du 031 est fixé dans ce ticket et le 031) · Fichiers touchés : `src/domain/memberImport.ts` et son test (nouveaux), `src/domain/importFields.ts` et son test (nouveaux : dates, téléphone, longueurs), `src/__fixtures__/importRows.ts` (nouveau), `src/domain/validation.ts` et son test (limite de nom et prénom, décision du porteur du 2026-11-28), `src/config/libelles/commun.ts` (messages des deux nouveaux codes) — 8 fichiers
+Dépend de : aucun (reçoit les lignes `{ line, cells }[]` du 031 : contrat commun ci-dessous, type déclaré structurellement dans `memberImport.ts`) · Fichiers touchés : `src/domain/memberImport.ts` et son test (nouveaux), `src/domain/importFields.ts` et son test (nouveaux : dates, téléphone, longueurs), `src/__fixtures__/importRows.ts` (nouveau), `src/domain/validation.ts` et son test (limite de nom et prénom, décision du porteur du 2026-11-28), `src/config/libelles/commun.ts` (messages des deux nouveaux codes) — 8 fichiers
 
 Découpé le 2026-11-28 (séance de découpage du jalon 3).
+
+**Contrat commun 031 ↔ 032** (séance de lancement du lot J3-1, 2026-11-28) : `parseCsv(text)` rend `{ separator, rows: { line: number; cells: string[] }[] }`, l'en-tête en `rows[0]` ; `line` est le numéro de ligne du tableur (en-tête = 1, lignes vides comptées dans la numérotation, un champ sur deux lignes compte pour une). Le 032 déclare ce type structurellement chez lui (`memberImport.ts`), le 034 unifiera. Refus du 031 en valeur de retour, liste fermée : `EMPTY`, `NOT_TEXT`, `TOO_LARGE`, `TOO_MANY_ROWS`, `MALFORMED` (avec le numéro de ligne), sans texte du fichier (ABS-04, SEC-12). `MAX_CSV_BYTES = 1024 * 1024` est exporté par `csvDecode.ts` ; le 033 reçoit la limite en paramètre (pas de valeur par défaut).
 
 ## Contexte
 
@@ -22,15 +24,18 @@ EX-30 : nom et prénom obligatoires ; date de naissance, téléphone d'urgence e
 - `src/domain/importFields.ts` : lecture d'une cellule.
   - Date : `JJ/MM/AAAA`, `J/M/AAAA` ou `AAAA-MM-JJ` → `AAAA-MM-JJ` (RM-04, 1900 à 2100) ; année à deux chiffres refusée ; date future refusée.
   - Téléphone : `parsePhone`, plus 9 chiffres commençant par 1 à 9 → `0` remis devant (Excel retire le zéro d'un numéro).
-  - Espaces autour retirés.
-- `src/domain/validation.ts` : `validateMember` refuse un nom ou un prénom de plus de 100 caractères (`NAME_TOO_LONG`) ou qui contient un caractère de contrôle U+0000 à U+001F ou U+007F (`NAME_INVALID_CHAR`) ; messages dans `src/config/libelles/commun.ts`. Seuls nom et prénom d'un membre : saisons, groupes et libellés de contact inchangés. L'import et la saisie (032b) passent par la même règle.
+  - Espaces autour retirés ; nom et prénom écrits en NFC (ici, pas dans `validateMember`).
+  - Dates avec une heure, ou à points ou à tirets (`14.03.2017`, `14-03-2017`) refusées ; `0033…` refusé ; le 0 n'est remis qu'après retrait des espaces, points et tirets.
+- `src/domain/validation.ts` : `validateMember` refuse un nom ou un prénom de plus de 100 caractères, comptés en points de code après `trim()` (`NAME_TOO_LONG`, « 100 caractères au plus. »), ou qui contient, après `trim()`, un caractère de U+0000 à U+001F, U+007F à U+009F, U+2028, U+2029, U+202A à U+202E ou U+2066 à U+2069 (`NAME_INVALID_CHAR`, « Retirez le caractère invisible (tabulation, retour à la ligne). ») ; messages dans `src/config/libelles/commun.ts` ; `validateName` inchangé. La même règle s'applique à la restauration : une sauvegarde avec un nom hors règle est refusée en entier (`checkRows` → `validateMember`, `backupRows.ts` inchangé) ; tests existants de sauvegarde et de restauration verts, données fictives conformes. Seuls nom et prénom d'un membre : saisons, groupes et libellés de contact inchangés. L'import et la saisie (032b) passent par la même règle.
 - `src/domain/memberImport.ts` : `previewImport(rows, { existingMembers, groups, today })`.
   - En-têtes comparés sans casse, accents, espaces, `_` ni `-` : `nom`, `prenom`, `date_naissance` (aussi « date de naissance », « naissance »), `telephone` (aussi « tel », « téléphone d'urgence »), `groupe`. Toute autre colonne ignorée ; colonne en double : la première.
   - Sans `nom` ou sans `prenom` : refus `MISSING_COLUMNS` (« Fichier non reconnu »).
-  - Chaque ligne : valide, **invalide** (motif : nom manquant, prénom manquant, trop long, date invalide, téléphone invalide), ou **doublon**.
-  - Doublon : nom et prénom égaux après `foldText`, et date de naissance égale ou absente d'un côté ; contre les membres de l'appli (archivés compris) et contre une ligne précédente du fichier.
-  - Groupe : groupe non archivé de la saison active dont le nom est égal après `foldText` ; introuvable ou sans saison active : membre importé sans groupe, ligne signalée (question prévue).
+  - Cellules manquantes : vides ; en trop : ignorées ; ligne toute vide : ignorée. En-tête valide sans données : aperçu à zéro.
+  - Chaque ligne : valide, **invalide**, ou **doublon** ; priorité invalide > doublon > groupe introuvable. Invalide : un seul motif (champ + code `NAME_REQUIRED`, `NAME_TOO_LONG`, `NAME_INVALID_CHAR`, `DATE_INVALID`, `DATE_IN_FUTURE`, `PHONE_INVALID`), le premier trouvé dans l'ordre nom, prénom, date, téléphone.
+  - Doublon : nom et prénom égaux après `foldText`, espaces réduits et apostrophe ’ remplacée par ', et date de naissance égale ou absente d'un côté ; contre les membres de l'appli (archivés compris) et contre les lignes **valides** précédentes du fichier.
+  - Groupe : groupe non archivé de la saison active dont le nom est égal après `foldText` ; introuvable, sans saison active, ou deux groupes de ce nom dans la saison active : membre importé sans groupe, ligne signalée « Groupe introuvable » ; cellule groupe vide : sans groupe, sans signal.
   - Rendu : compteurs (lignes, à importer, invalides, doublons), listes pour l'écran, et la liste à écrire selon les doublons que l'encadrant garde (`ignored` par défaut).
+- Seuls les 5 champs sont gardés (ABS-03) ; un `=` en tête est gardé tel quel (neutralisation à l'export, 036).
 - Aucune valeur d'une cellule dans une erreur levée ou un code (ABS-04).
 
 ## Critères d'acceptation
@@ -69,6 +74,23 @@ Séance de découpage du jalon 3 (2026-11-28), réponses du porteur :
 - Décisions d'office ci-dessus appliquées, notées dans `docs/DECISIONS.md` (état « à relire »).
 - Relecture du porteur avant la fusion dans le groupe (zone sensible).
 
+Séance de lancement du lot J3-1 (2026-11-28), réponses du porteur :
+
+- **Caractères refusés** dans nom et prénom (SEC-06) : en plus de U+0000 à U+001F et U+007F, **aussi U+0080 à U+009F, U+2028, U+2029 et les caractères de sens d'affichage U+202A à U+202E et U+2066 à U+2069**, à l'import comme à la saisie, dans `validateMember`. La règle complète remplace celle de la séance de découpage dans le report à SEC-06 (« À reporter »).
+- **Restauration** : même règle ; une sauvegarde avec un nom hors règle est refusée en entier, par `checkRows` → `validateMember`, sans toucher `backupRows.ts`. Ligne à ajouter à SEC-10 à l'intégration (« À reporter »). Le 032 vérifie que les tests existants de sauvegarde et de restauration restent verts (données fictives conformes). La fiche du 032b est corrigée en conséquence (un nom plus long ne peut pas venir d'une sauvegarde).
+
+Décisions automatiques de la pré-analyse (état « à relire », `docs/DECISIONS.md`) :
+
+- Contrat commun 031 ↔ 032 (en tête de la fiche).
+- Cellules manquantes = vides, en trop ignorées, ligne toute vide ignorée ; en-tête valide sans données : aperçu à zéro.
+- 100 caractères comptés en points de code après `trim()`, dans `validateMember` seulement (pas `validateName`) ; contrôle des caractères après `trim()`.
+- Un motif par ligne invalide (champ + code), le premier trouvé dans l'ordre nom, prénom, date, téléphone ; textes de `NAME_TOO_LONG` et `NAME_INVALID_CHAR` dans `commun.ts`.
+- Priorité invalide > doublon > groupe introuvable ; doublon interne comparé aux lignes valides précédentes seulement ; comparaison `foldText`, espaces réduits, apostrophe ’ → '.
+- Nom et prénom écrits en NFC dans `importFields` (pas dans `validateMember`).
+- Deux groupes de même nom dans la saison active : « Groupe introuvable » ; cellule groupe vide : sans groupe, sans signal.
+- Dates avec heure, à points ou à tirets refusées ; `0033…` refusé ; 0 remis après retrait des espaces, points et tirets.
+- Seuls les 5 champs gardés (ABS-03), aucune cellule dans une erreur (ABS-04), `=` gardé tel quel (neutralisation à l'export, 036).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |
@@ -79,5 +101,6 @@ Séance de découpage du jalon 3 (2026-11-28), réponses du porteur :
 ## À reporter
 
 - CHANGELOG : Import CSV : colonnes reconnues, lignes invalides et doublons repérés avant toute écriture (F-07, EX-30).
-- Architecture : `src/domain/importFields.ts`, `src/domain/memberImport.ts` ; `validateMember` : 100 caractères, sans caractère de contrôle.
-- SECURITE : SEC-06, nom et prénom de 100 caractères au plus, sans caractère de contrôle, à l'import comme à la saisie (décision du porteur du 2026-11-28).
+- Architecture : `src/domain/importFields.ts`, `src/domain/memberImport.ts` ; `validateMember` : 100 caractères, sans caractère de contrôle ni invisible.
+- SECURITE : SEC-06, nom et prénom de 100 caractères au plus (points de code, après `trim()`), sans caractère de U+0000 à U+001F, U+007F à U+009F, U+2028, U+2029, U+202A à U+202E ni U+2066 à U+2069, à l'import comme à la saisie (décisions du porteur du 2026-11-28).
+- SECURITE : SEC-10, une sauvegarde dont un nom ou un prénom est hors de cette règle est refusée en entier à la restauration (décision du porteur du 2026-11-28).
