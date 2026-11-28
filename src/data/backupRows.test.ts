@@ -112,6 +112,10 @@ describe('checkRows : toute ligne de la copie passe les règles de l’appli', (
     ['EX-13 commentaire de séance trop long', `UPDATE sessions SET comment = '${long}'`],
     ['RM-03 nombre de groupes de séance nul', 'UPDATE sessions SET group_count = 0'],
     ['RM-03 nombre de groupes de séance négatif', 'UPDATE sessions SET group_count = -1'],
+    [
+      'RM-03 nombre de groupes de séance au-delà des entiers sûrs',
+      `UPDATE sessions SET group_count = ${Number.MAX_SAFE_INTEGER} + 1`,
+    ],
     ['EX-10 statut de présence inconnu', "UPDATE attendances SET status = 'peut-être'"],
     ['EX-14 date du brouillon invalide', "UPDATE roll_call_drafts SET date = 'hier'"],
     [

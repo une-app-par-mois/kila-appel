@@ -213,7 +213,7 @@ describe('Migration 2 : nombre de groupes figé de la séance (ticket 043, RM-03
 
   it('RM-03 remplit group_count avec le nombre actuel de groupes, NULL sans groupe', async () => {
     await migrate(db);
-    expect(await userVersion(db)).toBe(2);
+    expect(await userVersion(db)).toBe(LATEST_VERSION);
     expect(await db.query('SELECT id, group_count FROM sessions ORDER BY id')).toEqual([
       { id: 1, group_count: 2 },
       { id: 2, group_count: 1 },

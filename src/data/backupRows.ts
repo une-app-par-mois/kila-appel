@@ -151,14 +151,22 @@ const RULES: Rule[] = [
     // jamais inférieur aux groupes de la séance (un groupe supprimé le laisse supérieur).
     table: 'sessions',
     columns: (schema) =>
-      `id, season_id, slot_id, date, start_time, comment, group_count,
+      // Au-delà des entiers sûrs, lu 0 (refusé) : le pilote SQLite ne le lirait pas en nombre exact.
+      `id, season_id, slot_id, date, start_time, comment,
+       CASE WHEN group_count > ${Number.MAX_SAFE_INTEGER} THEN 0 ELSE group_count END AS group_count,
        (SELECT count(*) FROM ${schema}.session_groups sg WHERE sg.session_id = sessions.id) AS group_rows`,
     check: (r) => {
       date(r.date);
       time(r.start_time);
       comment(r.comment);
       const n = r.group_count;
-      ensure(n === null || (typeof n === 'number' && isId(n) && n >= Number(r.group_rows)));
+      ensure(
+        n === null ||
+          (typeof n === 'number' &&
+            isId(n) &&
+            Number.isSafeInteger(n) &&
+            n >= Number(r.group_rows)),
+      );
     },
   },
   { table: 'session_groups', columns: 'session_id, group_id', check: none },

@@ -31,7 +31,7 @@ Plan validé par le porteur le 2026-11-28 (option A, migration 2).
 
 - [ ] Migration 2 testée sur une base de la version 1 (`migrations.test.ts`) : colonne ajoutée, `group_count` égal au nombre de lignes `session_groups` de chaque séance ; schéma identique entre une base neuve et une base migrée (un test le vérifie).
 - [ ] `CHECK` : `group_count` à 0 refusé ; `NULL` accepté.
-- [ ] `sessionsRepo.record` : séance à deux groupes → `group_count = 2` ; après la suppression d'un groupe, `group_count` reste à 2.
+- [ ] `sessionsRepo.record` : `group_count` égal au nombre de groupes écrits pour la séance, compté dans la même transaction (correction 1 de l'intégration : jamais une valeur fixe ; un appel n'écrit aujourd'hui qu'un groupe, donc 1, et un second groupe simulé donne 2) ; après la suppression d'un groupe, `group_count` ne change pas.
 - [ ] SEC-10 : sauvegarde avec `group_count` inférieur au nombre de groupes de la séance refusée en entier (`INVALID_DATA`) ; sauvegarde de la version 1 migrée puis restaurée sans perte ; sauvegarde de version future (`LATEST_VERSION + 1`) refusée.
 - [ ] SEC-05 : requêtes paramétrées.
 
@@ -65,10 +65,12 @@ Reporté du lot J3-3 (2026-11-28, fiche 039) :
 | Index sur `group_count` (pré-analyse) | Index ; aucun | Aucun | Lu avec la séance, jamais filtré seul | à relire |
 | Version future dans `backup.test.ts` (pré-analyse) | `2` en dur ; `LATEST_VERSION + 1` | `LATEST_VERSION + 1` | Reste juste après chaque migration | à relire |
 | Schéma neuf = schéma migré (pré-analyse) | Pas de test ; test | Test dans `migrations.test.ts` (`sqlite_schema` trié, base v1 avec données migrée contre base neuve) | Le recontrôle de la restauration compare les schémas exactement | à relire |
-| Critère « séance à deux groupes → `group_count = 2` » de `record` | Ajouter plusieurs groupes à `record` ; tester 2 par la migration | `record` ne prend qu'un groupe (`RollCallInput.groupId`) : il écrit `1` ; le cas « 2 » est testé par le remplissage de la migration et par la restauration v1 | Plusieurs groupes à l'appel n'existent pas encore (F-11 côté appel hors périmètre) | à relire |
-| `group_count` NULL avec des groupes, à la restauration | Refuser ; accepter | Accepté (seul « inférieur » est refusé) | Lettre de la décision du porteur ; le 043b lit NULL comme « compte actuel » (`COALESCE`) ; un jeu fictif écrit en SQL brut laisse NULL | à relire |
+| Critère « séance à deux groupes → `group_count = 2` » de `record` | `1` en dur ; nombre de groupes écrits | Nombre de groupes écrits : `UPDATE … (SELECT count(*) FROM session_groups WHERE session_id = ?)` dans la même transaction ; testé avec un second groupe simulé (déclencheur de test) | `1` en dur ferait refuser par SEC-10 toutes les sauvegardes dès les séances à plusieurs groupes (F-11, jalon 4) | changée après contradiction |
+| `group_count` NULL avec des groupes, à la restauration | Refuser ; accepter | Accepté dans le 043 (seul « inférieur » est refusé) ; règle stricte et jeux de test (`seed`, `alertsSeed`, `purgeSeed`, `statsSeed`) au ticket **043c**, après le 043b | Décision du porteur du 2026-11-28 | décidée par le porteur le 2026-11-28 |
 | Où vit le contrôle de cohérence | `checkRows` ; contrôle à part dans `verifyBackup` | `checkRows` (règle `sessions`, sous-requête qualifiée par le schéma lu) | Joue aussi au recontrôle de la restauration (copie attachée), testé dans `backup.test.ts` | à relire |
-| Tests rendus faux par la migration 2, hors liste de la fiche | Les laisser ; les ajuster | Ajustés : `slotsScheduleFrom.test.ts` (« `LATEST_VERSION` vaut 1 » devient « le déclencheur reste dans la migration 1 »), `backupExport.test.ts` (version `LATEST_VERSION`), `backupCheck.test.ts` (fausse migration 2 remplacée par la vraie, sur une sauvegarde v1 du jeu fictif) | Constats périmés par la décision du porteur ; 11 fichiers avec la fiche au lieu de 8 | à relire |
+| Tests rendus faux par la migration 2, hors liste de la fiche | Les laisser ; les ajuster | Ajustés : `slotsScheduleFrom.test.ts` (garde-fou `LATEST_VERSION` à 2, exceptions datées à ADR-003 : 043, et déclencheur dans la migration 1), `backupExport.test.ts` (version `LATEST_VERSION`), `backupCheck.test.ts` (fausse migration 2 remplacée par la vraie, sur une sauvegarde v1 du jeu fictif) | Constats périmés par la décision du porteur ; garde-fou de version gardé (changée après contradiction) | changée après contradiction |
+| Nombre de fichiers | 8 prévus ; 11 avec la fiche | 11 fichiers : dérogation datée | Tests périmés par la migration 2 | décidée par le porteur le 2026-11-28 |
+| Plafond de `group_count` à la restauration | Aucun ; entier sûr | Au-delà de `Number.MAX_SAFE_INTEGER`, refusé (`INVALID_DATA`) : lu 0 en SQL, puis `Number.isSafeInteger` | Le pilote ne lit pas exactement un entier plus grand (node:sqlite lève une erreur) | à relire |
 | Durée de la migration (NF-08) | Pas de test ; test | Test : base v1 de `volumeSeed` (1 200 séances à deux groupes) migrée en moins de 2 s | Première migration sur un appareil rempli | à relire |
 
 ## Questions pour le porteur
@@ -79,5 +81,7 @@ Aucune.
 
 - CHANGELOG : rien (visible au 043b).
 - DECISIONS.md : les lignes « à relire » ci-dessus.
+- SEC-10, limite provisoire : à la restauration, `group_count` NULL est accepté même quand la séance a des groupes ; la règle stricte vient avec le ticket 043c (décision du porteur du 2026-11-28). À reprendre dans `docs/SECURITE.md` (SEC-10) et dans la fiche 043c.
+- IDEES/F-11 : `record` multi-groupes s'appuie déjà sur le compte des lignes `session_groups` pour `group_count`.
 - Architecture : §4.1, colonne `sessions.group_count` (nombre de groupes figé à l'enregistrement) ; §4.2, migration 2.
 - Reportés au 043b : tests « RM-03 Q2 » de `attendanceExportRepo.test.ts` et de `reportRepo.test.ts` à inverser ; requête de la grille du 039b (`reportGridRepo`) sous la même règle ; `MEMBER` de `src/data/statsRepo.ts` (`x.groups = 1` hors de `credits`) ramené dans la règle unique.
