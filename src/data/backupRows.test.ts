@@ -70,6 +70,23 @@ describe('checkRows : toute ligne de la copie passe les règles de l’appli', (
     ['EX-01 fin de saison avant son début', "UPDATE seasons SET end_date = '2000-01-01'"],
     ['ABS-03 nom de membre vide', "UPDATE members SET last_name = ' '"],
     ['ABS-03 prénom de membre vide', "UPDATE members SET first_name = ''"],
+    // SEC-06, SEC-10 (décisions du porteur du 2026-11-28) : même règle qu'à la saisie.
+    [
+      'SEC-06 nom de membre de 101 caractères',
+      `UPDATE members SET last_name = '${'x'.repeat(101)}'`,
+    ],
+    [
+      'SEC-06 prénom de membre de 101 caractères',
+      `UPDATE members SET first_name = '${'é'.repeat(101)}'`,
+    ],
+    [
+      'SEC-06 tabulation dans un nom de membre',
+      "UPDATE members SET last_name = 'Exe' || char(9) || 'mple'",
+    ],
+    [
+      'SEC-06 sens d’affichage dans un prénom',
+      "UPDATE members SET first_name = 'Al' || char(8238) || 'ix'",
+    ],
     ['EX-03 date de naissance invalide', "UPDATE members SET birth_date = '2015-02-30'"],
     ['EX-03 date d’archivage d’un membre invalide', "UPDATE members SET archived_at = 'hier'"],
     ['ticket 008 téléphone d’un contact invalide', "UPDATE emergency_contacts SET phone = '12'"],
@@ -159,6 +176,14 @@ describe('checkRows : toute ligne de la copie passe les règles de l’appli', (
       );
       expect(await checkRows(db, TODAY)).toBe('INVALID_DATA');
     }
+  });
+
+  it('SEC-06 accepte un nom et un prénom de 100 caractères', async () => {
+    await db.execute('UPDATE members SET last_name = ?, first_name = ?', [
+      'x'.repeat(100),
+      '😀'.repeat(100),
+    ]);
+    expect(await checkRows(db, TODAY)).toBeNull();
   });
 
   it('EX-14 accepte un updated_at avec ou sans secondes', async () => {
