@@ -28,7 +28,7 @@ Relevé du 2026-11-28 (lecture seule : `npm view`, paquet décompressé hors du 
 ## Ce qui change (plan à valider, option recommandée)
 
 - `npx expo install expo-print`, puis version exacte 58.0.9 (CONV-31) ; on vérifie que l'installation n'ajoute aucune dépendance npm ; aucune autre dépendance directe.
-- `plugins/withoutWebViewMetrics.js` : ajoute sous `<application>` `<meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true"/>` et `…EnableSafeBrowsing` à `false`, avec `tools:replace="android:value"` ; idempotente (appliquée deux fois, même manifeste) ; placée en dernier dans `app.json`.
+- `plugins/withoutWebViewMetrics.js` : ajoute sous `<application>` `<meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true"/>` et `…EnableSafeBrowsing` à `false`, avec `tools:replace="android:value"` ; idempotente (appliquée deux fois, même manifeste) ; placée en **premier** dans `app.json` (changé après contradiction, voir « Décisions »).
 - `scripts/audit-apk.js` : contrôle inconditionnel ; une seule `meta-data` de chaque nom, enfant direct d'`application`, valeur booléenne littérale (`true` pour MetricsOptOut, `false` pour EnableSafeBrowsing) ; refus d'une chaîne, d'une référence, d'un doublon et d'une valeur placée sous une activité ; listes de permissions et de composants inchangées (toujours **exactement** `config/permissions-attendues.txt`) : toute différence vue sur l'APK arrête le ticket et devient une question.
 - `src/staticChecksPrint.test.ts` (reprend les outils de `src/__fixtures__/expoAccess.ts`, chaque refus vu en échec) :
   - importeurs d'expo-print ⊆ [`src/data/expoPrint.ts`] (créé au 040, aucun aujourd'hui ; le 040 durcira en « exactement ») ; tout sous-chemin du paquet refusé ;
@@ -37,16 +37,16 @@ Relevé du 2026-11-28 (lecture seule : `npm view`, paquet décompressé hors du 
   - argument de `printToFileAsync` : objet écrit en entier, sans `...` ni variable, avec les seules clés `html`, `width`, `height` et `margins` ; toute autre clé refusée, `uri`, `base64` et `useMarkupFormatter` compris ;
   - `Orientation` et `base64` ne sont pas interdits comme noms ailleurs.
 - `docs/SECURITE.md` et `docs/CONFORMITE.md` : complétés à l'intégration du lot par l'IA principale (voir « À reporter »).
-- Registre des licences (`src/config/licences.json`, EX-42) : régénéré au 040, quand le paquet entre dans le bundle.
+- Registre des licences (`src/config/licences.json`, EX-42) : régénéré dans ce ticket (changé après contradiction : le module natif est déjà lié, `docs/CONFORMITE.md` exige la mise à jour dans le même ticket).
 
 ## Critères d'acceptation
 
-- [ ] Réponse datée du porteur (2026-11-28) notée dans `docs/ARCHITECTURE.md` (décisions du porteur, à l'intégration) ; version installée exactement 58.0.9.
-- [ ] APK : permissions **exactement** celles de `config/permissions-attendues.txt` (SEC-02) ; INTERNET absente (ABS-01, NF-03) ; méta-données WebView présentes.
-- [ ] Build iOS : `scripts/audit-ios.js` inchangé et vert (aucune habilitation, aucun scheme).
-- [ ] `npm audit` sans vulnérabilité haute ; version exacte ; licence MIT dans la liste acceptée.
-- [ ] Contrôle statique : un import fictif de `printAsync` ou un appel avec `uri` dans un fichier de test fait échouer le contrôle.
-- [ ] L'appli démarre et fonctionne comme avant sur l'émulateur.
+- [ ] Réponse datée du porteur (2026-11-28) notée dans `docs/ARCHITECTURE.md` (décisions du porteur, à l'intégration) ; version installée exactement 58.0.9 — version faite (`package.json` et `package-lock.json` : `58.0.9`) ; ARCHITECTURE à l'intégration.
+- [x] APK : permissions **exactement** celles de `config/permissions-attendues.txt` (SEC-02) ; INTERNET absente (ABS-01, NF-03) ; méta-données WebView présentes — APK de production local, audit conforme (voir « À reporter ») ; APK de la CI non vérifié.
+- [ ] Build iOS : `scripts/audit-ios.js` inchangé et vert (aucune habilitation, aucun scheme) — non vérifié : pas de build iOS sur ce poste ; `audit-ios.js` inchangé ; expo-print n'a pas d'extension de configuration (`app.plugin.js` absent).
+- [x] `npm audit` sans vulnérabilité haute ; version exacte ; licence MIT dans la liste acceptée.
+- [x] Contrôle statique : un import fictif de `printAsync` ou un appel avec `uri` dans un fichier de test fait échouer le contrôle.
+- [x] L'appli démarre et fonctionne comme avant sur l'émulateur — démarrage seul (écran Bienvenue, `DB_READY`) ; parcours complet non rejoué.
 
 ## Tests attendus
 
@@ -90,6 +90,20 @@ Décisions automatiques de la pré-analyse (état « à relire », `docs/DECISIO
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
+| Où placer le contrôle des méta-données dans `audit-apk.js` | dans `auditManifest` ; fonction à part appelée par `main` | fonction `auditWebViewMetadata` à part, appelée sans condition par `main` sur le même `xmltree` ; `auditManifest` et `scripts/audit-apk.test.js` inchangés (9ᵉ fichier évité) | les tests existants appellent `auditManifest` sur des manifestes sans méta-données ; les refus existants ne bougent pas | à relire |
+| Distinguer le booléen `true` de la chaîne `"true"` | réécrire `attribute` ; petite fonction qui s'appuie sur elle | `typedValue` réutilise `attribute` et garde les guillemets d'une chaîne ; format lu sur l'APK local : booléen `=true`, chaîne `="…" (Raw: "…")`, référence `=@0x7f…` | `attribute` (contrôle existant) n'est pas modifiée | à relire |
+| `meta-data` nommée par référence de ressource | ignorer ; refuser | refusée (échec fermé), quel que soit son nom | une référence peut cacher l'un des deux noms ; même règle que les composants (ticket 026) ; aucune dans l'APK actuel | à relire |
+| Références à `printToFileAsync` autres qu'un appel | permises ; refusées partout ; refusées hors des tests | appel contrôlé partout, tests compris ; autre référence (variable, réexport local, `{ printToFileAsync }`, `.call`, déstructuration) refusée hors des tests ; dans un test, clé d'une simulation et `expect(printToFileAsync)` permises | sinon `const f = printToFileAsync; f({ uri })` contourne le contrôle de l'argument ; le 040 doit pouvoir simuler le module | à relire |
+| Formes d'import permises dans l'adaptateur | — | `import { printToFileAsync } from 'expo-print'` seul : alias (`as`), `import type`, défaut, effet de bord, `require`, `import()`, réexport refusés | « seul `printToFileAsync` peut être importé » ; un alias échappe au contrôle des appels | à relire |
+| « Même écrits en chaîne » | chaîne égale au nom ; chaîne qui le contient | chaîne entière égale au nom (`'printAsync'`, `requireNativeModule('ExpoPrint')`, `m['selectPrinterAsync']`) | une sous-chaîne refuserait des textes sans rapport ; limite : nom calculé (`print${'Async'}`) non vu, écrite en tête du test | à relire |
+| Méta-donnée déjà déclarée par une bibliothèque | garder les deux ; remplacer | l'extension retire toute déclaration de ces deux noms sous `<application>` et ajoute la sienne | idempotence, aucun doublon ; `tools:replace` règle la fusion avec les bibliothèques | à relire |
+| Ordre de l'extension dans `app.json` (revue de code) | en dernier ; en premier | **en premier** : `withMod` enchaîne vers le mod déjà inscrit (`nextMod`), donc le dernier plugin déclaré s'exécute en premier et le premier déclaré en dernier ; `getConfig` applique les plugins d'`app.json` avant les plugins internes d'Expo. Test : avec `withPlugins`, l'extension déclarée avant un plugin contraire garde ses valeurs, déclarée après elle les perd | le dernier mot à la préconstruction ; « en dernier » (pré-analyse) donnait le contraire ; le vrai filet reste l'audit du binaire | changée après contradiction |
+| Registre des licences (contradicteur) | au 040 ; dans ce ticket | dans ce ticket : `node scripts/licences.js`, entrée `expo-print` 58.0.9 (MIT) ajoutée, `--check` passe | expo-print est déjà lié comme module natif ; `docs/CONFORMITE.md` (l. 78) demande la mise à jour dans le même ticket ; sinon `--check` échoue à la PR du jalon | changée après contradiction |
+| Nom de module non littéral (revue de sécurité) | ignoré ; refusé | refusé partout, tests compris (« ABS-01 module non littéral ») : `require`, `import()` et `jest.mock`, `doMock`, `unmock`, `dontMock`, `setMock`, `requireActual`, `requireMock`, `createMockFromModule` dont le premier argument n'est pas une chaîne brute (variable, parenthèses, `as`, `<string>`, `!`, `satisfies`, gabarit avec substitution) ; aides `nonLiteralLoad` et `isModuleArgument` dans `src/__fixtures__/expoAccess.ts`, utilisées par ce contrôle seul ; le code existant passe sans changement | `require(('expo-print/build/ExponentPrint')).default.print({ uri })` échappait à `moduleName` | à relire |
+| Filet texte (revue de sécurité) | — | la chaîne `'expo-print'` ou `'expo-print/…'` est refusée hors des tests et de `src/data/expoPrint.ts` (« ABS-01 chaîne expo-print »), sauf quand elle est le nom d'un import déjà contrôlé | même filet que `staticChecksFiles` (noms de modules natifs) | à relire |
+| `print` (revue de sécurité) | — | `.print(…)` et `['print'](…)` refusés partout (« ABS-01 nom refusé ») ; une fonction locale `print()` reste permise | fonction d'impression du module natif, qui lit une adresse | à relire |
+| `import {} from 'expo-print'` et clé `printToFileAsync` (revue) | — | liste vide refusée dans l'adaptateur ; la clé `printToFileAsync:` n'est exemptée que dans un fichier de test | défauts de la première version | à relire |
+| Taille du contrôle statique | nouveau fichier ; aides dans `expoAccess.ts` | `isNamespace`, `calleeOf`, `visitModules`, `modulesOf`, `nonLiteralLoad`, `isModuleArgument` déplacées dans `src/__fixtures__/expoAccess.ts` (10ᵉ fichier, sans la fiche) ; `src/staticChecksPrint.test.ts` à 300 lignes | plafond de 300 lignes et de 10 fichiers | à relire |
 
 ## Questions pour le porteur
 
@@ -99,3 +113,25 @@ Décisions automatiques de la pré-analyse (état « à relire », `docs/DECISIO
 - Architecture : §2 expo-print installé (version exacte) ; §6 extension `plugins/withoutWebViewMetrics.js`, audit des méta-données WebView.
 - SECURITE (à l'intégration du 038, décisions du porteur du 2026-11-28) : SEC-08 complétée : expo-print importé par `src/data/expoPrint.ts` seul, `printToFileAsync` seul, argument écrit en entier avec les clés `html`, `width`, `height`, `margins` seulement (`printAsync`, `selectPrinterAsync`, `ExpoPrint`, `uri`, `base64`, `useMarkupFormatter` refusés) ; CSP `default-src 'none'; style-src 'unsafe-inline'; img-src data:` en tête du HTML (Vérification : « à venir, 039 ») ; `cache/Print/` vidé après chaque rapport, au démarrage et après Tout effacer (Vérification : « à venir, 040 ») ; méta-données `MetricsOptOut` et `EnableSafeBrowsing` vérifiées sur l'APK. SEC-02 : ligne « méta-données de la WebView vérifiées par `audit-apk.js` ». SEC-01 : ligne `src/staticChecksPrint.test.ts`. Limite : `MetricsOptOut` ne couvre que les mesures d'usage.
 - CONFORMITE (à l'intégration) : §3, rapport et export partagés par l'encadrant, même interprétation que la sauvegarde, à décrire dans la politique au jalon 6 (ABS-08), déclarations inchangées ; §8, module natif expo-print (MIT), aucune bibliothèque tierce nouvelle.
+- Relevé du 2026-11-28, APK de production construit en local avant et après l'installation (`expo prebuild --clean`, `gradlew assembleRelease`), `aapt2` 37.0.0 :
+  - Installation : `npx expo install expo-print` a écrit `~58.0.9`, ramené à `58.0.9` ; une seule entrée ajoutée au verrou (`node_modules/expo-print`, MIT, aucune dépendance npm) ; `npm audit` : 0 vulnérabilité. Manifeste de l'AAR `expo.modules.print-58.0.9` : aucune permission, aucun composant ; dépendances Maven `kotlin-stdlib-jdk7` 2.2.10, `annotations` 23.0.0, `pika-api` 1.1.0.
+  - `aapt2 dump permissions` : **identique** avant et après (`RECEIVE_BOOT_COMPLETED`, `POST_NOTIFICATIONS`, `com.jitavision.kila.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` déclarée et utilisée). INTERNET absente.
+  - `aapt2 dump xmltree --file AndroidManifest.xml`, diff sans les numéros de ligne (`(line=…)`) : seules les deux méta-données sont ajoutées sous `<application>` ; 8 composants avant, 8 après, identiques.
+    ```
+    63a64,69
+    >             A: http://schemas.android.com/apk/res/android:name(0x01010003)="android.webkit.WebView.EnableSafeBrowsing" (Raw: "android.webkit.WebView.EnableSafeBrowsing")
+    >             A: http://schemas.android.com/apk/res/android:value(0x01010024)=false
+    >           E: meta-data
+    >             A: http://schemas.android.com/apk/res/android:name(0x01010003)="android.webkit.WebView.MetricsOptOut" (Raw: "android.webkit.WebView.MetricsOptOut")
+    >             A: http://schemas.android.com/apk/res/android:value(0x01010024)=true
+    >           E: meta-data
+    ```
+  - `node scripts/audit-apk.js` : APK d'avant, 2 écarts (« Méta-donnée WebView absente » pour chacune) ; APK d'après, « Audit du binaire : conforme (SEC-02) ».
+  - Émulateur `emulator-5554` : APK d'après installé, `pm clear`, lancé : `DB_READY` (version 1), écran **Bienvenue**, aucun plantage.
+  - Contrôle statique vu en échec : chacune des 10 règles de `src/staticChecksPrint.test.ts` neutralisée tour à tour fait échouer au moins un test ; un fichier fictif `src/fictif038.test.ts` (import de `printAsync`, appel avec `uri`) fait échouer le balayage du dépôt (« nom refusé », « clé refusée »), puis retiré.
+- Corrections de revue (2026-11-28) : chaque règle ajoutée a été neutralisée tour à tour (module non littéral, `.print`, filet texte, exemption du nom d'import, liste vide, clé hors test) et fait échouer au moins un test ; ordre des plugins vérifié par `withPlugins` ; `node scripts/licences.js --check` : à jour (63 entrées). APK reconstruit avec l'extension en tête de `app.json` : permissions et manifeste compilé identiques à l'APK d'après, audit conforme.
+- Pour la fiche 040 (à recopier par l'IA principale) :
+  - (a) iOS : la `WKWebView` d'expo-print a JavaScript activé et aucune permission réseau à retirer. Tout le texte du rapport est échappé ; le gabarit commence par `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:">` ; tests de l'échappement et de la présence de la CSP.
+  - (b) Effacer le PDF de `cacheDir/Print/` après le partage.
+  - (c) Les tests du 040 simulent expo-print par une fabrique `jest.mock('expo-print', () => …)` et une variable `mock…` (la clé `printToFileAsync:` n'est permise que dans un fichier de test ; aucun nom de module non littéral).
+  - (d) Durcir dans `src/staticChecksPrint.test.ts` « importeurs ⊆ [`src/data/expoPrint.ts`] » en « exactement ».

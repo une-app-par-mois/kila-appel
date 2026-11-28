@@ -45,6 +45,7 @@
       ]
     },
     "plugins": [
+      "./plugins/withoutWebViewMetrics.js",
       "expo-router",
       "expo-sqlite",
       [
