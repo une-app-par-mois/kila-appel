@@ -42,7 +42,9 @@ describe('SEC-10 cache/exports/ : écriture bornée et partage', () => {
     expect(dir.startsWith(`${exportsDir}/`)).toBe(true);
     await writeFile(join(dir, 'kila-presences-2026-11-28.csv'), '\uFEFFnom;prenom\n');
     await writeFile(join(dir, 'kila-rapport-2026-11-28.pdf'), new Uint8Array([37, 80, 68, 70]));
-    expect(readFileSync(join(dir, 'kila-presences-2026-11-28.csv'), 'utf8')).toBe('\uFEFFnom;prenom\n');
+    expect(readFileSync(join(dir, 'kila-presences-2026-11-28.csv'), 'utf8')).toBe(
+      '\uFEFFnom;prenom\n',
+    );
     expect([...readFileSync(join(dir, 'kila-rapport-2026-11-28.pdf'))]).toEqual([37, 80, 68, 70]);
   });
 
