@@ -1,6 +1,6 @@
 # 036 — Export CSV des présences : contenu
 
-Statut : en cours · Jalon : 3 · Zone sensible : **oui** (export : données de mineurs qui sortent de l'appareil ; injection de formules, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
+Statut : en attente du porteur (Q1) · Jalon : 3 · Zone sensible : **oui** (export : données de mineurs qui sortent de l'appareil ; injection de formules, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
 
 Dépend de : aucun · Fichiers touchés : `src/domain/csvWrite.ts` et son test (nouveaux), `src/domain/attendanceCsv.ts` et son test (nouveaux), `src/data/attendanceExportRepo.ts` et son test (nouveaux), `src/config/libelles/stats.ts` (en-tête, « Sans créneau », « Sans groupe » ; séance de lancement du lot J3-2) — 7 fichiers (8 si le test NF-08 va dans un fichier séparé ; le jeu fictif `src/__fixtures__/statsSeed.ts` est réutilisé sans modification)
 
@@ -87,11 +87,29 @@ Décisions automatiques de la pré-analyse (état « à relire », `docs/DECISIO
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
+| Colonne Groupe d'un export filtré, pour une présence qui compte aussi pour l'autre groupe de la séance | Groupe filtré seul ; tous les groupes de la présence | Groupe filtré seul (« Tous les groupes » : « A, B ») | Le fichier filtré parle d'un seul groupe ; rien de plus ne sort de l'appareil | à relire |
+| Ordre des groupes joints « A, B » | Ordre SQL ; Collator français | Collator français (`sensitivity: 'base'`) | Ordre stable, comme à l'écran | à relire |
+| Créneau dont le nom n'est fait que d'espaces | Gardé tel quel ; traité comme sans nom | Traité comme sans nom : jour de la date et heure de la séance | Cellule vide inutile dans le tableur | à relire |
+| Tri dans une séance | — | `byName` de `statsSql.ts` (nom, puis prénom, Collator français) ; à nom égal, ordre des identifiants des membres (tri stable) | Même ordre que les statistiques | à relire |
+| `groups(period)` | Requête propre ; liste des statistiques | `statsRepo.overview(period).groups` (une requête), réduits à `groupId`, `name`, `archived` | « Ceux des statistiques de la période » : même liste et même ordre, sans seconde règle à tenir | à relire |
+| Groupe ou période invalides | — | Identifiant de groupe ou de saison invalide : `DataError('NOT_FOUND')` ; groupe inexistant : 0 ligne ; période revalidée par `customPeriod` | Comme `statsRepo` ; erreurs sans donnée (ABS-04) | à relire |
+| Lignes SQL d'une présence comptée pour deux groupes | `group_concat` ; une ligne SQL par groupe | Une ligne SQL par groupe, regroupées en une ligne d'export par le dépôt | `group_concat` n'a pas d'ordre garanti et son séparateur peut figurer dans un nom | à relire |
+| Test NF-08 | Dans le test du dépôt ; fichier séparé | `src/data/attendanceExportVolume.test.ts` (8 fichiers au total) | Le test du dépôt approchait les 300 lignes | à relire |
 
 ## Questions pour le porteur
+
+**Q1 — SEC-07 appliquée à toute cellule (cas réservé : sécurité).** Le plan validé dit « champs texte seulement (nom, prénom, groupe, créneau), pas la date ni le statut ». `toCsv` neutralise aujourd'hui toute cellule, en-tête compris. Le fichier produit est identique, car les dates (`JJ/MM/AAAA`), les statuts et l'en-tête ne commencent jamais par `=`, `+`, `-`, `@`, une tabulation ou un retour chariot. Options :
+
+1. **Toute cellule (recommandé, appliqué)** : une colonne ajoutée plus tard ne peut pas oublier la neutralisation ; `toCsv` reste simple (aucune liste de colonnes).
+2. Champs texte seulement, à la lettre : `toCsv` reçoit la liste des colonnes à neutraliser.
+
+Facile à défaire (une ligne dans `csvWrite.ts` et un test). Statut du ticket : en attente du porteur pour cette seule question ; le reste est terminé.
 
 ## À reporter
 
 - CHANGELOG : rien (visible au 037).
-- Architecture : `src/domain/csvWrite.ts`, `src/domain/attendanceCsv.ts`, `src/data/attendanceExportRepo.ts`.
+- Architecture : `src/domain/csvWrite.ts` (`toCsv` : `;`, BOM, CRLF, SEC-07), `src/domain/attendanceCsv.ts` (lignes du CSV des présences, textes reçus en paramètre), `src/data/attendanceExportRepo.ts` (`rows`, `count`, `groups` ; une requête chacune, RM-03 par `credits` de `statsSql.ts`).
+- SECURITE : SEC-07, colonne Vérification : `src/domain/csvWrite.test.ts`, `src/domain/attendanceCsv.test.ts` et l'aller-retour piégé de `src/data/attendanceExportRepo.test.ts`.
+- Décisions : les lignes du tableau « Décisions » ci-dessus, à recopier en bas de `docs/DECISIONS.md` ; Q1 dans `docs/QUESTIONS.md`.
+- Mesures NF-08 (`attendanceExportVolume.test.ts`, poste local) : les trois cas passent en 1,7 s au total, 120 000 lignes comprises.
 - CONFORMITE (à l'intégration) : §2.2, pour répondre au droit d'accès d'une famille, l'encadrant filtre l'enfant dans le tableur avant d'envoyer le fichier (décision du porteur du 2026-11-28, EX-31 inchangée).

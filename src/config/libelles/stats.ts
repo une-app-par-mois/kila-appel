@@ -1,5 +1,6 @@
 // Textes de l'onglet Statistiques, du choix d'une période (ticket 024) et des statistiques d'un
-// groupe et d'un membre (ticket 025) ; EX-27, RM-01, RM-03.
+// groupe et d'un membre (ticket 025), du fichier CSV des présences (ticket 036) ; EX-27, EX-31,
+// RM-01, RM-03.
 import { plural } from './outils';
 
 type Counts = { present: number; late: number; excused: number; absent: number };
@@ -56,6 +57,12 @@ export const stats = {
       to: 'Au',
       placeholder: 'JJ/MM/AAAA',
       apply: 'Appliquer',
+    },
+    /** Fichier CSV des présences (ticket 036, EX-31) : en-tête, séance sans créneau, sans groupe. */
+    csv: {
+      header: ['Date', 'Créneau', 'Groupe', 'Nom', 'Prénom', 'Statut'],
+      noSlot: 'Sans créneau',
+      noGroup: 'Sans groupe',
     },
   },
 } as const;
