@@ -6,6 +6,9 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Ajouté
 
+- Import CSV : les membres de l'aperçu sont ajoutés d'un bloc, avec leur téléphone d'urgence et leur groupe ; un doublon déjà dans l'appli est inscrit au groupe du fichier, et désarchivé ; rien n'est encore branché à un écran (F-07, EX-30, SEC-10, SEC-12) — ticket 034 (PR #99).
+- Export CSV : contenu du fichier des présences (une ligne par séance et par membre, format d'Excel français, formules neutralisées dans toute cellule) ; rien n'est encore branché à un écran (F-08, EX-31, SEC-07) — ticket 036 (PR #98).
+- Rapport PDF : bibliothèque d'impression d'Expo, sans permission ni réseau ; mesures d'usage de la WebView d'Android refusées (F-09, ABS-01, ABS-07, SEC-08) — ticket 038 (PR #100).
 - Import CSV : lecture des fichiers d'Excel, de LibreOffice et de Google Sheets, en UTF-8 ou Windows-1252, séparés par point-virgule, virgule ou tabulation ; fichier « CSV (Macintosh) » (MacRoman) repéré et refusé ; 1 Mo et 2 000 lignes au plus ; rien n'est encore branché à un écran (F-07, EX-30, SEC-06) — ticket 031.
 - Import CSV : colonnes reconnues, lignes invalides et doublons repérés avant toute écriture ; nom et prénom d'un membre de 100 caractères au plus, sans caractère invisible, à l'import et à la restauration (une sauvegarde hors règle est refusée en entier) ; rien n'est encore branché à un écran (F-07, EX-30, SEC-06, SEC-10) — ticket 032.
 - Fichiers : lecture bornée d'un fichier choisi, dossier `cache/exports/` vidé au démarrage et après Tout effacer, écriture et partage bornés des CSV et PDF, verrou commun étendu à l'import et aux exports ; rien de visible (F-07 à F-09, SEC-06, SEC-10) — ticket 033.

@@ -1,6 +1,6 @@
 # 036 — Export CSV des présences : contenu
 
-Statut : en attente du porteur (Q2) · Jalon : 3 · Zone sensible : **oui** (export : données de mineurs qui sortent de l'appareil ; injection de formules, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
+Statut : fusionné dans le groupe (PR #98, après la relecture du porteur du 2026-11-28) · Jalon : 3 · Zone sensible : **oui** (export : données de mineurs qui sortent de l'appareil ; injection de formules, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
 
 Dépend de : aucun · Fichiers touchés : `src/domain/csvWrite.ts` et son test (nouveaux), `src/domain/attendanceCsv.ts` et son test (nouveaux), `src/data/attendanceExportRepo.ts` et son test (nouveaux), `src/config/libelles/stats.ts` (en-tête, « Sans créneau », « Sans groupe » ; séance de lancement du lot J3-2) — 7 fichiers (8 si le test NF-08 va dans un fichier séparé ; le jeu fictif `src/__fixtures__/statsSeed.ts` est réutilisé sans modification)
 
@@ -118,7 +118,7 @@ Ce n'est pas faisable dans la seule requête de l'export : la base ne garde aucu
 3. Même heuristique dans l'export seul : l'export et les statistiques ne comptent plus pareil.
 4. Garder la règle actuelle et l'écrire comme limite connue.
 
-Statut : le 036 attend la réponse à Q2 ; le reste est terminé.
+Réponse du porteur du 2026-11-28 : **option 4, la règle actuelle est gardée comme limite connue**. Une présence d'une séance à deux groupes dont l'un est supprimé passe au groupe restant, dans les statistiques comme dans l'export (le test « RM-03 Q2 » fixe ce comportement). Un ticket séparé, avec migration ([043](043-trace-groupes-seance.md)), gardera le nombre de groupes de chaque séance et corrigera la règle dans `statsSql.ts` pour les deux ; il inversera ce test.
 
 ## À reporter
 
@@ -126,7 +126,7 @@ Statut : le 036 attend la réponse à Q2 ; le reste est terminé.
 - Architecture : `src/domain/csvWrite.ts` (`toCsv` : `;`, BOM, CRLF, SEC-07), `src/domain/attendanceCsv.ts` (lignes du CSV des présences, textes reçus en paramètre), `src/data/attendanceExportRepo.ts` (`rows`, `count`, `groups` ; une requête chacune, RM-03 par `credits` de `statsSql.ts`).
 - SECURITE : nouveau texte de SEC-07 (décision du porteur du 2026-11-28) : « Toute cellule d'un CSV exporté, en-tête compris, est neutralisée par le préfixe `'` si elle commence par une tabulation ou un retour chariot, ou si son premier caractère visible (après les espaces, espace insécable compris, et les caractères invisibles U+200B à U+200F, U+2060, U+FEFF, U+061C, U+202A à U+202E, U+2066 à U+2069) est `=`, `+`, `-` ou `@`. Un caractère de formule placé après une virgule, un point-virgule ou une tabulation de la cellule (espaces et invisibles sautés) est précédé de `'`. Une cellule qui contient `;`, `,`, `"`, une tabulation, un CR ou un LF est mise entre guillemets. Limite : un réenregistrement du fichier par Excel retire la protection. »
 - SECURITE : SEC-07, colonne Vérification : `src/domain/csvWrite.test.ts`, `src/domain/attendanceCsv.test.ts` et l'aller-retour piégé de `src/data/attendanceExportRepo.test.ts`.
-- Décisions : les lignes du tableau « Décisions » ci-dessus, à recopier en bas de `docs/DECISIONS.md` ; Q1 décidée par le porteur le 2026-11-28 ; Q2 dans `docs/QUESTIONS.md`.
+- Décisions : les lignes du tableau « Décisions » ci-dessus, à recopier en bas de `docs/DECISIONS.md` ; Q1 et Q2 décidées par le porteur le 2026-11-28 (Q2 : limite connue, ticket 043).
 - Pour le 037 : mesurer la mémoire sur l'A55 avec `volumeSeed` (120 000 lignes, pic estimé entre 100 et 200 Mo) et prévoir un plafond de lignes si besoin.
 - Limite : dans « A, B », un nom de groupe qui contient une virgule ne se distingue pas du séparateur à la lecture.
 - `groups()` passe par la requête `OVERVIEW` des statistiques : durée à mesurer sur l'appareil.

@@ -56,6 +56,13 @@ Reporté du lot J3-1 (2026-11-28) :
 - Vérifier sur l'A55 qu'un envoi différé vers Drive lit bien le fichier avant l'effacement du sous-dossier à la fermeture de la feuille de partage (033).
 - Tenir le verrou `'report'` par `fileLock.run('report', …)` (rendu dans un `finally`, même après une erreur), de l'écriture à la fermeture de la feuille de partage.
 
+Reporté du lot J3-2 (2026-11-28, fiche 038) :
+
+- (a) iOS : la `WKWebView` d'expo-print a JavaScript activé et aucune permission réseau à retirer. Tout le texte du rapport est échappé ; le gabarit commence par `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:">` ; tests de l'échappement et de la présence de la CSP (SEC-08, « à venir 039/040 »).
+- (b) Effacer le PDF de `cacheDir/Print/` après le partage (et au démarrage, et après Tout effacer : SEC-08).
+- (c) Les tests simulent expo-print par une fabrique `jest.mock('expo-print', () => …)` et une variable `mock…` : la clé `printToFileAsync:` n'est permise que dans un fichier de test ; aucun nom de module non littéral (« ABS-01 module non littéral »).
+- (d) Durcir dans `src/staticChecksPrint.test.ts` « importeurs ⊆ [`src/data/expoPrint.ts`] » en « exactement [`src/data/expoPrint.ts`] ».
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

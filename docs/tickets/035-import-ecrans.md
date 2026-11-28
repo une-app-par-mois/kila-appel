@@ -66,6 +66,12 @@ Reporté du lot J3-1 (2026-11-28) :
 - Un doublon gardé dont `unknownGroup` n'est pas nul est importé sans groupe : l'écran le dit.
 - L'aperçu dit qu'un doublon ignoré déjà dans l'appli sera inscrit au groupe du fichier et, s'il est archivé, désarchivé (décision du porteur du 2026-11-28 ; maquette « Import CSV : aperçu » mise à jour à l'intégration du lot J3-1).
 
+Reporté du lot J3-2 (2026-11-28, fiche 034) :
+
+- **Réservée (écart de maquette, à poser au porteur)** : le résultat de `confirm` a six compteurs, `{ added, enrolled, duplicatesIgnored, invalid, duplicatesEnrolled, unarchived }` ; la maquette de l'écran de fin n'en montre que quatre. Afficher `duplicatesEnrolled` (doublons inscrits à un groupe du fichier) et `unarchived` (doublons désarchivés, dès que le groupe du fichier est trouvé, décision du porteur du 2026-11-28) demande la validation du porteur.
+- Passer l'aperçu affiché à `confirm(aperçuAffiché, kept)` : le hook rend `stale` (`IMPORT_NO_SESSION`) si cet aperçu n'est plus celui de la session.
+- `useMemberImport(os, { owner: true })` sur l'écran de choix seulement : il vide la session à son démontage ; les écrans suivants l'appellent sans `owner`.
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

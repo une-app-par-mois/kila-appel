@@ -1,6 +1,6 @@
 # 034 — Import CSV : enregistrement et parcours
 
-Statut : en cours · Jalon : 3 · Zone sensible : **oui** (écriture en base de données importées, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
+Statut : fusionné dans le groupe (PR #99, après la relecture du porteur du 2026-11-28) · Jalon : 3 · Zone sensible : **oui** (écriture en base de données importées, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
 
 Dépend de : 031, 032, 033 · Fichiers touchés : `src/data/memberImportRepo.ts` et son test (nouveaux), `src/hooks/useMemberImport.ts` et son test (nouveaux), `src/hooks/importSession.ts` (nouveau : aperçu gardé en mémoire entre les écrans), `src/domain/memberImport.ts` (type `CsvRow` importé de `csvParse.ts` et réexporté, reporté du lot J3-1) — 6 fichiers au départ, 8 au plus avec deux fichiers de test séparés (séance de lancement du lot J3-2)
 

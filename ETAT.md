@@ -6,48 +6,36 @@ Dernière mise à jour : 2026-11-28
 
 ## En cours
 
-**Jalon 3 en cours** (Entrer et sortir les données : F-07 import CSV, F-08 export CSV, F-09 rapport PDF), branche `groupe/jalon-3-entrer-sortir-donnees`, partie de `main` ; 14 tickets (031 à 042, avec 032b et 039b), plans validés par le porteur le 2026-11-28.
+**Jalon 3 en cours** (Entrer et sortir les données : F-07 import CSV, F-08 export CSV, F-09 rapport PDF), branche `groupe/jalon-3-entrer-sortir-donnees`, partie de `main` ; 15 tickets (031 à 042, avec 032b et 039b, plus 043 créé au lot J3-2), plans validés par le porteur le 2026-11-28 (sauf 043).
 
-**Lot J3-1 fusionné dans le groupe** le 2026-11-28 après la relecture du porteur : 031 (lecture du CSV, PR #93), 032 (règles de l'import et aperçu, PR #94), 033 (fichiers des échanges, verrou, `cache/exports/`, PR #95). Intégration : branche `ticket/lot-j3-1-integration` (50 décisions ajoutées, SEC-01, SEC-06 et SEC-10 complétés, maquette de l'import mise à jour). Aucune question en attente du porteur.
+**Lot J3-2 fait** : fusionné dans le groupe le 2026-11-28 après la relecture du porteur : 034 (enregistrement de l'import, PR #99), 036 (contenu du CSV des présences, PR #98), 038 (expo-print 58.0.9 verrouillé, WebView d'Android sans mesures d'usage, PR #100). Intégration : branche `ticket/lot-j3-2-integration` (47 lignes ajoutées à `docs/DECISIONS.md`, SEC-01, SEC-02, SEC-07, SEC-08, SEC-10, SEC-12 complétés, CONFORMITE §2.2, §3, §8). Réponses du porteur du 2026-11-28 : doublon archivé désarchivé dès que le groupe du fichier est trouvé ; SEC-07 élargie à toute cellule ; Q2 du 036 gardée comme limite connue, ticket 043 (migration). Aucune question en attente dans la file du porteur.
 
-Jalon 2 fait (PR #88, `main` à `40d70bb`, fusionné sans le prétest sur l'A55, décision du porteur du 2026-11-28 : tout défaut trouvé au prétest devient un ticket du jalon 3, classé selon PLAN §5) ; jalon 1 fait (PR #63) ; jalon 0 fait (PR #7).
+**Lot J3-1 fusionné dans le groupe** (031, 032, 033 : PR #93, #94, #95).
 
-## Bilan des décisions automatiques, fin du jalon 2
-
-`docs/DECISIONS.md` : **204 décisions automatiques** au jalon 2 ; 11 changées après contradiction ; 0 contestée, maintenue ; **0 annulée** par le porteur au jalon 2 ; 2 annulées depuis le début du projet (les deux du 015b). Les 6 en attente du porteur sont confirmées (lignes de confirmation du 2026-11-28) ; 0 en attente.
+Jalon 2 fait (PR #88, `main` à `40d70bb`, sans le prétest sur l'A55, décision du porteur du 2026-11-28 : tout défaut trouvé au prétest devient un ticket du jalon 3) ; jalon 1 fait (PR #63) ; jalon 0 fait (PR #7).
 
 ## Prochaines étapes
 
-1. **Lot J3-2 recommandé : 034, 036, 038** (séance de lancement : pré-analyse, QCM, plans en zone sensible).
-   - Plus de dépendance bloquante : 034 dépend de 031, 032, 033 (fusionnés) ; 036 et 038 de rien. 038 avant 039 : risque de la dépendance expo-print (WebView, audit de l'APK) levé tôt ; 039 reste possible à sa place (aucun fichier commun non plus).
-   - Fichiers communs : **aucun** (034 : `memberImportRepo`, `useMemberImport`, `importSession`, `memberImport.ts` ; 036 : `csvWrite`, `attendanceCsv`, `attendanceExportRepo` ; 038 : `package.json`, `package-lock.json`, `app.json`, `plugins/`, `scripts/audit-apk*`, `staticChecksPrint.test.ts`).
-   - 032b (formulaires, 3 fichiers, hors zone sensible, aucun fichier commun) peut s'ajouter en 4e ticket.
-   - Ensuite : 035 et 037 (après 034 et 036), 039 puis 039b, 040 (après 033, 038, 039, 039b), 041, campagne Maestro 042.
-2. **Prétest du jalon 2 sur l'A55**, à faire par le porteur (désinstaller Ki&La avant d'installer l'APK de la CI de la PR #88) :
-   - base réellement abîmée (APK de debug, `run-as`) et restauration depuis l'écran de récupération (014f) ;
-   - durée de `quick_check` avec une grosse base fictive ;
+1. **Lot suivant : 035, 037, 039** (séance de lancement : pré-analyse, QCM, plans en zone sensible pour 037 et 039).
+   - 035 (écrans de l'import) : écart de maquette à poser au porteur (compteurs `duplicatesEnrolled` et `unarchived` du résultat) ; `confirm(aperçuAffiché, kept)`, `owner: true` sur l'écran de choix.
+   - 037 (écran de l'export) : mesurer la mémoire sur l'A55 (`volumeSeed`, 120 000 lignes), plafond de lignes si besoin ; durée de `groups()`.
+   - 039 (HTML du rapport) : échappement et CSP (SEC-08, « à venir 039 »).
+2. **Ensuite** : 039b, 040 (après 038, 039, 039b : CSP, échappement, effacement de `cache/Print/`, simulation par une fabrique, contrôle « exactement »), 041, 032b, 042 (Maestro du jalon 3) et **043** (trace des groupes d'une séance, migration, zone sensible).
+3. **Prétest du jalon 2 sur l'A55**, à faire par le porteur (désinstaller Ki&La avant d'installer l'APK de la CI de la PR #88) :
+   - base réellement abîmée (APK de debug, `run-as`) et restauration depuis l'écran de récupération (014f) ; durée de `quick_check` avec une grosse base fictive ;
    - bandeau des 30 jours (014d) ; `scripts/e2e.sh --appareil-reel` ;
-   - écrans des alertes (022) et du choix de période (024) : focus, retour Android, `dismissTo` ;
-   - « Garder la [1 ▾] dernière saison » (020), statistiques d'un groupe et d'un membre (025 : 35 cases, tablette, TalkBack) ;
-   - **relances (028b, 028c, 029)** :
-     - activation et dialogue de permission (Android 13+ : le dialogue pourrait ne pas venir tant qu'aucun canal n'existe ; sinon, question au porteur) ;
-     - dialogue fermé sans réponse (interrupteur éteint attendu, pas le bandeau) ;
-     - refus, puis réglages du téléphone et retour : bandeau, puis bandeau disparu ;
-     - relance reçue à l'heure (début + délai), sans nom de membre sur l'écran verrouillé ;
-     - bannière et son quand l'appli est ouverte, sans pastille ;
-     - appui avec l'appli fermée, en arrière-plan et ouverte : l'appel du créneau s'ouvre ;
-     - plus aucune relance programmée ni affichée après Tout effacer ;
-     - comportement en Doze et après un redémarrage du téléphone ;
-     - mode avion (aucune différence attendue) ;
-     - retour Android bloqué pendant la demande de permission ;
-   - **NF-08 sur l'appareil** : sauvegarde de volume du 030 (`volumeSeed`, générée par `e2eBackup.ts`) restaurée, accueil et onglet Stats jugés à l'œil.
-   Déjà validé par le porteur sur l'A55 le 2026-11-27 (APK `1a23be4`) : Bienvenue, appel au doigt, onglet Stats, brouillon après redémarrage, export et restauration par Drive, Tout effacer puis restauration ; audit SEC-02 conforme.
-3. **Vérifications iPhone avant le jalon 7** (toute publication iOS) : restauration réelle puis `tmp/` vide ; aucun lien dans `Caches/expo-sharing-tmp/` ; préfixe du cache identique entre expo-file-system et expo-modules-core ; Inbox `tmp/<identifiant>-Inbox/` vidée par Tout effacer et par le démarrage ; restauration depuis l'écran de récupération ; build iOS avec expo-notifications sans habilitation.
-4. PR méthode n° 1 sur `une-app-par-mois/methode-vibe-coding` à relire par le porteur, app-template à suivre.
+   - écrans des alertes (022), du choix de période (024), de la conservation (020), statistiques d'un groupe et d'un membre (025 : 35 cases, tablette, TalkBack) ;
+   - **relances (028b, 028c, 029)** : activation et dialogue de permission (Android 13+), dialogue fermé sans réponse, refus puis réglages et retour, relance reçue à l'heure sans nom sur l'écran verrouillé, bannière appli ouverte sans pastille, appui appli fermée, en arrière-plan et ouverte, rien après Tout effacer, Doze et redémarrage, mode avion, retour Android bloqué pendant la demande ;
+   - **NF-08 sur l'appareil** : sauvegarde de volume du 030 restaurée, accueil et onglet Stats jugés à l'œil.
+   Déjà validé sur l'A55 le 2026-11-27 (APK `1a23be4`) : Bienvenue, appel, onglet Stats, brouillon, export et restauration par Drive, Tout effacer puis restauration ; audit SEC-02 conforme.
+4. **Vérifications iPhone avant le jalon 7** : restauration réelle puis `tmp/` vide ; `Caches/expo-sharing-tmp/` ; Inbox vidée ; build iOS avec expo-notifications et expo-print sans habilitation (`audit-ios.js` non rejoué au 038, pas de build iOS sur ce poste).
+5. PR méthode n° 1 sur `une-app-par-mois/methode-vibe-coding` à relire par le porteur, app-template à suivre.
 
 ## Points d'attention
 
-- **Prétest du jalon 2 sur l'A55 à faire** (liste ci-dessus) : le jalon est dans `main` sans lui (décision du porteur du 2026-11-28) ; chaque défaut trouvé devient un ticket du jalon 3, classé selon PLAN §5.
+- **Prétest sur l'A55 des jalons 2 et 3 à faire** (liste ci-dessus) : le jalon 2 est dans `main` sans lui (décision du porteur du 2026-11-28) ; chaque défaut trouvé devient un ticket du jalon 3, classé selon PLAN §5.
+- **Mémoire de l'export CSV à mesurer sur l'A55** (037) : `volumeSeed`, 120 000 lignes, pic estimé entre 100 et 200 Mo ; plafond de lignes si besoin.
+- Limite connue (Q2 du 036) : une présence d'une séance à deux groupes dont l'un est supprimé passe au groupe restant (statistiques et export), jusqu'au ticket 043.
 - **Vérifications du jalon 3 sur l'A55** (en plus du prétest du jalon 2) : CSV d'Excel (UTF-8, Windows-1252, MacRoman refusé) venus de Drive et de Gmail ; `File.size` d'une copie absente, BOM gardé par `File.write(string)`, `File.create()` puis `write()` dans un sous-dossier neuf ; `text/csv` accepté par Drive et Gmail ; envoi différé vers Drive lu avant l'effacement du sous-dossier (037, 040) ; UTI `public.comma-separated-values-text` et `com.adobe.pdf` sur iPhone (jalon 7).
 - Outil d'écriture des agents : un U+FEFF littéral (caractère invisible) a été écrit dans une fiche au lot J3-1 ; à surveiller dans le code et les tests (écrire `\uFEFF` ou des octets).
 - Hook pre-push : il lance `scripts/test.sh` sur la **copie de travail**, pas sur les commits envoyés ; la CI reste la vérification qui fait foi.
@@ -74,5 +62,6 @@ Jalon 2 fait (PR #88, `main` à `40d70bb`, fusionné sans le prétest sur l'A55,
 - **Requêtes du lot J2-1 jamais lancées par expo-sqlite sur un appareil** : séries d'absences (CTE, `ROW_NUMBER`, 021) et agrégats des statistiques (`+e.group_id` pour forcer l'index `enrollments_member`, 023) ; vérifiées sur `node:sqlite` seulement. APK de la CI et build iOS simulateur avec expo-notifications : construits par la CI de la PR #88 (APK audité conforme).
 - **Écrans des lots J2-2 et J2-3 jamais vus sur un téléphone** : statistiques d'un groupe et d'un membre, phrase de conservation du 020 ; alertes (focus et retour Android de l'écran d'alerte, recherche d'urgence limitée au membre), onglet Stats (`router.dismissTo` de l'écran Période, textes agrandis, tablette) ; testés avec le routeur simulé de Jest, puis sur l'émulateur par la campagne du 030 (retour Android de l'écran d'alerte, `dismissTo` de l'écran Période, statistiques de la saison) ; rien sur un téléphone.
 - **Relances (028a, 028b, 028c, 029)** : branchées et dans le bundle ; APK de production reconstruit et audité en local après la fusion (conforme, mêmes trois permissions, INTERNET absente, aucune ligne Firebase sur l'émulateur), mais aucune relance programmée ni délivrée sur un appareil, annulation ciblée et retrait des SharedPreferences non vus ; Hermes non vérifié pour les heures doublées ; iOS : build simulateur de la CI seulement. Contrôle statique SEC-03 : un nom calculé (`obj[a + b]`) n'est pas détecté, `jest.setup.js` n'est pas parcouru. `expoNotifications.ts` et `staticChecksNotifications.test.ts` à 300 lignes (découper au prochain ajout).
+- **Lot J3-2** : import, export et expo-print vérifiés sur `node:sqlite` et Jest seulement, sauf le 038 (APK de production local audité conforme, démarrage sur l'émulateur) ; APK de la CI et build iOS avec expo-print non vérifiés ; NF-08 de l'import (2 000 lignes) et de l'export mesurés sur le poste, pas sur l'A55.
 - Couleurs nommées (`'red'`) non détectées par le contrôle CONV-16.
 - Habilitations iOS contrôlées sur le projet généré, pas sur un binaire signé : à revoir avec la signature (jalon 6). Polices IBM Plex absentes du poste : les maquettes s'affichent dans la police du système.

@@ -1,6 +1,6 @@
 # 038 — Rapport PDF : expo-print et garde-fous du binaire
 
-Statut : en cours (dépendance accordée par le porteur le 2026-11-28, version exacte 58.0.9) · Jalon : 3 · Zone sensible : **oui** (dépendance et rendu par WebView : règle « aucun réseau », `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
+Statut : fusionné dans le groupe (PR #100, après la relecture du porteur du 2026-11-28 ; dépendance accordée par le porteur le 2026-11-28, version exacte 58.0.9) · Jalon : 3 · Zone sensible : **oui** (dépendance et rendu par WebView : règle « aucun réseau », `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
 
 Dépend de : aucun · Fichiers touchés : `package.json`, `package-lock.json`, `app.json`, `plugins/withoutWebViewMetrics.js` et son test (nouveaux), `scripts/audit-apk.js`, `scripts/audit-apk-webview.test.js` (nouveau : `audit-apk.test.js` fait 302 lignes), `src/staticChecksPrint.test.ts` (nouveau) — 8 fichiers, ou 9 si `scripts/audit-apk.test.js` doit être retouché (séance de lancement du lot J3-2 ; `docs/SECURITE.md` et `docs/CONFORMITE.md` : à l'intégration du lot, voir « À reporter »)
 

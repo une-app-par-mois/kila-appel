@@ -15,7 +15,7 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 0 | Outillage et risques techniques | Voir `docs/PLAN.md` §2 | `groupe/jalon-0-outillage` | fait (PR #7) |
 | 1 | Organiser, appeler, retrouver | Voir `docs/PLAN.md` §2 | `groupe/jalon-1-organiser-appeler-retrouver` | fait (PR #63) |
 | 2 | Suivre l'assiduité (F-04, F-05, F-06) | Voir `docs/PLAN.md` §2 | `groupe/jalon-2-suivre-assiduite` | fait (PR #88), sans le prétest sur l'A55 (décision du porteur du 2026-11-28) |
-| 3 | Entrer et sortir les données (F-07, F-08, F-09) | Voir `docs/PLAN.md` §2 | `groupe/jalon-3-entrer-sortir-donnees` | découpé (14 tickets : 031 à 042, avec 032b et 039b, 2026-11-28) ; plans validés par le porteur le 2026-11-28 ; en cours : lot J3-1 (031, 032, 033) fusionné dans le groupe |
+| 3 | Entrer et sortir les données (F-07, F-08, F-09) | Voir `docs/PLAN.md` §2 | `groupe/jalon-3-entrer-sortir-donnees` | découpé (14 tickets : 031 à 042, avec 032b et 039b, 2026-11-28), plus 043 (créé à l'intégration du lot J3-2) ; plans validés par le porteur le 2026-11-28 ; en cours : lots J3-1 (031, 032, 033) et J3-2 (034, 036, 038) fusionnés dans le groupe |
 | 4 à 7 | Détaillés au début du jalon précédent | `docs/PLAN.md` §2 | — | à faire |
 
 ## Tickets
@@ -83,13 +83,14 @@ Un jalon = un objectif vérifiable et son critère de sortie. En mode par jalon,
 | 032 | [Import CSV : règles de l'import et aperçu](032-import-regles.md) | 3 | F-07 | oui | fusionné dans le groupe (PR #94) |
 | 032b | [Fiche membre : nom et prénom de 100 caractères au plus](032b-saisie-longueur-nom.md) | 3 | F-01, SEC-06 | non | à faire |
 | 033 | [Fichiers des échanges : adaptateur, verrou et nettoyage](033-fichiers-echanges.md) | 3 | F-07 à F-09 | oui | fusionné dans le groupe (PR #95) |
-| 034 | [Import CSV : enregistrement et parcours](034-import-enregistrement.md) | 3 | F-07 | oui | en cours |
+| 034 | [Import CSV : enregistrement et parcours](034-import-enregistrement.md) | 3 | F-07 | oui | fusionné dans le groupe (PR #99) |
 | 035 | [Import CSV : écrans](035-import-ecrans.md) | 3 | F-07 | non | à faire |
-| 036 | [Export CSV des présences : contenu](036-export-csv-contenu.md) | 3 | F-08 | oui | en cours |
+| 036 | [Export CSV des présences : contenu](036-export-csv-contenu.md) | 3 | F-08 | oui | fusionné dans le groupe (PR #98) |
 | 037 | [Export CSV des présences : écran et partage](037-export-csv-ecran.md) | 3 | F-08 | oui | à faire |
-| 038 | [Rapport PDF : expo-print et garde-fous du binaire](038-rapport-dependance.md) | 3 | F-09 | oui | en cours |
+| 038 | [Rapport PDF : expo-print et garde-fous du binaire](038-rapport-dependance.md) | 3 | F-09 | oui | fusionné dans le groupe (PR #100) |
 | 039 | [Rapport PDF : synthèse et taux (HTML)](039-rapport-contenu.md) | 3 | F-09 | oui | à faire |
 | 039b | [Rapport PDF : grille séance par séance](039b-rapport-grille.md) | 3 | F-09 | oui | à faire |
 | 040 | [Rapport PDF : production du fichier et partage](040-rapport-production.md) | 3 | F-09 | oui | à faire |
 | 041 | [Rapport PDF : écran](041-rapport-ecran.md) | 3 | F-09 | non | à faire |
 | 042 | [Campagne Maestro du jalon 3](042-maestro-jalon-3.md) | 3 | F-07 à F-09 | non | à faire |
+| 043 | [Trace des groupes d'une séance après la suppression d'un groupe](043-trace-groupes-seance.md) | 3 | F-05, F-08, RM-03 | oui | à faire |
