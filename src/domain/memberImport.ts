@@ -1,13 +1,14 @@
 // EX-30 : aperçu d'un import CSV, calculé avant toute écriture (ticket 032). Domaine pur : les
-// membres et les groupes existants sont passés en paramètres, l'écriture vient au ticket 034.
+// membres et les groupes existants sont passés en paramètres ; l'écriture est dans memberImportRepo.ts.
 // ABS-03 : seuls nom, prénom, date de naissance, téléphone et groupe sont gardés.
 // ABS-04 : un motif de refus porte une ligne, un champ et un code, jamais une cellule.
+import type { CsvRow } from '@/domain/csvParse';
 import { foldText, isIsoDate } from '@/domain/formats';
 import { parseImportDate, parseImportPhone, readImportName } from '@/domain/importFields';
 import { InputError, validateMember, validateMemberName } from '@/domain/validation';
 
-/** Ligne lue d'un CSV (ticket 031) : `line` est le numéro de ligne du tableur, en-tête = 1. */
-export type CsvRow = { line: number; cells: string[] };
+/** Ligne lue d'un CSV : type de la lecture (ticket 031), réexporté (un seul type, ticket 034). */
+export type { CsvRow };
 export type ImportGroup = { id: number; seasonId: number; name: string; archivedAt: string | null };
 export type ExistingMember = {
   id: number;
@@ -224,6 +225,16 @@ export const previewImport = (rows: CsvRow[], options: ImportOptions): PreviewRe
   result.counts.invalid = result.invalid.length;
   result.counts.duplicates = result.duplicates.length;
   return { ok: true, preview: result };
+};
+
+/**
+ * ABS-03, SEC-06 : lignes réduites aux cellules des colonnes reconnues, en-tête compris (première
+ * colonne de chaque sorte) ; une colonne « Allergies » ne reste pas en mémoire. L'aperçu se calcule
+ * sur ces lignes : une ligne remplie seulement dans des colonnes inconnues y devient vide.
+ */
+export const keepImportColumns = (rows: CsvRow[]): CsvRow[] => {
+  const kept = Object.values(readHeader(rows[0]?.cells ?? [])).sort((a, b) => a - b);
+  return rows.map(({ line, cells }) => ({ line, cells: kept.map((i) => cells[i] ?? '') }));
 };
 
 /** EX-30 : membres à écrire, dans l'ordre du fichier ; doublons ignorés sauf ceux de `kept`. */
