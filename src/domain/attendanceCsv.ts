@@ -22,19 +22,26 @@ export type ExportRow = {
 export type AttendanceCsvLabels = {
   /** « Date;Créneau;Groupe;Nom;Prénom;Statut ». */
   header: readonly string[];
-  noSlot: string;
+  /** Séance sans créneau, avec son heure : « Sans créneau 18:00 ». */
+  noSlot: (time: string) => string;
   noGroup: string;
   statuses: Readonly<Record<AttendanceStatus, string>>;
-  /** Lundi en premier. */
-  weekdays: readonly string[];
+  /** Les sept jours, lundi en premier. */
+  weekdays: readonly [string, string, string, string, string, string, string];
 };
 
-/** Nom du créneau ; sans nom, jour de la date de la séance et son heure ; sans créneau, « Sans créneau ». */
+/**
+ * Nom du créneau ; sans nom, jour de la date de la séance et son heure ; sans créneau, « Sans
+ * créneau » et l'heure (deux appels sans créneau le même jour restent distincts).
+ */
 const slotLabel = (row: ExportRow, labels: AttendanceCsvLabels): string => {
-  if (!row.hasSlot) return labels.noSlot;
+  if (!row.hasSlot) return labels.noSlot(row.startTime);
   const name = row.slotName?.trim();
   if (name) return name;
-  return `${labels.weekdays[weekdayOfDate(row.date) - 1] ?? ''} ${row.startTime}`;
+  const day = labels.weekdays[weekdayOfDate(row.date) - 1];
+  // ABS-04 : défaut du programme, signalé sans aucune donnée.
+  if (day === undefined) throw new Error('Libellé du jour manquant');
+  return `${day} ${row.startTime}`;
 };
 
 /** EX-31 : texte du fichier (BOM, en-tête, une ligne par présence, CRLF). */

@@ -1,6 +1,6 @@
 # 036 — Export CSV des présences : contenu
 
-Statut : en attente du porteur (Q1) · Jalon : 3 · Zone sensible : **oui** (export : données de mineurs qui sortent de l'appareil ; injection de formules, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
+Statut : en attente du porteur (Q2) · Jalon : 3 · Zone sensible : **oui** (export : données de mineurs qui sortent de l'appareil ; injection de formules, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
 
 Dépend de : aucun · Fichiers touchés : `src/domain/csvWrite.ts` et son test (nouveaux), `src/domain/attendanceCsv.ts` et son test (nouveaux), `src/data/attendanceExportRepo.ts` et son test (nouveaux), `src/config/libelles/stats.ts` (en-tête, « Sans créneau », « Sans groupe » ; séance de lancement du lot J3-2) — 7 fichiers (8 si le test NF-08 va dans un fichier séparé ; le jeu fictif `src/__fixtures__/statsSeed.ts` est réutilisé sans modification)
 
@@ -95,21 +95,40 @@ Décisions automatiques de la pré-analyse (état « à relire », `docs/DECISIO
 | Groupe ou période invalides | — | Identifiant de groupe ou de saison invalide : `DataError('NOT_FOUND')` ; groupe inexistant : 0 ligne ; période revalidée par `customPeriod` | Comme `statsRepo` ; erreurs sans donnée (ABS-04) | à relire |
 | Lignes SQL d'une présence comptée pour deux groupes | `group_concat` ; une ligne SQL par groupe | Une ligne SQL par groupe, regroupées en une ligne d'export par le dépôt | `group_concat` n'a pas d'ordre garanti et son séparateur peut figurer dans un nom | à relire |
 | Test NF-08 | Dans le test du dépôt ; fichier séparé | `src/data/attendanceExportVolume.test.ts` (8 fichiers au total) | Le test du dépôt approchait les 300 lignes | à relire |
+| Colonne Créneau d'une séance sans créneau (`slot_id` NULL) | « Sans créneau » ; « Sans créneau » et l'heure | « Sans créneau 18:00 » (heure de la séance) ; `noSlot` devient une fonction de l'heure dans `stats.csv` | Deux appels sans créneau le même jour restent distincts (revue) | changée après contradiction |
+| Libellé du jour manquant | `?? ''` ; erreur | `weekdays` typé en tuple de 7 ; libellé absent : `Error('Libellé du jour manquant')`, sans donnée | Pas de cellule tronquée en silence ; ABS-04 (revue) | changée après contradiction |
+| SEC-07 : caractère de formule après un séparateur suivi d'espaces ou d'invisibles (« A, -B ») | Juste après le séparateur ; après les espaces et invisibles aussi | Les espaces et invisibles sont sautés, comme en tête de cellule : « A, '-B » | Même règle en tête et après un séparateur ; « , =1 » s'ouvre aussi comme une formule après découpage | à relire |
+| SEC-07 : cellule qui commence par une tabulation suivie d'un caractère de formule (« \t=1 ») | — | Deux apostrophes : « '\t'=1 » (règle de tête et règle du séparateur, appliquées l'une après l'autre) | Cas sans usage réel ; inoffensif | à relire |
 
 ## Questions pour le porteur
 
-**Q1 — SEC-07 appliquée à toute cellule (cas réservé : sécurité).** Le plan validé dit « champs texte seulement (nom, prénom, groupe, créneau), pas la date ni le statut ». `toCsv` neutralise aujourd'hui toute cellule, en-tête compris. Le fichier produit est identique, car les dates (`JJ/MM/AAAA`), les statuts et l'en-tête ne commencent jamais par `=`, `+`, `-`, `@`, une tabulation ou un retour chariot. Options :
+**Q1 — SEC-07 appliquée à toute cellule (cas réservé : sécurité).** Décidée par le porteur le 2026-11-28 : toute cellule, en-tête compris, avec la règle élargie (premier caractère visible, caractère de formule après `,`, `;` ou tabulation, guillemets dès qu'une virgule ou une tabulation figure dans la cellule). Appliquée. Texte d'origine : le plan validé dit « champs texte seulement (nom, prénom, groupe, créneau), pas la date ni le statut ». `toCsv` neutralise aujourd'hui toute cellule, en-tête compris. Le fichier produit est identique, car les dates (`JJ/MM/AAAA`), les statuts et l'en-tête ne commencent jamais par `=`, `+`, `-`, `@`, une tabulation ou un retour chariot. Options :
 
 1. **Toute cellule (recommandé, appliqué)** : une colonne ajoutée plus tard ne peut pas oublier la neutralisation ; `toCsv` reste simple (aucune liste de colonnes).
 2. Champs texte seulement, à la lettre : `toCsv` reçoit la liste des colonnes à neutraliser.
 
-Facile à défaire (une ligne dans `csvWrite.ts` et un test). Statut du ticket : en attente du porteur pour cette seule question ; le reste est terminé.
+Facile à défaire (une ligne dans `csvWrite.ts` et un test).
+
+**Q2 — Présence d'une séance à deux groupes dont l'un est supprimé (cas réservé : règle RM-03, données personnelles, schéma).** Décision du porteur : une présence dont le groupe est supprimé devient « Sans groupe » et ne sort jamais d'un export filtré. Avec la règle actuelle (`credits`), elle passe au groupe restant : supprimer Vétérans fait sortir Paul (inscrit aux seuls Vétérans) dans l'export Benjamins (test « RM-03 Q2 » de `attendanceExportRepo.test.ts`, qui fixe le comportement actuel). **Les statistiques du jalon 2 ont le même défaut** : le même test montre le retard de Paul compté pour Benjamins dans `statsRepo.overview`.
+
+Ce n'est pas faisable dans la seule requête de l'export : la base ne garde aucune trace du groupe supprimé. Supprimer un groupe efface sa ligne de `session_groups` et aussi les inscriptions du membre à ce groupe (`ON DELETE CASCADE`). La séance ressemble alors à une séance d'un seul groupe, et le membre n'a plus d'inscription à « un autre groupe de la saison » : l'heuristique proposée à la revue ne repère donc pas le cas (Paul, comme Léa dans l'exemple, n'a plus aucune inscription dans la saison). Options :
+
+1. **Garder une trace dans le schéma (recommandé)** : par exemple, `sessions.group_count` figé à l'enregistrement de l'appel, ou une ligne de `session_groups` gardée avec `group_id` NULL (`ON DELETE SET NULL`). Le repli « un seul groupe » ne vaut que si la séance n'a jamais eu qu'un groupe ; la règle est corrigée dans `statsSql.ts`, pour les statistiques et l'export à la fois. Migration, et les séances déjà enregistrées restent dans l'état actuel (aucune trace à reconstituer). Ticket à part.
+2. Heuristique sans schéma, dans `statsSql.ts` : le repli ne vaut que si le membre a eu, à une date quelconque, une inscription au groupe restant (Nour, inscription terminée, reste compté pour Benjamins ; Paul devient « Sans groupe »). Change RM-03 pour un membre jamais inscrit au groupe d'une séance d'un seul groupe (il devient « Sans groupe » et sort des statistiques du groupe).
+3. Même heuristique dans l'export seul : l'export et les statistiques ne comptent plus pareil.
+4. Garder la règle actuelle et l'écrire comme limite connue.
+
+Statut : le 036 attend la réponse à Q2 ; le reste est terminé.
 
 ## À reporter
 
 - CHANGELOG : rien (visible au 037).
 - Architecture : `src/domain/csvWrite.ts` (`toCsv` : `;`, BOM, CRLF, SEC-07), `src/domain/attendanceCsv.ts` (lignes du CSV des présences, textes reçus en paramètre), `src/data/attendanceExportRepo.ts` (`rows`, `count`, `groups` ; une requête chacune, RM-03 par `credits` de `statsSql.ts`).
+- SECURITE : nouveau texte de SEC-07 (décision du porteur du 2026-11-28) : « Toute cellule d'un CSV exporté, en-tête compris, est neutralisée par le préfixe `'` si elle commence par une tabulation ou un retour chariot, ou si son premier caractère visible (après les espaces, espace insécable compris, et les caractères invisibles U+200B à U+200F, U+2060, U+FEFF, U+061C, U+202A à U+202E, U+2066 à U+2069) est `=`, `+`, `-` ou `@`. Un caractère de formule placé après une virgule, un point-virgule ou une tabulation de la cellule (espaces et invisibles sautés) est précédé de `'`. Une cellule qui contient `;`, `,`, `"`, une tabulation, un CR ou un LF est mise entre guillemets. Limite : un réenregistrement du fichier par Excel retire la protection. »
 - SECURITE : SEC-07, colonne Vérification : `src/domain/csvWrite.test.ts`, `src/domain/attendanceCsv.test.ts` et l'aller-retour piégé de `src/data/attendanceExportRepo.test.ts`.
-- Décisions : les lignes du tableau « Décisions » ci-dessus, à recopier en bas de `docs/DECISIONS.md` ; Q1 dans `docs/QUESTIONS.md`.
+- Décisions : les lignes du tableau « Décisions » ci-dessus, à recopier en bas de `docs/DECISIONS.md` ; Q1 décidée par le porteur le 2026-11-28 ; Q2 dans `docs/QUESTIONS.md`.
+- Pour le 037 : mesurer la mémoire sur l'A55 avec `volumeSeed` (120 000 lignes, pic estimé entre 100 et 200 Mo) et prévoir un plafond de lignes si besoin.
+- Limite : dans « A, B », un nom de groupe qui contient une virgule ne se distingue pas du séparateur à la lecture.
+- `groups()` passe par la requête `OVERVIEW` des statistiques : durée à mesurer sur l'appareil.
 - Mesures NF-08 (`attendanceExportVolume.test.ts`, poste local) : les trois cas passent en 1,7 s au total, 120 000 lignes comprises.
 - CONFORMITE (à l'intégration) : §2.2, pour répondre au droit d'accès d'une famille, l'encadrant filtre l'enfant dans le tableur avant d'envoyer le fichier (décision du porteur du 2026-11-28, EX-31 inchangée).

@@ -61,7 +61,8 @@ export const stats = {
     /** Fichier CSV des présences (ticket 036, EX-31) : en-tête, séance sans créneau, sans groupe. */
     csv: {
       header: ['Date', 'Créneau', 'Groupe', 'Nom', 'Prénom', 'Statut'],
-      noSlot: 'Sans créneau',
+      /** Avec l'heure de la séance (deux appels sans créneau le même jour restent distincts). */
+      noSlot: (time: string) => `Sans créneau ${time}`,
       noGroup: 'Sans groupe',
     },
   },

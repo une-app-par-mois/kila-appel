@@ -55,15 +55,18 @@ describe('attendanceCsv (EX-31)', () => {
     );
   });
 
-  it('EX-31 EX-39 séance sans créneau (créneau supprimé ou appel sans créneau) : « Sans créneau »', () => {
-    const csv = attendanceCsv([row({ hasSlot: false, slotName: null, date: '2026-11-29' })], L);
-    expect(csv).toBe(`${HEAD}29/11/2026;Sans créneau;Poussins;Blanc;Zoé;Présent\r\n`);
+  it('EX-31 EX-39 séance sans créneau (créneau supprimé ou appel sans créneau) : « Sans créneau » et l’heure', () => {
+    const csv = attendanceCsv(
+      [row({ hasSlot: false, slotName: null, date: '2026-11-29', startTime: '18:00' })],
+      L,
+    );
+    expect(csv).toBe(`${HEAD}29/11/2026;Sans créneau 18:00;Poussins;Blanc;Zoé;Présent\r\n`);
   });
 
   it('EX-31 RM-03 présence qui compte pour deux groupes : une seule ligne, « A, B »', () => {
     const csv = attendanceCsv([row({ groups: ['Benjamins', 'Vétérans'] })], L);
     expect(csv).toBe(
-      `${HEAD}25/11/2026;Poussins mercredi;Benjamins, Vétérans;Blanc;Zoé;Présent\r\n`,
+      `${HEAD}25/11/2026;Poussins mercredi;"Benjamins, Vétérans";Blanc;Zoé;Présent\r\n`,
     );
   });
 
@@ -87,9 +90,9 @@ describe('attendanceCsv (EX-31)', () => {
       L,
     );
     expect(csv).toBe(
-      `${HEAD}25/11/2026;'+Créneau;'=Groupe, B;'-Marie;'@SOMME;Présent\r\n` +
+      `${HEAD}25/11/2026;'+Créneau;"'=Groupe, B";'-Marie;'@SOMME;Présent\r\n` +
         `25/11/2026;Poussins mercredi;O'Brien;"Dupont;Martin";"Zoé ""Zaza""";Présent\r\n` +
-        `25/11/2026;Poussins mercredi;Poussins;Marie-Ève;'\tTab;Présent\r\n`,
+        `25/11/2026;Poussins mercredi;Poussins;Marie-Ève;"'\tTab";Présent\r\n`,
     );
   });
 
@@ -104,5 +107,12 @@ describe('attendanceCsv (EX-31)', () => {
     })();
     expect(String(thrown)).toMatch('Date stockée invalide (RM-04)');
     expect(String(thrown)).not.toMatch(/Blanc|Zoé|2026-13-01/);
+  });
+
+  it('ABS-04 libellé du jour manquant : erreur sans aucun nom', () => {
+    const broken = { ...L, weekdays: [] as unknown as AttendanceCsvLabels['weekdays'] };
+    expect(() => attendanceCsv([row({ slotName: null, lastName: 'Blanc' })], broken)).toThrow(
+      /^Libellé du jour manquant$/,
+    );
   });
 });

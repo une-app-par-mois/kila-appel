@@ -9,6 +9,7 @@ import { attendanceExportRepo } from '@/data/attendanceExportRepo';
 import type { Db } from '@/data/db';
 import { openNodeDb } from '@/data/nodeDb';
 import { prepareDatabase } from '@/data/open';
+import { statsRepo } from '@/data/statsRepo';
 import { attendanceCsv } from '@/domain/attendanceCsv';
 import { decodeCsv } from '@/domain/csvDecode';
 import { parseCsv } from '@/domain/csvParse';
@@ -105,6 +106,23 @@ describe('Export des présences (EX-31, RM-03)', () => {
     const benjamins = await repo().rows(SEASON, s.groups.benjamins);
     expect(benjamins.find((r) => r.lastName === 'Roux')?.groups).toEqual(['Benjamins']);
     expect(await repo().count(SEASON, s.groups.benjamins)).toBe(10);
+  });
+
+  // Q2 de la fiche, en attente du porteur : comportement attendu (« Sans groupe », hors de l'export
+  // Benjamins) impossible sans changer RM-03 ou le schéma. Ce test fixe le comportement actuel,
+  // identique dans les statistiques du jalon 2 ; il sera inversé selon la réponse.
+  it('RM-03 Q2 séance à deux groupes dont l’un est supprimé : la présence passe au groupe restant (actuel)', async () => {
+    // B2 (24/10) : Benjamins et Vétérans ; Paul n'est inscrit qu'aux Vétérans.
+    await db.execute('DELETE FROM groups WHERE id = ?', [s.groups.veterans]);
+    const b2 = (await repo().rows(SEASON, null)).filter((r) => r.date === '2026-10-24');
+    expect(b2.map((r) => [r.lastName, r.groups])).toEqual([
+      ['Michel', ['Benjamins']],
+      ['Roux', ['Benjamins']],
+    ]);
+    expect(await repo().count(SEASON, s.groups.benjamins)).toBe(10);
+    const stats = await statsRepo(db).overview(SEASON);
+    const benjamins = stats.groups.find((g) => g.groupId === s.groups.benjamins);
+    expect(benjamins?.counts).toEqual({ present: 7, late: 1, excused: 0, absent: 2 });
   });
 
   it('EX-31 tri par date, heure, séance, puis par nom (Collator français) ; archivés compris', async () => {
@@ -226,7 +244,7 @@ describe('Jeu piégé : SEC-07 et aller-retour', () => {
     const expected = [
       ['04/11/2026', "'@Créneau", '\'=HYPERLINK("x")'],
       ['11/11/2026', 'Mercredi 14:00', '\'=HYPERLINK("x")'],
-      ['18/11/2026', 'Sans créneau', 'Sans groupe'],
+      ['18/11/2026', 'Sans créneau 14:00', 'Sans groupe'],
     ].flatMap((head) => people4.map((p) => [...head, ...p, 'Présent']));
     expect(cells.slice(1)).toEqual(expected);
   });

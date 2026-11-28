@@ -23,6 +23,10 @@ describe('toCsv (EX-31)', () => {
     );
     expect(toCsv(HEADER, [['A\nB', 'C\rD']])).toBe('\uFEFFNom;Prénom\r\n"A\nB";"C\rD"\r\n');
   });
+
+  it('SEC-07 virgule ou tabulation dans la cellule : entre guillemets', () => {
+    expect(toCsv(HEADER, [['A, B', 'a\tb']])).toBe('\uFEFFNom;Prénom\r\n"A, B";"a\tb"\r\n');
+  });
 });
 
 describe('neutralize (SEC-07)', () => {
@@ -37,7 +41,35 @@ describe('neutralize (SEC-07)', () => {
     expect(neutralize(input)).toBe(expected);
   });
 
-  it.each(['Marie-Ève', "O'Brien", 'Zoé', '', '1=1', 'a@b'])(
+  it.each([
+    [' =1+1', "' =1+1"],
+    ['\u00A0=1', "'\u00A0=1"],
+    ['\u200B=1', "'\u200B=1"],
+    ['\u2066\u202E\uFEFF\u061C\u2060@SOMME', "'\u2066\u202E\uFEFF\u061C\u2060@SOMME"],
+    ['\u200F  -2', "'\u200F  -2"],
+  ])(
+    'SEC-07 « %j » : premier caractère visible après espaces et invisibles neutralisé',
+    (input, expected) => {
+      expect(neutralize(input)).toBe(expected);
+    },
+  );
+
+  it.each([
+    ['Dupont,=HYPERLINK("x")', 'Dupont,\'=HYPERLINK("x")'],
+    ['a\t=1', "a\t'=1"],
+    ['a;+1', "a;'+1"],
+    ['A, -B, @C', "A, '-B, '@C"],
+    ['a,\u200B=1', "a,\u200B'=1"],
+  ])('SEC-07 « %j » : caractère de formule après un séparateur neutralisé', (input, expected) => {
+    expect(neutralize(input)).toBe(expected);
+  });
+
+  it('SEC-07 cellule DDE neutralisée', () => {
+    expect(neutralize("=cmd|' /C calc'!A0")).toBe("'=cmd|' /C calc'!A0");
+    expect(neutralize("@SUM(1+1)*cmd|' /C calc'!A0")).toBe("'@SUM(1+1)*cmd|' /C calc'!A0");
+  });
+
+  it.each(['Marie-Ève', "O'Brien", 'Zoé', '', '1=1', 'a@b', 'Benjamins, Vétérans', '  '])(
     'SEC-07 « %s » intact (premier caractère seulement)',
     (input) => {
       expect(neutralize(input)).toBe(input);
@@ -62,6 +94,9 @@ describe('Aller-retour avec la lecture du 031', () => {
       ['@SOMME', "O'Brien"],
       ['Dupont;Martin', 'Zoé "Zaza"'],
       ['Marie-Ève', 'Ligne\r\ncoupée'],
+      [' =1+1', '\u200B=1'],
+      ['Dupont,=HYPERLINK("x")', 'a\t=1'],
+      ["=cmd|' /C calc'!A0", 'A, B'],
     ];
     const decoded = decodeCsv(bytes(toCsv(HEADER, rows)));
     if (!('text' in decoded)) throw new Error('décodage refusé');
@@ -75,6 +110,9 @@ describe('Aller-retour avec la lecture du 031', () => {
       ["'@SOMME", "O'Brien"],
       ['Dupont;Martin', 'Zoé "Zaza"'],
       ['Marie-Ève', 'Ligne\r\ncoupée'],
+      ["' =1+1", "'\u200B=1"],
+      ['Dupont,\'=HYPERLINK("x")', "a\t'=1"],
+      ["'=cmd|' /C calc'!A0", 'A, B'],
     ]);
   });
 });
