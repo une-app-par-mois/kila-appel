@@ -413,6 +413,32 @@ Avant de passer aux tickets suivants, je veux voir avec toi comment optimiser le
 - Un contrat entre deux tickets parallèles se fixe au lancement, avec un exemple chiffré (« Ligne 17 ») : les deux revues l'ont vérifié sans se parler.
 - Une boucle sur des données importées se mesure au volume maximal permis (2 000 lignes, base pleine), pas au fichier d'exemple.
 
+### Lot J3-2 (034, 036, 038) — 2026-11-28
+
+**Prompt clé** : séance de lancement du deuxième lot du jalon 3 (pré-analyse, QCM, plans des trois tickets en zone sensible), trois agents de code en parallèle, revues de code et de sécurité, contradicteur, puis intégration.
+
+**Réponses du porteur au QCM du lot** :
+- 034 : doublon archivé désarchivé seulement s'il est inscrit pendant l'import (texte de la maquette précisé) ;
+- 036 : présences d'un groupe supprimé en « Sans groupe » dans l'export « Tous les groupes », jamais dans un export filtré ; EX-31 inchangée, l'encadrant filtre l'enfant dans le tableur (CONFORMITE §2.2) ;
+- 038 : contrôle statique d'expo-print (noms refusés, argument écrit en entier) ; SEC-08 complétée à l'intégration.
+
+**Réponses du porteur à la relecture** : doublon archivé désarchivé dès que le groupe du fichier est trouvé, inscrit ou non ; SEC-07 élargie à toute cellule (Q1) ; Q2 du 036 (séance à deux groupes dont l'un est supprimé) gardée comme limite connue, ticket 043 avec migration ; fusion des trois tickets validée.
+
+**Ce que l'IA a fait** :
+- **Développement** : 034 (`memberImportRepo.ts` : une transaction, aperçu recalculé dans la transaction, `IMPORT_STALE` ; `useMemberImport.ts`, `importSession.ts`) ; 036 (`csvWrite.ts`, `attendanceCsv.ts`, `attendanceExportRepo.ts`, NF-08 sur 120 000 lignes) ; 038 (expo-print 58.0.9, `withoutWebViewMetrics.js`, `auditWebViewMetadata`, `staticChecksPrint.test.ts`, APK local audité).
+- **Intégration** : PR #98, #99, #100 fusionnées dans le groupe ; 47 lignes ajoutées à `docs/DECISIONS.md` ; SEC-01, SEC-02, SEC-07, SEC-08, SEC-10, SEC-12 et CONFORMITE complétés ; reports vers 035, 037, 040 ; ticket 043 créé.
+
+**Ce qui a été corrigé par les revues** :
+- **contournement du contrôle statique** (038, revue de sécurité) : un nom de module écrit entre parenthèses, `require(('expo-print/build/ExponentPrint')).default.print({ uri })`, échappait au contrôle ; tout nom de module non littéral est maintenant refusé partout, tests compris (« ABS-01 module non littéral »), avec `.print(…)` et un filet texte sur `'expo-print'` ;
+- **registre des licences non régénéré** (038, contradicteur) : expo-print était déjà lié comme module natif, et `licences.js --check` aurait échoué à la PR du jalon ; régénéré dans le ticket, comme le demande CONFORMITE §7 ;
+- **aperçu gardé après un abandon pendant la lecture** (034, revue de sécurité) : un abandon ou un écran démonté pendant la lecture laissait la session se remplir ensuite ; génération de session changée à chaque `clear`, vérifiée avant de remplir la session ;
+- ordre de l'extension dans `app.json` inversé (le premier plugin déclaré a le dernier mot) ; « Sans créneau » suivi de l'heure ; lignes réduites aux colonnes reconnues avant de les garder en mémoire.
+
+**Leçons** :
+- Un contrôle statique se teste aussi contre les formes détournées d'un même appel (parenthèses, `as`, gabarit), pas seulement contre l'appel direct.
+- Une dépendance native liée dans un ticket entre au registre des licences dans le même ticket, même si le code qui l'appelle vient plus tard.
+- Une règle de données qui dépend d'une ligne supprimée en cascade ne se corrige pas dans une requête : il faut une trace dans le schéma (Q2, ticket 043).
+
 ### [Étape] — [AAAA-MM-JJ]
 
 **Prompt**

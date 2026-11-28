@@ -25,7 +25,7 @@ Données personnelles, règles des stores, droit de l'UE, licences, et liste des
 | --- | --- |
 | Minimisation | Nom et prénom seuls obligatoires ; aucun champ de santé ni commentaire par membre (ABS-03) |
 | Durée de conservation (CNIL, sport amateur : 3 ans au plus après la fin de l'adhésion) | Conservation réglable de 1 à 3 saisons, 3 par défaut ; la purge efface aussi les membres qui ne figurent plus dans aucune saison gardée (EX-24, décisions du porteur du 2026-11-27) |
-| Droit d'accès d'une famille | Export CSV filtrable (EX-31) |
+| Droit d'accès d'une famille | Export CSV des présences filtrable par période et par groupe (EX-31, inchangée) ; pour répondre à une famille, l'encadrant filtre l'enfant dans le tableur avant d'envoyer le fichier (décision du porteur du 2026-11-28, ticket 036) |
 | Droit de rectification | Fiche membre modifiable (EX-03) |
 | Droit à l'effacement | Suppression réelle d'un membre et de ses présences (ABS-05, EX-03) ; valeurs effacées aussi dans le fichier de base (`secure_delete`, ticket 007d) |
 | Sécurité | Données dans l'espace privé de l'appli ; avertissement à chaque sortie de données (SEC-09) |
@@ -45,6 +45,7 @@ Les mineurs n'utilisent pas l'appli : la règle du consentement parental en dess
 | Suppression de compte | Ne vise que les applis qui permettent de créer un compte | Sans objet ; « Tout effacer » existe quand même (EX-23) |
 | Public cible | Déclaré par tranches d'âge ; la politique Familles s'applique dès qu'une tranche inclut des enfants ; Google peut contrôler la cohérence avec la fiche | **16 ans et plus** (tranches 16-17 et 18+, décision du 2026-11-26, pour inclure de jeunes animateurs) ; fiche et visuels sans élément qui attire les enfants. À vérifier dans la console : que la tranche 16-17 ne déclenche pas la politique Familles |
 | Permissions | Au strict nécessaire | Audit sur le binaire (SEC-02). Relance (F-06, ticket 026, décision du porteur du 2026-11-27) : `POST_NOTIFICATIONS` (demandée à l'activation de la relance) et `RECEIVE_BOOT_COMPLETED` (reprogrammation après redémarrage), sans alarme exacte ; notifications **locales** seulement, aucune donnée ne quitte l'appareil : « aucune donnée collectée » inchangé. La politique de confidentialité mentionnera les notifications locales (jalon 6, ABS-08) |
+| Import et exports (ticket 038, décision du porteur du 2026-11-28, ABS-08) | Même règle que la ligne « Export par le partage système » | Import CSV (sélecteur du système), export CSV et rapport PDF passent par le partage du système, à l'initiative de l'encadrant, comme la sauvegarde : **aucune donnée collectée**, déclarations des stores inchangées. La politique de confidentialité (jalon 6) décrira l'import CSV, l'export CSV et le rapport PDF |
 | Index des SDK de Play | Play repère les SDK connus dans le binaire et peut les rapprocher du formulaire « Sécurité des données » | **Risque noté** (décision du 2026-11-27) : Firebase Messaging est présent dans le binaire (tiré par expo-notifications), non initialisé (aucun `google-services.json`) et ses composants retirés du manifeste ; Play peut quand même le signaler. Réponse prévue : aucune donnée collectée, aucun composant actif (audit SEC-02) |
 
 ## 4. App Store
@@ -113,6 +114,10 @@ Relevé le 2026-11-27 sur le binaire Android construit (`gradlew :app:dependenci
 
 Autres bibliothèques tirées (AndroidX, Kotlin, kotlinx-coroutines, Okio, `javax.inject`, `error_prone_annotations`, `org.jetbrains:annotations`) : Apache-2.0 ; `datastore-preferences-external-protobuf` : BSD-3-Clause ; `io.github.expo.pika:pika-api` : MIT. Toutes dans la liste du §7. À reprendre dans l'inventaire complet des bibliothèques natives (action ci-dessus).
 
+### Inventaire natif d'expo-print (ticket 038)
+
+Relevé le 2026-11-28 sur l'APK de production construit en local. expo-print 58.0.9 (MIT, aucune dépendance npm) : module natif `expo.modules.print` (MIT), manifeste vide (aucune permission, aucun composant) ; dépendances Maven `kotlin-stdlib-jdk7` 2.2.10 (Apache-2.0), `org.jetbrains:annotations` 23.0.0 (Apache-2.0), `io.github.expo.pika:pika-api` 1.1.0 (MIT), déjà tirées par d'autres modules Expo : **aucune bibliothèque tierce nouvelle**. Registre affiché (EX-42) : entrée `expo-print` 58.0.9 (MIT) ajoutée à `src/config/licences.json` au ticket 038 (`node scripts/licences.js --check` à jour).
+
 ## 9. Sources (consultées le 2026-11-26)
 
 - Google Play, Sécurité des données : <https://support.google.com/googleplay/android-developer/answer/10787469>
@@ -143,6 +148,7 @@ Non lus (pages vides ou en erreur) : considérant 18 du RGPD (EUR-Lex), deux pag
 - 2026-11-27 (ticket 027, ABS-08) : Réglages de la relance (activée, délai) : réglages non personnels stockés sur l'appareil, sauvegardés ; déclarations des stores inchangées (aucune donnée collectée).
 - 2026-11-27 (lot J2-4 : tickets 028b, 028c, 029, ABS-08) : relances programmées sur l'appareil (notifications locales, aucun envoi, aucun réseau), demande de la permission `POST_NOTIFICATIONS` seulement à l'activation de la relance ; aucune donnée nouvelle en base. Le système garde une copie des relances programmées (nom du groupe, identifiant du créneau, date ; jamais un nom de membre) dans le stockage privé de l'appli pour les reprogrammer après un redémarrage, retirée par l'annulation (Tout effacer, restauration) et exclue de la sauvegarde Android (`allowBackup: false`) ; le nom du groupe s'affiche sur l'écran verrouillé, et l'écran Relance le dit. Déclarations des stores inchangées (aucune donnée collectée, §3 et §4, notifications locales déjà prises en compte au 026) ; la politique de confidentialité (jalon 6) devra mentionner les notifications locales, cette copie système et l'affichage du nom du groupe sur l'écran verrouillé. Aucun texte légal validé modifié.
 - 2026-11-27 (décision du porteur) : §8, l'action « Déclarer le public cible 18+ (Play) » devient « 16 ans et plus » (tranches 16-17 et 18+), conformément au §3 et à la décision du 2026-11-26.
+- 2026-11-28 (lot J3-2 : tickets 034, 036, 038, ABS-08) : expo-print 58.0.9 (MIT) accepté, ajouté au registre des licences ; import CSV, export CSV et rapport PDF par le partage du système, à l'initiative de l'encadrant : déclarations des stores inchangées (aucune donnée collectée), à décrire dans la politique (jalon 6) ; droit d'accès d'une famille : EX-31 inchangée, l'encadrant filtre l'enfant dans le tableur (§2.2) ; aucun champ nouveau en base (l'import écrit les champs existants du membre, de son contact et de son inscription).
 
 ## Questions ouvertes
 
