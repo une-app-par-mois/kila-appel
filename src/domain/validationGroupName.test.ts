@@ -6,7 +6,7 @@ describe('validateGroupName (SEC-06, ticket 044)', () => {
     expect(validateGroupName('  Poussins mercredi ')).toBe('Poussins mercredi');
   });
 
-  it.each(['', '   ', '\t\n'])('refuse un nom vide (%j) : NAME_REQUIRED', (name) => {
+  it.each(['', '   ', '\t\n'])('EX-02 refuse un nom vide (%j) : NAME_REQUIRED', (name) => {
     expect(() => validateGroupName(name)).toThrow(
       expect.objectContaining({ code: 'NAME_REQUIRED' }),
     );

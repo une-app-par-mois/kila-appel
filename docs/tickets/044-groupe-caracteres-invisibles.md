@@ -53,10 +53,11 @@ Créé le 2026-11-28 à l'intégration du lot J3-3 (« À reporter » de la fich
 | D1 : forme de la règle | Modifier `validateName` ; nouvelle fonction | `validateGroupName` exporté : `validateName` puis `NAME_INVALID_CHAR` (via `isInvisible`) ; `validateName` inchangé | Ne pas toucher aux autres noms (saison, créneau : 044b) | à relire |
 | D2 : où appliquer la règle | Écran ; dépôt | `groupsRepo.create` et `groupsRepo.rename` appellent `validateGroupName` | Un seul point de contrôle, comme les membres | à relire |
 | D3 : restauration | — | `backupRows.groups` utilise `same(validateGroupName(...))` ; tests SEC-06 et SEC-10 avec U+202E (refusé) et un émoji avec U+200D (accepté) | Même mécanisme que les autres règles de `backupRows` | à relire |
-| D4 : texte d'erreur | Nouveau texte ; texte existant | Message de `NAME_INVALID_CHAR` inchangé | Même texte pour membres et groupes | à relire |
+| D4 : texte d'erreur | Nouveau texte ; texte existant | Message de `NAME_INVALID_CHAR` inchangé | Même texte pour membres et groupes | contestée, changée dans le 032b |
 | D5 : écrans du groupe | `maxLength` ou contrôle local ; erreur du dépôt | Pas de `maxLength` ni de contrôle local ; l'erreur s'affiche sous le champ ; un test d'écran | La règle reste dans le domaine | à relire |
 | D6 : longueur maximale | 100 ; aucune | Pas de longueur maximale | Hors périmètre du ticket, non demandée | à relire |
-| D7 : tests du domaine | `validation.test.ts` ; nouveau fichier | Nouveau fichier de test du domaine ; ABS-04 vérifié (aucun nom dans l'erreur ni le journal) ; 7 fichiers ; `isInvisible` et l'ordre des contrôles de `validateMemberName` inchangés | `validation.test.ts` déjà long ; aucune régression sur les membres | à relire |
+| D7 : tests du domaine | `validation.test.ts` ; nouveau fichier | Nouveau fichier de test du domaine ; ABS-04 vérifié (aucun nom dans l'erreur ni le journal) ; 8 fichiers ; `isInvisible` et l'ordre des contrôles de `validateMemberName` inchangés | `validation.test.ts` déjà long ; aucune régression sur les membres | à relire |
+| Export bloqué par un groupe déjà en base avec un caractère invisible (`verifyBackup` → `checkRows`) | Accepter ; nettoyer ou migrer | Accepté : l'export échoue tant que le groupe n'est pas renommé | Appli non publiée | décidée par le porteur le 2026-11-28 |
 | D8 : aide `name` de `backupRows.ts` | La garder ; la retirer | Retirée avec l'import de `validateName` : les groupes étaient ses seuls appelants | Pas de code mort (CLAUDE.md) | à relire |
 | D9 : test d'écran | Un test pour les deux écrans ; un test par écran | Deux tests dans `src/appTests/groups.test.tsx` (création, renommage) ; 8 fichiers au lieu de 7 | Un seul rendu par test, comme les autres tests d'écran | à relire |
 
@@ -66,3 +67,6 @@ Créé le 2026-11-28 à l'intégration du lot J3-3 (« À reporter » de la fich
 
 - CHANGELOG : Groupes : un nom de groupe avec un caractère invisible est refusé (SEC-06).
 - Architecture : rien.
+- SECURITE.md : SEC-06 couvre aussi les noms de groupe (création, renommage, restauration, ticket 044) ; historique des validations.
+- SECURITE.md, limite de SEC-10 : un groupe déjà en base avec un caractère invisible fait échouer l'export (`verifyBackup` → `checkRows`) comme la restauration, jusqu'à son renommage ; accepté par le porteur le 2026-11-28 (appli non publiée).
+- Fiche 044b : liste SEC-06 élargie (décision du porteur du 2026-11-28) à U+00AD, U+034F, U+115F, U+1160, U+180E, U+2060 à U+2064, U+3164, U+FFA0, U+FFF9 à U+FFFB et aux tags U+E0000 à U+E007F ; U+200D et U+FE0F restent acceptés. Non codé dans le 044.
