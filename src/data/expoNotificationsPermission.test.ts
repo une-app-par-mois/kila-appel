@@ -70,10 +70,12 @@ describe('EX-29 demande de la permission (ticket 029)', () => {
 
 describe('EX-29 un seul chemin vers la demande de permission (ticket 029, SEC-03)', () => {
   const ROOT = join(__dirname, '..', '..');
+  // Identifiants du texte, découpés par un motif littéral (pas de motif construit : Semgrep).
+  const identifiers = (text: string) => new Set(text.match(/[A-Za-z_$][\w$]*/g));
   const filesNaming = (name: string) =>
     walkSources(join(ROOT, 'src'))
       .filter((file) => !TEST_FILE.test(file))
-      .filter((file) => new RegExp(`\\b${name}\\b`).test(readFileSync(file, 'utf8')))
+      .filter((file) => identifiers(readFileSync(file, 'utf8')).has(name))
       .map((file) => relative(ROOT, file))
       .sort();
 

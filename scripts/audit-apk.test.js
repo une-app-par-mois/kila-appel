@@ -109,6 +109,31 @@ describe('Manifeste du binaire (ABS-07, sauvegarde système)', () => {
     const text = tree('x').replace('="x" (Raw: "x")', '=@0x7f0e0012');
     expect(auditManifest(text)).toEqual(['Lien profond déclaré : @0x7f0e0012']);
   });
+
+  // L'espace de noms est comparé tel quel : ses points ne sont pas des jokers (CodeQL).
+  it.each([
+    'http://schemasXandroidXcom/apk/res/android',
+    'http://schemas/android/com/apk/res/android',
+  ])('SEC-02 ne lit pas un attribut d’un autre espace de noms : %s', (namespace) => {
+    const line = ':scheme(0x01010027)="kila"';
+    const text = tree('kila').replace(`${ANDROID}${line}`, `${namespace}${line}`);
+    expect(text).toContain(`A: ${namespace}${line}`);
+    expect(auditManifest(text)).toEqual([]);
+  });
+
+  it('SEC-02 lit une valeur sans guillemets jusqu’au premier blanc', () => {
+    const text = tree('x').replace('="x" (Raw: "x")', '=@0x7f0e0012\t(Raw: "y")');
+    expect(auditManifest(text)).toEqual(['Lien profond déclaré : @0x7f0e0012']);
+  });
+
+  it('SEC-02 ne lit pas un attribut sans identifiant de ressource hexadécimal', () => {
+    expect(auditManifest(tree('x').replace('scheme(0x01010027)="x"', 'scheme(0x)="x"'))).toEqual(
+      [],
+    );
+    expect(auditManifest(tree('x').replace('scheme(0x01010027)="x"', 'scheme(0xZZ)="x"'))).toEqual(
+      [],
+    );
+  });
 });
 
 describe('latestVersion : choix des build-tools', () => {

@@ -42,12 +42,23 @@ const MESSAGING_ACTIONS = new Set([
   'com.google.android.c2dm.intent.RECEIVE',
 ]);
 
-/** Valeur d'un attribut android: sur une ligne `A:` : littérale ("…") ou référence (@0x7f…). */
+/**
+ * Valeur d'un attribut android: sur une ligne `A:` : littérale ("…") ou référence (@0x7f…).
+ * Analyse par comparaison de chaînes, sans motif construit : l'espace de noms est comparé
+ * tel quel, ses points ne valent que des points.
+ */
 const attribute = (line, name) => {
-  const match = line.match(
-    new RegExp(`^\\s*A: ${ANDROID_NS}:${name}\\(0x[0-9a-f]+\\)=(?:"([^"]*)"|(\\S+))`),
-  );
-  return match ? (match[1] ?? match[2]) : undefined;
+  const prefix = `A: ${ANDROID_NS}:${name}(0x`;
+  const text = line.trimStart();
+  if (!text.startsWith(prefix)) return undefined;
+  const rest = text.slice(prefix.length);
+  const close = rest.indexOf(')=');
+  if (close < 1 || !/^[0-9a-f]+$/.test(rest.slice(0, close))) return undefined;
+  const value = rest.slice(close + 2);
+  const end = value.indexOf('"', 1);
+  if (value.startsWith('"') && end > 0) return value.slice(1, end);
+  const token = value.split(/\s/, 1)[0];
+  return token === '' ? undefined : token;
 };
 
 // Attributs lus sur un composant ; targetActivity n'existe que sur un activity-alias.
