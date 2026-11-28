@@ -481,6 +481,8 @@ ${section('Doublons')}
 ${carte(`<div class="rang"><div><div class="l-titre">Léo Garcia</div><div class="l-sous mono">14/03/2017 · déjà dans l'appli</div></div><span class="filtre on">Ignorer</span></div><div class="rang"><div><div class="l-titre">Zoé Blanc</div><div class="l-sous mono">déjà dans l'appli</div></div><span class="filtre on">Ignorer</span></div>`)}
 ${section('Ligne invalide')}
 ${carte(`<div class="rang"><div><div class="l-titre">Ligne 17</div><div class="l-sous">Prénom manquant</div></div></div>`)}
+${section('Groupe introuvable')}
+${carte(`<div class="rang"><div><div class="l-titre">Ligne 12</div><div class="l-sous">« Poussin mercredi » : importé sans groupe</div></div></div>`)}
 ${go('import-resultat', 'Importer 21 membres')}
 <p class="note">Rien n'est écrit avant ce bouton.</p>`);
 
@@ -492,7 +494,12 @@ ${go('membres', 'Voir les membres')}`);
 ecran('import-erreur', 2, 'Import CSV : fichier illisible', 'EX-30', 'parametres', `
 ${titre('Fichier non reconnu', 'import')}
 ${carte(`<p>Ce fichier ne contient pas de colonnes « nom » et « prenom ». Rien n'a été importé.</p>`, 'bandeau')}
-${go('import', 'Choisir un autre fichier')}`);
+${go('import', 'Choisir un autre fichier')}
+${section('Autres causes, même écran')}
+${carte(`<p>Ce fichier n'est pas un CSV. Dans Excel : Fichier › Enregistrer sous › CSV (séparateur : point-virgule). Rien n'a été importé.</p>`, 'bandeau')}
+${carte(`<p>Ce fichier dépasse 1 Mo ou 2 000 lignes. Découpez-le en plusieurs fichiers. Rien n'a été importé.</p>`, 'bandeau')}
+${carte(`<p>Ce fichier n'a pas pu être lu (guillemet non fermé ?). Rien n'a été importé.</p>`, 'bandeau')}
+<p class="note">Un texte par cause (décision du porteur du 2026-11-28, ticket 035).</p>`);
 
 // F-08, F-09 — Exports
 ecran('export-csv', 2, 'Export CSV des présences', 'EX-31', 'stats', `
@@ -506,9 +513,10 @@ ecran('rapport', 2, 'Rapport PDF', 'EX-32', 'stats', `
 ${titre('Rapport PDF', 'stats')}
 <label>Période</label><div class="champ">Saison 2026-2027 ▾</div>
 <label>Groupes</label><div class="champ">Tous les groupes ▾</div>
-${carte(`<div class="feuille"><div class="l-titre">Ki&La · Rapport de présence</div><div class="l-sous mono">01/09/2026 – 26/11/2026</div><div class="barre"><i class="s-present" style="width:80%"></i><i class="s-late" style="width:7%"></i><i class="s-excused" style="width:5%"></i><i class="s-absent" style="width:8%"></i></div><div class="l-sous">Synthèse, puis une page par groupe…</div></div>`)}
+${carte(`<div class="feuille"><div class="l-titre">Ki&La · Rapport de présence</div><div class="l-sous mono">01/09/2026 – 26/11/2026</div><div class="barre"><i class="s-present" style="width:80%"></i><i class="s-late" style="width:7%"></i><i class="s-excused" style="width:5%"></i><i class="s-absent" style="width:8%"></i></div><div class="l-sous">Synthèse, puis une page par groupe et sa grille…</div></div>`)}
+${carte(`<p>Le fichier contient les noms des membres et leurs taux de présence, <b>en clair</b>. Partagez-le seulement avec qui doit le recevoir.</p>`, 'bandeau')}
 ${go('rapport', 'Créer et partager le PDF')}
-<p class="note">Format A4. Contenu exact : question ouverte du PRD (→ ticket F-09).</p>`);
+<p class="note">Format A4 : synthèse et taux par membre en portrait, puis la grille séance par séance de chaque groupe en paysage, par blocs d'environ 25 séances (décision du porteur du 2026-11-28, tickets 039 et 039b).</p>`);
 
 // F-10, F-11 — Créneau ponctuel et plusieurs groupes
 ecran('creneau-ponctuel', 2, 'Créneau ponctuel (plusieurs groupes)', 'EX-33, EX-34', 'parametres', `
@@ -561,7 +569,8 @@ ${titre('États vides')}
 ${section("Alertes d'assiduité")}${carte(`<p>Aucune alerte : personne n'a manqué ${'3'} séances de suite.</p>`)}
 ${section('Statistiques')}${carte(`<p>Pas encore de statistiques : elles apparaissent après le premier appel enregistré.</p>${go('appel', "Faire l'appel")}`)}
 ${section('Frise')}${carte(`<p>Aucun créneau déclaré : la frise se remplira dès votre premier créneau.</p>${go('creneau', 'Nouveau créneau')}`)}
-${section('Export sur une période sans séance')}${carte(`<p>Aucune présence sur cette période : rien à exporter.</p>`)}`);
+${section('Export sur une période sans séance')}${carte(`<p>Aucune présence sur cette période : rien à exporter.</p>`)}
+${section('Rapport sur une période sans séance')}${carte(`<p>Aucune séance enregistrée sur cette période : rien à mettre dans le rapport.</p>`)}`);
 
 // ---------- Page ----------
 const ecransJson = JSON.stringify(ecrans.map(({ id, lot, titre: t, exigences }) => ({ id, lot, titre: t, exigences })));
