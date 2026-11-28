@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 // ABS-01, SEC-08 (ticket 038, décisions du porteur du 2026-11-28) : expo-print n'est importé que
-// par l'adaptateur src/data/expoPrint.ts (créé au 040), et seulement printToFileAsync, sans alias ;
+// par l'adaptateur src/data/expoPrint.ts (créé au 040a), et seulement printToFileAsync, sans alias ;
 // son argument est un objet écrit en entier, sans `...` ni variable, aux seules clés html, width,
 // height et margins. printAsync (lit une adresse http), selectPrinterAsync (recherche d'imprimantes
 // sur le réseau) et ExpoPrint (module natif) sont refusés comme noms dans tout src/, même en
@@ -291,10 +291,10 @@ describe('ABS-01 SEC-08 le code du dépôt respecte le contrôle d’expo-print'
     expect(violations).toEqual([]);
   });
 
-  it('expo-print n’est importé que par src/data/expoPrint.ts, ou par aucun fichier (avant le 040)', () => {
+  it('expo-print est importé par src/data/expoPrint.ts, exactement (040a)', () => {
     const importing = files
       .filter((file) => !TEST_FILE.test(file))
       .filter((file) => modulesOf(file, read(file)).includes(MODULE));
-    expect(importing.filter((file) => file !== OWNER)).toEqual([]);
+    expect(importing).toEqual([OWNER]);
   });
 });

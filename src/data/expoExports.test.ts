@@ -2,11 +2,13 @@
  * @jest-environment node
  */
 // Exports CSV et PDF dans `cache/exports/` (src/data/expoExports.ts, ticket 033, SEC-10, ABS-04) :
-// écriture bornée, partage par types fermés, erreurs sans chemin. Modules natifs imités sur node:fs
+// écriture bornée, partage par types fermés, erreurs sans chemin. Ticket 040a (EX-32, SEC-08,
+// SEC-10) : PDF déplacé de `cache/Print/` sous `kila-rapport-<début>-au-<fin>.pdf`, en-tête `%PDF-`
+// contrôlé, original effacé en cas d'échec, `cache/Print/` vidé. Modules natifs imités sur node:fs
 // (src/__fixtures__/expoModules.ts, ADR-008).
-import { existsSync, readdirSync, readFileSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
-import { shareFile, writeFile } from '@/data/expoExports';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { clearPrint, moveReport, shareFile, writeFile } from '@/data/expoExports';
 import { expoStorage } from '@/data/expoFiles';
 
 jest.mock('expo-sqlite', () => ({ openDatabaseAsync: jest.fn() }));
@@ -16,7 +18,13 @@ jest.mock('expo-document-picker', () => ({ getDocumentAsync: jest.fn() }));
 
 const fsMock = jest.requireMock('expo-file-system') as {
   Paths: { root: string };
-  File: { prototype: { delete(): void; write(c: unknown): Promise<void> } };
+  File: {
+    prototype: {
+      delete(): void;
+      write(c: unknown): Promise<void>;
+      move(d: unknown): Promise<void>;
+    };
+  };
 };
 const { shareAsync } = jest.requireMock('expo-sharing') as { shareAsync: jest.Mock };
 const cache = join(fsMock.Paths.root, 'cache dir');
@@ -135,5 +143,125 @@ describe('SEC-10 cache/exports/ : écriture bornée et partage', () => {
     await exportsStorage.newDir();
     await exportsStorage.clear();
     expect(existsSync(exportsDir)).toBe(false);
+  });
+});
+
+describe('EX-32 SEC-10 rapport PDF : de cache/Print/ vers cache/exports/', () => {
+  const exportsStorage = expoStorage('exports');
+  const printDir = join(cache, 'Print');
+  /** PDF laissé par le rendu dans `cache/Print/`, comme expo-print. */
+  const printed = (content: string | Uint8Array = '%PDF-1.7\n% rapport fictif\n') => {
+    mkdirSync(printDir, { recursive: true });
+    const path = join(printDir, '3f2a-rapport.pdf');
+    writeFileSync(path, content);
+    return path;
+  };
+  const period = { from: '2026-09-01', to: '2026-11-28' };
+  const NAME = 'kila-rapport-2026-09-01-au-2026-11-28.pdf';
+
+  it('EX-32 déplace le PDF sous kila-rapport-<début>-au-<fin>.pdf, %PDF- en tête', async () => {
+    const source = printed();
+    const dir = await exportsStorage.newDir();
+    const path = await moveReport(source, dir, period);
+    expect(path).toBe(join(dir, NAME));
+    expect(readFileSync(path, 'utf8').startsWith('%PDF-')).toBe(true);
+    expect(existsSync(source)).toBe(false);
+    expect(readdirSync(dir)).toEqual([NAME]);
+  });
+
+  it('EX-32 période d’un seul jour acceptée (début égal à la fin)', async () => {
+    const dir = await exportsStorage.newDir();
+    const day = { from: '2024-02-29', to: '2024-02-29' };
+    expect(await moveReport(printed(), dir, day)).toBe(
+      join(dir, 'kila-rapport-2024-02-29-au-2024-02-29.pdf'),
+    );
+  });
+
+  it.each([
+    ['vide', ''],
+    ['trop court', '%PDF'],
+    ['sans en-tête PDF', '<html>%PDF-1.7'],
+    ['en minuscules', '%pdf-1.7'],
+  ])('SEC-08 refuse un fichier %s, original effacé, rien déplacé', async (_label, content) => {
+    const source = printed(content);
+    const dir = await exportsStorage.newDir();
+    await expect(moveReport(source, dir, period)).rejects.toEqual(
+      new Error('Fichier PDF invalide'),
+    );
+    expect(existsSync(source)).toBe(false);
+    expect(readdirSync(dir)).toEqual([]);
+  });
+
+  it('SEC-08 lecture de l’en-tête en échec (fichier absent) : refus sans chemin', async () => {
+    const dir = await exportsStorage.newDir();
+    await expect(moveReport(join(printDir, 'absent.pdf'), dir, period)).rejects.toEqual(
+      new Error('Fichier PDF invalide'),
+    );
+    expect(readdirSync(dir)).toEqual([]);
+  });
+
+  it('ABS-04 SEC-10 déplacement en échec : original effacé, erreur sans chemin', async () => {
+    const source = printed();
+    const dir = await exportsStorage.newDir();
+    jest.spyOn(fsMock.File.prototype, 'move').mockRejectedValueOnce(new Error(source));
+    await expect(moveReport(source, dir, period)).rejects.toEqual(
+      new Error('Déplacement du fichier impossible'),
+    );
+    expect(existsSync(source)).toBe(false);
+    expect(readdirSync(dir)).toEqual([]);
+  });
+
+  it('ABS-04 déplacement et effacement en échec : toujours la même erreur sans chemin', async () => {
+    const source = printed();
+    const dir = await exportsStorage.newDir();
+    jest.spyOn(fsMock.File.prototype, 'move').mockRejectedValueOnce(new Error(source));
+    failDeletes();
+    await expect(moveReport(source, dir, period)).rejects.toEqual(
+      new Error('Déplacement du fichier impossible'),
+    );
+  });
+
+  it.each([
+    ['hors de Print/', () => join(cache, 'exports', 'a.pdf')],
+    ['dans un sous-dossier de Print/', () => join(printDir, '1', 'a.pdf')],
+    ['par une remontée', () => `${printDir}/../a.pdf`],
+    ['qui n’est pas un PDF', () => join(printDir, 'a.html')],
+  ])('SEC-08 refuse une source %s, sans rien toucher', async (_label, source) => {
+    const path = source();
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, '%PDF-1.7\n% fictif\n');
+    const dir = await exportsStorage.newDir();
+    await expect(moveReport(path, dir, period)).rejects.toEqual(
+      new Error('Chemin de fichier refusé'),
+    );
+    expect(existsSync(path)).toBe(true);
+    expect(readdirSync(dir)).toEqual([]);
+  });
+
+  it.each([
+    ['dossier exports/ lui-même', () => exportsDir, period],
+    ['dossier hors de exports/', () => join(cache, 'sauvegardes', '1'), period],
+    ['date mal formée', () => join(exportsDir, '1'), { ...period, from: '2026-1-28' }],
+    ['date piégée', () => join(exportsDir, '1'), { ...period, to: '2026-11-28/../x' }],
+    ['mois 13, jour 45', () => join(exportsDir, '1'), { ...period, to: '2026-13-45' }],
+    ['mois 00', () => join(exportsDir, '1'), { ...period, from: '2026-00-28' }],
+    ['30 février', () => join(exportsDir, '1'), { ...period, to: '2026-02-30' }],
+    [
+      '29 février d’une année non bissextile',
+      () => join(exportsDir, '1'),
+      { ...period, from: '2026-02-29' },
+    ],
+    ['période inversée', () => join(exportsDir, '1'), { from: '2026-11-28', to: '2026-09-01' }],
+  ])('SEC-10 refuse une destination : %s ; original effacé', async (_l, dir, wrong) => {
+    const source = printed();
+    await expect(moveReport(source, dir(), wrong)).rejects.toThrow('Chemin de fichier refusé');
+    expect(existsSync(source)).toBe(false);
+  });
+
+  it('SEC-10 clearPrint vide cache/Print/, et ne lève rien s’il est absent', async () => {
+    printed();
+    await clearPrint();
+    expect(existsSync(printDir)).toBe(false);
+    await expect(clearPrint()).resolves.toBeUndefined();
   });
 });

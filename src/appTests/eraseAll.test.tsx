@@ -27,7 +27,8 @@ let mockDir = '';
 let mockFailing = new Set<string>();
 jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => mockDb }));
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
-// Les dossiers du cache sur node:fs : `sauvegardes`, `restauration`, `exports` (033), `DocumentPicker`.
+// Les dossiers du cache sur node:fs : `sauvegardes`, `restauration`, `exports` (033), `DocumentPicker`
+// et `Print` (040a, ci-dessous).
 jest.mock('@/data/expoFiles', () => {
   const { join: j } = require('node:path');
   const fixtures = require('@/__fixtures__/backupFiles');
@@ -50,6 +51,16 @@ jest.mock('@/data/expoFiles', () => {
     },
   };
 });
+// Ticket 040a : `cache/Print/` d'expo-print sur node:fs ; échec immédiat comme les autres dossiers.
+jest.mock('@/data/expoExports', () => ({
+  clearPrint: async () => {
+    if (mockFailing.has('Print')) throw new Error('cache');
+    require('node:fs').rmSync(require('node:path').join(mockDir, 'Print'), {
+      recursive: true,
+      force: true,
+    });
+  },
+}));
 const { log } = jest.requireMock('@/data/log') as { log: jest.Mock };
 
 const Stub = () => null;
@@ -71,7 +82,7 @@ const openFromBackup = async () => {
   await screen.findByRole('header', { name: t.title });
   return router;
 };
-const CACHE = ['sauvegardes', 'restauration', 'exports', 'DocumentPicker'];
+const CACHE = ['sauvegardes', 'restauration', 'exports', 'Print', 'DocumentPicker'];
 
 describe('EX-23 écran Tout effacer', () => {
   let dir: ReturnType<typeof tempDir>;
@@ -187,7 +198,7 @@ describe('EX-23 écran Tout effacer', () => {
     expect(stack).toEqual(['(tabs)']);
   });
 
-  it.each([['sauvegardes'], ['restauration'], ['exports'], ['DocumentPicker']])(
+  it.each([['sauvegardes'], ['restauration'], ['exports'], ['Print'], ['DocumentPicker']])(
     'SEC-10 vidage de %s en échec : journalisé, les autres vidés, Bienvenue quand même',
     async (failing) => {
       mockFailing = new Set([failing]);

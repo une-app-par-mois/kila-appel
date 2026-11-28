@@ -10,7 +10,12 @@ import {
 } from '@/hooks/useStartupCleanup';
 
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
-const mockClear = { sauvegardes: jest.fn(), restauration: jest.fn(), exports: jest.fn() };
+const mockClear = {
+  sauvegardes: jest.fn(),
+  restauration: jest.fn(),
+  exports: jest.fn(),
+  Print: jest.fn(),
+};
 const mockClearPicked = jest.fn();
 const mockPickerOs = jest.fn();
 jest.mock('@/data/expoFiles', () => ({
@@ -22,12 +27,15 @@ jest.mock('@/data/expoFiles', () => ({
     return { clearPicked: () => mockClearPicked() };
   },
 }));
+// Ticket 040a : PDF laissé par expo-print dans `cache/Print/` après un arrêt brutal (SEC-08, SEC-10).
+jest.mock('@/data/expoExports', () => ({ clearPrint: () => mockClear.Print() }));
 const { log } = jest.requireMock('@/data/log') as { log: jest.Mock };
 
 const allClears = [
   mockClear.sauvegardes,
   mockClear.restauration,
   mockClear.exports,
+  mockClear.Print,
   mockClearPicked,
 ];
 
@@ -46,7 +54,7 @@ describe('Nettoyage au démarrage (ticket 014c)', () => {
     for (const task of tasks) fileLock.release(task);
   });
 
-  it('vide sauvegardes, restauration, exports (033) et les copies du sélecteur, une fois', async () => {
+  it('SEC-10 vide sauvegardes, restauration, exports (033), Print (040a) et le sélecteur, une fois', async () => {
     await cleanupAtStartup();
     await cleanupAtStartup();
     for (const clear of allClears) expect(clear).toHaveBeenCalledTimes(1);
@@ -88,6 +96,7 @@ describe('Nettoyage au démarrage (ticket 014c)', () => {
     await expect(cleanupAtStartup()).resolves.toBeUndefined();
     expect(mockClear.restauration).toHaveBeenCalledTimes(1);
     expect(mockClear.exports).toHaveBeenCalledTimes(1);
+    expect(mockClear.Print).toHaveBeenCalledTimes(1);
     // ABS-04 : un code seul.
     expect(log.mock.calls).toEqual([['STARTUP_CLEANUP_FAILED']]);
     expect(fileLock.holder()).toBeNull();
