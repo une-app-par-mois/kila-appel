@@ -1,6 +1,6 @@
 # 028b — Relance : programmation
 
-Statut : fusionné dans le groupe (PR #84) · Jalon : 2 · Zone sensible : **oui** (notifications, ABS-01 : liste fermée d'expo-notifications élargie à `setNotificationHandler` ; ABS-04) · Trivial : non
+Statut : fait (PR #88 vers `main` ; PR #84 dans le groupe) · Jalon : 2 · Zone sensible : **oui** (notifications, ABS-01 : liste fermée d'expo-notifications élargie à `setNotificationHandler` ; ABS-04) · Trivial : non
 
 Dépend de : 028a (adaptateur `src/data/expoNotifications.ts`, `sessionsRepo.reminderSessions`, contrôle statique), 027 (calcul et réglages) ; pas du 028c, qui tourne en parallèle · Fichiers touchés : `src/hooks/useReminders.ts` et `src/hooks/useReminders.test.tsx` (nouveaux), `src/domain/reminders.ts` et son test (fonction « séances encore dues »), `src/config/libelles/relance.ts` (`channel`), `src/data/expoNotifications.ts` (`setNotificationHandler`), `src/__fixtures__/expoModules.ts` (faux module), `src/staticChecksNotifications.test.ts` (liste fermée), `src/app/_layout.tsx` (montage), `src/config/licences.json` — environ 12 fichiers avec la fiche ; APK reconstruit et audité. Seul fichier commun avec le 028c : `_layout.tsx` (un petit ajout chacun).
 

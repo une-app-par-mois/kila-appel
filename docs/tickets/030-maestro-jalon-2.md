@@ -1,6 +1,6 @@
 # 030 — Campagne Maestro du jalon 2
 
-Statut : fusionné dans le groupe (PR #86) · Jalon : 2 · Zone sensible : non (parcours de test, aucun code de l'appli) · Trivial : non
+Statut : fait (PR #88 vers `main` ; PR #86 dans le groupe) · Jalon : 2 · Zone sensible : non (parcours de test, aucun code de l'appli) · Trivial : non
 
 Dépend de : 022, 024, 025 (et 029 pour le dernier parcours) · Fichiers touchés : `.maestro/alerte-traitee.yaml` (nouveau), `.maestro/statistiques.yaml` (nouveau), `.maestro/relance-reglage.yaml` (nouveau), `src/__fixtures__/e2eBackup.ts`, `scripts/e2e/sauvegarde-fictive.test.ts`, `scripts/e2e.sh` — 6 fichiers
 

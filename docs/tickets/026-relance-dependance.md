@@ -1,6 +1,6 @@
 # 026 — Relance : expo-notifications et garde-fous du binaire
 
-Statut : fusionné dans le groupe (PR #69) (dépendance et permissions acceptées par le porteur le 2026-11-27) · Jalon : 2 · Zone sensible : **oui** (dépendance et permissions : règle « aucun réseau », `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
+Statut : fait (PR #88 vers `main` ; PR #69 dans le groupe) (dépendance et permissions acceptées par le porteur le 2026-11-27) · Jalon : 2 · Zone sensible : **oui** (dépendance et permissions : règle « aucun réseau », `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
 
 Dépend de : aucun · Fichiers touchés : `package.json`, `package-lock.json`, `app.json`, `plugins/withoutFirebase.js` (nouveau), `config/permissions-attendues.txt`, `scripts/audit-apk.js`, `scripts/audit-apk.test.js`, `README.md` (permissions), `docs/CONFORMITE.md` (§3 permissions, §8 inventaire natif) — 9 fichiers
 

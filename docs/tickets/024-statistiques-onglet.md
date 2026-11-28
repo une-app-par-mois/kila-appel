@@ -1,6 +1,6 @@
 # 024 — Statistiques : onglet et période
 
-Statut : fusionné dans le groupe (PR #73) · Jalon : 2 · Zone sensible : non (affiche sans calculer : taux et arrondi viennent du 023) · Trivial : non
+Statut : fait (PR #88 vers `main` ; PR #73 dans le groupe) · Jalon : 2 · Zone sensible : non (affiche sans calculer : taux et arrondi viennent du 023) · Trivial : non
 
 Dépend de : 023 · Fichiers touchés : `src/ui/TabBar.tsx`, `src/app/(tabs)/_layout.tsx`, `src/app/(tabs)/stats.tsx` (nouveau), `src/app/stats/periode.tsx` (nouveau), `src/ui/AttendanceBar.tsx` (nouveau), `src/config/libelles/stats.ts` (nouveau), `src/config/libelles/index.ts`, `src/appTests/stats.test.tsx` (nouveau), `src/appTests/tabRoutes.tsx` — 9 fichiers
 

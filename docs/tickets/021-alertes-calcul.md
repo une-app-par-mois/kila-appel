@@ -1,6 +1,6 @@
 # 021 — Alertes d'assiduité : calcul et données
 
-Statut : fusionné dans le groupe (PR #68) · Jalon : 2 · Zone sensible : **oui** (calcul affiché : séries d'absences et alertes, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
+Statut : fait (PR #88 vers `main` ; PR #68 dans le groupe) · Jalon : 2 · Zone sensible : **oui** (calcul affiché : séries d'absences et alertes, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
 
 Dépend de : aucun · Fichiers touchés : `src/domain/absenceStreak.ts` et son test (nouveaux), `src/data/alertsRepo.ts` et son test (nouveaux), `src/data/settingsRepo.ts`, `src/data/settingsRepo.test.ts`, `src/hooks/useAlerts.ts` et son test (nouveaux), `src/data/errors.ts`, `src/data/backupRows.ts` — 13 fichiers avec les tests et les jeux de test (ticket gardé entier, décision du porteur du 2026-11-27)
 

@@ -29,15 +29,13 @@ Le plus gros risque technique d'abord (jalon 0). Chaque jalon se termine par un 
 
 Total jusqu'à la publication Android (jalons 0 à 6) : **43 tickets, environ 69 h de porteur**, hors marge.
 
-**Jalon 2, développement terminé (2026-11-28)** : les 13 tickets sont fusionnés dans `groupe/jalon-2-suivre-assiduite` ; PR du jalon vers `main` à ouvrir. Critère de sortie en face de ce qui est vérifié :
+**Jalon 2 fait (2026-11-28)** : PR #88 fusionnée dans `main` en squash (`40d70bb`), CI toute verte sur le dernier commit, campagne Maestro sur l'APK de la CI 7 parcours sur 7. **Fusionné sans le prétest sur l'A55**, sur décision du porteur du 2026-11-28 : le prétest reste à faire, et tout défaut trouvé devient un ticket corrigé au jalon 3, classé selon le §5. Critère de sortie en face de ce qui est vérifié :
 
 | Critère de sortie | Vérifié | Reste à vérifier sur l'A55 (prétest) |
 | --- | --- | --- |
-| Alerte levée puis traitée | Campagne Maestro sur l'émulateur (`alerte-traitee` : alerte levée, traitée, revenue après une absence de plus ; retour Android) | Écran d'alerte sur le téléphone : focus, retour Android |
+| Alerte levée puis traitée | Campagne Maestro sur l'émulateur, APK de la CI (`alerte-traitee` : alerte levée, traitée, revenue après une absence de plus ; retour Android) | Écran d'alerte sur le téléphone : focus, retour Android |
 | Taux exacts sur un jeu fictif vérifié à la main | Tests sur `node:sqlite` et campagne sur l'émulateur (`statistiques` : 87 %, 88 %, 78 %, 64 %, tableau du 023) | Requêtes des statistiques par expo-sqlite sur le téléphone ; NF-08 jugé à l'œil sur la sauvegarde de volume (indicatif sur l'émulateur : accueil 1,07 s, Stats 2,95 s) |
 | Relance reçue sur le téléphone, sans nom de membre | Réglage et dialogue de permission pilotés sur l'émulateur (`relance-reglage` : pas maintenant, autoriser, refuser) | Relance reçue à l'heure, écran verrouillé sans nom de membre, appui vers l'appel, après redémarrage, en mode avion (liste de recette de `ETAT.md`) |
-
-Reste aussi : la campagne sur l'APK de la CI de la PR du jalon.
 
 ## 3. Calendrier estimé
 
@@ -84,8 +82,11 @@ Démarches hors code, à lancer tôt à cause des délais.
 
 À la fin de chaque jalon : heures réellement passées, calendrier recalculé, décision du porteur si la date est menacée. Noté dans `ETAT.md`.
 
+- 2026-11-28 (fin du jalon 2) : jalon 2 fait le 28 nov., prévu sur la période du 21 déc. au 3 janv. ; heures réellement passées par le porteur **non mesurées** (18 h prévues) ; calendrier non recalculé faute de mesure, avance de plusieurs semaines sur le §3 ; prétest sur l'A55 reporté (décision du porteur du 2026-11-28). Décisions automatiques du jalon 2 : 204, dont 11 changées après contradiction, 0 contestée maintenue, **0 annulée** par le porteur ; 2 annulées depuis le début du projet (015b).
+
 ## Décisions du porteur
 
+- 2026-11-28 (fin du jalon 2) : jalon 2 fusionné dans `main` (PR #88) sans le prétest sur l'A55 ; le prétest reste à faire, tout défaut trouvé devient un ticket corrigé au jalon 3 (classement du §5).
 - 2026-11-27 (séance de lancement du lot J2-4) : ticket 028b découpé en 028b (programmation) et 028c (appui sur la notification, Tout effacer, restauration), plus de 10 fichiers en zone sensible ; jalon 2 : 13 tickets au lieu de 12, total jusqu'au jalon 6 : 43 tickets ; heures du porteur inchangées (18 h pour le jalon 2).
 - 2026-11-27 (séance de lancement du lot J2-3) : ticket 028 découpé en 028a (adaptateur et garde-fous) et 028b (reprogrammation, appui sur la notification, Tout effacer) ; jalon 2 : 12 tickets au lieu de 11, total jusqu'au jalon 6 : 42 tickets ; heures du porteur inchangées (18 h pour le jalon 2), le 028b reprenant une partie du travail prévu au 028.
 - 2026-11-27 (séance de découpage du jalon 2) : découpage accepté, 11 tickets (020 à 030) au lieu de 5, chacun sous 10 fichiers ; heures du porteur recalées en proportion de l'estimation du plan (8 h pour 5 tickets, soit 1,6 h par ticket : 11 × 1,6 = 17,6, arrondi à 18 h) ; total jusqu'au jalon 6 : 41 tickets et environ 69 h (59 + 10).

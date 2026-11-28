@@ -1,6 +1,6 @@
 # 029 — Relance : réglage et demande de permission
 
-Statut : fusionné dans le groupe (PR #82) · Jalon : 2 · Zone sensible : **oui** (demande de permission du système, EX-29, ABS-07) · Trivial : non
+Statut : fait (PR #88 vers `main` ; PR #82 dans le groupe) · Jalon : 2 · Zone sensible : **oui** (demande de permission du système, EX-29, ABS-07) · Trivial : non
 
 Dépend de : 028a (adaptateur `src/data/expoNotifications.ts`, `reminderPermission` ; pas le 028b, décision du porteur du 2026-11-27) · Fichiers touchés : `src/app/relance.tsx` (nouveau), `src/app/permission-notifications.tsx` (nouveau), `src/hooks/useReminderSettings.ts` (nouveau), `src/app/(tabs)/parametres.tsx`, `src/config/libelles/relance.ts`, `src/appTests/reminderSettings.test.tsx` (nouveau), `src/appTests/notificationPermission.test.tsx` (nouveau), `src/data/expoNotifications.ts` (fonction de demande juste après `reminderPermission`), `src/__fixtures__/expoModules.ts` (faux module, même placement), `src/data/expoNotificationsPermission.test.ts` (nouveau : le test actuel de l'adaptateur fait 300 lignes), `src/config/libelles/commun.ts` et `src/config/libelles/alertes.ts` (`alerts.settingsSection` déplacé vers `labels.settings`, avec sa référence dans `src/appTests/alerts.test.tsx`) — environ 12 fichiers, gardé entier (décision du porteur du 2026-11-27)
 
