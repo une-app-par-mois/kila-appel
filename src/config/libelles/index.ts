@@ -1,6 +1,7 @@
 // Tous les textes de l'interface (CONV-03) : aucun texte en dur dans un écran. Un fichier par
 // domaine, 300 lignes au plus chacun (décision du porteur du 2026-11-27), rassemblés ici.
 import { accueil } from './accueil';
+import { alertes } from './alertes';
 import { appel } from './appel';
 import { commun } from './commun';
 import { creneaux } from './creneaux';
@@ -10,6 +11,8 @@ import { historique } from './historique';
 import { membres } from './membres';
 import { organisation } from './organisation';
 import { recuperation } from './recuperation';
+import { relance } from './relance';
+import { stats } from './stats';
 
 export type { LastBackup } from './donnees';
 export type { PurgeCounts } from './effacement';
@@ -27,4 +30,7 @@ export const labels = {
   ...donnees,
   ...recuperation,
   ...effacement,
+  ...relance,
+  ...stats,
+  ...alertes,
 } as const;

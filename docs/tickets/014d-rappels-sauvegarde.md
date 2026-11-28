@@ -1,6 +1,6 @@
 # 014d — Invitation et bandeau de sauvegarde
 
-Statut : fusionné dans le groupe (PR #49, 2026-11-27 ; invitation et bandeau pas encore vus sur l'A55) · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : fait (PR #63 vers `main` ; PR #49, 2026-11-27 ; invitation et bandeau pas encore vus sur l'A55) · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Dépend de : 014, 014b, 013 · Fichiers touchés : `src/app/invitation-sauvegarde.tsx` (nouveau), `src/hooks/useBackupReminder.ts` (nouveau), `src/hooks/useSavedReturn.ts`, `src/app/(tabs)/index.tsx`, `src/data/sessionsRepo.ts` (`firstRecordedDate`), `src/config/libelles/accueil.ts`, tests
 

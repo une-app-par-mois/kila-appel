@@ -2,11 +2,14 @@
 // zone sensible). Le sélecteur, les fichiers et l'ouverture brute d'une copie sont passés en
 // paramètre (expo dans l'appli, node:fs et node:sqlite dans les tests) : le même cycle est testé
 // et livré. Le cycle est partagé avec l'écran de récupération (src/hooks/restoreFlow.ts, ticket
-// 014f). ABS-04 : le journal ne reçoit que des codes.
+// 014f). ABS-04 : le journal ne reçoit que des codes. B2 (ticket 028c) : après une restauration
+// réussie, les relances programmées et affichées sont retirées (elles visent les données
+// remplacées).
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { restoreBackup } from '@/data/backup';
 import { draftGroupName } from '@/data/draftGroupName';
 import type { RestoreDeps } from '@/data/expoFiles';
+import { cancelAllReminders, dismissAllReminders } from '@/data/expoNotifications';
 import { notifyDataChanged } from '@/hooks/dataChanged';
 import { fileLock } from '@/hooks/fileLock';
 import { type Outcome, type RestoreState, restoreOnce } from '@/hooks/restoreFlow';
@@ -80,6 +83,10 @@ export const useRestore = (deps: RestoreDeps, nav: RestoreNav) => {
         apply: async (backup, notice) => {
           // EX-20 : une seule transaction ; un échec laisse la base intacte (RESTORE_FAILED).
           await restoreBackup(db, backup);
+          // B2 : relances de l'ancienne base annulées et retirées (un `slotId` pourrait viser un
+          // autre créneau), avant que les écrans et la reprogrammation (028b) ne relisent.
+          await cancelAllReminders();
+          await dismissAllReminders();
           notifyDataChanged();
           return { step: 'done', ...notice };
         },

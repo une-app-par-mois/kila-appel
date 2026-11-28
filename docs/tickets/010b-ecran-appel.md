@@ -1,6 +1,6 @@
 # 010b — Écran d'appel
 
-Statut : fusionné dans le groupe · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : fait (PR #63 vers `main`) · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Découpé le 2026-11-27 (décision du porteur) depuis le ticket 010.
 

@@ -28,7 +28,7 @@ const st = labels.statuses;
 const DATE = '2026-11-18';
 const row = (name: string, status: string) =>
   screen.findByRole('button', { name: t.row(name, status) });
-const button = (name: string | RegExp) => screen.findByRole('button', { name });
+const button = (name: string) => screen.findByRole('button', { name });
 /** Attend qu'une lecture de la base donne la valeur voulue (écritures du brouillon en arrière-plan). */
 const eventually = async <T,>(read: () => Promise<T>, expected: T) => {
   for (let i = 0; i < 100; i++) {
@@ -116,7 +116,7 @@ describe('Brouillon d’appel (EX-14)', () => {
   it('EX-14 « Nouvel appel » ouvre le brouillon ; l’enregistrement l’efface', async () => {
     await insertDraft(s.slotId, DATE, '17:40', null, [[s.otherMemberId, 'excused']]);
     const router = await open('/');
-    await fireEvent.press(await button(new RegExp(`^${t.entry}`)));
+    await fireEvent.press(await button(t.entry));
     expect(router.getPathname()).toBe('/appel');
     expect(await row('Sam Fictif', st.excused)).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: t.save }));

@@ -1,6 +1,6 @@
 # 015b — Conservation et purge des anciennes saisons
 
-Statut : fusionné dans le groupe (PR #50, 2026-11-27) · Jalon : 1 · Zone sensible : oui (plan validé par le porteur le 2026-11-27) · Trivial : non
+Statut : fait (PR #63 vers `main` ; PR #50, 2026-11-27) · Jalon : 1 · Zone sensible : oui (plan validé par le porteur le 2026-11-27) · Trivial : non
 
 Dépend de : 015, 014, 014b, 014e · Fichiers touchés : `src/data/purge.ts` et son test, `src/hooks/useErase.ts` (conservation et purge), `src/hooks/fileLock.ts` (tâche `'erase'`), `src/app/donnees.tsx`, `src/app/(tabs)/parametres.tsx`, `src/config/libelles/effacement.ts` (et `index.ts`), `scripts/maquettes.mjs`, tests
 

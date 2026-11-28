@@ -3,7 +3,7 @@
  */
 // useRestore (ticket 014e, EX-20, NF-04, SEC-10 ; zone sensible) : vrai cycle sur node:fs et
 // node:sqlite, sélecteur imité (copie dans un dossier « DocumentPicker »). Horloge figée au
-// 27/11/2026.
+// 27/11/2026. B2 (ticket 028c) : relances affichées retirées après une restauration réussie.
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react-native';
@@ -22,6 +22,13 @@ let mockDb: Db | null = null;
 jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => mockDb }));
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
 const { log } = jest.requireMock('@/data/log') as { log: jest.Mock };
+jest.mock('@/data/expoNotifications', () => ({
+  cancelAllReminders: jest.fn(async () => true),
+  dismissAllReminders: jest.fn(async () => {}),
+}));
+const { cancelAllReminders: cancel, dismissAllReminders: dismiss } = jest.requireMock(
+  '@/data/expoNotifications',
+) as { cancelAllReminders: jest.Mock; dismissAllReminders: jest.Mock };
 
 describe('EX-20 useRestore', () => {
   let dir: ReturnType<typeof tempDir>;
@@ -59,6 +66,8 @@ describe('EX-20 useRestore', () => {
     nav.onCancel.mockClear();
     nav.onDone.mockClear();
     log.mockClear();
+    dismiss.mockClear();
+    cancel.mockClear();
   });
   afterEach(async () => {
     // Écrans fermés et restauration finie : le verrou du module est rendu avant le test suivant.
@@ -120,15 +129,23 @@ describe('EX-20 useRestore', () => {
     const expected = await dump(saved);
     await saved.close();
     picker.next = backup;
-    const changed = jest.fn();
+    // B2 : relances annulées puis retirées une fois, sous le verrou, avant que les écrans ne
+    // relisent.
+    const order: string[] = [];
+    cancel.mockImplementation(async () => order.push(`annulation ${fileLock.holder()}`));
+    dismiss.mockImplementation(async () => {
+      order.push(`retrait ${fileLock.holder()}`);
+    });
+    const changed = jest.fn(() => order.push('relecture'));
     const off = onDataChanged(changed);
     const { result } = await start();
     await waitFor(() => expect(result.current.state.step).toBe('confirm'));
+    expect(dismiss).not.toHaveBeenCalled();
     await act(async () => result.current.confirm());
     await waitFor(() => expect(nav.onDone).toHaveBeenCalledTimes(1));
     off();
     expect(await dump(db)).toEqual(expected);
-    expect(changed).toHaveBeenCalled();
+    expect(order).toEqual(['annulation restore', 'retrait restore', 'relecture']);
     expect(nav.onCancel).not.toHaveBeenCalled();
     noCopyLeft();
   });
@@ -146,6 +163,7 @@ describe('EX-20 useRestore', () => {
     await waitFor(noCopyLeft);
     expect(await dump(db)).toEqual(before);
     expect(nav.onDone).not.toHaveBeenCalled();
+    expect(dismiss).not.toHaveBeenCalled();
     expect(log).toHaveBeenCalledWith('RESTORE_CANCELLED');
   });
 
@@ -172,6 +190,8 @@ describe('EX-20 useRestore', () => {
     await waitFor(() => expect(result.current.state).toEqual({ step: 'failed' }));
     expect(await rowCounts(db)).toEqual(before);
     expect(nav.onDone).not.toHaveBeenCalled();
+    expect(dismiss).not.toHaveBeenCalled();
+    expect(cancel).not.toHaveBeenCalled();
     noCopyLeft();
   });
 

@@ -187,7 +187,7 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
 
   it('EX-09 accueil : « Nouvel appel » ouvre la séance proposée', async () => {
     const router = await open('/');
-    const entry = await screen.findByRole('button', { name: new RegExp(`^${t.entry}`) });
+    const entry = await screen.findByRole('button', { name: t.entry });
     await fireEvent.press(entry);
     expect(router.getPathname()).toBe('/appel');
     expect(await screen.findByRole('header', { name: 'Poussins' })).toBeTruthy();
@@ -199,7 +199,7 @@ describe('Écran d’appel (EX-09 à EX-15)', () => {
     await db.execute("UPDATE slots SET schedule_from = '2026-12-01'");
     const router = await open('/');
     expect(await screen.findByText(t.noSession)).toBeTruthy();
-    await fireEvent.press(screen.getByRole('button', { name: new RegExp(`^${t.entry}`) }));
+    await fireEvent.press(screen.getByRole('button', { name: t.entry }));
     expect(router.getPathname()).toBe('/appel-libre');
   });
 

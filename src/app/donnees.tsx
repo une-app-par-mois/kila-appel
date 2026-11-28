@@ -2,7 +2,8 @@
 // complet au-dessus du bouton (SEC-09, ABS-06 : jamais réduit), export par le partage du système,
 // date de la dernière sauvegarde ; section Restaurer, qui ouvre l'écran Restauration (ticket 014e,
 // EX-20). Section Conservation (ticket 015b, EX-24, SEC-11) : « Garder les [3 ▾] dernières
-// saisons », saisons au-delà, purge après une confirmation chiffrée, sous le verrou commun. Section
+// saisons », ou « Garder la [1 ▾] dernière saison » pour 1 (ticket 020), lue en entier par le seul
+// bouton ; saisons au-delà, purge après une confirmation chiffrée, sous le verrou commun. Section
 // Tout effacer (ticket 015f, EX-23) : première confirmation, qui ouvre l'écran Tout effacer.
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -66,7 +67,9 @@ const Retention = ({ locked }: { locked: boolean }) => {
   return (
     <Card>
       <View style={styles.keep}>
-        <Text style={styles.keepText}>{k.keepBefore}</Text>
+        <Text style={styles.keepText} importantForAccessibility="no" accessibilityElementsHidden>
+          {k.keepBefore(retention)}
+        </Text>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={k.accessibility(retention)}
@@ -77,7 +80,9 @@ const Retention = ({ locked }: { locked: boolean }) => {
           <Text style={styles.choiceValue}>{retention}</Text>
           <Icon name="choices" />
         </Pressable>
-        <Text style={styles.keepText}>{k.keepAfter}</Text>
+        <Text style={styles.keepText} importantForAccessibility="no" accessibilityElementsHidden>
+          {k.keepAfter(retention)}
+        </Text>
       </View>
       <Text style={styles.note}>{names.length === 0 ? k.none : k.over(names)}</Text>
       {names.length > 0 && (

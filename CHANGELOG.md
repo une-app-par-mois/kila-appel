@@ -6,6 +6,18 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Ajouté
 
+- Tests : campagne Maestro du jalon 2 (`.maestro/`) : alerte traitée puis revenue après une absence de plus, statistiques du jeu vérifié à la main du 023 (période « Saison »), réglage de la relance avec le dialogue de permission du système (pas maintenant, autoriser, refuser), durées indicatives de NF-08 sur une sauvegarde de volume ; une sauvegarde fictive par parcours, générée à chaque lancement — ticket 030.
+- Relance : notifications locales programmées pour les 7 jours à venir, annulées dès que l'appel est enregistré ; relances affichées retirées quand la séance n'est plus due ; bannière et son quand l'appli est ouverte, sans pastille (F-06, EX-28, ABS-04) — ticket 028b.
+- Relance : un appui ouvre l'appel du créneau ; Tout effacer annule et retire les relances ; une restauration annule et retire les relances de l'ancienne base (F-06, EX-28, SEC-11, SEC-12) — ticket 028c.
+- Paramètres : réglage de la relance (activation, délai), demande de permission seulement à l'activation, état réel affiché (F-06, EX-28, EX-29) — ticket 029.
+- Relance : adaptateur des notifications locales (date fixe, heures d'été et d'hiver, annulation, retrait des relances affichées), contrôle statique d'expo-notifications en liste fermée, séances lues avec leur état ; rien n'est encore programmé (F-06, EX-28, ABS-01, ABS-04, SEC-03) — ticket 028a.
+- Stats : taux de présence de chaque membre d'un groupe, séance par séance ; un appui sur un groupe de l'onglet ouvre ses statistiques (F-05, EX-27) — ticket 025.
+- Effacement : accords au singulier dans la confirmation de purge (« son groupe », « leur présence ») et « Garder la dernière saison » pour une saison — ticket 020.
+- Relance : calcul des relances des 7 jours à venir et réglages (désactivée par défaut, 30 min) (F-06, EX-28) — ticket 027.
+- Onglet Stats : taux de présence de la période et par groupe, période au choix (F-05, EX-27) — ticket 024.
+- Accueil : alertes d'assiduité, écran de l'alerte avec « Marquer comme traitée », réglage du seuil dans Paramètres (F-04, EX-25, EX-26) ; « Voir ses contacts d'urgence » ouvre la recherche d'urgence limitée au membre — ticket 022.
+- Statistiques : calcul des taux de présence par groupe et par membre, sur la saison, le mois ou des dates libres (F-05, EX-27, RM-01, RM-03) — ticket 023.
+- Assiduité : calcul des séries d'absences et des alertes, traitement d'une alerte et seuil réglable de 2 à 10 (F-04, EX-25, EX-26, RM-02) — ticket 021.
 - Tests : campagne Maestro du jalon 1 (`scripts/e2e.sh`, `.maestro/`) : appel de 20 membres chronométré, brouillon après fermeture forcée, sauvegarde puis tout effacer puis restauration d'une sauvegarde fictive générée à chaque lancement — ticket 016.
 - Écran « Base illisible » : « Restaurer une sauvegarde » (bouton principal) ; le fichier est vérifié sur l'écran même, puis résumé avec « Les données abîmées seront effacées définitivement. » ; refus ou Annuler ne touchent pas au fichier abîmé ; après la confirmation, effacement, base neuve et recopie en une transaction, puis l'accueil ; si la recopie échoue, « La restauration n'a pas abouti », base vide ouverte, « Choisir un fichier… » ou « Repartir de zéro » ; si la base neuve ne s'ouvre pas après l'effacement (restauration ou « Repartir de zéro »), « Les données abîmées ont été effacées, mais l'appli n'a pas pu préparer un nouveau fichier de données. Réessayez. », jamais « Rien n'a été effacé » ; retour Android sans effet pendant l'effacement et la recopie (EX-22, EX-20, SEC-10, SEC-11) — ticket 014f.
 - Données : Tout effacer, depuis l'écran Sauvegarde ou Paramètres, après double confirmation (le bouton, puis le mot EFFACER) ; les copies du cache sont vidées juste après, puis Bienvenue recrée la saison comme à une installation neuve (EX-23, SEC-10, SEC-11) — ticket 015f.
@@ -54,8 +66,10 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Sécurité
 
+- Permissions : notifications (demandées seulement à l'activation de la relance) et redémarrage de l'appareil (relances reprogrammées) ; aucune connexion réseau, INTERNET toujours absente ; Firebase retiré du binaire et refusé par l'audit (F-06, ABS-01, ABS-07, SEC-02) — ticket 026.
 - Outillage : minimatch forcé en 11.0.9 sur la plage vulnérable (>= 7.0.0) par `overrides`, alerte Dependabot n° 2 levée ; garde-fou `scripts/minimatch.test.js` — ticket 017.
 - Outillage : glob forcé en 14.0.6 sur la plage vulnérable (>= 9.0.0) par `overrides`, faille GHSA-3g3m-2fjr-6pw4 levée ; garde-fou `scripts/glob.test.js` ; comparaison de versions commune (`scripts/lock-versions.js`) et échec si une dépendance déclare glob >= 15 ou minimatch >= 12 (« ajuster l'override ») — ticket 018.
+- Sécurité : nom d'auteur du registre des licences sans reste de chevron ; test sans RegExp construite (019).
 
 ### Corrigé
 

@@ -1,6 +1,6 @@
 # 015f — Tout effacer
 
-Statut : fusionné dans le groupe (PR #56, 2026-11-27 ; pas encore essayé sur l'A55) · Jalon : 1 · Zone sensible : oui · Trivial : non
+Statut : fait (PR #63 vers `main` ; PR #56, 2026-11-27 ; pas encore essayé sur l'A55) · Jalon : 1 · Zone sensible : oui · Trivial : non
 
 Dépend de : 015, 015b, 014c · Fichiers touchés : `src/app/tout-effacer.tsx` (nouveau), `src/hooks/useErase.ts`, `src/app/donnees.tsx`, `src/app/(tabs)/parametres.tsx`, libellés, tests
 

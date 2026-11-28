@@ -1,6 +1,6 @@
 # 010 — Appel : données
 
-Statut : fusionné dans le groupe · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : fait (PR #63 vers `main`) · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Découpé le 2026-11-27 (décision du porteur) : 010 (données et hooks), 010b (écran d'appel), 010c (appel sans créneau, ajout d'un membre pendant l'appel).
 

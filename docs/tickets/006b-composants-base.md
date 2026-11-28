@@ -1,6 +1,6 @@
 # 006b — Composants de base
 
-Statut : fusionné dans le groupe · Jalon : 1 · Zone sensible : non · Trivial : non
+Statut : fait (PR #63 vers `main`) · Jalon : 1 · Zone sensible : non · Trivial : non
 
 Issu du découpage du ticket 006 (décision du porteur du 2026-11-26).
 

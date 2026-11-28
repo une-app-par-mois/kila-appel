@@ -1,6 +1,6 @@
 # 006f — Modifier une saison sans laisser d'inscription hors de ses dates
 
-Statut : fusionné dans le groupe · Jalon : 1 · Zone sensible : oui (comme 006 et 006c) · Trivial : non
+Statut : fait (PR #63 vers `main`) · Jalon : 1 · Zone sensible : oui (comme 006 et 006c) · Trivial : non
 
 Relevé par la revue du 007e ; décision du porteur du 2026-11-26.
 

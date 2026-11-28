@@ -172,7 +172,15 @@ const RULES: Rule[] = [
     columns: 'draft_id, member_id, status',
     check: (r) => status(r.status),
   },
-  { table: 'alert_acks', columns: 'member_id, acked_at', check: (r) => date(r.acked_at) },
+  {
+    // EX-26 : longueur traitée, entier de 1 ou plus, comme l'écrit l'appli.
+    table: 'alert_acks',
+    columns: 'member_id, streak_length, acked_at',
+    check: (r) => {
+      ensure(typeof r.streak_length === 'number' && isId(r.streak_length));
+      date(r.acked_at);
+    },
+  },
   {
     // ADR-002, ABS-08 : seulement les réglages connus, avec une valeur valide.
     table: 'settings',

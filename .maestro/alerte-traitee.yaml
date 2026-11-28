@@ -1,0 +1,63 @@
+# Alerte d'assiduité traitée, puis revenue (ticket 030, EX-25, EX-26, RM-02). Sauvegarde fictive
+# `kila-e2e-alertes.db` (src/__fixtures__/e2eBackup.ts) : Rémi Exemple, absent à J-7, J-10 et
+# J-14 du jour de l'appareil, soit 3 absences de suite, le seuil par défaut. Vérifie aussi le
+# retour Android de l'écran d'alerte (focus, ticket 022).
+appId: com.jitavision.kila
+---
+- runFlow:
+    file: sous-parcours/restaurer.yaml
+    env:
+      FICHIER: 'kila-e2e-alertes.db'
+      RESUME: '2 membres · 1 groupe · 3 séances'
+
+# EX-25 : l'alerte est sur l'accueil.
+- extendedWaitUntil:
+    visible: 'Alertes d’assiduité'
+    timeout: 10000
+- scrollUntilVisible:
+    element: 'Rémi Exemple, Minimes jeudi, 3 absences'
+- tapOn: 'Rémi Exemple, Minimes jeudi, 3 absences'
+- extendedWaitUntil:
+    visible: 'Minimes jeudi · 3 absences non excusées de suite'
+    timeout: 5000
+# Retour Android sans rien traiter : l'accueil, l'alerte toujours là.
+- back
+- extendedWaitUntil:
+    visible: 'Rémi Exemple, Minimes jeudi, 3 absences'
+    timeout: 5000
+
+# EX-26 : « Marquer comme traitée » ramène à l'accueil, où l'alerte a disparu.
+- tapOn: 'Rémi Exemple, Minimes jeudi, 3 absences'
+- extendedWaitUntil:
+    visible: 'Marquer comme traitée'
+    timeout: 5000
+- tapOn: 'Marquer comme traitée'
+- extendedWaitUntil:
+    visible: 'Aucune alerte : personne n’a manqué 3 séances de suite\.'
+    timeout: 5000
+- assertNotVisible: 'Rémi Exemple, Minimes jeudi, .*'
+- assertNotVisible: 'Marquer comme traitée'
+
+# EX-26 : une absence de plus (appel du jour, sans créneau) et l'alerte revient, à 4 absences.
+- tapOn: 'Nouvel appel'
+- extendedWaitUntil:
+    visible: 'Minimes jeudi'
+    timeout: 5000
+- tapOn: 'Minimes jeudi'
+- extendedWaitUntil:
+    visible: 'Rémi Exemple, Présent'
+    timeout: 5000
+- tapOn: 'Rémi Exemple, Présent'
+- assertVisible: 'Rémi Exemple, Absent'
+- scrollUntilVisible:
+    element: 'Enregistrer l’appel'
+- tapOn: 'Enregistrer l’appel'
+- extendedWaitUntil:
+    visible: 'Appel enregistré'
+    timeout: 5000
+- tapOn: 'Accueil'
+- extendedWaitUntil:
+    visible: 'Alertes d’assiduité'
+    timeout: 5000
+- scrollUntilVisible:
+    element: 'Rémi Exemple, Minimes jeudi, 4 absences'

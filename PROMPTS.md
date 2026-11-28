@@ -225,6 +225,149 @@ Avant de passer aux tickets suivants, je veux voir avec toi comment optimiser le
 - Maestro mesure surtout son propre coût (environ 2,2 s par appui) : sur l'émulateur, NF-01 se lit comme une alerte ; la mesure qui fait foi reste sur un téléphone.
 - Une base d'un ancien build laisse l'accueil vide sans message : désinstaller avant chaque installation de test.
 
+### Clôture du jalon 1 — 2026-11-27
+
+**Prompt clé** : PR du jalon 1 vers `main`, correction des alertes de la CI, campagne Maestro sur l'APK de la CI, accord du porteur, fusion, puis séance de clôture (questions de `docs/QUESTIONS.md`, bilan des décisions).
+
+**Ce que l'IA a fait** :
+- **CI de la PR #63** : tout vert sauf Semgrep (`detect-non-literal-regexp` dans `purge.test.tsx`, RegExp construite depuis un paramètre de test) et CodeQL (« Incomplete multi-character sanitization » dans `authorOf`, `scripts/licences.js` : avec des chevrons imbriqués, `Alix Exemple <a<b>c>` donnait `Alix Exemplec>`). Ticket 019 : regex écrites en dur ; `authorOf` retire les groupes `<…>` et `(…)` caractère par caractère, imbrications comprises ; aucune règle désactivée.
+- **Campagne Maestro** sur l'APK de la CI (`kila-apk-test`) : verte, appel de 20 membres en 23,5 s.
+- **Fusion** de la PR #63 en squash après l'accord du porteur (`main` à `91ed684`) ; alertes Dependabot fermées (0 ouverte) ; branche `groupe/jalon-2-suivre-assiduite` créée depuis `main`.
+- **Séance de clôture** : les deux questions du 015b posées ; ticket 020 créé ; tickets du jalon 1 passés à « fait ».
+
+**Ce qui a été corrigé par les revues** : la première version du 019 coupait le nom d'auteur au premier « < » ou « ( » ; la revue l'a refusée (un auteur « (c) Acme Corp » ou avec une parenthèse au milieu perdait son nom).
+
+**Ce que j'ai corrigé ou refusé** : réponses de clôture du 2026-11-27, qui annulent les deux décisions du 015b :
+- confirmation de purge : avec un compte de 1, le possessif s'accorde (« son groupe », « son créneau ») ; au-delà, « ses 3 groupes » ;
+- ligne de conservation : « Garder la dernière saison » pour 1 ; la phrase de la maquette pour 2 et plus.
+
+**Bilan des décisions du jalon 1** : 2 annulées (les deux du 015b, par des accords) ; 9 changées après contradiction ; 27 changées après revue ; 3 décidées par le porteur ; 0 en attente.
+
+**Leçons** :
+- Corriger une alerte de sécurité plutôt que la classer : CodeQL avait raison sur un reste de chevron, et classer une alerte est un réglage extérieur réservé au porteur.
+- La file du porteur a bien fonctionné : deux questions de texte n'ont rien bloqué, et la correction part sur un ticket.
+
+### Lot J2-1 (021, 026, 023) — 2026-11-27
+
+**Prompt clé** : séance de découpage du jalon 2 (dix tickets, 021 à 030 ; expo-notifications accepté par une décision datée du porteur), puis séance de lancement du lot J2-1 (plans des trois zones sensibles validés, QCM des questions de la pré-analyse), puis trois agents de code en parallèle.
+
+**Ce que l'IA a fait** :
+- **Développement** : 021 (séries d'absences en une requête SQL puis RM-02 dans le domaine, traitement des alertes, seuil de 2 à 10) ; 026 (expo-notifications 58.1.10 installé et verrouillé : `plugins/withoutFirebase.js`, `blockedPermissions` étendue, audit de l'APK durci, APK construit et audité en local, démarrage vérifié sur l'émulateur) ; 023 (taux RM-01, arrondi exact, parts de la barre, périodes, agrégats SQL d'une requête par écran, jeu fictif vérifié à la main).
+- **Intégration** : revue de code, contradicteur, revue de sécurité (trois zones sensibles) ; corrections renvoyées aux agents ; fusions une par une (PR #68, #69, #70) ; 1449 tests ; 59 décisions ajoutées à `docs/DECISIONS.md`, 3 en attente du porteur mises en file.
+
+**Ce qui a été corrigé par les revues** :
+- **masquage des alertes** : un traitement ne couvrait la série que depuis sa première absence ; une correction qui coupait la série traitée, puis de nouvelles absences, la laissaient masquée : comparaison avec la **dernière** absence (scénarios a, b, c) ;
+- **restauration vérifiée** : `alert_acks.streak_length` n'était pas contrôlé dans une sauvegarde ; entier ≥ 1, sinon le fichier est refusé ;
+- **barre trompeuse** : un statut rare arrondi à 0 disparaissait de la barre ; tout statut non nul garde au moins 1 point (changée après contradiction) ;
+- **filtre Saison** : deux saisons qui se chevauchent mélangeaient leurs séances ; « Saison » filtre par `sessions.season_id` en plus des dates ;
+- **audit durci** : un `activity-alias`, une référence de ressource ou un composant gms non exporté passaient l'audit ; alias et cible contrôlés, références refusées (échec fermé), liste figée `config/composants-google-attendus.txt` ;
+- **découverts en pré-analyse** (avant le code) : 8 bibliothèques natives sous **licence Google** (Android Software Development Kit License), hors de la liste du §7, et **ShortcutBadger** avec 16 permissions de lanceurs, tirés par expo-notifications et expo-application.
+
+**Décisions du porteur** (2026-11-27) :
+- expo-notifications accepté selon l'option A (Firebase retiré du manifeste, jamais initialisé), avec `POST_NOTIFICATIONS` et `RECEIVE_BOOT_COMPLETED` seules, sans alarme exacte ; iOS sans pastille ni habilitation ; « aucune donnée collectée » gardé, risque de l'index des SDK de Play noté ;
+- licence Google acceptée pour ces 8 bibliothèques seulement ; ShortcutBadger accepté, ses permissions bloquées ;
+- 026 fusionné dans le jalon avant le 028 (ABS-07 tenue au niveau du jalon) ;
+- 021 : retraiter met à jour la date sur place (`ON CONFLICT … DO UPDATE SET acked_at = MAX(…)`) ; masquage à partir de la dernière absence ; restauration vérifiée ; ticket de 13 fichiers gardé entier ; ligne ABS-08 au journal de CONFORMITE ;
+- 023 : membres comptés listés dans leur groupe ; maquette corrigée (« 13 séances », 64 %) ; filtre Saison par `season_id` ; suppression d'un groupe d'une séance commune documentée, à figer au jalon 4 (F-11).
+
+**Leçons** :
+- Lire les manifestes et les POM de chaque bibliothèque native avant d'accepter une dépendance : la licence et les permissions ne se voient pas dans `package.json`.
+- Un audit par motifs se contourne par un alias ou une référence : l'échec fermé et une liste figée versionnée rendent tout ajout visible au diff.
+
+### Lot J2-2 (022, 024, 027) — 2026-11-27
+
+**Prompt clé** : séance de lancement du lot J2-2 (plan du 027 en zone sensible validé, QCM des questions de la pré-analyse, destination de « Voir ses contacts d'urgence » tranchée par le porteur), puis trois agents de code en parallèle.
+
+**Ce que l'IA a fait** :
+- **Développement** : 022 (section des alertes sur l'accueil, écran de l'alerte et « Marquer comme traitée », réglage du seuil, cases `SessionSquares`, recherche d'urgence ouverte par `?membre=<id>`) ; 024 (onglet Stats, écran Période, barre `AttendanceBar`) ; 027 (calcul pur des relances des 7 jours à venir, réglages désactivée par défaut et 30 min, textes de la maquette, test SEC-12 sur un jeu fictif lu par les dépôts).
+- **Intégration** : revue de code, contradicteur, revue de sécurité du 027 ; corrections renvoyées aux agents ; fusions une par une (PR #72, #73, #74) ; 1526 tests ; 50 décisions ajoutées à `docs/DECISIONS.md`, 1 en attente du porteur mise en file.
+
+**Ce qui a été corrigé par les revues** :
+- **urgence limitée au membre** : la recherche pré-remplie avec le nom montrait aussi les homonymes (ou un « Martinez » pour « Martin ») : risque d'appeler le mauvais parent ; tant que la saisie n'est pas modifiée, seule la carte du membre s'affiche, sans `autoFocus` ;
+- **fermeture de l'écran d'urgence par l'alerte** : l'écran d'alerte revenait à l'accueil dès que l'alerte n'était plus montrée, et fermait la recherche d'urgence ouverte par-dessus ; le retour n'a lieu que quand l'écran d'alerte a le focus ;
+- **pile de navigation de l'écran Période** : `router.navigate` empilait un second `(tabs)`, un retour rouvrait l'écran Période ; retour par `router.dismissTo` vers `/stats`, testé par deux applications de suite ;
+- **fenêtre de 7 jours des relances** : elle s'arrêtait à aujourd'hui + 6, la relance de la semaine suivante manquait dès que celle du jour était passée ; occurrences d'hier à aujourd'hui + 7, bornées par maintenant + 7 jours (ADR-007) ;
+- **seuil des alertes** (contradicteur) : un seuil lu à part pouvait échouer sans message ou différer de celui de la liste ; `useAlerts` renvoie le seuil lu avec la liste.
+
+**Incident** : disque plein pendant le lot ; chaque copie de travail des agents pesait de 4 à 12 Go ; 59 Go libérés avant de reprendre.
+
+**Leçons** :
+- Un écran qui navigue seul (retour automatique) doit vérifier qu'il a le focus : un écran ouvert par-dessus n'est pas le sien.
+- Pré-remplir une recherche dans un écran d'urgence n'est pas neutre : le résultat doit désigner une seule personne.
+- Surveiller la place libre avant de lancer trois agents en parallèle.
+
+### Lot J2-3 (020, 025, 028a) — 2026-11-27
+
+**Prompt clé** : séance de lancement du lot J2-3 (pré-analyse, QCM des questions prévisibles, plan du 028 en zone sensible ajusté et validé, découpage du 028 en 028a et 028b), puis trois agents de code en parallèle.
+
+**Réponses du porteur au QCM du lot** :
+- 020 : possessif à chaque compte de 1 (« son groupe, son créneau, sa séance et ses 3 présences ») ; « Garder la [1 ▾] dernière saison », le champ reste dans la phrase ;
+- 025 : comptes accordés (« 6 présents », « 0 retard ») ; séance sans statut en case vide, libellé « Sans statut » ; « Archivé » ; états vides ; pas de légende des couleurs sur l'écran membre ; période en paramètre `periode=saison` ou `periode=mois` ;
+- 028 : découpé en 028a (adaptateur et garde-fous) et 028b (reprogrammation, appui, Tout effacer) ; le 029 dépend seulement du 028a ; plan ajusté (liste fermée, nouveau contrôle statique, canal créé seulement relance activée et permission accordée, aucune demande de permission avant le 029, `reminderSessions`) ; relances affichées : on retire celles qui ne sont plus dues ; 028a gardé entier à 12 fichiers ;
+- pour le 028b : `setNotificationHandler` ajouté (bannière et son appli ouverte, sans pastille), canal « Relances » en importance haute, retrait des relances affichées dont l'appel est fait.
+
+**Ce que l'IA a fait** :
+- **Développement** : 020 (accords de la confirmation de purge et de la phrase de conservation, 81 combinaisons de comptes testées) ; 025 (écrans des statistiques d'un groupe et d'un membre, case vide de `SessionSquares`, `statsPeriodParams.ts`, appui sur un groupe de l'onglet) ; 028a (adaptateur `expoNotifications.ts` en liste fermée, heures d'été et d'hiver, `reminderSessions`, contrôle `staticChecksNotifications.test.ts`, APK construit et audité en local).
+- **Intégration** : revue de code, contradicteur, revue de sécurité du 028a ; corrections renvoyées aux agents ; fusions une par une (PR #77, #78, #79) ; 1653 tests ; 63 décisions ajoutées à `docs/DECISIONS.md` ; fiche 028b créée.
+
+**Ce qui a été corrigé par les revues** :
+- **contrôle statique contournable** (revue de sécurité du 028a) : un import par `node_modules/`, `import N = require()`, une clé écrite en chaîne, `jest.requireActual` ou un import relatif hors de `src/` passait le contrôle ; une fonction réseau d'expo-notifications restait donc appelable, avec un appel réseau possible sur iOS ; tous refusés, chacun vu en échec ; limite connue : un nom calculé (`obj[a + b]`) ;
+- **tests dépendants du fuseau horaire** : `process.env.TZ` posé dans un fichier de test était sans effet sur les workers de Jest ; 7 tests échouaient en UTC, le fuseau de la CI, qui aurait échoué à la PR du jalon ; fuseau fixé en tête de `jest.config.js`, vérifié avec `TZ=UTC` et `TZ=America/New_York` ;
+- **« Archivé » et la couleur Encre** (025, contradicteur) : « Archivé » manquait sur l'écran d'un membre ; les taux étaient en couleur Texte, 16 pt, alors que la charte met les chiffres en Encre (18 dans les listes, 26 pour le chiffre clé) ;
+- **lecture en double** (020) : le lecteur d'écran lisait « Garder la » et « dernière saison » en plus du bouton qui lit la phrase entière ; les deux morceaux sont cachés au lecteur d'écran.
+
+**Leçons** :
+- Un contrôle statique par motifs se teste en cherchant à le contourner : chaque forme d'import (chemin, `require`, simulation de Jest) est une porte.
+- Un test qui dépend de l'heure doit fixer son fuseau là où les workers démarrent, et passer aussi en UTC avant la PR.
+
+### Lot J2-4 (028b, 028c, 029) — 2026-11-27
+
+**Prompt clé** : séance de lancement du lot J2-4 (pré-analyse, QCM des questions prévisibles, plans des trois tickets en zone sensible, découpage du 028b en 028b et 028c), puis trois agents de code en parallèle.
+
+**Réponses du porteur au QCM du lot** :
+- 028b découpé en 028b (programmation) et 028c (appui sur la notification, Tout effacer, restauration), en parallèle, seul fichier commun `_layout.tsx` ;
+- plans validés : reprogrammations une par une, la dernière demande gagne, reportées pendant un effacement ou une restauration ; canal créé seulement relance activée et permission accordée ; `setNotificationHandler` (bannière, liste, son, sans pastille) ; Tout effacer annule et retire toutes les relances, une restauration retire les affichées avant de reprogrammer ; cible d'un appui lue une fois au démarrage à froid, ignorée pendant le verrou ; permission demandée seulement à l'activation, après l'écran « Autoriser les notifications ? », iOS sans pastille ; APK reconstruit et audité ;
+- relances affichées : retirer aussi celles dont tous les groupes sont archivés ou hors de la saison active ;
+- 029 gardé entier (environ 12 fichiers) ; refus au dialogue et permission jamais demandée : état effectif avec bandeau (jamais demandée : interrupteur éteint, sans bandeau) ; mention « Le nom du groupe s'affiche sur l'écran verrouillé. » (écart de maquette accepté) ;
+- placement pour éviter les conflits entre agents (clés de `relance.ts`, fonctions de l'adaptateur et du faux module, imports alphabétiques).
+
+**Réponses du porteur en revue** : 029 fusionné après relecture ; 028c gardé entier à 12 fichiers ; 028b gardé entier à 13 fichiers ; annulation ciblée (`getAllScheduledNotificationsAsync` et `cancelScheduledNotificationAsync` ajoutées à la liste fermée) ; M1 corrigé dans le 028b (base effacée : tout annuler).
+
+**Ce que l'IA a fait** :
+- **Développement** : 029 (écrans `relance.tsx` et `permission-notifications.tsx`, `useReminderSettings`, `reminderPermissionState` et `requestReminderPermission`, ligne Relance de Paramètres) ; 028c (`useReminderTap`, `clearReminders` de Tout effacer, annulation et retrait après une restauration, réponse forgée refusée, imitation globale dans `jest.setup.js`) ; 028b (`useReminders`, `dueSessions`, `showRemindersInForeground`, annulation ciblée, `localDates.ts`, licences, APK reconstruit et audité).
+- **Intégration** : revues de code, contradicteur et revues de sécurité des trois tickets ; corrections renvoyées aux agents ; fusions une par une (PR #82, #83, #84) ; 1741 tests ; 41 décisions ajoutées à `docs/DECISIONS.md`, 3 questions en file.
+
+**Ce qui a été corrigé par les revues** :
+- **appui perdu au démarrage** (028c) : un appui reçu pendant le nettoyage du démarrage (verrou `cleanup`) était ignoré ; il est mis en attente et ouvert une fois la pile montée ;
+- **appui forgé par une autre appli** (revue de sécurité du 028c) : une appli tierce pouvait lancer l'activité avec une fausse notification push et ouvrir un appel ; `targetOfResponse` refuse le type `push` et exige l'identifiant `relance-<slotId>-<date>` ;
+- **relances reprogrammées après Tout effacer** (028b, contradicteur) : une passe commencée avant l'effacement pouvait reprogrammer les relances des données effacées ; verrou, compte des effacements et base relus avant chaque écriture native ;
+- **relance de la minute annulée** (028b) : tout annuler à chaque passe supprimait une relance due dans la minute, pas encore délivrée ; annulation ciblée des seules relances qui ne sont plus gardées (décision du porteur) ;
+- **base effacée** (M1, 028b) : une base effacée qui ne se rouvre pas laissait les relances programmées ; à `erased` ou `restoreFailed`, tout est annulé et retiré (décision du porteur) ;
+- **double appui** (029) : deux appuis sur « Continuer » ou deux bascules de l'interrupteur lançaient deux demandes ou empilaient deux écrans ; gardes et retour bloqué pendant la demande ;
+- **permission illisible affichée comme activée** (029, contradicteur) : la ligne de Paramètres suivait la préférence alors que le 028b ne programme rien quand la lecture échoue ; elle suit l'interrupteur (« Désactivée »).
+
+**Leçons** :
+- Une passe asynchrone qui écrit dans le système doit revérifier ses conditions avant chaque écriture, pas seulement au départ.
+- Tout point d'entrée qu'une autre appli peut atteindre (activité, notification) se traite comme une entrée non fiable.
+
+### Ticket 030 et fin du développement du jalon 2 — 2026-11-27
+
+**Prompt clé** : lancement du 030 (campagne Maestro du jalon 2, fiche `docs/tickets/030-maestro-jalon-2.md`) par un agent de code, puis revues, contradicteur, fusion (PR #86) et intégration documentaire.
+
+**Réponses du porteur** : émulateur seul (`emulator-5554`, jamais `--appareil-reel`, A55 « non vérifié ») ; dialogue de permission du système piloté par Maestro (pas maintenant, autoriser, refuser) ; NF-08 relevé sur une sauvegarde de volume, sans seuil, à titre indicatif, jugé à l'œil sur l'A55 au prétest ; ticket gardé entier à 14 fichiers.
+
+**Ce que l'IA a fait** : quatre parcours du jalon 2 (`alerte-traitee`, `statistiques`, `relance-reglage`, `volume-nf08`) après ceux du jalon 1, une sauvegarde fictive par parcours écrite par `e2eBackup.ts`, restauration commune en sous-parcours ; campagne **7/7 verte** sur l'émulateur (Android 16, API 36), appel de 20 membres en 25,4 s ; NF-08 indicatif sur 500 membres et 930 séances : accueil 1,07 s, Stats 2,95 s ; 1752 tests ; 19 décisions ajoutées à `docs/DECISIONS.md`, aucune question en file.
+
+**Ce qui a été corrigé par les revues** :
+- **campagne bloquée hors des dates** : un émulateur réglé hors du jeu du 023 (avant le 2026-11-25 ou après le 2027-07-31) faisait refuser toute la campagne ; seule la sauvegarde des statistiques n'est plus écrite et `e2e.sh` saute le parcours `statistiques` avec un avertissement (contradicteur) ;
+- **contrôle de l'interrupteur qui ne vérifiait rien** : `checked: false` trouvait le titre, un texte jamais coché, donc toujours vrai ; l'état se lit sur la ligne « Relance » de Paramètres, et le contrôle a été vu en échec en l'inversant ;
+- **contrôles des statistiques qui pouvaient attraper une ligne de groupe** : « 87 % » ou « 21 » cherchés par leur seul texte pouvaient tomber sur une ligne de groupe ; ils sont lus par position, sous leur titre et au-dessus de « Par groupe » ;
+- **séances futures dans la sauvegarde de volume** : `volumeSeed` contenait 270 séances après le jour de l'appareil, que l'appli n'enregistre jamais ; elles sont retirées et la mesure porte sur 930 séances.
+
+**Leçons** :
+- Un contrôle de test se vérifie en le faisant échouer une fois : sinon il peut ne rien vérifier.
+- Un jeu de test daté doit dire ce qu'il fait hors de ses dates, sans bloquer le reste.
+
 ### [Étape] — [AAAA-MM-JJ]
 
 **Prompt**

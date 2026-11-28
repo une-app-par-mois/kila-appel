@@ -1,6 +1,6 @@
 # 014c — Base illisible au démarrage
 
-Statut : fusionné dans le groupe (PR #51, 2026-11-27 ; base abîmée réelle pas encore essayée sur l'A55) · Jalon : 1 · Zone sensible : oui (plan validé par le porteur le 2026-11-27) · Trivial : non
+Statut : fait (PR #63 vers `main` ; PR #51, 2026-11-27 ; base abîmée réelle pas encore essayée sur l'A55) · Jalon : 1 · Zone sensible : oui (plan validé par le porteur le 2026-11-27) · Trivial : non
 
 Dépend de : 014, 014b, 014e, 015c · Fichiers touchés : `src/data/open.ts`, `src/data/expoDb.ts` (`deleteAppDatabase`), `src/hooks/useDatabase.ts`, `src/hooks/fileLock.ts` (tâche `'cleanup'`), `src/app/_layout.tsx`, `src/ui/Recovery.tsx`, `src/config/libelles/recuperation.ts` (et `index.ts`), `scripts/maquettes.mjs`, tests
 

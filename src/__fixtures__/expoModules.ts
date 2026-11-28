@@ -134,3 +134,94 @@ export const fakeSqlite = (open: (name: string, options?: object, directory?: st
     };
   },
 });
+
+type FakeRequest = { identifier: string; content: { data?: Record<string, unknown> } };
+type FakeResponse = { notification: { date: number; request: FakeRequest } };
+type FakeSchedule = { identifier: string; content: object; trigger: object };
+
+/**
+ * expo-notifications (ticket 028a) : notifications programmées et affichées tenues en mémoire,
+ * permission, réponse à la demande et dernière réponse réglables ; une fonction nommée dans `fail` échoue. Constantes
+ * recopiées du paquet (58.1.10), car seul l'adaptateur peut l'importer (ABS-01).
+ */
+export const fakeNotifications = () => {
+  const state = {
+    scheduled: [] as FakeSchedule[],
+    presented: [] as FakeRequest[],
+    channels: [] as { id: string; channel: object }[],
+    permission: { granted: false, canAskAgain: true, status: 'undetermined' },
+    /** Réponse du système à la demande (029) et options de chaque demande. */
+    answer: { granted: true, canAskAgain: true, status: 'granted' },
+    requests: [] as object[],
+    lastResponse: null as FakeResponse | null,
+    listeners: [] as ((response: FakeResponse) => void)[],
+    fail: new Set<string>(),
+  };
+  const guard = (name: string) => {
+    if (state.fail.has(name)) throw new Error(`échec simulé : ${name}`);
+  };
+  return {
+    state,
+    SchedulableTriggerInputTypes: { DATE: 'date' },
+    AndroidImportance: { DEFAULT: 5, HIGH: 6 },
+    scheduleNotificationAsync: async (request: FakeSchedule) => {
+      guard('scheduleNotificationAsync');
+      state.scheduled = state.scheduled.filter((x) => x.identifier !== request.identifier);
+      state.scheduled.push(request);
+      return request.identifier;
+    },
+    cancelAllScheduledNotificationsAsync: async () => {
+      guard('cancelAllScheduledNotificationsAsync');
+      state.scheduled = [];
+    },
+    getPermissionsAsync: async () => {
+      guard('getPermissionsAsync');
+      return state.permission;
+    },
+    requestPermissionsAsync: async (options: object) => {
+      guard('requestPermissionsAsync');
+      state.requests.push(options);
+      state.permission = state.answer;
+      return state.answer;
+    },
+    setNotificationChannelAsync: async (id: string, channel: object) => {
+      guard('setNotificationChannelAsync');
+      state.channels.push({ id, channel });
+      return channel;
+    },
+    getPresentedNotificationsAsync: async () => {
+      guard('getPresentedNotificationsAsync');
+      return state.presented.map((request) => ({ date: 0, request }));
+    },
+    dismissNotificationAsync: async (identifier: string) => {
+      guard('dismissNotificationAsync');
+      state.presented = state.presented.filter((x) => x.identifier !== identifier);
+    },
+    getLastNotificationResponse: () => {
+      guard('getLastNotificationResponse');
+      return state.lastResponse;
+    },
+    addNotificationResponseReceivedListener: (listener: (response: FakeResponse) => void) => {
+      guard('addNotificationResponseReceivedListener');
+      state.listeners.push(listener);
+      return {
+        remove: () => {
+          state.listeners = state.listeners.filter((x) => x !== listener);
+        },
+      };
+    },
+    // Ticket 028b : comportement au premier plan, relevé par jest.spyOn dans les tests.
+    setNotificationHandler: (_handler: object | null) => {
+      guard('setNotificationHandler');
+    },
+    // Ticket 028b : n'annuler que les relances qui ne sont plus prévues.
+    getAllScheduledNotificationsAsync: async () => {
+      guard('getAllScheduledNotificationsAsync');
+      return [...state.scheduled];
+    },
+    cancelScheduledNotificationAsync: async (identifier: string) => {
+      guard('cancelScheduledNotificationAsync');
+      state.scheduled = state.scheduled.filter((x) => x.identifier !== identifier);
+    },
+  };
+};

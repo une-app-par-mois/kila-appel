@@ -44,7 +44,8 @@ Les mineurs n'utilisent pas l'appli : la règle du consentement parental en dess
 | Politique de confidentialité | Obligatoire même sans collecte, sur la fiche **et dans l'appli** ; URL publique en https, page web (pas un PDF) | GitHub Pages + écran EX-40, même texte |
 | Suppression de compte | Ne vise que les applis qui permettent de créer un compte | Sans objet ; « Tout effacer » existe quand même (EX-23) |
 | Public cible | Déclaré par tranches d'âge ; la politique Familles s'applique dès qu'une tranche inclut des enfants ; Google peut contrôler la cohérence avec la fiche | **16 ans et plus** (tranches 16-17 et 18+, décision du 2026-11-26, pour inclure de jeunes animateurs) ; fiche et visuels sans élément qui attire les enfants. À vérifier dans la console : que la tranche 16-17 ne déclenche pas la politique Familles |
-| Permissions | Au strict nécessaire | Audit sur le binaire (SEC-02) |
+| Permissions | Au strict nécessaire | Audit sur le binaire (SEC-02). Relance (F-06, ticket 026, décision du porteur du 2026-11-27) : `POST_NOTIFICATIONS` (demandée à l'activation de la relance) et `RECEIVE_BOOT_COMPLETED` (reprogrammation après redémarrage), sans alarme exacte ; notifications **locales** seulement, aucune donnée ne quitte l'appareil : « aucune donnée collectée » inchangé. La politique de confidentialité mentionnera les notifications locales (jalon 6, ABS-08) |
+| Index des SDK de Play | Play repère les SDK connus dans le binaire et peut les rapprocher du formulaire « Sécurité des données » | **Risque noté** (décision du 2026-11-27) : Firebase Messaging est présent dans le binaire (tiré par expo-notifications), non initialisé (aucun `google-services.json`) et ses composants retirés du manifeste ; Play peut quand même le signaler. Réponse prévue : aucune donnée collectée, aucun composant actif (audit SEC-02) |
 
 ## 4. App Store
 
@@ -76,6 +77,7 @@ Apple et Google demandent de déclarer si l'éditeur est un **commerçant** (*tr
 - **Licences acceptées pour une dépendance** : MIT, ISC, BSD, Apache-2.0, et (décision du porteur du 2026-11-26) 0BSD, BlueOak-1.0.0, CC0-1.0, Unlicense ; une double licence est acceptée si l'une des deux l'est ; **polices** : SIL OFL 1.1. **Refusées sans décision du porteur** : GPL, LGPL, AGPL, SSPL et toute licence copyleft.
 - **Registre** : la liste des licences embarquées est générée depuis les dépendances réellement présentes dans le build et affichée dans l'appli (EX-42) ; elle est mise à jour dans le même ticket que toute nouvelle dépendance, police ou ressource.
 - Polices IBM Plex : fichier de licence OFL livré à côté des `.ttf` (ADR-001).
+- **Android Software Development Kit License** (décision datée du porteur du 2026-11-27, ticket 026) : acceptée pour ces 8 bibliothèques natives **et elles seulement**, tirées par expo-notifications et expo-application : `play-services-base`, `play-services-basement`, `play-services-tasks`, `play-services-stats`, `play-services-cloud-messaging`, `firebase-iid-interop`, `firebase-measurement-connector`, `installreferrer`. Toute autre bibliothèque sous cette licence demande une nouvelle décision. Inventaire nominatif au §8.
 - **Périmètre du registre** (décision du porteur du 2026-11-26) : paquets du bundle JavaScript exporté et polices, par `scripts/licences.js` ; les bibliothèques natives (Gradle, CocoaPods) font l'objet d'un inventaire à part (§8).
 
 ## 8. Actions avant le lancement
@@ -87,11 +89,29 @@ Apple et Google demandent de déclarer si l'éditeur est un **commerçant** (*tr
 | Rédiger la politique de confidentialité et les conditions d'utilisation (source unique pour l'appli et la page web) | IA, validé par le porteur | Ticket des pages légales |
 | Publier sur GitHub Pages un modèle de mention d'information que le club remet aux familles | IA, validé par le porteur | Ticket des pages légales |
 | Remplir « Sécurité des données » (Play) et « App Privacy » (Apple) | Porteur | À la soumission |
-| Déclarer le public cible 18+ (Play) et remplir le questionnaire d'âge (Apple) | Porteur | À la soumission |
+| Déclarer le public cible 16 ans et plus (Play : tranches 16-17 et 18+, §3, décision du 2026-11-26) et remplir le questionnaire d'âge (Apple) | Porteur | À la soumission |
 | Auditer les permissions et l'absence de chiffrement sur les binaires | IA (CI), porteur (lecture) | Fin de jalon et chaque version |
 | Générer le registre des licences | IA | Chaque version |
 | Inventorier les licences des bibliothèques natives (Gradle, CocoaPods : AndroidX, Kotlin, OkHttp, Hermes…) et les ajouter au registre affiché (EX-42), décision du porteur du 2026-11-26 | IA | Avant la première soumission |
 | Préparer un jeu de données fictif pour la revue des stores (une appli vide est souvent refusée) | IA | Avant la première soumission |
+
+### Inventaire natif d'expo-notifications et d'expo-application (ticket 026)
+
+Relevé le 2026-11-27 sur le binaire Android construit (`gradlew :app:dependencies`, configuration `releaseRuntimeClasspath`, licences lues dans les POM). Tirées par expo-notifications 58.1.10 et expo-application 58.1.2 ; aucune n'a de rôle actif : sans `google-services.json`, Firebase ne s'initialise pas, et ses composants sont retirés du manifeste (`plugins/withoutFirebase.js`, vérifié par `scripts/audit-apk.js`).
+
+| Bibliothèque | Version | Licence | Rôle et état dans Ki&La |
+| --- | --- | --- | --- |
+| `com.google.firebase:firebase-messaging` | 25.0.1 | Apache-2.0 | Firebase Cloud Messaging : non initialisé, services et récepteur retirés |
+| `firebase-common`, `firebase-components`, `firebase-annotations` | 22.0.1, 19.0.0, 17.0.0 | Apache-2.0 | Socle Firebase : `FirebaseInitProvider` et `ComponentDiscoveryService` retirés |
+| `firebase-installations`, `firebase-installations-interop` | 18.0.0, 17.1.1 | Apache-2.0 | Identifiant d'installation Firebase : jamais créé (Firebase non initialisé) |
+| `firebase-datatransport`, `firebase-encoders`, `-json`, `-proto` | 18.2.0, 17.0.0, 18.0.0, 16.0.0 | Apache-2.0 | Envoi de mesures : inactif |
+| `com.google.android.datatransport:transport-api`, `transport-runtime`, `transport-backend-cct` | 3.1.0, 3.1.9, 3.1.9 | Apache-2.0 | Datatransport : services et récepteur retirés ; INTERNET absente |
+| `firebase-iid-interop`, `firebase-measurement-connector` | 17.1.0, 19.0.0 | Android SDK License (§7) | Interfaces internes de Firebase |
+| `com.google.android.gms:play-services-base`, `-basement`, `-tasks`, `-stats`, `-cloud-messaging` | 18.1.0, 18.3.0, 18.1.0, 17.0.2, 17.2.0 | Android SDK License (§7) | Google Play services : seule `GoogleApiActivity` reste, non exportée (liste figée `config/composants-google-attendus.txt`) |
+| `com.android.installreferrer:installreferrer` | 2.2 | Android SDK License (§7) | Référent d'installation (expo-application) : permission bloquée, jamais appelé |
+| `me.leolin:ShortcutBadger` | 1.1.22 | Apache-2.0 | Pastilles des lanceurs : ses 16 permissions bloquées, pastille jamais posée |
+
+Autres bibliothèques tirées (AndroidX, Kotlin, kotlinx-coroutines, Okio, `javax.inject`, `error_prone_annotations`, `org.jetbrains:annotations`) : Apache-2.0 ; `datastore-preferences-external-protobuf` : BSD-3-Clause ; `io.github.expo.pika:pika-api` : MIT. Toutes dans la liste du §7. À reprendre dans l'inventaire complet des bibliothèques natives (action ci-dessus).
 
 ## 9. Sources (consultées le 2026-11-26)
 
@@ -118,6 +138,11 @@ Non lus (pages vides ou en erreur) : considérant 18 du RGPD (EUR-Lex), deux pag
 
 - 2026-11-26 (ticket 005) : date d'effet de l'horaire des créneaux ajoutée (donnée d'organisation, non personnelle, stockée sur l'appareil) ; rien ne change pour les déclarations des stores (« aucune donnée collectée ») ; la politique de confidentialité (EX-40) la range avec les créneaux (ABS-08).
 - 2026-11-26 : comptes Jita Vision, nom Ki&La, GitHub Pages ; Jita Vision **commerçant** au sens du DSA ; modèle de mention d'information pour les familles sur la page web ; export non déclaré comme partage (action initiée par l'utilisateur) ; public cible Play **16 ans et plus**.
+- 2026-11-27 (ticket 021, ABS-08) : Alertes traitées (membre, longueur, date) : stockées sur l'appareil, sauvegardées, effacées avec le membre ; déclarations des stores inchangées (aucune donnée collectée) ; reprises dans la politique (jalon 6).
+- 2026-11-27 (ticket 026, ABS-01, ABS-07, ABS-08) : expo-notifications 58.1.10 accepté avec expo-application, badgin, abort-controller (et event-target-shim, tirée), verrouillé (Firebase retiré du manifeste, audit SEC-02) ; permissions `POST_NOTIFICATIONS` et `RECEIVE_BOOT_COMPLETED` seules (§3) ; Android SDK License pour 8 bibliothèques nommées (§7) ; ShortcutBadger accepté, ses 16 permissions bloquées (§8) ; « aucune donnée collectée » gardé ; risque de l'index des SDK de Play noté (§3) ; notifications locales reprises dans la politique (jalon 6).
+- 2026-11-27 (ticket 027, ABS-08) : Réglages de la relance (activée, délai) : réglages non personnels stockés sur l'appareil, sauvegardés ; déclarations des stores inchangées (aucune donnée collectée).
+- 2026-11-27 (lot J2-4 : tickets 028b, 028c, 029, ABS-08) : relances programmées sur l'appareil (notifications locales, aucun envoi, aucun réseau), demande de la permission `POST_NOTIFICATIONS` seulement à l'activation de la relance ; aucune donnée nouvelle en base. Le système garde une copie des relances programmées (nom du groupe, identifiant du créneau, date ; jamais un nom de membre) dans le stockage privé de l'appli pour les reprogrammer après un redémarrage, retirée par l'annulation (Tout effacer, restauration) et exclue de la sauvegarde Android (`allowBackup: false`) ; le nom du groupe s'affiche sur l'écran verrouillé, et l'écran Relance le dit. Déclarations des stores inchangées (aucune donnée collectée, §3 et §4, notifications locales déjà prises en compte au 026) ; la politique de confidentialité (jalon 6) devra mentionner les notifications locales, cette copie système et l'affichage du nom du groupe sur l'écran verrouillé. Aucun texte légal validé modifié.
+- 2026-11-27 (décision du porteur) : §8, l'action « Déclarer le public cible 18+ (Play) » devient « 16 ans et plus » (tranches 16-17 et 18+), conformément au §3 et à la décision du 2026-11-26.
 
 ## Questions ouvertes
 

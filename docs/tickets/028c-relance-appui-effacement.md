@@ -1,0 +1,95 @@
+# 028c — Relance : appui et effacement
+
+Statut : fusionné dans le groupe (PR #83) · Jalon : 2 · Zone sensible : **oui** (notifications, ABS-04 ; effacement : Tout effacer annule et retire les relances, ABS-05 ; restauration ; SEC-11) · Trivial : non
+
+Dépend de : 028a (adaptateur `src/data/expoNotifications.ts` : `lastReminderTarget`, `onReminderTarget`, `cancelAllReminders`, `dismissAllReminders`), 027 (calcul et réglages) ; pas du 028b, qui tourne en parallèle · Fichiers touchés : `src/app/_layout.tsx` (cible de l'appui), `src/hooks/useErase.ts`, `src/app/tout-effacer.tsx`, `src/hooks/useEraseAll.test.tsx`, `src/hooks/useRestore.ts` et `src/hooks/useRestore.test.tsx`, `src/hooks/useRecovery.ts` et `src/hooks/useRecovery.test.tsx`, un test d'écran de l'appui dans `src/appTests/` (nouveau) — environ 9 fichiers. Seul fichier commun avec le 028b : `_layout.tsx` (un petit ajout chacun).
+
+Créé le 2026-11-27 à la séance de lancement du lot J2-4 : le 028b (plus de 10 fichiers en zone sensible) est découpé par le porteur en 028b (programmation) et 028c (ce ticket).
+
+## Contexte
+
+Un appui sur la relance ouvre l'appel du créneau (maquette « Relance sur l'écran verrouillé » : « Un appui ouvre l'appel. »). Tout effacer doit annuler les relances programmées et retirer celles qui sont affichées (`docs/IDEES.md`, note du porteur, ticket 015f) ; une restauration retire les relances affichées, qui ne correspondent plus aux données (B2 du 028a).
+
+## À lire
+
+- `docs/tickets/028-relance-programmation.md` (« Reports du 028a » : B1, B2, B3) ; `docs/tickets/028b-relance-reprogrammation.md` (ticket parallèle) ; ADR-007 ; `docs/SECURITE.md` SEC-11, SEC-12
+- `src/data/expoNotifications.ts` (`lastReminderTarget`, `onReminderTarget`, `cancelAllReminders`, `dismissAllReminders`)
+- `src/hooks/useErase.ts` (`useEraseAll`, `EraseAllDeps`), `src/hooks/useRestore.ts`, `src/hooks/useRecovery.ts`, `src/hooks/fileLock.ts` (`useFileLock`), `src/app/_layout.tsx`
+- `design/maquettes/` : « Relance sur l'écran verrouillé »
+
+## Ce qui change
+
+- `src/app/_layout.tsx` : la cible d'un appui n'est lue qu'une fois, au démarrage à froid (`lastReminderTarget`, B1), puis `onReminderTarget` pendant que l'appli tourne ; elle ouvre `/appel?creneau=<slotId>&date=<date>` ; données hors format (type de `slotId` compris) → accueil (CONV-14) ; ignorée pendant un effacement, une restauration ou un export (verrou de `useFileLock`) ; abandonnée si l'écran de récupération s'affiche. Un seul petit ajout (le 028b y monte `useReminders`).
+- Tout effacer : `EraseAllDeps` reçoit un `clearReminders` qui appelle `cancelAllReminders` puis `dismissAllReminders`, juste après l'effacement, sous le même verrou ; un échec est journalisé (`ERASE_REMINDERS_FAILED`, sans nom) sans empêcher Bienvenue ; `src/app/tout-effacer.tsx` le fournit ; `src/hooks/useEraseAll.test.tsx` suit.
+- Restauration (B2) : `dismissAllReminders` après une restauration réussie, dans `src/hooks/useRestore.ts` et `src/hooks/useRecovery.ts` ; la reprogrammation sur les données restaurées vient ensuite du 028b (verrou libéré, `notifyDataChanged`).
+- SEC-11 (B3) : limite notée à l'intégration : expo-notifications copie les relances programmées dans les SharedPreferences d'Android pour les reprogrammer après un redémarrage ; Tout effacer les annule, donc les retire.
+
+## Critères d'acceptation
+
+- [x] Appui sur la notification (appli ouverte, en arrière-plan, fermée) : l'appel du créneau à la bonne date s'ouvre ; données hors format → accueil (à froid ; appli ouverte, rien ne s'ouvre, décision en attente du porteur). Testé avec l'adaptateur simulé ; non vérifié sur l'appareil (appli fermée, en arrière-plan, ouverte).
+- [x] B1 : la cible du démarrage à froid n'est lue qu'une fois ; elle ne rouvre pas un appel après Tout effacer ou une restauration.
+- [x] Appui pendant un effacement, une restauration ou un export : ignoré ; écran de récupération affiché : cible abandonnée.
+- [x] Tout effacer : plus aucune relance programmée ni affichée (IDEES, SEC-11) ; échec journalisé sans bloquer Bienvenue (non vérifié sur l'appareil, ni le retrait effectif des SharedPreferences).
+- [x] B2 : restauration réussie (Paramètres ou écran de récupération) → relances affichées retirées ; restauration en échec → rien n'est retiré.
+- [x] ABS-04 : aucun nom dans le journal.
+
+## Tests attendus
+
+- `src/hooks/useEraseAll.test.tsx` : `clearReminders` appelé après l'effacement (annulation puis retrait), échec journalisé sans bloquer Bienvenue.
+- `src/hooks/useRestore.test.tsx`, `src/hooks/useRecovery.test.tsx` : `dismissAllReminders` après une restauration réussie, pas après un échec.
+- Test d'écran de l'appui (`src/appTests/`, adaptateur simulé) : démarrage à froid, appli ouverte, cible lue une seule fois, cible hors format, appui pendant le verrou, écran de récupération.
+- À la main (téléphone, prétest du jalon) : appui → appel, appli fermée comprise ; Tout effacer puis plus aucune relance affichée.
+
+## Hors périmètre
+
+- Programmation, canal, `setNotificationHandler` (028b).
+- Écrans de réglage et demande de permission (029).
+
+## Questions prévues
+
+Séance de lancement du lot J2-4 (2026-11-27), réponses du porteur :
+
+- Découpage du 028b en 028b et 028c, en parallèle ; seul fichier commun `_layout.tsx`.
+- **Plan validé par le porteur le 2026-11-27** (zone sensible) : Tout effacer annule et retire toutes les relances ; une restauration retire celles qui sont affichées avant de reprogrammer ; la cible d'un appui n'est lue qu'une fois, au démarrage à froid, ouvre `/appel?creneau=…&date=…`, est ignorée pendant un effacement, une restauration ou un export, et abandonnée si l'écran de récupération s'affiche.
+
+Reports du 028a (2026-11-27), part du 028c :
+
+- B1 : lire `lastReminderTarget()` une seule fois, au démarrage à froid ; une cible périmée pourrait sinon rouvrir le mauvais appel après Tout effacer ou une restauration ;
+- B2 : appeler `dismissAllReminders` après une restauration ;
+- B3 : ajouter aux limites de SEC-11 la copie des relances programmées dans les SharedPreferences d'Android ;
+- appui sur la notification avec l'appli fermée : vérifier le type de `slotId` au démarrage à froid.
+
+## Décisions
+
+| Question | Options | Choix | Raison | État |
+| --- | --- | --- | --- | --- |
+| Où vit la logique de l'appui ? | dans `_layout.tsx` ; hook à part | nouveau `src/hooks/useReminderTap.ts`, une ligne dans `_layout.tsx` | `_layout.tsx` est commun avec le 028b : l'ajout y reste minimal ; le hook est testé par l'écran | à relire |
+| Appui (ou cible à froid) pendant l'ouverture de la base ou le nettoyage du démarrage | ignoré ; mis en attente | mis en attente, ouvert une fois la pile montée ; abandonné si l'écran de récupération s'affiche. L'écouteur n'ignore que `erase`, `restore` et `export` : le verrou `cleanup` met aussi l'appui en attente | plan validé : « navigation une fois la pile montée » ; un appui à froid arrive justement pendant ce temps ; la première version ignorait un appui pendant `cleanup` (revues du 028c) | changée après contradiction |
+| Appui pendant le verrou (effacement, restauration, export) | ignoré ; différé à la fin | ignoré, jamais rejoué ; vérifié aussi au moment de naviguer | plan validé (« ignorée ») ; rejouer après Tout effacer ou une restauration rouvrirait un appel périmé (B1) | à relire |
+| Cible hors format, appli ouverte | aller à l'accueil ; ne rien ouvrir | rien ne s'ouvre, l'écran affiché reste ; à froid, c'est l'accueil | la fiche dit « → accueil » : à froid l'appli s'ouvre sur l'accueil ; appli ouverte, quitter un appel en cours pour une notification illisible ferait perdre le fil | en attente du porteur |
+| Où placer l'annulation et le retrait de Tout effacer | dans `tout-effacer.tsx` ; dans `useErase.ts` | `clearAllReminders` exporté par `useErase.ts`, passé par `tout-effacer.tsx` comme `clearReminders` | testable sans monter l'écran (ordre annulation puis retrait), sans fichier de plus | à relire |
+| Ordre et échecs de Tout effacer | relances avant ou après les copies ; retrait si l'annulation échoue | seulement si l'effacement a réussi (plan validé) : relances d'abord, puis copies ; retrait tenté même si l'annulation échoue ; `ERASE_REMINDERS_FAILED` si l'annulation échoue ; un retrait en échec n'est journalisé que par l'adaptateur (`REMINDER_DISMISS_FAILED`) | retirer le plus possible (SEC-11) ; relances avant les copies : une appli tuée pendant le vidage ne garde pas de relance des données effacées, et la reprogrammation à l'ouverture (028b) répare le reste (revue de sécurité du 028c) | à relire |
+| Moment et contenu du retrait après une restauration | retrait des affichées seul ; annulation et retrait ; avant ou après la publication | `cancelAllReminders` puis `dismissAllReminders`. Paramètres : sous le verrou, avant `notifyDataChanged`. Récupération : avant `publishRestoredDatabase` (écran de récupération encore affiché, appuis abandonnés), `notifyDataChanged` ensuite | aucune relance de l'ancienne base ne part avec un `slotId` qui viserait un autre créneau ; la reprogrammation du 028b part de `notifyDataChanged` (revues du 028c) | à relire |
+| Imitation d'expo-notifications dans les tests | `jest.mock` dans chaque test qui monte le layout ; une fois dans `jest.setup.js` | `jest.setup.js`, ajout en fin de fichier (l'imitation en mémoire du 028a) | l'imitation automatique de jest-expo rend `undefined` : 4 fichiers de test du layout échouaient au démontage ; un fichier remplace l'imitation par son propre `jest.mock` | à relire |
+| Relance déjà traitée, appel déjà affiché, autre appel affiché | `push` toujours ; ignorer ou remplacer | même relance que la dernière traitée (clé `slotId|date` au niveau du module, comme l'identifiant) ou même appel que l'écran affiché : ignorée ; autre appel au sommet de la pile : `router.replace` | évite le double événement (démarrage à froid) et deux écrans d'appel empilés ; le brouillon est écrit à chaque changement, `useRollCallTarget` gère `DRAFT_IN_PROGRESS`. Limite : une relance déjà traitée ne rouvre plus son appel pendant le même lancement (revues du 028c) | à relire |
+| Réponse forgée (appli tierce qui lance l'activité avec une fausse notification push) | accepter toute réponse valide ; filtrer | `targetOfResponse` refuse un déclencheur `push` et exige l'identifiant `relance-<slotId>-<date>` | seules les relances programmées par l'appli comptent (SEC-12, revue de sécurité du 028c) ; modification courte au milieu de l'adaptateur | à relire |
+
+## Questions pour le porteur
+
+- **Ticket en attente : 12 fichiers au lieu d'environ 9, en zone sensible** (avec `src/data/expoNotifications.ts` depuis les corrections de revue). Fichiers : `src/app/_layout.tsx`, `src/hooks/useReminderTap.ts` (nouveau), `src/hooks/useErase.ts`, `src/app/tout-effacer.tsx`, `src/hooks/useEraseAll.test.tsx`, `src/hooks/useRestore.ts`, `src/hooks/useRestore.test.tsx`, `src/hooks/useRecovery.ts`, `src/hooks/useRecovery.test.tsx`, `src/appTests/reminderTap.test.tsx` (nouveau), `jest.setup.js` (imitation d’expo-notifications, 5 lignes), `src/data/expoNotifications.ts` (réponse forgée refusée).
+  1. **Garder le ticket tel quel** (recommandé) : le 11e fichier est une imitation de test, sans effet sur l'appli ; le hook à part évite d'alourdir `_layout.tsx`, commun avec le 028b.
+  2. Sortir l'imitation de `jest.setup.js` dans un petit ticket à fusionner avant celui-ci.
+  3. Remettre la logique de l'appui dans `_layout.tsx` (10 fichiers), au prix d'un conflit plus large avec le 028b.
+- Attention à l'intégration : si le 028b ajoute aussi une imitation d'expo-notifications dans `jest.setup.js`, n'en garder qu'une.
+- **Réponse du porteur du 2026-11-27** : option 1, ticket gardé entier à 12 fichiers, puis fusionné (PR #83). Une seule imitation dans `jest.setup.js` après la fusion du 028b.
+
+## À reporter
+
+- CHANGELOG : Relance : un appui ouvre l'appel du créneau ; Tout effacer annule et retire les relances ; une restauration annule et retire les relances de l'ancienne base (F-06, EX-28, SEC-11, SEC-12).
+- Architecture : appui sur une relance dans `src/hooks/useReminderTap.ts`, monté par `src/app/_layout.tsx` (cible du démarrage à froid lue une fois par lancement, navigation une fois la pile montée, ignorée pendant le verrou commun ou l'écran de récupération) ; `clearReminders` dans `EraseAllDeps` (`clearAllReminders` de `useErase.ts`) ; `cancelAllReminders` puis `dismissAllReminders` après une restauration réussie (`useRestore` ; `useRecovery`, avant la publication de la base) ; relance déjà traitée ou appel déjà affiché ignorés, autre appel remplacé ; réponse forgée refusée par l'adaptateur ; imitation en mémoire d'expo-notifications pour tous les tests (`jest.setup.js`).
+- SECURITE : SEC-11, limite des SharedPreferences d'Android (B3). Vérifié dans `node_modules/expo-notifications/android` (58.1.10) : chaque relance programmée est copiée, encodée en base64 (titre avec le nom du groupe, données `slotId` et `date`), dans le fichier privé `expo.modules.notifications.SharedPreferencesNotificationsStore`, sous la clé `notification_request-<identifiant>`, pour être reprogrammée après un redémarrage. `cancelAllScheduledNotificationsAsync` → `ExpoSchedulingDelegate.removeAllScheduledNotifications` → `SharedPreferencesNotificationsStore.removeAllNotificationRequests` : chaque entrée lisible est retirée en une écriture (`apply()`, asynchrone), puis son alarme est annulée. Limites : une entrée illisible (non décodable) n'est ni lue ni retirée ; l'écriture est différée de quelques instants ; comme pour SQLite, rien n'efface les octets déjà écrits sur la mémoire flash. `allowBackup` est à `false` (app.json) : ce fichier ne part pas dans la sauvegarde Android.
+- Revue de sécurité du 028c : dans `useRestore`, l'annulation et le retrait se font sous le verrou, sans délai maximal : un service de notifications bloqué figerait l'écran Restauration.
+- Revue de sécurité du 028c : `jest.setup.js` est hors du parcours du contrôle statique (`src/staticChecksNotifications.test.ts` ne lit que `src/`).
+- B3 : `apply()` est différé ; la fenêtre est très courte et couverte par la reprogrammation à l'ouverture (028b).
+- Intégration : n'en garder qu'une imitation d'expo-notifications dans `jest.setup.js` si le 028b en ajoute une.
+- IDEES : la ligne « Tout effacer devra annuler les relances » passe à « faite (ticket 028c) ».

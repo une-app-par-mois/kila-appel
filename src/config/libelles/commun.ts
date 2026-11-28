@@ -39,6 +39,8 @@ export const commun = {
     members: 'Membres',
     memberCount: (n: number) => (n === 0 ? 'Aucun membre' : plural(n, 'membre', 'membres')),
     slots: 'Créneaux',
+    /** Section des réglages : relance (ticket 029) et alertes d'assiduité (ticket 022). */
+    preferences: 'Réglages',
     data: 'Données',
     backup: 'Sauvegarde et restauration',
   },
@@ -65,6 +67,8 @@ export const commun = {
     STATUS_INVALID: 'Statut de présence inconnu.',
     COMMENT_TOO_LONG: '500 caractères au plus.',
     RETENTION_INVALID: 'Choisissez de garder 1, 2 ou 3 saisons.',
+    ALERT_THRESHOLD_INVALID: 'Choisissez un seuil de 2 à 10 absences.',
+    REMINDER_DELAY_INVALID: 'Choisissez un délai de 10, 15, 20, 30, 45 ou 60 min.',
     ALREADY_RECORDED: 'L’appel de cette séance est déjà enregistré.',
     SLOT_INVALID: 'Créneau introuvable.',
     NOT_A_SLOT_SESSION: 'Ce créneau n’a pas lieu à cette date et à cette heure.',

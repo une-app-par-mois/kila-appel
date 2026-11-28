@@ -1,6 +1,6 @@
 # 015 — Tout effacer et purge : données
 
-Statut : fusionné dans le groupe (PR #37, relu et accepté par le porteur le 2026-11-27) · Jalon : 1 · Zone sensible : oui · Trivial : non
+Statut : fait (PR #63 vers `main` ; PR #37, relu et accepté par le porteur le 2026-11-27) · Jalon : 1 · Zone sensible : oui · Trivial : non
 
 Dépend de : aucun ticket à faire · Fichiers touchés : `src/data/eraseAll.ts`, `src/data/purge.ts` et leurs tests ; `src/data/errors.ts` (trois codes)
 
