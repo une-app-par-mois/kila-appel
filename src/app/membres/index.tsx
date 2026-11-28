@@ -1,5 +1,6 @@
 // Membres (maquette, EX-03) : recherche, filtre par groupe (la puce ouvre la liste des groupes de
-// la saison active), bascule sur les archivés (décisions du porteur du 2026-11-26).
+// la saison active), bascule sur les archivés (décisions du porteur du 2026-11-26). « Importer
+// (CSV) » ouvre l'import (ticket 035, EX-30).
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -42,7 +43,8 @@ export default function Members() {
     archived: true,
   });
   const failed = loadFailed || archivedFailed || seasonsFailed || groupsFailed;
-  // Aucun membre du tout (ni recherche ni filtre) : « Nouveau membre » dans la carte, un seul bouton.
+  // Aucun membre du tout (ni recherche ni filtre) : les deux boutons dans la carte (décision du
+  // porteur du 2026-11-28, ticket 035).
   const searching = query.trim() !== '';
   const empty =
     members !== null && members.length === 0 && !archived && filterGroup === null && !searching;
@@ -51,6 +53,18 @@ export default function Members() {
     ...(groups ?? []).map((g) => ({ value: g.id as number | null, label: g.name })),
   ];
   const groupLabel = groupChoices.find((c) => c.value === groupId)?.label ?? t.allGroups;
+  // Maquette : « Importer (CSV) » sur un tiers, « Nouveau membre » sur deux tiers (ticket 035).
+  const actions = (
+    <View style={styles.actions}>
+      <Button
+        label={labels.memberImport.open}
+        variant="secondary"
+        flex={1}
+        onPress={() => router.push('/import')}
+      />
+      <Button label={t.create} flex={2} onPress={() => router.push('/membres/nouveau')} />
+    </View>
+  );
 
   return (
     <Screen
@@ -113,18 +127,17 @@ export default function Members() {
                   ? t.emptyAllArchived
                   : t.empty}
           </Text>
-          {empty && <Button label={t.create} onPress={() => router.push('/membres/nouveau')} />}
+          {empty && actions}
         </Card>
       )}
-      {!archived && !empty && (
-        <Button label={t.create} onPress={() => router.push('/membres/nouveau')} />
-      )}
+      {!archived && !empty && actions}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing * 2 },
+  actions: { flexDirection: 'row', gap: theme.spacing * 2.5, marginTop: theme.spacing * 3 },
   text: {
     fontFamily: theme.fonts.text,
     fontSize: 16,

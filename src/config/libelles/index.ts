@@ -8,6 +8,7 @@ import { creneaux } from './creneaux';
 import { donnees } from './donnees';
 import { effacement } from './effacement';
 import { historique } from './historique';
+import { importLabels } from './import';
 import { membres } from './membres';
 import { organisation } from './organisation';
 import { recuperation } from './recuperation';
@@ -23,6 +24,7 @@ export const labels = {
   ...commun,
   ...organisation,
   ...membres,
+  ...importLabels,
   ...creneaux,
   ...appel,
   ...accueil,

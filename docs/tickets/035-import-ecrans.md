@@ -96,10 +96,23 @@ Reporté du lot J3-2 (2026-11-28, fiche 034) :
 | Clé de libellés | — | Une seule clé `memberImport` | Pré-analyse du lot J3-3 ; NF-07 | à relire |
 | Plafond d'affichage de l'aperçu | Plafond ; aucun | Aucun plafond ; test de volume à 2000 lignes | Pré-analyse du lot J3-3 ; l'import est déjà plafonné à 2 000 lignes | à relire |
 | Taille du ticket | — | 9 fichiers au plus | Pré-analyse du lot J3-3 ; plafond de 10 fichiers | à relire |
+| Échec de lecture (`failed`) et fichier à l'en-tête seul : où les montrer | Écran d'aperçu ; écran « Fichier non reconnu » | « Fichier non reconnu », avec le texte validé de chacun ; l'aperçu ne s'ouvre pas pour un fichier sans membre | Même place que les autres refus : rien n'a été importé, on choisit un autre fichier (ticket 035) | à relire |
+| Retour depuis « Fichier non reconnu » | Revenir aux membres ; revenir à l'explication | Revenir à l'explication (`abandon()`) | Maquette : le retour de « Fichier non reconnu » mène à « Import CSV : choisir le fichier » (ticket 035) | à relire |
+| Retour depuis le résultat | Écran de choix ; liste des membres | Liste des membres, comme « Voir les membres » (`dismissTo('/membres')`) | Maquette : le retour du résultat mène à « Membres » (ticket 035) | à relire |
+| Abandon de la session en quittant l'aperçu | Écouteur `beforeRemove` ; démontage de l'écran | Au démontage de l'écran d'aperçu (`useEffect`) ; retour bloqué pendant l'écriture (`usePreventRemove`) | `beforeRemove` n'est pas émis par la pile sans blocage actif ; le démontage couvre bouton, geste et retour Android (ticket 035) | à relire |
+| Titres de section quand il n'y a qu'un élément | Toujours la forme de la maquette ; accordés | Accordés : « Doublon » / « Doublons », « Ligne invalide » / « Lignes invalides », « Groupe introuvable » / « Groupes introuvables » | La maquette accorde déjà (« Doublons » pour 2, « Ligne invalide » pour 1) (ticket 035) | à relire |
+| Phrase « Un doublon ignoré déjà dans l'appli sera inscrit… » | Toujours dans la section Doublons ; seulement s'il y a un doublon de l'appli | Seulement s'il y a au moins un doublon de l'appli | Sans objet pour un doublon du fichier seul (ticket 035) | à relire |
+| Compteur « invalide » en rouge | Toujours ; seulement si > 0 | Seulement si > 0 | Le rouge signale un problème ; « 0 invalide » n'en est pas un (ticket 035) | à relire |
+| Sous-titre d'un doublon du fichier | Mention seule ; date puis mention | « 14/03/2017 · en double dans le fichier », mention seule sans date | Même modèle que « 14/03/2017 · déjà dans l'appli » (ticket 035) | à relire |
+| Textes des autres motifs d'une ligne invalide | — | « Nom trop long », « Prénom avec un caractère non permis », « Date de naissance invalide », « Date de naissance dans le futur », « Téléphone invalide » (modèle « <Champ> <problème> ») | Modèle de la maquette « Prénom manquant » (ticket 035) | à relire |
+| Aperçu ouvert sans session (Tout effacer, session vidée) | Écran vide ; texte de `stale` | Texte de `stale` (« Les membres ou les groupes ont changé : recommencez l'import. ») | Même cause, même texte ; le retour ramène à l'écran de choix (ticket 035) | à relire |
+| Libellé du bouton désactivé (N = 0, M = 0) | « Importer 0 membre » ; autre texte | « Importer 0 membre » | Suit le modèle « Importer N membres » de la maquette (ticket 035) | à relire |
+| Nom lu par le lecteur d'écran sur la bascule | « Ignorer » ; « Ignorer, Léo Garcia » | « Ignorer » (annoncé « Ignorer, case cochée ») ; la bascule suit le nom du membre dans la ligne | Critère d'acceptation du ticket (« Ignorer, coché ») ; ajouter le nom se fait sans migration | en attente du porteur |
 
 ## Questions pour le porteur
 
 ## À reporter
 
 - CHANGELOG : Membres : import d'une liste depuis un fichier CSV, avec aperçu, doublons et lignes invalides signalés avant d'importer (F-07, EX-30).
-- Architecture : `src/app/import/` (trois écrans), libellés `import.ts`.
+- Architecture : `src/app/import/` (trois écrans : `index.tsx` choix et refus, propriétaire de la session ; `apercu.tsx` ; `resultat.tsx`, compteurs en paramètres de route), libellés `src/config/libelles/import.ts` (clé `memberImport`) ; `FilterChip` prend le rôle `checkbox` en option.
+- IDEES (`docs/IDEES.md`, absent de ce ticket pour tenir dans 9 fichiers) : montrer dans l'aperçu les colonnes reconnues et celles ignorées (décision du porteur du 2026-11-28).
