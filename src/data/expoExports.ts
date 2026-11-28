@@ -3,7 +3,9 @@
 // expo-file-system et expo-sharing (src/staticChecksFiles.test.ts), sans leurs fonctions réseau.
 // Les fichiers vivent dans `cache/exports/<sous-dossier>/`, vidé au début de chaque export, au
 // démarrage et après Tout effacer ; le sous-dossier est effacé à la fermeture du partage.
-import { Directory, File, Paths } from 'expo-file-system';
+// Ticket 040a (EX-32, SEC-08, SEC-10) : le PDF rendu par expo-print dans `cache/Print/` (contrôlé
+// par `printedPath`) est déplacé sous `kila-rapport-AAAA-MM-JJ.pdf`, `cache/Print/` est vidé.
+import { Directory, File, FileMode, Paths } from 'expo-file-system';
 import { shareAsync } from 'expo-sharing';
 import { checkSystemPath } from '@/data/expoDb';
 import { checkChild, pathToUri, refused, uriToPath } from '@/data/expoFiles';
@@ -19,6 +21,13 @@ export type ExchangeKind = keyof typeof EXCHANGE_TYPES;
 // Erreurs du module natif remplacées : elles peuvent citer le chemin (ABS-04).
 const unwritable = () => new Error('Écriture du fichier impossible');
 const unsharable = () => new Error('Partage du fichier impossible');
+const unmovable = () => new Error('Déplacement du fichier impossible');
+const notPdf = () => new Error('Fichier PDF invalide');
+/** Dossier où expo-print écrit ses PDF (Android `cacheDir/Print`, iOS `Caches/Print`, 58.0.9). */
+const printDir = () => new Directory(Paths.cache, 'Print');
+const PDF_HEADER = '%PDF-';
+const PRINTED_NAME = /\.pdf$/;
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 /** `path` : `<cache/exports>/<sous-dossier>/<nom>`, nom de `EXPORT_NAME` ; rend l'extension. */
 const checkExportPath = (path: string): string => {
@@ -63,4 +72,64 @@ export const shareFile = async (path: string, kind: ExchangeKind): Promise<void>
   } catch {
     throw unsharable();
   }
+};
+
+/** SEC-08 : `path` doit être un PDF enfant direct de `cache/Print/` ; sinon refus, sans le chemin. */
+const checkPrinted = (path: string): string => {
+  checkChild(uriToPath(printDir().uri), path);
+  if (!PRINTED_NAME.test(path)) throw refused();
+  return path;
+};
+
+/** URI rendue par expo-print → chemin du système, contrôlé par `checkPrinted`. */
+export const printedPath = (uri: string): string => checkPrinted(uriToPath(uri));
+
+/** Efface un fichier sans lever : un reste est repris par le vidage de `cache/Print/` (SEC-10). */
+const dropFile = (file: File) => {
+  try {
+    if (file.exists) file.delete();
+  } catch {
+    // Vidé au démarrage suivant et après Tout effacer.
+  }
+};
+
+/** Vrai si le fichier commence par `%PDF-` (EX-32). */
+const hasPdfHeader = async (file: File): Promise<boolean> => {
+  const handle = file.open(FileMode.ReadOnly);
+  try {
+    const head = await handle.readBytes(PDF_HEADER.length);
+    return String.fromCharCode(...head) === PDF_HEADER;
+  } finally {
+    handle.close();
+  }
+};
+
+/**
+ * EX-32 : déplace le PDF de `cache/Print/` vers `<dir>/kila-rapport-<today>.pdf`, `dir` étant un
+ * sous-dossier de `cache/exports/` ; rend le nouveau chemin. Source contrôlée d'abord (jamais un
+ * autre fichier touché) ; ensuite, tout échec (destination refusée, en-tête, déplacement) efface
+ * l'original (SEC-10). Erreurs sans chemin (ABS-04).
+ */
+export const moveReport = async (printed: string, dir: string, today: string): Promise<string> => {
+  const source = new File(pathToUri(checkPrinted(printed)));
+  try {
+    if (!DAY.test(today)) throw refused();
+    const target = `${dir}/kila-rapport-${today}.pdf`;
+    checkExportPath(target);
+    if (!(await hasPdfHeader(source).catch(() => false))) throw notPdf();
+    // Sous-dossier neuf : rien à écraser ; un reste y est effacé avec lui (fermeture du partage).
+    await source.move(new File(pathToUri(target))).catch(() => {
+      throw unmovable();
+    });
+    return target;
+  } catch (error) {
+    dropFile(source);
+    throw error;
+  }
+};
+
+/** SEC-08, SEC-10 : vide `cache/Print/` (démarrage, Tout effacer, début de chaque rapport). */
+export const clearPrint = async (): Promise<void> => {
+  const dir = printDir();
+  if (dir.exists) dir.delete();
 };
