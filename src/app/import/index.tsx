@@ -2,9 +2,11 @@
 // illisible », ticket 035, F-07, EX-30). Explication et tableau d'exemple ; le sélecteur et la
 // lecture passent par useMemberImport (034), dont cet écran est le propriétaire : son démontage
 // vide la session. Aperçu prêt : l'écran d'aperçu s'ouvre par-dessus. Refus : « Fichier non
-// reconnu », un texte par cause (décision du porteur du 2026-11-28). Bouton désactivé tant qu'une
-// opération sur les fichiers tient le verrou (export, restauration, purge, lecture en cours).
-import { useRouter } from 'expo-router';
+// reconnu », un texte par cause (décision du porteur du 2026-11-28) ; « Choisir un autre fichier »,
+// le bouton « ‹ », le geste et la touche retour ramènent à l'explication (maquette). Bouton
+// désactivé tant qu'une opération sur les fichiers tient le verrou (export, restauration, purge,
+// lecture en cours).
+import { usePreventRemove, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { labels } from '@/config/libelles';
@@ -51,6 +53,8 @@ export default function ImportStart() {
   const refusal = refusalOf(state, noMembers);
   const back = () => (router.canGoBack() ? router.back() : router.replace('/membres'));
   const disabled = locked || state.step === 'reading';
+  // Refus affiché : le retour du système et le geste font comme « ‹ » (retour à l'explication).
+  usePreventRemove(refusal !== null, abandon);
 
   if (refusal !== null) {
     return (
@@ -58,7 +62,7 @@ export default function ImportStart() {
         <Card warning>
           <Text style={styles.text}>{refusal}</Text>
         </Card>
-        <Button label={t.chooseAnother} disabled={disabled} onPress={() => void choose()} />
+        <Button label={t.chooseAnother} onPress={abandon} />
       </Screen>
     );
   }

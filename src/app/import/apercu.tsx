@@ -1,10 +1,11 @@
 // Import CSV : aperçu (maquette « Import CSV : aperçu », ticket 035, F-07, EX-30). Compteur, puis
 // les sections Doublons (bascule « Ignorer »), Ligne invalide et Groupe introuvable (décision du
-// porteur du 2026-11-28), cachées si vides ; rien n'est écrit avant le bouton. Le bouton suit les
-// bascules : « Importer N membres », sinon « Inscrire M membres à leur groupe » (doublons de
-// l'appli ignorés avec un groupe trouvé), désactivé à N = 0 et M = 0. Quitter l'écran (bouton,
-// geste, retour Android) abandonne la session, sauf pendant l'écriture, où le retour est bloqué.
-// ABS-04 : seuls des compteurs passent à l'écran de résultat.
+// porteur du 2026-11-28), cachées si vides ; rien n'est écrit avant le bouton. Le compteur et le
+// bouton suivent les bascules : « Importer N membres », sinon « Inscrire M membres à leur groupe »
+// (membres distincts de l'appli, doublons ignorés avec un groupe trouvé), désactivé à N = 0 et
+// M = 0. Quitter l'écran (bouton, geste, retour Android) abandonne la session qu'il montrait, sauf
+// pendant l'écriture, où le retour est bloqué. Fin de l'import : pile [membres, résultat], tout
+// retour mène aux membres. ABS-04 : seuls des compteurs passent à l'écran de résultat.
 import { usePreventRemove, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -12,6 +13,7 @@ import { labels } from '@/config/libelles';
 import { theme } from '@/config/theme';
 import { toDisplayDate } from '@/domain/formats';
 import type { DuplicateLine, ImportPreview } from '@/domain/memberImport';
+import { importSession } from '@/hooks/importSession';
 import { type ImportState, useMemberImport } from '@/hooks/useMemberImport';
 import { useSeasons } from '@/hooks/useSeasons';
 import { Button } from '@/ui/Button';
@@ -69,6 +71,9 @@ const Duplicates = ({ duplicates, ignored, onToggle }: DuplicatesProps) => (
             <FilterChip
               role="checkbox"
               label={t.ignore}
+              accessibilityLabel={t.ignoreMember(
+                labels.memberForm.fullName(d.member.firstName, d.member.lastName),
+              )}
               selected={!kept}
               onPress={() => onToggle(d.line)}
             />
@@ -128,15 +133,22 @@ export default function ImportPreviewScreen() {
   const [kept, setKept] = useState<number[]>([]);
   const writing = state.step === 'writing';
   usePreventRemove(writing);
-  // Écran quitté (bouton, geste, retour Android) : la session est abandonnée. Pendant l'écriture,
-  // le retour est bloqué ; après, la session est déjà vidée par `confirm`.
-  useEffect(() => abandon, [abandon]);
+  // Écran quitté (bouton, geste, retour Android) : la session montrée est abandonnée, pas une
+  // session ouverte depuis (nouveau choix de fichier avant le démontage). Pendant l'écriture, le
+  // retour est bloqué ; après, `confirm` a déjà vidé la session.
+  useEffect(() => {
+    const shown = importSession.generation();
+    return () => {
+      if (importSession.generation() === shown) abandon();
+    };
+  }, [abandon]);
   useEffect(() => {
     if (state.step !== 'done') return;
     const params = Object.fromEntries(
       Object.entries(state.result).map(([key, value]) => [key, String(value)]),
     );
-    router.replace({ pathname: '/import/resultat', params });
+    router.dismissTo('/membres');
+    router.push({ pathname: '/import/resultat', params });
   }, [state, router]);
 
   const message = messageOf(state);
@@ -152,14 +164,21 @@ export default function ImportPreviewScreen() {
   const toggle = (line: number) =>
     setKept((lines) => (lines.includes(line) ? lines.filter((l) => l !== line) : [...lines, line]));
   const n = preview.counts.toImport + kept.length;
-  const m = preview.duplicates.filter(
-    (d) => d.source === 'app' && !kept.includes(d.line) && d.member.groupId !== null,
-  ).length;
+  const enrolled = new Set<number>();
+  for (const d of preview.duplicates)
+    if (d.source === 'app' && !kept.includes(d.line) && d.member.groupId !== null)
+      enrolled.add(d.memberId);
+  const m = enrolled.size;
+  const counts = {
+    ...preview.counts,
+    toImport: n,
+    duplicates: preview.counts.duplicates - kept.length,
+  };
   const noSeason = seasons !== null && !seasons.some((s) => s.isActive);
 
   return (
     <Screen title={t.previewTitle} onBack={writing ? undefined : back}>
-      <Counter counts={preview.counts} />
+      <Counter counts={counts} />
       {noSeason && <Text style={styles.message}>{t.noSeason}</Text>}
       {preview.duplicates.length > 0 && (
         <Duplicates

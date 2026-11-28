@@ -24,8 +24,8 @@ const FIELDS: Record<InvalidField, string> = {
 const PROBLEMS: Record<string, string> = {
   NAME_REQUIRED: 'manquant',
   NAME_TOO_LONG: 'trop long',
-  NAME_INVALID_CHAR: 'avec un caractère non permis',
-  DATE_INVALID: 'invalide',
+  NAME_INVALID_CHAR: 'avec un caractère invisible',
+  DATE_INVALID: 'invalide (JJ/MM/AAAA)',
   DATE_IN_FUTURE: 'dans le futur',
   PHONE_INVALID: 'invalide',
 };
@@ -33,8 +33,9 @@ const PROBLEMS: Record<string, string> = {
 const MAX_GROUP_CHARS = 100;
 /** Cellule sur une seule ligne, tronquée à 100 points de code avec une ellipse. */
 const shortGroup = (group: string) => {
-  const chars = Array.from(group.replace(/\s+/g, ' '));
-  return chars.length > MAX_GROUP_CHARS ? `${chars.slice(0, MAX_GROUP_CHARS).join('')}…` : group;
+  const oneLine = group.replace(/\s+/g, ' ');
+  const chars = Array.from(oneLine);
+  return chars.length > MAX_GROUP_CHARS ? `${chars.slice(0, MAX_GROUP_CHARS).join('')}…` : oneLine;
 };
 
 const NOTHING = ' Rien n’a été importé.';
@@ -79,6 +80,8 @@ export const importLabels = {
     invalidSection: (n: number) => (n > 1 ? 'Lignes invalides' : 'Ligne invalide'),
     unknownGroupSection: (n: number) => (n > 1 ? 'Groupes introuvables' : 'Groupe introuvable'),
     ignore: 'Ignorer',
+    /** Lu par le lecteur d'écran : « Ignorer Léo Garcia » (bascule annoncée « case cochée »). */
+    ignoreMember: (name: string) => `Ignorer ${name}`,
     inApp: 'déjà dans l’appli',
     inAppArchived: 'déjà dans l’appli (archivé)',
     inFile: 'en double dans le fichier',

@@ -13,6 +13,7 @@ import Members from '@/app/membres/index';
 import { RootStack } from '@/appTests/tabRoutes';
 import { labels } from '@/config/libelles';
 import type { Db } from '@/data/db';
+import { erasedCount } from '@/hooks/dataChanged';
 import { fileLock } from '@/hooks/fileLock';
 import { importSession } from '@/hooks/importSession';
 
@@ -41,9 +42,13 @@ const routes = {
   'import/resultat': ImportResult,
 };
 const text = (s: string) => new TextEncoder().encode(s);
-const csv = (lines: string[][]) => text(`${lines.map((l) => l.join(';')).join('\r\n')}\r\n`);
-const MOCKUP = csv(MOCKUP_ROWS.map((r) => r.cells));
+/** Fichier d'un en-tête et de lignes, cellules séparées par `;`, fins de ligne CRLF. */
+const file = (...lines: string[]) => text(`${lines.join('\r\n')}\r\n`);
+const MOCKUP = file(...MOCKUP_ROWS.map((r) => r.cells.join(';')));
+const ZWSP = String.fromCodePoint(0x200b);
 const button = (name: string) => screen.findByRole('button', { name });
+const boxes = (name: string) => screen.findAllByRole('checkbox', { name });
+const back = () => act(async () => appRouter.back());
 const members = async (db: Db) =>
   (await db.query<{ n: number }>('SELECT COUNT(*) AS n FROM members'))[0]?.n;
 
@@ -77,29 +82,27 @@ describe('EX-30 écrans de l’import CSV', () => {
     expect(await screen.findByText('Importer des membres')).toBeTruthy();
     for (const cell of [...t.exampleHeader, ...t.exampleRow])
       expect(screen.getByText(cell)).toBeTruthy();
-    expect(
-      screen.getByText('Seuls nom et prénom sont obligatoires. Les autres colonnes sont ignorées.'),
-    ).toBeTruthy();
+    expect(screen.getByText(t.exampleHint)).toBeTruthy();
     expect(await button('Choisir le fichier…')).toBeTruthy();
   });
 
   it('EX-30 parcours complet : aperçu de la maquette, « Importer 21 membres », résultat, membres', async () => {
     await chooseFile(MOCKUP);
     expect(await screen.findByText('Aperçu')).toBeTruthy();
-    for (const s of ['24 lignes', '21 à importer', '1 invalide', '2 doublons'])
+    for (const s of ['24 lignes', '21 à importer', '1 invalide', '2 doublons', 'Doublons'])
       expect(screen.getByText(s)).toBeTruthy();
-    expect(screen.getByText('Doublons')).toBeTruthy();
-    expect(screen.getByText('Léo Garcia')).toBeTruthy();
     expect(screen.getByText('14/03/2017 · déjà dans l’appli')).toBeTruthy();
     expect(screen.getByText('déjà dans l’appli (archivé)')).toBeTruthy();
-    expect(screen.getByText('Ligne invalide')).toBeTruthy();
-    expect(screen.getByText('Ligne 17')).toBeTruthy();
-    expect(screen.getByText('Prénom manquant')).toBeTruthy();
-    expect(screen.getByText('Groupe introuvable')).toBeTruthy();
-    expect(screen.getByText('Ligne 12')).toBeTruthy();
+    for (const s of [
+      'Ligne invalide',
+      'Ligne 17',
+      'Prénom manquant',
+      'Groupe introuvable',
+      'Ligne 12',
+    ])
+      expect(screen.getByText(s)).toBeTruthy();
     expect(screen.getByText('« Poussin mercredi » : importé sans groupe')).toBeTruthy();
     expect(await members(base.db)).toBe(2);
-
     await fireEvent.press(await button('Importer 21 membres'));
     expect(await screen.findByText('21 membres importés')).toBeTruthy();
     expect(
@@ -113,91 +116,103 @@ describe('EX-30 écrans de l’import CSV', () => {
     expect(screen.queryByText('21 membres importés')).toBeNull();
   });
 
-  it('EX-30, NF-06 : une bascule « Ignorer » décochée passe le bouton à « Importer 22 membres »', async () => {
+  it('EX-30, NF-06 : « Ignorer Léo Garcia » décoché, bouton et compteur suivent ; retour Android du résultat', async () => {
     await chooseFile(MOCKUP);
-    const boxes = await screen.findAllByRole('checkbox', { name: 'Ignorer' });
-    expect(boxes).toHaveLength(2);
-    expect(boxes[0]?.props.accessibilityState).toMatchObject({ checked: true });
-    await fireEvent.press(boxes[0] as never);
+    const [garcia] = await boxes('Ignorer Léo Garcia');
+    expect(garcia?.props.accessibilityState).toMatchObject({ checked: true });
+    expect(await boxes('Ignorer Zoé Blanc')).toHaveLength(1);
+    await fireEvent.press(garcia as never);
     expect(await button('Importer 22 membres')).toBeTruthy();
-    const after = screen.getAllByRole('checkbox', { name: 'Ignorer' });
-    expect(after[0]?.props.accessibilityState).toMatchObject({ checked: false });
+    expect(screen.getByText('22 à importer')).toBeTruthy();
+    expect(screen.getByText('1 doublon')).toBeTruthy();
+    const [after] = await boxes('Ignorer Léo Garcia');
+    expect(after?.props.accessibilityState).toMatchObject({ checked: false });
     await fireEvent.press(await button('Importer 22 membres'));
     expect(await screen.findByText('22 membres importés')).toBeTruthy();
     expect(await members(base.db)).toBe(24);
+    // Pile [membres, résultat] : la touche retour mène aux membres, jamais à l'import.
+    await back();
+    expect(await screen.findByText('Rose André')).toBeTruthy();
+    expect(screen.queryByText('Importer des membres')).toBeNull();
+    expect(screen.queryByText('22 membres importés')).toBeNull();
   });
 
-  it('doublon gardé au groupe introuvable : l’écran dit qu’il est importé sans groupe', async () => {
-    await chooseFile(
-      csv([
-        ['nom', 'prenom', 'groupe'],
-        ['Garcia', 'Léo', 'Poussin mercredi'],
-      ]),
-    );
-    await fireEvent.press(
-      (await screen.findAllByRole('checkbox', { name: 'Ignorer' }))[0] as never,
-    );
+  it('doublon gardé au groupe introuvable : importé sans groupe ; cellule sur une seule ligne', async () => {
+    await chooseFile(file('nom;prenom;groupe', 'Garcia;Léo;Poussin mercredi'));
+    await fireEvent.press((await boxes('Ignorer Léo Garcia'))[0] as never);
     expect(
       await screen.findByText('« Poussin mercredi » introuvable : importé sans groupe'),
     ).toBeTruthy();
     expect(await button('Importer 1 membre')).toBeTruthy();
+    expect(t.unknownGroup('Poussin\n\tmercredi')).toBe(
+      '« Poussin mercredi » : importé sans groupe',
+    );
+    expect(t.keptWithoutGroup('Poussin\r\nmercredi')).toBe(
+      '« Poussin mercredi » introuvable : importé sans groupe',
+    );
+    expect(t.unknownGroup('x'.repeat(101))).toBe(`« ${'x'.repeat(100)}… » : importé sans groupe`);
   });
 
-  it('aucun membre à importer, doublons de l’appli inscrits : « Inscrire 1 membre à son groupe »', async () => {
+  it('aucun membre à importer : « Inscrire 1 membre à son groupe », un membre compté une fois', async () => {
     await chooseFile(
-      csv([
-        ['nom', 'prenom', 'groupe'],
-        ['Garcia', 'Léo', 'Benjamins lundi'],
-      ]),
+      file('nom;prenom;groupe', 'Garcia;Léo;Benjamins lundi', 'Garcia;Léo;Benjamins lundi'),
     );
+    expect(await screen.findByText('2 doublons')).toBeTruthy();
     await fireEvent.press(await button('Inscrire 1 membre à son groupe'));
     expect(await screen.findByText('Aucun membre importé')).toBeTruthy();
-    expect(screen.getByText('1 doublon ignoré, dont 1 inscrit au groupe du fichier.')).toBeTruthy();
   });
 
   it('rien à importer ni à inscrire : bouton désactivé ; section vide cachée', async () => {
-    await chooseFile(
-      csv([
-        ['nom', 'prenom'],
-        ['Morel', ''],
-      ]),
-    );
+    await chooseFile(file('nom;prenom', 'Morel;'));
     const disabled = await button('Importer 0 membre');
     expect(disabled.props.accessibilityState).toMatchObject({ disabled: true });
     expect(screen.queryByText('Doublons')).toBeNull();
     expect(screen.queryByText('Groupe introuvable')).toBeNull();
   });
 
+  it('textes des lignes invalides : date au format attendu, caractère invisible', async () => {
+    await chooseFile(
+      file('nom;prenom;date_naissance', 'Morel;Zoé;32/13/2016', `Petit;Zo${ZWSP}é;`),
+    );
+    expect(await screen.findByText('Date de naissance invalide (JJ/MM/AAAA)')).toBeTruthy();
+    expect(screen.getByText('Prénom avec un caractère invisible')).toBeTruthy();
+    expect(t.invalidReason('lastName', 'NAME_INVALID_CHAR')).toBe(
+      'Nom avec un caractère invisible',
+    );
+  });
+
   it.each([
-    [
-      'colonnes absentes',
-      csv([
-        ['a', 'b'],
-        ['1', '2'],
-      ]),
-      t.refusals.MISSING_COLUMNS,
-    ],
+    ['colonnes absentes', file('a;b', '1;2'), t.refusals.MISSING_COLUMNS],
     ['pas un CSV', utf16LeFile(), t.refusals.NOT_TEXT],
     ['trop gros', oversizeFile(), t.refusals.TOO_LARGE],
     ['trop de lignes', text(manyRowsText(2001)), t.refusals.TOO_MANY_ROWS],
-    ['guillemet non fermé', text('nom;prenom\r\n"Morel;Zoé\r\n'), t.refusals.MALFORMED],
+    ['guillemet non fermé', file('nom;prenom', '"Morel;Zoé'), t.refusals.MALFORMED],
     ['ancien format Mac', membersMacRoman(), t.refusals.UNSUPPORTED_ENCODING],
     ['vide', new Uint8Array(), t.refusals.EMPTY],
-    ['en-tête seul', text('nom;prenom\r\n'), t.refusals.NO_MEMBERS],
+    ['en-tête seul', file('nom;prenom'), t.refusals.NO_MEMBERS],
   ])('« Fichier non reconnu » : %s, rien d’importé', async (_cause, bytes, message) => {
     await chooseFile(bytes);
     expect(await screen.findByText('Fichier non reconnu')).toBeTruthy();
     expect(screen.getByText(message)).toBeTruthy();
     expect(await members(base.db)).toBe(2);
+    // Maquette : « Choisir un autre fichier » ramène à l'explication, sans ouvrir le sélecteur.
     mockBytes = MOCKUP;
     await fireEvent.press(await button('Choisir un autre fichier'));
+    expect(await screen.findByText('Importer des membres')).toBeTruthy();
+    expect(screen.queryByText('Aperçu')).toBeNull();
+    await fireEvent.press(await button(t.choose));
     expect(await screen.findByText('Aperçu')).toBeTruthy();
   });
 
-  it('retour depuis le refus : de nouveau l’explication', async () => {
+  it('retour depuis le refus, bouton « ‹ » ou touche Android : de nouveau l’explication', async () => {
     await chooseFile(utf16LeFile());
     await fireEvent.press(await button(labels.common.back));
     expect(await screen.findByText('Importer des membres')).toBeTruthy();
+    await fireEvent.press(await button(t.choose));
+    expect(await screen.findByText('Fichier non reconnu')).toBeTruthy();
+    await back();
+    expect(await screen.findByText('Importer des membres')).toBeTruthy();
+    expect(screen.queryByText('Fichier non reconnu')).toBeNull();
   });
 
   it('sélecteur annulé : l’écran de choix reste, sans aperçu', async () => {
@@ -228,10 +243,25 @@ describe('EX-30 écrans de l’import CSV', () => {
     await chooseFile(MOCKUP);
     expect(await screen.findByText('Aperçu')).toBeTruthy();
     expect(importSession.held()).toBe(true);
-    await act(async () => appRouter.back());
+    await back();
     expect(await button(t.choose)).toBeTruthy();
     expect(importSession.held()).toBe(false);
     expect(await members(base.db)).toBe(2);
+  });
+
+  it('nouvelle session ouverte avant le démontage de l’aperçu : elle reste', async () => {
+    await chooseFile(MOCKUP);
+    await screen.findByText('Aperçu');
+    const current = importSession.get();
+    if (current === null) throw new Error('Session attendue');
+    // Nouveau choix de fichier terminé avant le démontage de l'ancien aperçu.
+    await act(async () => {
+      importSession.clear();
+      importSession.set(current, erasedCount(), importSession.generation());
+      appRouter.back();
+    });
+    expect(await button(t.choose)).toBeTruthy();
+    expect(importSession.get()?.preview).toBe(current.preview);
   });
 
   it('membres ou groupes changés depuis l’aperçu : rien d’écrit, « recommencez l’import »', async () => {
@@ -255,8 +285,7 @@ describe('EX-30 écrans de l’import CSV', () => {
   });
 
   it('volume : 2 000 lignes invalides affichées sans plafond', async () => {
-    const lines = [['nom', 'prenom'], ...Array.from({ length: 2000 }, () => ['Morel', ''])];
-    await chooseFile(csv(lines));
+    await chooseFile(file('nom;prenom', ...Array.from({ length: 2000 }, () => 'Morel;')));
     expect(await screen.findByText('2000 invalides')).toBeTruthy();
     expect(screen.getByText('Ligne 2001')).toBeTruthy();
   }, 60_000);
