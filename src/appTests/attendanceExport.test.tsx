@@ -175,7 +175,7 @@ describe('Export CSV des présences (ticket 037, EX-31)', () => {
     await fireEvent.press(await exportButton(await repo().count(period, null)));
     await waitFor(() => expect(mockShare).toHaveBeenCalledTimes(1));
     expect(mockShare.mock.calls[0]?.[1]).toBe('csv');
-    expect(mockShare.mock.calls[0]?.[0]).toMatch(/\/kila-presences-\d{4}-\d{2}-\d{2}\.csv$/);
+    expect(mockShare.mock.calls[0]?.[0]).toMatch(/\/kila-presences-2026-09-01-au-2026-11-27\.csv$/);
     expect(text.split('\r\n').length - 2).toBe(await repo().count(period, null));
     const busy = await screen.findByRole('button', { name: t.exporting });
     expect(isDisabled(busy)).toBe(true);

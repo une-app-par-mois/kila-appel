@@ -29,11 +29,29 @@ let mockDb: Db | null = null;
 jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => mockDb }));
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
 const { log } = jest.requireMock('@/data/log') as { log: jest.Mock };
+// Nombre de lignes imposé pour le plafond (50 001 lignes ne se créent pas dans ce test).
+let mockCount: number | null = null;
+/** Lecture du nombre retenue jusqu'à `release()` (relecture en cours). */
+let mockGate: Promise<void> = Promise.resolve();
+jest.mock('@/data/attendanceExportRepo', () => {
+  const actual = jest.requireActual('@/data/attendanceExportRepo');
+  return {
+    attendanceExportRepo: (db: Db) => {
+      const repo = actual.attendanceExportRepo(db);
+      const count = async (...a: never[]) => {
+        await mockGate;
+        return mockCount ?? repo.count(...a);
+      };
+      return { ...repo, count };
+    },
+  };
+});
 
 const CSV_LABELS = { ...labels.stats.csv, statuses: labels.statuses, weekdays: labels.weekdays };
 const PERIOD = customPeriod('2026-09-01', '2026-11-27');
 const CHOICE = { kind: 'custom', from: PERIOD.from, to: PERIOD.to } as const;
-const FILE_NAME = /^kila-presences-\d{4}-\d{2}-\d{2}\.csv$/;
+// Période dans le nom (changée après contradiction) ; « _ » refusé par `EXPORT_NAME` (033).
+const FILE_NAME = 'kila-presences-2026-09-01-au-2026-11-27.csv';
 
 describe('F-08 EX-31 plafond de l’export', () => {
   it('EX-31 50 000 lignes passent, 50 001 sont refusées', () => {
@@ -70,6 +88,8 @@ describe('useAttendanceExport (EX-31, SEC-10)', () => {
     db = await prepareDatabase(openNodeDb());
     s = await statsSeed(db);
     mockDb = db;
+    mockCount = null;
+    mockGate = Promise.resolve();
     log.mockClear();
   });
   afterEach(async () => {
@@ -82,7 +102,7 @@ describe('useAttendanceExport (EX-31, SEC-10)', () => {
   const left = () => (existsSync(exportsDir) ? readdirSync(exportsDir) : []);
   const codes = () => log.mock.calls.map(([code]) => code as string);
 
-  it('EX-31 aperçu : groupes de la période et nombre de lignes, groupe absent → tous', async () => {
+  it('EX-31 aperçu : groupes de la période et nombre de lignes, groupe supprimé → tous', async () => {
     const repo = attendanceExportRepo(db);
     const all = await renderHook(() => useExportPreview(CHOICE, null, true));
     await waitFor(() => expect(all.result.current.preview).not.toBeNull());
@@ -91,11 +111,43 @@ describe('useAttendanceExport (EX-31, SEC-10)', () => {
     const one = await renderHook(() => useExportPreview(CHOICE, s.groups.poussins, true));
     await waitFor(() => expect(one.result.current.preview?.groupId).toBe(s.groups.poussins));
     expect(one.result.current.preview?.count).toBe(await repo.count(PERIOD, s.groups.poussins));
-    // Groupe d'une autre saison, absent de la liste : retour à « Tous les groupes ».
-    const gone = await renderHook(() => useExportPreview(CHOICE, s.groups.anciens, true));
+    // Groupe sans séance sur la période (autre saison) : gardé, ajouté à la liste, 0 ligne ; jamais
+    // élargi en silence à « Tous les groupes » (changée après contradiction).
+    const other = await renderHook(() => useExportPreview(CHOICE, s.groups.anciens, true));
+    await waitFor(() => expect(other.result.current.ready).toBe(true));
+    expect(other.result.current.preview?.groupId).toBe(s.groups.anciens);
+    expect(other.result.current.preview?.count).toBe(0);
+    expect(other.result.current.preview?.groups.at(-1)).toEqual({
+      groupId: s.groups.anciens,
+      name: 'Anciens',
+      archived: false,
+    });
+    // Groupe supprimé : retour à « Tous les groupes ».
+    const gone = await renderHook(() => useExportPreview(CHOICE, 999_999, true));
     await waitFor(() => expect(gone.result.current.preview).not.toBeNull());
     expect(gone.result.current.preview?.groupId).toBeNull();
     expect(gone.result.current.preview?.count).toBe(await repo.count(PERIOD, null));
+  });
+
+  it('EX-31 aperçu périmé : `ready` faux pendant une relecture et après un échec', async () => {
+    const { result, rerender } = await renderHook(
+      ({ groupId }: { groupId: number | null }) => useExportPreview(CHOICE, groupId, true),
+      { initialProps: { groupId: null as number | null } },
+    );
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    let release: () => void = () => undefined;
+    mockGate = new Promise((resolve) => (release = resolve));
+    await rerender({ groupId: s.groups.poussins });
+    // Relecture en cours : l'aperçu est encore celui de « Tous les groupes ».
+    expect(result.current.preview?.groupId).toBeNull();
+    expect(result.current.ready).toBe(false);
+    await act(async () => release());
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    await db.close();
+    await rerender({ groupId: null });
+    await waitFor(() => expect(result.current.loadFailed).toBe(true));
+    expect(result.current.ready).toBe(false);
+    db = await prepareDatabase(openNodeDb());
   });
 
   it('EX-31 aperçu : rien n’est lu tant que la période n’est pas valide', async () => {
@@ -110,11 +162,11 @@ describe('useAttendanceExport (EX-31, SEC-10)', () => {
     await act(() => result.current.exportNow(PERIOD, s.groups.poussins));
     const rows = await attendanceExportRepo(db).rows(PERIOD, s.groups.poussins);
     expect(shared).toHaveLength(1);
-    expect(shared[0]?.path.split('/').pop()).toMatch(FILE_NAME);
+    expect(shared[0]?.path.split('/').pop()).toBe(FILE_NAME);
     expect(shared[0]?.text).toBe(attendanceCsv(rows, CSV_LABELS));
     expect(deps.share).toHaveBeenCalledWith(shared[0]?.path);
     expect(left()).toEqual([]);
-    expect(result.current.failed).toBe(false);
+    expect(result.current.failure).toBeNull();
     expect(result.current.busy).toBe(false);
     expect(codes()).toEqual(['CSV_SHARED']);
   });
@@ -128,7 +180,7 @@ describe('useAttendanceExport (EX-31, SEC-10)', () => {
     await act(() => result.current.exportNow(PERIOD, null));
     expect(deps.share).not.toHaveBeenCalled();
     expect(left()).toEqual([]);
-    expect(result.current.failed).toBe(true);
+    expect(result.current.failure).toBe('failed');
     expect(codes()).toEqual(['CSV_EXPORT_FAILED']);
   });
 
@@ -139,11 +191,11 @@ describe('useAttendanceExport (EX-31, SEC-10)', () => {
     const { result } = await renderHook(() => useAttendanceExport(deps));
     await act(() => result.current.exportNow(PERIOD, null));
     expect(left()).toEqual([]);
-    expect(result.current.failed).toBe(true);
+    expect(result.current.failure).toBe('failed');
     // Un nouvel essai réussi efface le message d'échec.
     deps.share = jest.fn(async () => undefined);
     await act(() => result.current.exportNow(PERIOD, null));
-    expect(result.current.failed).toBe(false);
+    expect(result.current.failure).toBeNull();
   });
 
   it('SEC-10 : le dossier est vidé au début ; un vidage en échec n’empêche pas l’export', async () => {
@@ -155,12 +207,12 @@ describe('useAttendanceExport (EX-31, SEC-10)', () => {
     expect(codes()).toEqual(['CSV_CLEAR_FAILED', 'CSV_SHARED']);
   });
 
-  it('verrou : rien ne part pendant une autre opération ; « csv » tenu jusqu’au partage', async () => {
+  it('SEC-10 verrou : rien ne part pendant une autre opération ; « csv » tenu jusqu’au partage', async () => {
     const { result } = await renderHook(() => useAttendanceExport(deps));
     expect(fileLock.acquire('restore')).toBe(true);
     await act(() => result.current.exportNow(PERIOD, null));
     expect(deps.share).not.toHaveBeenCalled();
-    expect(result.current.failed).toBe(false);
+    expect(result.current.failure).toBeNull();
     fileLock.release('restore');
     const holders: (string | null)[] = [];
     deps.share = jest.fn(async () => {
@@ -173,7 +225,21 @@ describe('useAttendanceExport (EX-31, SEC-10)', () => {
     expect(fileLock.holder()).toBeNull();
   });
 
-  it('deux appuis rapprochés : un seul export', async () => {
+  it('EX-31 plafond sous le verrou : recompté avant la lecture, refus sans fichier', async () => {
+    mockCount = 50_001;
+    const { result } = await renderHook(() => useAttendanceExport(deps));
+    await act(() => result.current.exportNow(PERIOD, null));
+    expect(deps.share).not.toHaveBeenCalled();
+    expect(left()).toEqual([]);
+    expect(result.current.failure).toBe('tooMany');
+    expect(codes()).toEqual(['CSV_REJECTED_TOO_MANY']);
+    mockCount = 50_000;
+    await act(() => result.current.exportNow(PERIOD, null));
+    expect(deps.share).toHaveBeenCalledTimes(1);
+    expect(result.current.failure).toBeNull();
+  });
+
+  it('SEC-10 deux appuis rapprochés : un seul export', async () => {
     let finish: () => void = () => undefined;
     deps.share = jest.fn(() => new Promise<void>((resolve) => (finish = resolve)));
     const { result } = await renderHook(() => useAttendanceExport(deps));

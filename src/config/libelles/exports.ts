@@ -1,11 +1,9 @@
 // Textes des écrans d'export (maquettes « Statistiques », « Export CSV des présences », « États
 // vides » ; ticket 037, EX-31, SEC-09). Repris par le rapport PDF (ticket 041). Les textes du
 // fichier CSV restent dans `stats.csv` (ticket 036).
+import { NBSP } from '@/domain/attendanceRate';
 
-/** Espace insécable (U+00A0), comme dans « 87 % » (`attendanceRate.ts`). */
-const NBSP = String.fromCharCode(0xa0);
-
-/** « 2 418 » : milliers séparés par une espace insécable. */
+/** « 2 418 » : milliers séparés par une espace insécable, comme dans « 87 % ». */
 const thousands = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, NBSP);
 
 export const exportScreens = {
