@@ -466,6 +466,26 @@ Avant de passer aux tickets suivants, je veux voir avec toi comment optimiser le
 - Un gabarit qui échappe tout ne convient pas au CSS : le texte de confiance se sépare des données, puis un contrôle statique garde la frontière.
 - Le retour Android se teste sur chaque écran (bouton, geste, touche), pas seulement le bouton « ‹ ».
 
+### Lot J3-4 (039b, 032b, 044) — 2026-11-28
+
+**Prompt clé** : séance de lancement du quatrième lot du jalon 3 (pré-analyse, QCM, plans de 039b et 044 en zone sensible), trois agents de code en parallèle, revues de code et de sécurité, contradicteur, puis intégration.
+
+**Réponses du porteur** : 039b : teinte claire calculée, lettre foncée ; 044 : sauvegarde hors règle refusée en entier, aucune migration, export bloqué par un groupe ancien accepté (appli non publiée), saison, créneau et contact au 044b ; liste SEC-06 élargie pour tous les noms au 044b (U+200D et U+FE0F acceptés) ; relecture et fusion de 044 et 039b validées.
+
+**Ce que l'IA a fait** :
+- **Développement** : 039b (`reportGrid.ts`, `reportGridRepo.ts`, styles dans `reportCss`) ; 032b (`memberNameError`, contrôle champ par champ dans les deux formulaires du membre) ; 044 (`validateGroupName`, dépôt et restauration).
+- **Intégration** : PR #108, #109, #110 fusionnées dans le groupe ; 19 lignes ajoutées à `docs/DECISIONS.md` ; SEC-06, SEC-08, SEC-10 complétés ; reports vers 040 et 044b (découpage en 044b et 044c proposé).
+
+**Ce qui a été corrigé par le contradicteur** (4 décisions changées) :
+- texte de `NAME_INVALID_CHAR` : « effacez le champ et retapez le nom », l'encadrant ne voit pas le caractère à retirer ;
+- `maxLength` retiré (au lancement) : il coupait un texte collé sans rien dire et le message n'apparaissait jamais ;
+- colonne « Nom Prénom » unique de 40 mm, comme la maquette (039b) ;
+- légende de la grille reprise de la maquette, construite à partir des lettres et des statuts (039b).
+
+**Leçons** :
+- Une limite de saisie qui coupe en silence empêche le message d'erreur d'apparaître : le contrôle se fait sur la valeur, pas sur le clavier.
+- Un message d'erreur dit quoi faire avec ce que l'utilisateur voit, pas avec ce qu'il ne voit pas.
+
 ### [Étape] — [AAAA-MM-JJ]
 
 **Prompt**

@@ -1,6 +1,6 @@
 # 044 — Noms de groupe : refuser les caractères invisibles
 
-Statut : à faire · Jalon : 3 · Zone sensible : **oui** (validation des entrées, SEC-06 ; nom de groupe affiché à l'écran, dans l'export CSV et dans le rapport PDF) · Trivial : non
+Statut : fusionné dans le groupe (PR #108, après la relecture du porteur du 2026-11-28) · Jalon : 3 · Zone sensible : **oui** (validation des entrées, SEC-06 ; nom de groupe affiché à l'écran, dans l'export CSV et dans le rapport PDF) · Trivial : non
 
 Dépend de : aucun (039 fusionné) · Fichiers touchés : `src/domain/validation.ts` et `src/domain/validation.test.ts`, `src/data/groupsRepo.ts` et son test, `src/data/backupRows.ts` et son test (restauration), éventuellement `src/config/libelles/` (texte d'erreur de la fiche groupe) — environ 6 fichiers, à préciser à la pré-analyse
 

@@ -29,6 +29,8 @@ Le plus gros risque technique d'abord (jalon 0). Chaque jalon se termine par un 
 
 Total jusqu'à la publication Android (jalons 0 à 6) : **56 tickets, environ 69 h de porteur**, hors marge (total recompté le 2026-11-28 à la séance de lancement du lot J3-4 : 4 + 12 + 13 + 17 + 4 + 2 + 4).
 
+**Jalon 3 en cours (2026-11-28, intégration du lot J3-4)** : **12 tickets sur 17** fusionnés dans `groupe/jalon-3-entrer-sortir-donnees` (031, 032, 032b, 033, 034, 035, 036, 037, 038, 039, 039b, 044) ; restent 040, 041, 043, 044b, puis 042 (campagne Maestro). Découpage du 044b en 044b et 044c proposé (liste SEC-06 élargie), à valider à la séance de lancement du lot J3-5 : le jalon passerait à 18 tickets.
+
 **Jalon 2 fait (2026-11-28)** : PR #88 fusionnée dans `main` en squash (`40d70bb`), CI toute verte sur le dernier commit, campagne Maestro sur l'APK de la CI 7 parcours sur 7. **Fusionné sans le prétest sur l'A55**, sur décision du porteur du 2026-11-28 : le prétest reste à faire, et tout défaut trouvé devient un ticket corrigé au jalon 3, classé selon le §5. Critère de sortie en face de ce qui est vérifié :
 
 | Critère de sortie | Vérifié | Reste à vérifier sur l'A55 (prétest) |
