@@ -77,10 +77,17 @@ export type ReportHtml = string & { readonly [reportBrand]: true };
 export const REPORT_CSP = "default-src 'none'; style-src 'unsafe-inline'; img-src data:";
 
 /**
- * Orientation des pages de synthèse et de taux, dans cette seule constante (décision du porteur du
- * 2026-11-28 : A4 portrait ; repli « tout en paysage » si les pages mélangées ne tiennent pas, 040).
+ * Orientation des pages de synthèse et de taux (décision du porteur du 2026-11-28 : A4 portrait ;
+ * repli « tout en paysage » si les pages mélangées ne tiennent pas, 040b).
  */
 export const SUMMARY_PAGE = { name: 'portrait', size: 'A4 portrait' } as const;
+
+/** iOS (décision du porteur du 2026-11-28, 040b) : tout le rapport en paysage, à revoir au jalon 7. */
+export const SUMMARY_PAGE_LANDSCAPE = { name: 'synthese', size: 'A4 landscape' } as const;
+
+/** Orientation des pages de synthèse et de taux ; la grille reste en paysage (`GRID_PAGE`). */
+export type ReportOrientation = 'portrait' | 'landscape';
+const SUMMARY_PAGES = { portrait: SUMMARY_PAGE, landscape: SUMMARY_PAGE_LANDSCAPE } as const;
 
 /** Orientation des pages de grille (ticket 039b, décision du porteur du 2026-11-28 : A4 paysage). */
 export const GRID_PAGE = { name: 'paysage', size: 'A4 landscape' } as const;
@@ -118,13 +125,17 @@ export const lightTint = (color: string): string => {
  * couleurs vérifiées une à une ; aucune donnée de l'utilisateur. Un « < » la refuse : elle ne
  * peut pas fermer la balise `<style>`.
  */
-export const reportCss = (p: ReportPalette): string => {
+export const reportCss = (
+  p: ReportPalette,
+  orientation: ReportOrientation = 'portrait',
+): string => {
+  const summaryPage = SUMMARY_PAGES[orientation];
   const css = [
-    `@page { size: ${SUMMARY_PAGE.size}; margin: 15mm }`,
-    `@page ${SUMMARY_PAGE.name} { size: ${SUMMARY_PAGE.size}; margin: 15mm }`,
+    `@page { size: ${summaryPage.size}; margin: 15mm }`,
+    `@page ${summaryPage.name} { size: ${summaryPage.size}; margin: 15mm }`,
     'html { -webkit-print-color-adjust: exact; print-color-adjust: exact }',
     `body { margin: 0; color: ${checkColor(p.text)}; font-family: system-ui, sans-serif; font-size: 10pt; font-variant-numeric: tabular-nums }`,
-    `.page { page: ${SUMMARY_PAGE.name} }`,
+    `.page { page: ${summaryPage.name} }`,
     '.group { break-before: page; page-break-before: always }',
     'h1 { font-size: 16pt; margin: 0 0 2mm }',
     'h2 { font-size: 13pt; margin: 0 0 2mm }',
@@ -238,15 +249,17 @@ const groupPage = (g: ReportGroup, l: ReportLabels, grids: readonly SafeHtml[]) 
 
 /**
  * EX-32 : synthèse de la période, puis une page par groupe qui a des séances. `grids` : pages de
- * grille déjà rendues par groupe (039b), placées après la page de leur groupe ; facultatives.
+ * grille déjà rendues par groupe (039b, `reportGrids`), placées après la page de leur groupe ;
+ * facultatives. `orientation` : celle de la synthèse et des taux (paysage sur iOS, 040b).
  */
 export const reportHtml = (
   report: Report,
   labels: ReportLabels,
   palette: ReportPalette,
   grids: ReadonlyMap<number, readonly SafeHtml[]> = new Map(),
+  orientation: ReportOrientation = 'portrait',
 ): ReportHtml => {
-  const head = `${HEAD}<style>${reportCss(palette)}</style>`;
+  const head = `${HEAD}<style>${reportCss(palette, orientation)}</style>`;
   const pages = report.groups
     .filter((g) => g.sessions > 0)
     .map((g) => groupPage(g, labels, grids.get(g.groupId) ?? []));
