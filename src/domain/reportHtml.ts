@@ -82,6 +82,9 @@ export const REPORT_CSP = "default-src 'none'; style-src 'unsafe-inline'; img-sr
  */
 export const SUMMARY_PAGE = { name: 'portrait', size: 'A4 portrait' } as const;
 
+/** Orientation des pages de grille (ticket 039b, décision du porteur du 2026-11-28 : A4 paysage). */
+export const GRID_PAGE = { name: 'paysage', size: 'A4 landscape' } as const;
+
 const HEAD = `<!DOCTYPE html><html lang="fr"><head><meta http-equiv="Content-Security-Policy" content="${REPORT_CSP}"><meta charset="utf-8">`;
 
 const COLOR = /^#[0-9A-Fa-f]{6}$/;
@@ -89,6 +92,19 @@ const COLOR = /^#[0-9A-Fa-f]{6}$/;
 const checkColor = (color: string): string => {
   if (!COLOR.test(color)) throw new Error('Couleur refusée dans le rapport (SEC-08)');
   return color;
+};
+
+/** Part du fond du statut gardée dans la teinte claire des cases de la grille (039b). */
+const TINT_SHARE = 0.25;
+
+/**
+ * Charte (décision du porteur du 2026-11-28) : teinte claire du fond d'un statut, mêlé de blanc en
+ * TypeScript (aucune fonction CSS récente dans la WebView) ; couleur vérifiée avant et après.
+ */
+export const lightTint = (color: string): string => {
+  const channels = [1, 3, 5].map((i) => Number.parseInt(checkColor(color).slice(i, i + 2), 16));
+  const mixed = channels.map((c) => Math.round(255 - (255 - c) * TINT_SHARE));
+  return checkColor(`#${mixed.map((c) => c.toString(16).padStart(2, '0')).join('')}`.toUpperCase());
 };
 
 /**
@@ -122,6 +138,16 @@ export const reportCss = (p: ReportPalette): string => {
     '.groups td:nth-child(n+2), .groups th:nth-child(n+2) { text-align: right }',
     '.members td:nth-child(n+3), .members th:nth-child(n+3) { text-align: right }',
     ...SHARE_ORDER.map((s) => `.s-${s} { background: ${checkColor(p.statuses[s])} }`),
+    // Grille séance par séance (039b) : A4 paysage, police réduite, aucun style en ligne.
+    `@page ${GRID_PAGE.name} { size: ${GRID_PAGE.size}; margin: 10mm }`,
+    `.grid { page: ${GRID_PAGE.name}; break-before: page; page-break-before: always }`,
+    '.grid table { font-size: 8pt }',
+    '.grid th, .grid td { padding: 1mm 0.5mm }',
+    '.grid .who { width: 28mm }',
+    '.grid .c { text-align: center; overflow-wrap: normal }',
+    ...SHARE_ORDER.map(
+      (s) => `.g-${s} { background: ${lightTint(p.statuses[s])}; color: ${checkColor(p.text)} }`,
+    ),
   ].join('\n');
   if (css.includes('<')) throw new Error('Feuille de style refusée dans le rapport (SEC-08)');
   return css;

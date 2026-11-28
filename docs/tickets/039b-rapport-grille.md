@@ -75,10 +75,19 @@ Reporté du lot J3-3 (2026-11-28, fiche 039) :
 | 11. Oracle EX-32 | Valeurs écrites en dur ; `statsRepo.member` | Comparaison à `statsRepo.member`, y compris après la suppression d'un groupe ; aucun test RM-03 Q2 écrit en dur | Une seule vérité, celle des statistiques | à relire |
 | 12. Volume (NF-08) | — | Une requête en moins de 2 s ; taille du HTML journalisée sans seuil | Mesure indicative, pas de seuil arbitraire | à relire |
 | Nombre de fichiers | — | 7 fichiers | Sous 10 | à relire |
+| 13. Marge des pages paysage | 15 mm comme le portrait ; 10 mm | 10 mm (`@page paysage`) | Une place de plus pour 25 à 29 colonnes de dates | à relire |
+| 14. Teinte claire des cases | Part du fond gardée : 20 %, 25 %, 33 % | 25 % du fond de la charte mêlé de blanc (`lightTint`, `TINT_SHARE`), couleur revérifiée `#RRGGBB` ; test : contraste texte foncé / teinte d'au moins 7:1 pour les quatre statuts | Couleur reconnaissable, lettre très lisible à l'impression | à relire |
+| 15. Filtre introuvable ou invalide | `null` ; erreur ; grille vide | Grille vide (`Map` vide), sans requête pour un identifiant invalide ; période et saison revalidées (erreur, comme le 039) | Le rapport du 039 dit déjà « groupe introuvable » ; la grille n'ajoute rien | à relire |
+| 16. Largeurs et en-tête des colonnes | `colgroup` à largeurs en ligne ; classes | Classes seules : `.who` (nom, prénom) 28 mm, cases `.c` centrées ; heure sous la date par `<br>` | Décision 9 : aucun style en ligne | à relire |
+| 17. Libellés de la grille | Objet séparé ; dans `rapport.report` | `gridTitle` et `gridLegend` dans `rapport.report` (type `GridLabels` = extrait de `ReportLabels` + ces deux textes) | Un seul objet de textes passé au rapport et à la grille | à relire |
+| 18. Mesure de la taille du HTML | Octets ; caractères | Caractères (`length`), journalisés par `process.stdout.write` sans seuil | `Buffer` n'est pas typé dans la configuration de l'appli, qui vérifie aussi les tests | à relire |
 
 ## Questions pour le porteur
 
 ## À reporter
 
 - CHANGELOG : rien (visible au 041).
-- Architecture : `src/domain/reportGrid.ts`, `src/data/reportGridRepo.ts`.
+- Architecture : `src/domain/reportGrid.ts` (pages A4 paysage de la grille, blocs de 25 séances, table `groupId → SafeHtml[]`), `src/data/reportGridRepo.ts` (séances et statuts par groupe, une requête sur `credits`) ; `GRID_PAGE` et `lightTint` dans `src/domain/reportHtml.ts`.
+- SECURITE (SEC-08, colonne Vérification) : grille du 039b vérifiée par `src/domain/reportGrid.test.ts` (« SEC-08 nom fictif <script> échappé ; aucun <script, http, url( ni style en ligne », « SEC-08 couleur hors #RRGGBB refusée par la teinte »), styles de la grille dans `reportCss`.
+- Mesures NF-08 (poste de développement, 2026-11-28) : requête de la grille 38 à 50 ms (une saison, 10 groupes, 400 séances) et 362 à 365 ms (3 saisons, séances à deux groupes, 30 groupes) ; HTML des pages de grille environ 650 k caractères (une saison) et 3 900 k caractères (3 saisons), indicatif.
+- Fiche 040 : brancher `reportGrids(report, grid, rapport.report)` dans `reportHtml` ; vérifier l'orientation paysage et le poids du PDF pour une saison complète (environ 650 k caractères de HTML pour 500 membres).

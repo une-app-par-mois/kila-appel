@@ -5,6 +5,7 @@
 import { theme } from '../theme';
 import { commun } from './commun';
 import { plural } from './outils';
+import { stats } from './stats';
 
 export const rapport = {
   report: {
@@ -31,6 +32,11 @@ export const rapport = {
     /** Séances sans présence comptée (rapport filtré, RM-03) : le taux « — » s'explique. */
     noAttendance: 'Aucune présence comptée sur la période.',
     noMember: 'Aucun membre sur la période.',
+    /** Titre d'un bloc de la grille (039b) : « Poussins · séances du 02/09/2026 au 17/02/2027 ». */
+    gridTitle: (group: string, from: string, to: string) =>
+      `${group} · séances du ${from} au ${to}`,
+    /** Légende sous chaque bloc de la grille ; la case vide reprend le texte des statistiques. */
+    gridLegend: `P : présent · R : retard · E : excusé · A : absent. ${stats.stats.memberScreen.legend}`,
   },
 } as const;
 
