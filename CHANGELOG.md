@@ -6,6 +6,9 @@ Format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ### Ajouté
 
+- Import CSV : lecture des fichiers d'Excel, de LibreOffice et de Google Sheets, en UTF-8 ou Windows-1252, séparés par point-virgule, virgule ou tabulation ; fichier « CSV (Macintosh) » (MacRoman) repéré et refusé ; 1 Mo et 2 000 lignes au plus ; rien n'est encore branché à un écran (F-07, EX-30, SEC-06) — ticket 031.
+- Import CSV : colonnes reconnues, lignes invalides et doublons repérés avant toute écriture ; nom et prénom d'un membre de 100 caractères au plus, sans caractère invisible, à l'import et à la restauration (une sauvegarde hors règle est refusée en entier) ; rien n'est encore branché à un écran (F-07, EX-30, SEC-06, SEC-10) — ticket 032.
+- Fichiers : lecture bornée d'un fichier choisi, dossier `cache/exports/` vidé au démarrage et après Tout effacer, écriture et partage bornés des CSV et PDF, verrou commun étendu à l'import et aux exports ; rien de visible (F-07 à F-09, SEC-06, SEC-10) — ticket 033.
 - Tests : campagne Maestro du jalon 2 (`.maestro/`) : alerte traitée puis revenue après une absence de plus, statistiques du jeu vérifié à la main du 023 (période « Saison »), réglage de la relance avec le dialogue de permission du système (pas maintenant, autoriser, refuser), durées indicatives de NF-08 sur une sauvegarde de volume ; une sauvegarde fictive par parcours, générée à chaque lancement — ticket 030.
 - Relance : notifications locales programmées pour les 7 jours à venir, annulées dès que l'appel est enregistré ; relances affichées retirées quand la séance n'est plus due ; bannière et son quand l'appli est ouverte, sans pastille (F-06, EX-28, ABS-04) — ticket 028b.
 - Relance : un appui ouvre l'appel du créneau ; Tout effacer annule et retire les relances ; une restauration annule et retire les relances de l'ancienne base (F-06, EX-28, SEC-11, SEC-12) — ticket 028c.

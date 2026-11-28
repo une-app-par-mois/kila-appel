@@ -2,7 +2,7 @@
 
 Statut : à faire · Jalon : 3 · Zone sensible : **oui** (écriture en base de données importées, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
 
-Dépend de : 031, 032, 033 · Fichiers touchés : `src/data/memberImportRepo.ts` et son test (nouveaux), `src/hooks/useMemberImport.ts` et son test (nouveaux), `src/hooks/importSession.ts` (nouveau : aperçu gardé en mémoire entre les écrans) — 5 fichiers
+Dépend de : 031, 032, 033 · Fichiers touchés : `src/data/memberImportRepo.ts` et son test (nouveaux), `src/hooks/useMemberImport.ts` et son test (nouveaux), `src/hooks/importSession.ts` (nouveau : aperçu gardé en mémoire entre les écrans), `src/domain/memberImport.ts` (type `CsvRow` unifié, reporté du lot J3-1) — 6 fichiers (7 si un second fichier de test du dépôt est nécessaire)
 
 Découpé le 2026-11-28 (séance de découpage du jalon 3).
 
@@ -59,6 +59,16 @@ Séance de découpage du jalon 3 (2026-11-28), réponses du porteur :
 - Plan validé par le porteur le 2026-11-28.
 - Décisions d'office ci-dessus appliquées, notées dans `docs/DECISIONS.md` (état « à relire »).
 - Relecture du porteur avant la fusion dans le groupe (zone sensible).
+
+Reporté du lot J3-1 (2026-11-28) :
+
+- Unifier le type `CsvRow` : `src/domain/memberImport.ts` importe celui de `src/domain/csvParse.ts` (`{ line: number; cells: string[] }`, déjà exporté) au lieu de le déclarer (fichier ajouté à la liste).
+- `parseCsv` n'est appelé qu'après `decodeCsv`, qui borne la taille à 1 Mo ; le nombre de cellules par ligne n'est pas borné (jusqu'à environ 500 000 dans 1 Mo) : rester linéaire en nombre de cellules.
+- Verrou : `pick` (`expoImportPicker(os, MAX_CSV_BYTES)`) et `readFileBytes(path, MAX_CSV_BYTES)` dans un même `fileLock.run('import', …)`, rendu avant l'aperçu ; repris par `fileLock.run('import', …)` pendant l'écriture.
+- Si une restauration ou Tout effacer a eu lieu entre l'aperçu et la confirmation, revérifier les doublons (et les groupes) à la confirmation avant d'écrire.
+- Ne jamais afficher ni journaliser `error.message` (une erreur native peut citer le nom du fichier, ABS-04) : codes seulement.
+- **Décision du porteur du 2026-11-28** : un doublon de source `app` laissé sur « Ignorer » est inscrit au groupe du CSV (`member.groupId`) s'il ne l'est pas déjà, et désarchivé s'il était archivé (`memberId`, `archived`), dans la même transaction que l'import, sans réécrire ni nom, ni date de naissance, ni contact. Le résultat le compte (critère d'acceptation et test à ajouter).
+- Fichiers : `src/domain/memberImport.ts` en plus (6 fichiers) ; probablement un second fichier de test du dépôt pour les doublons inscrits et désarchivés si `memberImportRepo.test.ts` dépasse 300 lignes (7). Le ticket reste sous 10 fichiers ; risque de dépassement faible, à surveiller si le verrou ou l'inscription demandent de toucher `membersRepo.ts` ou `enrollmentsRepo.ts` (sinon les requêtes restent dans `memberImportRepo.ts`).
 
 ## Décisions
 

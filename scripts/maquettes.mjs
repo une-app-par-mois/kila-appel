@@ -478,13 +478,13 @@ ecran('import-apercu', 2, 'Import CSV : aperçu', 'EX-30', 'parametres', `
 ${titre('Aperçu', 'import')}
 <div class="carte compteur mono"><span>24 lignes</span><span>21 à importer</span><span class="rouge">1 invalide</span><span>2 doublons</span></div>
 ${section('Doublons')}
-${carte(`<div class="rang"><div><div class="l-titre">Léo Garcia</div><div class="l-sous mono">14/03/2017 · déjà dans l'appli</div></div><span class="filtre on">Ignorer</span></div><div class="rang"><div><div class="l-titre">Zoé Blanc</div><div class="l-sous mono">déjà dans l'appli</div></div><span class="filtre on">Ignorer</span></div>`)}
+${carte(`<div class="rang"><div><div class="l-titre">Léo Garcia</div><div class="l-sous mono">14/03/2017 · déjà dans l'appli</div></div><span class="filtre on">Ignorer</span></div><div class="rang"><div><div class="l-titre">Zoé Blanc</div><div class="l-sous mono">déjà dans l'appli</div></div><span class="filtre on">Ignorer</span></div><p class="l-sous">Un doublon ignoré déjà dans l'appli sera inscrit au groupe du fichier, et désarchivé s'il était archivé.</p>`)}
 ${section('Ligne invalide')}
 ${carte(`<div class="rang"><div><div class="l-titre">Ligne 17</div><div class="l-sous">Prénom manquant</div></div></div>`)}
 ${section('Groupe introuvable')}
 ${carte(`<div class="rang"><div><div class="l-titre">Ligne 12</div><div class="l-sous">« Poussin mercredi » : importé sans groupe</div></div></div>`)}
 ${go('import-resultat', 'Importer 21 membres')}
-<p class="note">Rien n'est écrit avant ce bouton.</p>`);
+<p class="note">Rien n'est écrit avant ce bouton. Doublon ignoré inscrit au groupe du fichier et désarchivé, sans réécrire nom, date ni contact : décision du porteur du 2026-11-28 (tickets 032, 034).</p>`);
 
 ecran('import-resultat', 2, 'Import CSV : résultat', 'EX-30', 'parametres', `
 ${titre('21 membres importés', 'membres')}
@@ -499,7 +499,8 @@ ${section('Autres causes, même écran')}
 ${carte(`<p>Ce fichier n'est pas un CSV. Dans Excel : Fichier › Enregistrer sous › CSV (séparateur : point-virgule). Rien n'a été importé.</p>`, 'bandeau')}
 ${carte(`<p>Ce fichier dépasse 1 Mo ou 2 000 lignes. Découpez-le en plusieurs fichiers. Rien n'a été importé.</p>`, 'bandeau')}
 ${carte(`<p>Ce fichier n'a pas pu être lu (guillemet non fermé ?). Rien n'a été importé.</p>`, 'bandeau')}
-<p class="note">Un texte par cause (décision du porteur du 2026-11-28, ticket 035).</p>`);
+${carte(`<p>Ce fichier est enregistré dans un ancien format Mac. Dans Excel : Enregistrer sous › CSV UTF-8. Rien n'a été importé.</p>`, 'bandeau')}
+<p class="note">Un texte par cause (décision du porteur du 2026-11-28, ticket 035). Ancien format Mac (MacRoman) repéré et refusé : décision du porteur du 2026-11-28 (ticket 031).</p>`);
 
 // F-08, F-09 — Exports
 ecran('export-csv', 2, 'Export CSV des présences', 'EX-31', 'stats', `

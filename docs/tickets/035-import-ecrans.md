@@ -57,6 +57,15 @@ Séance de découpage du jalon 3 (2026-11-28), réponses du porteur :
 - Maquette et `scripts/maquettes.mjs` à mettre à jour pour ces deux écarts (à l'intégration, comme au jalon 2), avant la comparaison de la PR.
 - Décisions d'office ci-dessus appliquées, notées dans `docs/DECISIONS.md` (état « à relire »).
 
+Reporté du lot J3-1 (2026-11-28) :
+
+- Refus `UNSUPPORTED_ENCODING` (MacRoman, décision du porteur du 2026-11-28) : « Ce fichier est enregistré dans un ancien format Mac. Dans Excel : Enregistrer sous › CSV UTF-8. Rien n'a été importé. » (maquette mise à jour à l'intégration du lot J3-1).
+- Refus `NOT_TEXT` (UTF-16, octet nul, BOM UTF-8 suivi d'octets invalides) : texte « pas un CSV » déjà validé.
+- Aperçu : montrer les colonnes reconnues (et celles ignorées).
+- Section « Groupe introuvable » : la cellule « groupe » s'affiche sur une seule ligne, tronquée à 100 points de code avec une ellipse.
+- Un doublon gardé dont `unknownGroup` n'est pas nul est importé sans groupe : l'écran le dit.
+- L'aperçu dit qu'un doublon ignoré déjà dans l'appli sera inscrit au groupe du fichier et, s'il est archivé, désarchivé (décision du porteur du 2026-11-28 ; maquette « Import CSV : aperçu » mise à jour à l'intégration du lot J3-1).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

@@ -1,6 +1,6 @@
 # 031 — Import CSV : décodage et lecture du fichier
 
-Statut : en cours · Jalon : 3 · Zone sensible : **oui** (import CSV : fichier extérieur lu, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
+Statut : fusionné dans le groupe (PR #93) · Jalon : 3 · Zone sensible : **oui** (import CSV : fichier extérieur lu, `docs/CADRAGE.md` « Zones sensibles ») · Trivial : non
 
 Dépend de : aucun · Fichiers touchés : `src/domain/csvDecode.ts` et son test (nouveaux), `src/domain/csvParse.ts` et son test (nouveaux), `src/__fixtures__/csvFiles.ts` (nouveau : fichiers fictifs et piégés, en octets) — 5 fichiers (6 si `csvParse.test.ts` dépasse 300 lignes : second fichier de test)
 
@@ -97,7 +97,7 @@ Décisions automatiques de la pré-analyse (état « à relire », `docs/DECISIO
 | Ligne « vide » | Espaces et séparateur choisi ; espaces et les trois séparateurs | Cellules faites seulement d'espaces, `;` et `,` (la tabulation est un espace) : ligne ignorée, comptée ; même règle pour la ligne qui sert à détecter le séparateur | Une ligne `,,` dans un fichier en `;` reste du bruit ; détection et lecture d'accord | à relire |
 | Ligne donnée avec `MALFORMED` | Ligne de l'éditeur de texte ; ligne du tableur | Ligne du tableur de l'enregistrement où se trouve le guillemet fautif (non fermé, ou suivi d'un autre texte) | Une seule convention, celle du contrat 031 ↔ 032 (revue du 031) | changée après contradiction |
 | Espaces autour d'un champ entre guillemets (`Martin, "Dupont, Léa" `) | Champ sans guillemets ; espaces ignorés | Espaces entre le séparateur et le guillemet ouvrant, et entre le guillemet fermant et le séparateur ou la fin de ligne, ignorés : cellule `Dupont, Léa` ; seul un autre texte après le guillemet fermant reste `MALFORMED` ; sans guillemet ouvrant, le champ reste tel quel, espaces compris | Google Sheets et des exports écrits à la main mettent une espace après la virgule (revue du 031) | changée après contradiction |
-| BOM dans le texte reçu par `parseCsv` | Laissé ; retiré | U+FEFF de tête retiré aussi par `parseCsv` | Le 032 et ses tests appellent `parseCsv` sur un texte direct ; l'en-tête resterait « ﻿Nom » | à relire |
+| BOM dans le texte reçu par `parseCsv` | Laissé ; retiré | U+FEFF de tête retiré aussi par `parseCsv` | Le 032 et ses tests appellent `parseCsv` sur un texte direct ; l'en-tête resterait « U+FEFF Nom » | à relire |
 | Exports pour les tests | Tester par `decodeCsv` seulement ; exporter la table | `decodeWindows1252` exporté (les 256 octets comparés au `TextDecoder` de Node, octet nul compris) ; `MAX_CSV_DATA_ROWS = 2000` exporté par `csvParse.ts` | L'octet nul est refusé par `decodeCsv` : seule la fonction seule permet le test des 256 octets | à relire |
 | Ordre des refus du décodage | — | `TOO_LARGE`, puis `NOT_TEXT` (BOM UTF-16, octet nul, BOM UTF-8 suivi d'octets invalides), puis `EMPTY` (texte fait de blancs selon `trim()`) ; `decodeCsv` ne rend plus `MALFORMED` | Taille d'abord, sans parcourir un gros fichier | changée après contradiction |
 | Second fichier de test | — | `src/domain/csvParseLimits.test.ts` (limites, refus, trois encodages de bout en bout, ABS-04) : 6 fichiers | Décision de la pré-analyse ; `csvParse.test.ts` garde les guillemets, lignes, fins de ligne et séparateurs | à relire |
@@ -110,6 +110,8 @@ Décisions automatiques de la pré-analyse (état « à relire », `docs/DECISIO
 | Heuristique du repérage MacRoman | Au moins un octet MacRoman et aucun en 0xC0–0xFF ; majorité | Majorité : plus d'octets parmi `82 83 87 88 89 8D 8E 8F 90 95 99 9D 9F` (Ç É á à â ç é è ê ï ô ù ü en MacRoman, signes rares ou indéfinis en Windows-1252) que d'octets 0xC0–0xFF (lettres accentuées de Windows-1252) ; € Œ œ ‘ ’ “ ” – — … jamais comptés | La règle « aucun octet 0xC0–0xFF » laissait passer un fichier MacRoman avec ’ (D5) ou « (C7) ; limite connue : un fichier Windows-1252 dont les seuls caractères hors ASCII sont Ž, ‰ ou ™ serait refusé à tort | à relire |
 
 ## Questions pour le porteur
+
+- **Décision du porteur du 2026-11-28** : fusionné dans le groupe après sa relecture (PR #93).
 
 ## À reporter
 

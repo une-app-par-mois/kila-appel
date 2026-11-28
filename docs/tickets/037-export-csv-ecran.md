@@ -55,6 +55,11 @@ Séance de découpage du jalon 3 (2026-11-28), réponses du porteur :
 - Décisions d'office ci-dessus appliquées, notées dans `docs/DECISIONS.md` (état « à relire »).
 - Relecture du porteur avant la fusion dans le groupe (zone sensible).
 
+Reporté du lot J3-1 (2026-11-28) :
+
+- Vérifier sur l'A55 qu'un envoi différé vers Drive lit bien le fichier avant l'effacement du sous-dossier à la fermeture de la feuille de partage (033).
+- Tenir le verrou `'csv'` par `fileLock.run('csv', …)` (rendu dans un `finally`, même après une erreur), de l'écriture à la fermeture de la feuille de partage.
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |

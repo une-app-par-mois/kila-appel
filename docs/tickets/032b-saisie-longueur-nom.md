@@ -42,6 +42,11 @@ Décision du porteur du 2026-11-28 (SEC-06) : nom et prénom d'un membre de 100 
 - Aucune : règle décidée par le porteur le 2026-11-28.
 - Décision automatique proposée : `maxLength` sur les champs en plus du contrôle (le clavier s'arrête, le collage est contrôlé).
 
+Reporté du lot J3-1 (2026-11-28) :
+
+- La limite du domaine compte en points de code (après `trim()`), alors que `maxLength={100}` de React Native compte en unités UTF-16 : un nom avec des émojis ou des caractères hors du plan de base est coupé par le clavier avant 100 points de code. Sans gravité (plus strict que le domaine, jamais plus permissif) ; à dire dans la PR et dans le test des 100 caractères (caractères du plan de base).
+- Message de `NAME_INVALID_CHAR` : la liste des caractères refusés a été élargie à la relecture du 032 (U+061C, U+200B, U+200E, U+200F, U+FEFF, demi-caractères isolés ; U+200D accepté).
+
 ## Décisions
 
 | Question | Options | Choix | Raison | État |
