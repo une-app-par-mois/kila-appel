@@ -3,7 +3,10 @@
  */
 // ABS-01 : la WebView d'Android (rapport PDF, expo-print) n'envoie ni mesures d'usage ni requêtes
 // Safe Browsing (décision du porteur du 2026-11-28, ticket 038).
-const { WEBVIEW_METADATA, addWebViewMetadata } = require('./withoutWebViewMetrics');
+const { withAndroidManifest, withPlugins } = require('expo/config-plugins');
+const withoutWebViewMetrics = require('./withoutWebViewMetrics');
+
+const { WEBVIEW_METADATA, addWebViewMetadata } = withoutWebViewMetrics;
 const app = require('../app.json');
 
 const TOOLS = 'http://schemas.android.com/tools';
@@ -69,7 +72,30 @@ describe('ABS-01 plugin withoutWebViewMetrics', () => {
     expect(metaData(result)).toEqual([other, ...expected]);
   });
 
-  it('est déclaré dans app.json, en dernier', () => {
-    expect(app.expo.plugins.at(-1)).toBe('./plugins/withoutWebViewMetrics.js');
+  // withMod enchaîne vers le mod déjà inscrit (nextMod) : le dernier plugin déclaré s'exécute en
+  // premier, le premier déclaré en dernier (getConfig applique app.json avant les plugins internes).
+  const hostile = (config) =>
+    withAndroidManifest(config, (mod) => {
+      mod.modResults.manifest.application[0]['meta-data'] = [
+        { $: { 'android:name': METRICS, 'android:value': 'false' } },
+      ];
+      return mod;
+    });
+  const run = async (plugins) => {
+    const config = withPlugins(
+      { name: 'x', slug: 'x', _internal: { projectRoot: __dirname } },
+      plugins,
+    );
+    const modRequest = { platform: 'android', modName: 'manifest' };
+    return (await config.mods.android.manifest({ modResults: manifest(), modRequest })).modResults;
+  };
+
+  it('a le dernier mot sur un plugin déclaré après lui, pas sur un plugin déclaré avant', async () => {
+    expect(metaData(await run([withoutWebViewMetrics, hostile]))).toEqual(expected);
+    expect(metaData(await run([hostile, withoutWebViewMetrics]))[0]['android:value']).toBe('false');
+  });
+
+  it('est déclaré dans app.json en premier, pour avoir le dernier mot', () => {
+    expect(app.expo.plugins[0]).toBe('./plugins/withoutWebViewMetrics.js');
   });
 });

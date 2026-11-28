@@ -3,7 +3,9 @@
 // processus de l'appli, donc malgré l'absence de la permission INTERNET. Ce plugin s'y oppose par
 // les deux méta-données documentées d'Android, selon la décision du porteur du 2026-11-28.
 // `tools:replace` : aucune bibliothèque ne peut imposer une autre valeur à la fusion du manifeste.
-// Vérifié sur le binaire par scripts/audit-apk.js. Limite : MetricsOptOut ne couvre que les
+// Déclaré en premier dans app.json : withMod enchaîne vers le mod déjà inscrit, le premier plugin
+// déclaré s'exécute donc en dernier et a le dernier mot à la préconstruction. Le vrai filet reste
+// l'audit du binaire (scripts/audit-apk.js). Limite : MetricsOptOut ne couvre que les
 // mesures d'usage.
 const { AndroidConfig, withAndroidManifest } = require('expo/config-plugins');
 

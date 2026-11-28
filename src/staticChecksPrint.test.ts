@@ -6,13 +6,23 @@
 // son argument est un objet écrit en entier, sans `...` ni variable, aux seules clés html, width,
 // height et margins. printAsync (lit une adresse http), selectPrinterAsync (recherche d'imprimantes
 // sur le réseau) et ExpoPrint (module natif) sont refusés comme noms dans tout src/, même en
-// chaîne. Contrôle sur l'arbre syntaxique de TypeScript, comme staticChecksNotifications.
+// chaîne, comme `.print(…)` (revues du 038). Un module chargé par un nom non littéral est refusé
+// partout, et la chaîne 'expo-print' hors de l'adaptateur et des tests. Contrôle sur l'arbre
+// syntaxique de TypeScript, comme staticChecksNotifications.
 // Limite connue : un nom calculé (`print${'Async'}`) n'est pas vu ; la revue complète.
 import { readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import ts from 'typescript';
-import { factoryMocks, literalText, loadedModule } from '@/__fixtures__/expoAccess';
-import { scriptKind, TEST_FILE, walkSources } from '@/__fixtures__/sourceFiles';
+import {
+  calleeOf,
+  isModuleArgument,
+  isNamespace,
+  literalText,
+  modulesOf,
+  nonLiteralLoad,
+  visitModules,
+} from '@/__fixtures__/expoAccess';
+import { TEST_FILE, walkSources } from '@/__fixtures__/sourceFiles';
 
 const OWNER = 'src/data/expoPrint.ts';
 const MODULE = 'expo-print';
@@ -21,36 +31,17 @@ const FUNCTION = 'printToFileAsync';
 const KEYS = new Set(['html', 'width', 'height', 'margins']);
 /** Refusés partout, adaptateur et tests compris, comme identifiant ou comme chaîne. */
 const REFUSED = new Set(['printAsync', 'selectPrinterAsync', 'ExpoPrint']);
-
 /** `import { printToFileAsync } from 'expo-print'`, rien d'autre (ni alias, ni type, ni défaut). */
 const inList = (node: ts.Node): boolean => {
   if (!ts.isImportDeclaration(node)) return false;
   const clause = node.importClause;
   if (!clause || clause.isTypeOnly || clause.name || !clause.namedBindings) return false;
   if (!ts.isNamedImports(clause.namedBindings)) return false;
-  return clause.namedBindings.elements.every(
-    (e) => e.name.text === FUNCTION && e.propertyName === undefined && !e.isTypeOnly,
+  const elements = clause.namedBindings.elements;
+  return (
+    elements.length > 0 &&
+    elements.every((e) => e.name.text === FUNCTION && e.propertyName === undefined && !e.isTypeOnly)
   );
-};
-
-const isNamespace = (node: ts.Node) =>
-  (ts.isImportDeclaration(node) &&
-    node.importClause?.namedBindings !== undefined &&
-    ts.isNamespaceImport(node.importClause.namedBindings)) ||
-  (ts.isExportDeclaration(node) &&
-    (node.exportClause === undefined || ts.isNamespaceExport(node.exportClause)));
-
-/** Appel dont ce nœud (nom, `.nom` ou `['nom']`) est la fonction appelée. */
-const calleeOf = (node: ts.Node): ts.CallExpression | undefined => {
-  const parent = node.parent;
-  if (ts.isCallExpression(parent) && parent.expression === node) return parent;
-  const isMember =
-    (ts.isPropertyAccessExpression(parent) && parent.name === node) ||
-    (ts.isElementAccessExpression(parent) && parent.argumentExpression === node);
-  const call = isMember ? parent.parent : undefined;
-  return call !== undefined && ts.isCallExpression(call) && call.expression === parent
-    ? call
-    : undefined;
 };
 
 /** Nom d'une propriété écrite en clair (`html: x`, `html`, `'html': x`), sinon undefined. */
@@ -79,33 +70,11 @@ const functionProblems = (file: string, node: ts.Node): string[] => {
   // Import et réexport (`export { … } from 'expo-print'`) : contrôlés par les règles du module.
   if (ts.isImportSpecifier(parent)) return [];
   if (ts.isExportSpecifier(parent) && parent.parent.parent.moduleSpecifier) return [];
-  // Clé d'une simulation (`jest.mock('expo-print', () => ({ printToFileAsync: … }))`).
-  if (ts.isPropertyAssignment(parent) && parent.name === node) return [];
   const call = calleeOf(node);
   if (call !== undefined) return argumentProblems(call);
+  // Dans un test : clé d'une simulation (`jest.mock('expo-print', () => ({ printToFileAsync: … }))`)
+  // et vérification de l'appel.
   return TEST_FILE.test(file) ? [] : ['SEC-08 printToFileAsync hors appel'];
-};
-
-const parse = (file: string, source: string) =>
-  ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, scriptKind(file));
-
-const visitModules = (file: string, source: string, onModule: (n: ts.Node, m: string) => void) => {
-  const tree = parse(file, source);
-  const mocked = factoryMocks(tree);
-  const visit = (node: ts.Node) => {
-    const name = loadedModule(node, mocked);
-    if (name !== undefined) onModule(node, name);
-    ts.forEachChild(node, visit);
-  };
-  visit(tree);
-  return tree;
-};
-
-/** Modules chargés par un fichier (test « seul importeur »). */
-const modulesOf = (file: string, source: string): string[] => {
-  const found: string[] = [];
-  visitModules(file, source, (_, name) => found.push(name));
-  return found;
 };
 
 const check = (file: string, source: string): string[] => {
@@ -117,9 +86,17 @@ const check = (file: string, source: string): string[] => {
     if (isNamespace(node)) found.push('ABS-01 import *');
     else if (file === OWNER && !inList(node)) found.push('ABS-01 import hors liste');
   });
+  const textNet = !TEST_FILE.test(file) && file !== OWNER;
   const visit = (node: ts.Node) => {
+    if (nonLiteralLoad(node)) found.push('ABS-01 module non littéral');
     const text = ts.isIdentifier(node) ? node.text : literalText(node);
     if (text !== undefined && REFUSED.has(text)) found.push('ABS-01 nom refusé');
+    // `.print(…)` ou `['print'](…)` : la fonction d'impression du module natif.
+    const memberCall = () => calleeOf(node) !== undefined && !ts.isCallExpression(node.parent);
+    if (text === 'print' && memberCall()) found.push('ABS-01 nom refusé');
+    const named = literalText(node);
+    const isModule = named === MODULE || named?.startsWith(`${MODULE}/`) === true;
+    if (textNet && isModule && !isModuleArgument(node)) found.push('ABS-01 chaîne expo-print');
     if (text === FUNCTION) found.push(...functionProblems(file, node));
     ts.forEachChild(node, visit);
   };
@@ -160,6 +137,7 @@ describe('ABS-01 expo-print seulement dans l’adaptateur, printToFileAsync seul
     "const p = require('expo-print');",
     "const p = await import('expo-print');",
     "import P = require('expo-print');",
+    "import {} from 'expo-print';",
   ])('refuse dans l’adaptateur ce qui sort de la liste : %s', (source) => {
     expect(check(OWNER, source)).toEqual(['ABS-01 import hors liste']);
   });
@@ -188,6 +166,46 @@ describe('ABS-01 expo-print seulement dans l’adaptateur, printToFileAsync seul
     expect(check('src/a.test.ts', `await Print['${name}']({});`)).toEqual(['ABS-01 nom refusé']);
     expect(check('src/a.ts', `requireNativeModule('${name}');`)).toEqual(['ABS-01 nom refusé']);
     expect(check('src/a.ts', `const o = { ${name}: 1 };`)).toEqual(['ABS-01 nom refusé']);
+  });
+
+  it.each([
+    'require(m);',
+    "require(('expo-print'));",
+    "await import('expo-print' as string);",
+    "require(<string>'expo-print');",
+    "require('expo-print'!);",
+    "require('expo-print' satisfies string);",
+    `await import(\`expo-\${'print'}\`);`,
+    'jest.mock(m, () => ({}));',
+    "jest.requireActual(('x'));",
+  ])('refuse un nom de module non littéral, partout : %s', (source) => {
+    for (const file of [OWNER, 'src/a.test.ts']) {
+      expect(check(file, source)).toEqual(['ABS-01 module non littéral']);
+    }
+  });
+
+  it('refuse le contournement par un sous-chemin entre parenthèses et .print', () => {
+    const source = "require(('expo-print/build/ExponentPrint')).default.print({ uri });";
+    expect(check(OWNER, source)).toEqual(['ABS-01 module non littéral', 'ABS-01 nom refusé']);
+    expect(check('src/a.ts', source)).toEqual([
+      'ABS-01 module non littéral',
+      'ABS-01 chaîne expo-print',
+      'ABS-01 nom refusé',
+    ]);
+  });
+
+  it.each(['Print.print({ uri });', "Print['print']({ uri });", 'm.default.print?.(u);'])(
+    'refuse print appelé comme propriété : %s',
+    (source) => expect(check('src/a.test.ts', source)).toEqual(['ABS-01 nom refusé']),
+  );
+
+  it('filet texte : la chaîne expo-print hors de l’adaptateur et des tests', () => {
+    for (const s of ["const m = 'expo-print';", "jest.mock('expo-print/build/x', () => ({}));"]) {
+      expect(check('src/a.ts', s)).toEqual(['ABS-01 chaîne expo-print']);
+      expect(check(OWNER, s)).toEqual([]);
+      expect(check('src/a.test.ts', s)).toEqual([]);
+    }
+    expect(check('src/a.ts', "const print = 1; print(); o.printer(); 'expo-printer';")).toEqual([]);
   });
 
   it('laisse passer Orientation et base64 comme noms, hors de l’argument', () => {
@@ -242,6 +260,7 @@ describe('SEC-08 argument de printToFileAsync écrit en entier', () => {
 
   it.each([
     'const f = printToFileAsync; f({ uri });',
+    'const o = { printToFileAsync: f };',
     'export { printToFileAsync };',
     'const o = { printToFileAsync };',
     'printToFileAsync.call(null, { uri });',
@@ -258,7 +277,7 @@ describe('SEC-08 argument de printToFileAsync écrit en entier', () => {
   });
 });
 
-describe('Le code du dépôt respecte le contrôle d’expo-print', () => {
+describe('ABS-01 SEC-08 le code du dépôt respecte le contrôle d’expo-print', () => {
   const root = join(__dirname, '..');
   const files = walkSources(join(root, 'src')).map((path) => relative(root, path));
   const read = (file: string) => readFileSync(join(root, file), 'utf8');

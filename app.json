@@ -45,6 +45,7 @@
       ]
     },
     "plugins": [
+      "./plugins/withoutWebViewMetrics.js",
       "expo-router",
       "expo-sqlite",
       [
@@ -65,8 +66,7 @@
         }
       ],
       "./plugins/withoutUrlScheme.js",
-      "./plugins/withoutFirebase.js",
-      "./plugins/withoutWebViewMetrics.js"
+      "./plugins/withoutFirebase.js"
     ]
   }
 }

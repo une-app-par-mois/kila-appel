@@ -2,6 +2,7 @@
 // de TypeScript pour le contrôle src/staticChecksFiles.test.ts (ABS-01, revues du ticket 014e).
 import { dirname, join } from 'node:path';
 import ts from 'typescript';
+import { scriptKind } from './sourceFiles';
 
 /** Texte d'une chaîne écrite telle quelle (guillemets ou gabarit sans substitution). */
 export const literalText = (node: ts.Node | undefined): string | undefined =>
@@ -131,4 +132,97 @@ export const stringKey = (node: ts.Node): string | undefined => {
 export const loadedModule = (node: ts.Node, mocked: Set<string>): string | undefined => {
   const name = moduleName(node);
   return name !== undefined && isRequireMock(node) && mocked.has(name) ? undefined : name;
+};
+
+// Revue de sécurité du 038 : un nom de module non littéral échappe à moduleName, il est refusé.
+/** Fonctions de jest qui prennent un nom de module. */
+const JEST_LOADERS = new Set([
+  'mock',
+  'doMock',
+  'unmock',
+  'dontMock',
+  'setMock',
+  'requireActual',
+  'requireMock',
+  'createMockFromModule',
+]);
+
+/** require(), import() ou jest.<chargeur>() : leur premier argument est un nom de module. */
+const isLoader = (node: ts.Node): node is ts.CallExpression => {
+  if (!ts.isCallExpression(node)) return false;
+  const callee = node.expression;
+  if (callee.kind === ts.SyntaxKind.ImportKeyword) return true;
+  if (ts.isIdentifier(callee)) return callee.text === 'require';
+  return (
+    ts.isPropertyAccessExpression(callee) &&
+    ts.isIdentifier(callee.expression) &&
+    callee.expression.text === 'jest' &&
+    JEST_LOADERS.has(callee.name.text)
+  );
+};
+
+/** Chaîne qui nomme le module chargé (déjà contrôlée par les règles du module). */
+export const isModuleArgument = (node: ts.Node): boolean => {
+  const parent = node.parent;
+  return (
+    ((ts.isImportDeclaration(parent) || ts.isExportDeclaration(parent)) &&
+      parent.moduleSpecifier === node) ||
+    ts.isExternalModuleReference(parent) ||
+    (ts.isLiteralTypeNode(parent) && ts.isImportTypeNode(parent.parent)) ||
+    (ts.isCallExpression(parent) &&
+      parent.arguments[0] === node &&
+      moduleName(parent) !== undefined)
+  );
+};
+
+/** Chargement dont le nom de module n'est pas une chaîne littérale brute (`require(m)`, `(…)`, `as`). */
+export const nonLiteralLoad = (node: ts.Node): boolean =>
+  isLoader(node) && literalText(node.arguments[0]) === undefined;
+
+/** `import *`, `export *` et `export * as` (contrôles staticChecksNotifications et Print). */
+export const isNamespace = (node: ts.Node) =>
+  (ts.isImportDeclaration(node) &&
+    node.importClause?.namedBindings !== undefined &&
+    ts.isNamespaceImport(node.importClause.namedBindings)) ||
+  (ts.isExportDeclaration(node) &&
+    (node.exportClause === undefined || ts.isNamespaceExport(node.exportClause)));
+
+/** Appel dont ce nœud (nom, `.nom` ou `['nom']`) est la fonction appelée. */
+export const calleeOf = (node: ts.Node): ts.CallExpression | undefined => {
+  const parent = node.parent;
+  if (ts.isCallExpression(parent) && parent.expression === node) return parent;
+  const isMember =
+    (ts.isPropertyAccessExpression(parent) && parent.name === node) ||
+    (ts.isElementAccessExpression(parent) && parent.argumentExpression === node);
+  const call = isMember ? parent.parent : undefined;
+  return call !== undefined && ts.isCallExpression(call) && call.expression === parent
+    ? call
+    : undefined;
+};
+
+const parse = (file: string, source: string) =>
+  ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, scriptKind(file));
+
+/** Parcourt l'arbre et signale chaque module chargé ; rend l'arbre (contrôle d'expo-print). */
+export const visitModules = (
+  file: string,
+  source: string,
+  onModule: (n: ts.Node, m: string) => void,
+) => {
+  const tree = parse(file, source);
+  const mocked = factoryMocks(tree);
+  const visit = (node: ts.Node) => {
+    const name = loadedModule(node, mocked);
+    if (name !== undefined) onModule(node, name);
+    ts.forEachChild(node, visit);
+  };
+  visit(tree);
+  return tree;
+};
+
+/** Modules chargés par un fichier (test « seul importeur »). */
+export const modulesOf = (file: string, source: string): string[] => {
+  const found: string[] = [];
+  visitModules(file, source, (_, name) => found.push(name));
+  return found;
 };
