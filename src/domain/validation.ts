@@ -5,6 +5,8 @@ import { parsePhone } from '@/domain/phone';
 
 export type InputErrorCode =
   | 'NAME_REQUIRED'
+  | 'NAME_TOO_LONG'
+  | 'NAME_INVALID_CHAR'
   | 'DATE_INVALID'
   | 'DATE_IN_FUTURE'
   | 'END_BEFORE_START'
@@ -52,10 +54,46 @@ export const validateSeason = (input: SeasonInput): SeasonInput => {
 /** EX-03, ABS-03 : nom, prénom et date de naissance facultative ; aucun autre champ. */
 export type MemberInput = { firstName: string; lastName: string; birthDate: string | null };
 
-/** EX-03 : nom et prénom non vides ; date de naissance facultative, RM-04, pas après `today`. */
+/** SEC-06 : nom et prénom d'un membre, 100 caractères au plus (décision du porteur du 2026-11-28). */
+export const MEMBER_NAME_MAX = 100;
+// SEC-06 (décisions du porteur du 2026-11-28) : refusés dans un nom, les caractères de contrôle
+// (C0, DEL, C1), les séparateurs de ligne et de paragraphe, les caractères de sens d'affichage
+// (dont U+061C, U+200E, U+200F), l'espace sans largeur U+200B, U+FEFF, et les demi-caractères
+// (surrogates) isolés, que `[...name]` rend seuls. U+200D (émojis composés) reste accepté.
+const isInvisible = (char: string) => {
+  const c = char.codePointAt(0) ?? 0;
+  return (
+    c <= 0x1f ||
+    (c >= 0x7f && c <= 0x9f) ||
+    c === 0x2028 ||
+    c === 0x2029 ||
+    (c >= 0x202a && c <= 0x202e) ||
+    (c >= 0x2066 && c <= 0x2069) ||
+    c === 0x061c ||
+    c === 0x200b ||
+    c === 0x200e ||
+    c === 0x200f ||
+    c === 0xfeff ||
+    (c >= 0xd800 && c <= 0xdfff)
+  );
+};
+
+/** SEC-06 : nom non vide, 100 points de code au plus, sans caractère invisible, après trim(). */
+export const validateMemberName = (text: string): string => {
+  const name = validateName(text);
+  const chars = [...name];
+  if (chars.length > MEMBER_NAME_MAX) throw new InputError('NAME_TOO_LONG');
+  if (chars.some(isInvisible)) throw new InputError('NAME_INVALID_CHAR');
+  return name;
+};
+
+/**
+ * EX-03, SEC-06 : nom et prénom non vides, bornés, sans caractère invisible ; date de naissance
+ * facultative, RM-04, pas après `today`. Même règle à la saisie, à l'import et à la restauration.
+ */
 export const validateMember = (input: MemberInput, today: string): MemberInput => {
-  const firstName = validateName(input.firstName);
-  const lastName = validateName(input.lastName);
+  const firstName = validateMemberName(input.firstName);
+  const lastName = validateMemberName(input.lastName);
   if (input.birthDate === null) return { firstName, lastName, birthDate: null };
   const birthDate = validateDate(input.birthDate);
   if (birthDate > today) throw new InputError('DATE_IN_FUTURE');

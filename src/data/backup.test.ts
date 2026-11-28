@@ -128,6 +128,19 @@ describe('EX-20 NF-04 restauration par recopie en une transaction', () => {
     }
   });
 
+  it('SEC-10 une sauvegarde avec un nom hors règle (SEC-06) est refusée en entier', async () => {
+    // Un seul membre de la copie a un nom de 101 caractères : rien n'est restauré.
+    await source.execute("UPDATE members SET last_name = ? WHERE first_name = 'Alix'", [
+      'x'.repeat(101),
+    ]);
+    const badPath = dir.path('hors-regle.db');
+    await exportBackup(source, badPath, '2026-10-22');
+    const before = await snapshot(target);
+    const result = await verifyBackup(badPath, `${badPath}.verif`, deps);
+    expect(result).toMatchObject({ ok: false, reason: 'INVALID_DATA' });
+    expect(await snapshot(target)).toEqual(before);
+  });
+
   it('un échec au milieu laisse toutes les tables telles quelles', async () => {
     const before = await snapshot(target);
     const beforeCounts = await counts(target);

@@ -74,6 +74,69 @@ describe('EX-03 validateMember', () => {
     ).toThrow(expect.objectContaining({ code: 'NAME_REQUIRED' }));
   });
 
+  const member = (firstName: string, lastName = 'Exemple') =>
+    validateMember({ firstName, lastName, birthDate: null }, today);
+
+  it('SEC-06 accepte 100 caractères, comptés en points de code après trim()', () => {
+    expect(member(` ${'a'.repeat(100)} `).firstName).toHaveLength(100);
+    // Un émoji (deux unités UTF-16) compte pour un.
+    expect(member('😀'.repeat(100)).firstName).toBe('😀'.repeat(100));
+  });
+
+  it('SEC-06 refuse un nom ou un prénom de 101 caractères (NAME_TOO_LONG)', () => {
+    expect(() => member('a'.repeat(101))).toThrow(
+      expect.objectContaining({ code: 'NAME_TOO_LONG' }),
+    );
+    expect(() => member('Alix', 'é'.repeat(101))).toThrow(
+      expect.objectContaining({ code: 'NAME_TOO_LONG' }),
+    );
+  });
+
+  // U+0000 à U+001F, U+007F à U+009F, U+2028, U+2029, U+202A à U+202E, U+2066 à U+2069 ; et
+  // (porteur, 2026-11-28) U+061C, U+200B, U+200E, U+200F, U+FEFF, demi-caractères isolés.
+  it.each([
+    0x00, 0x09, 0x0a, 0x0d, 0x1f, 0x7f, 0x80, 0x9f, 0x2028, 0x2029, 0x202a, 0x202e, 0x2066, 0x2069,
+    0x061c, 0x200b, 0x200e, 0x200f, 0xfeff, 0xd800, 0xdbff, 0xdc00, 0xdfff,
+  ])('SEC-06 refuse le caractère invisible de code %i dans un nom (NAME_INVALID_CHAR)', (code) => {
+    const char = String.fromCodePoint(code);
+    expect(() => member(`Al${char}ix`)).toThrow(
+      expect.objectContaining({ code: 'NAME_INVALID_CHAR' }),
+    );
+    expect(() => member('Alix', `Exe${char}mple`)).toThrow(
+      expect.objectContaining({ code: 'NAME_INVALID_CHAR' }),
+    );
+  });
+
+  it('SEC-06 accepte U+200D dans un émoji composé (paire de demi-caractères complète)', () => {
+    const family = String.fromCodePoint(0x1f469, 0x200d, 0x1f467);
+    expect(member(`Alix ${family}`).firstName).toBe(`Alix ${family}`);
+  });
+
+  it.each([0x20, 0xa0, 0xe9, 0x2019, 0x202f, 0x2065, 0x206a, 0x061b, 0x200c, 0x200d, 0x2010])(
+    'SEC-06 accepte le caractère de code %i au milieu d’un nom (voisins des plages refusées)',
+    (code) => {
+      expect(member(`Al${String.fromCodePoint(code)}ix`).firstName).toHaveLength(5);
+    },
+  );
+
+  it('SEC-06 garde les espaces autour comme avant ; accents, apostrophes et tirets acceptés', () => {
+    expect(member('\tAlix\n').firstName).toBe('Alix');
+    expect(member('Zoé-Léa', 'O’Brien d’Arc').lastName).toBe('O’Brien d’Arc');
+    expect(member(' Alix ').firstName).toBe('Alix');
+  });
+
+  it('ABS-04 l’erreur de longueur ou de caractère ne contient pas la saisie', () => {
+    for (const name of [`Alix${'x'.repeat(100)}`, 'Al\tix']) {
+      try {
+        member(name);
+      } catch (error) {
+        expect(String(error)).not.toContain('Alix');
+        expect(String(error)).not.toContain('Al\tix');
+      }
+    }
+    expect.assertions(4);
+  });
+
   it('refuse une date de naissance mal écrite (RM-04) ou dans le futur', () => {
     expect(() =>
       validateMember({ firstName: 'A', lastName: 'B', birthDate: '14/03/2015' }, today),
