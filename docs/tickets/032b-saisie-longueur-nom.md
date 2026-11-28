@@ -55,8 +55,11 @@ Reporté du lot J3-1 (2026-11-28) :
 | Moment du contrôle | À l'enregistrement par le dépôt ; avant, champ par champ | `validateMemberName` champ par champ avant l'enregistrement, message sous le champ | Message au bon endroit, rien d'écrit | à relire |
 | Bouton « Enregistrer » | Désactivé ; actif | Actif ; l'appui montre l'erreur | Un bouton grisé n'explique rien | à relire |
 | Fiche `[id].tsx`, enregistrement en quittant (`updateOnLeave`) | Enregistrer ; écarter | Un nom invalide est écarté aussi | Jamais d'écriture hors règle | à relire |
-| Texte de `NAME_INVALID_CHAR` | — | Inchangé | Même texte à l'import et à la saisie | à relire |
+| Texte de `NAME_INVALID_CHAR` | Inchangé (« Retirez le caractère invisible… ») ; « Le nom contient un caractère invisible : effacez le champ et retapez le nom. » | Nouveau texte, dans `commun.ts` (changée après contradiction, 2026-11-28) | L'import a son propre libellé (`import.ts`) ; l'encadrant ne voit pas le caractère et ne peut pas le « retirer ». Texte repris par les groupes (044) | à relire |
+| Fiche, champ quitté sans changement | Contrôler le nom quand même ; ne rien dire | Ne rien dire : `same` avant `memberNameError` | Un nom ancien de plus de 100 caractères ne doit pas afficher d'erreur tant qu'on ne le change pas | à relire |
+| Fiche, date de naissance future non quittée, puis sortie de l'écran | Tout échoue (`DATE_IN_FUTURE`) ; écarter la date | Écarter la date, comme un nom invalide ; les autres champs valides sont enregistrés | Bogue déjà présent : le prénom valide était perdu | à relire |
 | Tests des 100 caractères | — | 100 caractères du plan de base, puis 100 entourés d'espaces (`trim()`) ; `accessibilityRole="alert"` vérifié ; nouveau fichier de test ; 3 fichiers | Limite comptée après `trim()`, en points de code | à relire |
+| Où placer le contrôle partagé par les deux formulaires | Fonction locale dans chaque écran ; export depuis un fichier de route ; `memberNameError` dans `src/ui/errorMessage.ts` | `memberNameError` dans `src/ui/errorMessage.ts` (4e fichier, 5 au plus) | Une seule règle (`validateMemberName`, inchangée) et un seul message ; expo-router lit les exports d'une route, on n'y exporte rien d'autre | à relire |
 
 ## Questions pour le porteur
 

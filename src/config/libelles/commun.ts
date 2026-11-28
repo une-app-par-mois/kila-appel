@@ -57,7 +57,8 @@ export const commun = {
   errors: {
     NAME_REQUIRED: 'Indiquez un nom.',
     NAME_TOO_LONG: '100 caractères au plus.',
-    NAME_INVALID_CHAR: 'Retirez le caractère invisible (tabulation, retour à la ligne).',
+    NAME_INVALID_CHAR:
+      'Le nom contient un caractère invisible : effacez le champ et retapez le nom.',
     DATE_INVALID: 'Date à écrire sous la forme JJ/MM/AAAA.',
     DATE_IN_FUTURE: 'Cette date est dans le futur.',
     DATE_OUTSIDE_SEASON: 'Cette date est en dehors de la saison.',
