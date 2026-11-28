@@ -1,11 +1,13 @@
 // Adaptateur expo-file-system, expo-sharing et expo-document-picker de la sauvegarde et de la
-// restauration (tickets 014b et 014e, EX-19, EX-20). Seul fichier qui importe ces modules
-// (src/staticChecksFiles.test.ts) ; leurs fonctions réseau et leurs sous-chemins y sont refusés
+// restauration (tickets 014b et 014e, EX-19, EX-20). Seul fichier, avec expoExports.ts (exports CSV
+// et PDF, ticket 033), qui importe ces modules (src/staticChecksFiles.test.ts) ; leurs fonctions réseau et leurs sous-chemins y sont refusés
 // comme partout (ABS-01, décisions du porteur du 2026-11-27).
 // Les fichiers vivent dans des sous-dossiers dédiés du cache, exclu de la sauvegarde du système :
 // `sauvegardes` (export) et `restauration` (copie vérifiée), jamais vidés l'un par l'autre. Le
 // fichier choisi est copié par le sélecteur dans `cache/DocumentPicker/` (Android) ou dans
-// `tmp/<identifiant>-Inbox/` (iOS). ABS-06 : copies en clair.
+// `tmp/<identifiant>-Inbox/` (iOS). ABS-06 : copies en clair. Ticket 033 : l'import lit un fichier
+// choisi (lecture bornée, SEC-06) ; l'export CSV et le rapport PDF écrivent dans `exports/`
+// (expoExports.ts).
 import { getDocumentAsync } from 'expo-document-picker';
 import { Directory, File, FileMode, Paths } from 'expo-file-system';
 import { shareAsync } from 'expo-sharing';
@@ -22,7 +24,23 @@ export const IOS_INBOX = 'com.jitavision.kila-Inbox';
 const IOS_CACHES = '/Library/Caches';
 // Type générique : sur iOS, un type connu ajouterait son extension (« .db.sqlite »).
 const SHARE_MIME_TYPE = 'application/octet-stream';
-const refused = () => new Error('Chemin de fichier refusé');
+export const refused = () => new Error('Chemin de fichier refusé');
+// Erreur du module natif remplacée : elle peut citer le chemin, donc le nom du fichier (ABS-04).
+const unreadable = () => new Error('Lecture du fichier impossible');
+/** Codes de journal du sélecteur selon l'usage : restauration ou import (ticket 033). */
+const PICK_CODES = {
+  restore: {
+    path: 'RESTORE_PICK_PATH_REFUSED',
+    tooLarge: 'RESTORE_REJECTED_TOO_LARGE',
+    clear: 'RESTORE_COPY_CLEAR_FAILED',
+  },
+  import: {
+    path: 'IMPORT_PICK_PATH_REFUSED',
+    tooLarge: 'IMPORT_REJECTED_TOO_LARGE',
+    clear: 'IMPORT_COPY_CLEAR_FAILED',
+  },
+} as const;
+type PickCodes = (typeof PICK_CODES)[keyof typeof PICK_CODES];
 
 /** URI d'expo-file-system (`file:///…`) → chemin du système, attendu par SQLite. */
 export const uriToPath = (uri: string): string => {
@@ -75,7 +93,7 @@ const canonical = (path: string) =>
   path.startsWith('/private/') ? path.slice('/private'.length) : path;
 
 /** `path` doit être un enfant direct du dossier `root` ; sinon erreur, sans le chemin (ABS-04). */
-const checkChild = (root: string, path: string) => {
+export const checkChild = (root: string, path: string) => {
   const parent = canonical(root);
   const child = canonical(checkSystemPath(path));
   const name = child.slice(parent.length + 1);
@@ -83,20 +101,26 @@ const checkChild = (root: string, path: string) => {
 };
 
 let created = 0;
+/** Au plus `length` octets du début d'un fichier. */
+const readHead = async (path: string, length: number) => {
+  const handle = fileAt(path).open(FileMode.ReadOnly);
+  try {
+    return await handle.readBytes(length);
+  } finally {
+    handle.close();
+  }
+};
+const deleteFile = (path: string) => {
+  const file = fileAt(path);
+  if (file.exists) file.delete();
+};
 
-/** Fichiers du dossier dédié `cache/<name>/` : `sauvegardes` (export) ou `restauration`. */
-export const expoStorage = (name: 'sauvegardes' | 'restauration'): BackupStorage => {
+/** Dossier dédié `cache/<name>/` : `sauvegardes`, `restauration` ou `exports` (CSV, PDF). */
+export const expoStorage = (name: 'sauvegardes' | 'restauration' | 'exports'): BackupStorage => {
   const dedicated = () => new Directory(Paths.cache, name);
   return {
     size: async (path) => fileAt(path).size,
-    readHead: async (path, length) => {
-      const handle = fileAt(path).open(FileMode.ReadOnly);
-      try {
-        return await handle.readBytes(length);
-      } finally {
-        handle.close();
-      }
-    },
+    readHead,
     copy: (from, to) => fileAt(from).copy(fileAt(to)),
     clear: async () => {
       const dir = dedicated();
@@ -127,6 +151,30 @@ const iosInbox = (): string => {
   if (!caches.endsWith(IOS_CACHES)) throw refused();
   return `${caches.slice(0, -IOS_CACHES.length)}/tmp/${IOS_INBOX}`;
 };
+const pickedRoot = (os: string) => (os === 'ios' ? iosInbox() : uriToPath(pickerDir().uri));
+const clearPickedDirs = async (os: string) => {
+  const dirs = os === 'ios' ? [pickerDir(), new Directory(pathToUri(iosInbox()))] : [pickerDir()];
+  for (const dir of dirs) if (dir.exists) dir.delete();
+};
+/**
+ * Vide les dossiers du sélecteur sans jamais lever : l'erreur native peut citer le nom du fichier
+ * (ABS-04). Un échec écrit un code seul ; le nettoyage du démarrage reprendra la copie (SEC-10).
+ */
+const clearPickedQuietly = async (os: string, codes: PickCodes) => {
+  try {
+    await clearPickedDirs(os);
+  } catch {
+    log(codes.clear);
+  }
+};
+/** Efface une copie du sélecteur ; si elle résiste, vide les dossiers du sélecteur. Ne lève pas. */
+const dropPicked = async (os: string, path: string, codes: PickCodes) => {
+  try {
+    deleteFile(path);
+  } catch {
+    await clearPickedQuietly(os, codes);
+  }
+};
 
 /**
  * Sélecteur de fichiers du système (EX-20). Android : copie dans `cache/DocumentPicker/`
@@ -134,19 +182,10 @@ const iosInbox = (): string => {
  * le fichier dans l'Inbox (`asCopy`) ; une seconde copie dans le cache laisserait celle-ci derrière
  * nous, donc l'adaptateur la prend telle quelle (revue du 014e). Une copie à un endroit inattendu
  * vide les dossiers du sélecteur avant l'erreur ; une taille annoncée au-delà de la limite est
- * refusée tout de suite, copie effacée.
+ * refusée tout de suite, copie effacée. L'effacement d'une copie ne lève jamais (ticket 033).
  */
-export const expoPicker = (os: string): PickerAccess => {
+const picker = (os: string, maxBytes: number, codes: PickCodes): PickerAccess => {
   const ios = os === 'ios';
-  const pickedRoot = () => (ios ? iosInbox() : uriToPath(pickerDir().uri));
-  const deleteFile = (path: string) => {
-    const file = fileAt(path);
-    if (file.exists) file.delete();
-  };
-  const clearPicked = async () => {
-    const dirs = ios ? [pickerDir(), new Directory(pathToUri(iosInbox()))] : [pickerDir()];
-    for (const dir of dirs) if (dir.exists) dir.delete();
-  };
   return {
     pick: async () => {
       const result = await getDocumentAsync({
@@ -160,30 +199,73 @@ export const expoPicker = (os: string): PickerAccess => {
       try {
         if (asset === undefined) throw refused();
         path = uriToPath(asset.uri);
-        checkChild(pickedRoot(), path);
+        checkChild(pickedRoot(os), path);
       } catch (error) {
         // Code à part : un chemin inattendu n'est pas une panne du sélecteur (revue du 014e).
-        log('RESTORE_PICK_PATH_REFUSED');
-        await clearPicked();
+        log(codes.path);
+        await clearPickedQuietly(os, codes);
         throw error;
       }
-      if (asset.size !== undefined && asset.size > MAX_BACKUP_BYTES) {
-        log('RESTORE_REJECTED_TOO_LARGE');
-        try {
-          deleteFile(path);
-        } catch {
-          await clearPicked();
-        }
+      if (asset.size !== undefined && asset.size > maxBytes) {
+        log(codes.tooLarge);
+        await dropPicked(os, path, codes);
         return { reason: 'TOO_LARGE' };
       }
       return { path };
     },
     removePicked: async (path) => {
-      checkChild(pickedRoot(), path);
+      checkChild(pickedRoot(os), path);
       deleteFile(path);
     },
-    clearPicked,
+    clearPicked: () => clearPickedDirs(os),
   };
+};
+
+/** Sélecteur de la restauration : limite `MAX_BACKUP_BYTES`, codes `RESTORE_…`. */
+export const expoPicker = (os: string): PickerAccess =>
+  picker(os, MAX_BACKUP_BYTES, PICK_CODES.restore);
+
+/** Sélecteur de l'import (ticket 033) : limite de l'appelant (SEC-06), codes `IMPORT_…`. */
+export const expoImportPicker = (os: string, maxBytes: number): PickerAccess =>
+  picker(os, maxBytes, PICK_CODES.import);
+
+/** Octets d'un fichier choisi, ou refus : plus de `maxBytes` octets. */
+export type ReadResult = { bytes: Uint8Array } | { reason: 'TOO_LARGE' };
+
+/**
+ * Lit la copie du sélecteur d'un fichier choisi pour l'import (SEC-06, ticket 033) : seulement un
+ * enfant direct d'un dossier du sélecteur ; taille réelle vérifiée avant la lecture (la taille
+ * annoncée peut manquer), lecture bornée à `maxBytes + 1`. La copie est effacée par la lecture
+ * elle-même, en réussite comme en refus (SEC-10). Erreurs sans chemin (ABS-04).
+ */
+export const readFileBytes = async (
+  path: string,
+  maxBytes: number,
+  os: string = Platform.OS,
+): Promise<ReadResult> => {
+  try {
+    checkChild(pickedRoot(os), path);
+  } catch (error) {
+    log(PICK_CODES.import.path);
+    await clearPickedQuietly(os, PICK_CODES.import);
+    throw error;
+  }
+  try {
+    let bytes: Uint8Array | null;
+    try {
+      // Taille réelle au-delà de la limite : refus sans lecture.
+      bytes = fileAt(path).size > maxBytes ? null : await readHead(path, maxBytes + 1);
+    } catch {
+      throw unreadable();
+    }
+    if (bytes === null || bytes.length > maxBytes) {
+      log(PICK_CODES.import.tooLarge);
+      return { reason: 'TOO_LARGE' };
+    }
+    return { bytes };
+  } finally {
+    await dropPicked(os, path, PICK_CODES.import);
+  }
 };
 
 export const expoBackupDeps: BackupDeps = {

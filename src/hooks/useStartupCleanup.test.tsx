@@ -2,7 +2,7 @@
 // 014e) : une fois par processus, sous le verrou commun, jamais pendant une opération en cours.
 import { act, renderHook } from '@testing-library/react-native';
 import { Platform } from 'react-native';
-import { fileLock } from '@/hooks/fileLock';
+import { type FileTask, fileLock } from '@/hooks/fileLock';
 import {
   cleanupAtStartup,
   resetStartupCleanupForTests,
@@ -10,11 +10,13 @@ import {
 } from '@/hooks/useStartupCleanup';
 
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
-const mockClear = { sauvegardes: jest.fn(), restauration: jest.fn() };
+const mockClear = { sauvegardes: jest.fn(), restauration: jest.fn(), exports: jest.fn() };
 const mockClearPicked = jest.fn();
 const mockPickerOs = jest.fn();
 jest.mock('@/data/expoFiles', () => ({
-  expoStorage: (name: 'sauvegardes' | 'restauration') => ({ clear: () => mockClear[name]() }),
+  expoStorage: (name: 'sauvegardes' | 'restauration' | 'exports') => ({
+    clear: () => mockClear[name](),
+  }),
   expoPicker: (os: string) => {
     mockPickerOs(os);
     return { clearPicked: () => mockClearPicked() };
@@ -22,7 +24,12 @@ jest.mock('@/data/expoFiles', () => ({
 }));
 const { log } = jest.requireMock('@/data/log') as { log: jest.Mock };
 
-const allClears = [mockClear.sauvegardes, mockClear.restauration, mockClearPicked];
+const allClears = [
+  mockClear.sauvegardes,
+  mockClear.restauration,
+  mockClear.exports,
+  mockClearPicked,
+];
 
 describe('Nettoyage au démarrage (ticket 014c)', () => {
   beforeEach(() => {
@@ -35,10 +42,11 @@ describe('Nettoyage au démarrage (ticket 014c)', () => {
     }
   });
   afterEach(() => {
-    for (const task of ['export', 'restore', 'cleanup'] as const) fileLock.release(task);
+    const tasks: FileTask[] = ['export', 'restore', 'cleanup', 'erase', 'import', 'csv', 'report'];
+    for (const task of tasks) fileLock.release(task);
   });
 
-  it('vide sauvegardes, restauration et les copies du sélecteur, une fois par processus', async () => {
+  it('vide sauvegardes, restauration, exports (033) et les copies du sélecteur, une fois', async () => {
     await cleanupAtStartup();
     await cleanupAtStartup();
     for (const clear of allClears) expect(clear).toHaveBeenCalledTimes(1);
@@ -53,17 +61,24 @@ describe('Nettoyage au démarrage (ticket 014c)', () => {
     expect(fileLock.holder()).toBe('cleanup');
     expect(fileLock.acquire('export')).toBe(false);
     expect(fileLock.acquire('restore')).toBe(false);
+    for (const task of ['import', 'csv', 'report'] as const) {
+      expect(fileLock.acquire(task)).toBe(false);
+    }
     finish();
     await running;
     expect(fileLock.holder()).toBeNull();
   });
 
-  it('sauté pendant une opération : rien n’est vidé, le verrou reste à l’opération', async () => {
-    expect(fileLock.acquire('restore')).toBe(true);
-    await cleanupAtStartup();
-    for (const clear of allClears) expect(clear).not.toHaveBeenCalled();
-    expect(fileLock.holder()).toBe('restore');
-  });
+  it.each(['restore', 'import', 'csv', 'report'] as const)(
+    'sauté pendant une opération (%s) : rien n’est vidé, le verrou lui reste',
+    async (task) => {
+      expect(fileLock.acquire(task)).toBe(true);
+      await cleanupAtStartup();
+      for (const clear of allClears) expect(clear).not.toHaveBeenCalled();
+      expect(fileLock.holder()).toBe(task);
+      fileLock.release(task);
+    },
+  );
 
   it('un échec écrit STARTUP_CLEANUP_FAILED, les autres dossiers sont vidés, rien ne bloque', async () => {
     mockClear.sauvegardes.mockRejectedValueOnce(new Error('/chemin/privé'));
@@ -72,6 +87,7 @@ describe('Nettoyage au démarrage (ticket 014c)', () => {
     });
     await expect(cleanupAtStartup()).resolves.toBeUndefined();
     expect(mockClear.restauration).toHaveBeenCalledTimes(1);
+    expect(mockClear.exports).toHaveBeenCalledTimes(1);
     // ABS-04 : un code seul.
     expect(log.mock.calls).toEqual([['STARTUP_CLEANUP_FAILED']]);
     expect(fileLock.holder()).toBeNull();

@@ -21,13 +21,13 @@ import { type FileTask, fileLock } from '@/hooks/fileLock';
 let mockDb: Db | null = null;
 let mockDir = '';
 /**
- * Dossiers dont le vidage échoue : erreur immédiate, avant toute promesse, pour `sauvegardes` et
- * `restauration` ; promesse rejetée pour `DocumentPicker`.
+ * Dossiers dont le vidage échoue : erreur immédiate, avant toute promesse, pour `sauvegardes`,
+ * `restauration` et `exports` ; promesse rejetée pour `DocumentPicker`.
  */
 let mockFailing = new Set<string>();
 jest.mock('@/hooks/useDatabase', () => ({ useDatabase: () => mockDb }));
 jest.mock('@/data/log', () => ({ log: jest.fn() }));
-// Les dossiers du cache sur node:fs : `sauvegardes`, `restauration`, `DocumentPicker`.
+// Les dossiers du cache sur node:fs : `sauvegardes`, `restauration`, `exports` (033), `DocumentPicker`.
 jest.mock('@/data/expoFiles', () => {
   const { join: j } = require('node:path');
   const fixtures = require('@/__fixtures__/backupFiles');
@@ -71,7 +71,7 @@ const openFromBackup = async () => {
   await screen.findByRole('header', { name: t.title });
   return router;
 };
-const CACHE = ['sauvegardes', 'restauration', 'DocumentPicker'];
+const CACHE = ['sauvegardes', 'restauration', 'exports', 'DocumentPicker'];
 
 describe('EX-23 écran Tout effacer', () => {
   let dir: ReturnType<typeof tempDir>;
@@ -187,7 +187,7 @@ describe('EX-23 écran Tout effacer', () => {
     expect(stack).toEqual(['(tabs)']);
   });
 
-  it.each([['sauvegardes'], ['restauration'], ['DocumentPicker']])(
+  it.each([['sauvegardes'], ['restauration'], ['exports'], ['DocumentPicker']])(
     'SEC-10 vidage de %s en échec : journalisé, les autres vidés, Bienvenue quand même',
     async (failing) => {
       mockFailing = new Set([failing]);

@@ -11,6 +11,7 @@ import {
   readSync,
   rmSync,
   statSync,
+  writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -41,6 +42,14 @@ class FakeFile {
       },
       close: () => closeSync(fd),
     };
+  }
+  // Ticket 033 : create échoue si le fichier existe ; write écrit du texte ou des octets.
+  create() {
+    if (existsSync(pathOf(this.uri))) throw new Error('FileAlreadyExists');
+    writeFileSync(pathOf(this.uri), '');
+  }
+  async write(content: string | Uint8Array) {
+    writeFileSync(pathOf(this.uri), content);
   }
   async copy(destination: FakeFile) {
     if (existsSync(pathOf(destination.uri))) throw new Error('DestinationAlreadyExists');
@@ -91,7 +100,8 @@ const fileUri = (path: string) => `file://${path.split('/').map(encodeURICompone
  * expo-document-picker (ticket 014e). Avec `copyToCacheDirectory`, copie le fichier que rend
  * `choose()` dans `<cacheRoot>/DocumentPicker/` (Android et iOS) ; sans, rend la copie que
  * dépose le sélecteur d'iOS (`asCopy`) dans `inboxRoot()`. `null` : annulé ; `choose` peut lever
- * une erreur (sélecteur en échec). Options relevées par `options` ; `size` : taille annoncée.
+ * une erreur (sélecteur en échec). Options relevées par `options` ; `size` : taille annoncée ;
+ * `name` : nom du fichier choisi (ticket 033, `choisi.csv` pour l'import).
  */
 export const fakeDocumentPicker = (
   cacheRoot: () => string,
@@ -99,6 +109,7 @@ export const fakeDocumentPicker = (
   options: (o: object) => void,
   inboxRoot: () => string = () => join(cacheRoot(), 'sans-inbox'),
   size: () => number | undefined = () => undefined,
+  name: () => string = () => 'choisi.db',
 ) => {
   let next = 0;
   return {
@@ -109,9 +120,9 @@ export const fakeDocumentPicker = (
       const dir = o.copyToCacheDirectory ? join(cacheRoot(), 'DocumentPicker') : inboxRoot();
       mkdirSync(dir, { recursive: true });
       next += 1;
-      const path = join(dir, `${next}-choisi.db`);
+      const path = join(dir, `${next}-${name()}`);
       copyFileSync(source, path);
-      const asset = { name: 'choisi.db', uri: fileUri(path), lastModified: 0, size: size() };
+      const asset = { name: name(), uri: fileUri(path), lastModified: 0, size: size() };
       return { canceled: false, assets: [asset] };
     },
   };
