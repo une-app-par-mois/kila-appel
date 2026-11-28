@@ -1,0 +1,36 @@
+# NF-08 à titre indicatif (ticket 030, décision du porteur du 2026-11-27) : sauvegarde de volume
+# `kila-e2e-volume.db` (`volumeSeed` : 500 membres, 3 saisons ; séances arrêtées au jour de
+# l'appareil, 930 le 2026-11-27), restaurée, puis deux durées relevées sur l'émulateur, sans seuil : accueil (alertes) après un
+# lancement à froid, et onglet Stats. Elles comprennent le temps propre de Maestro ; le porteur
+# juge à l'œil sur l'A55.
+appId: com.jitavision.kila
+---
+- runFlow:
+    file: sous-parcours/restaurer.yaml
+    env:
+      FICHIER: 'kila-e2e-volume.db'
+      RESUME: '500 membres · 30 groupes · \d+ séances'
+- extendedWaitUntil:
+    visible: 'Alertes d’assiduité'
+    timeout: 30000
+
+# Accueil : du lancement à froid jusqu'à la section des alertes.
+- stopApp
+- evalScript: ${output.start = Date.now()}
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible: 'Alertes d’assiduité'
+    timeout: 30000
+- evalScript: ${output.home = (Date.now() - output.start) / 1000}
+- evalScript: "${console.log('NF-08 accueil (alertes), lancement à froid : ' + output.home + ' s')}"
+
+# Onglet Stats : de l'appui jusqu'au taux de présence.
+- evalScript: ${output.start = Date.now()}
+- tapOn: 'Stats'
+- extendedWaitUntil:
+    visible:
+      id: 'stats-rate'
+    timeout: 30000
+- evalScript: ${output.stats = (Date.now() - output.start) / 1000}
+- evalScript: "${console.log('NF-08 onglet Stats : ' + output.stats + ' s')}"

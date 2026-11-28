@@ -1,5 +1,7 @@
-// Sauvegarde fictive des parcours de bout en bout (ticket 016), lancée par scripts/e2e.sh :
-//   node --experimental-transform-types scripts/e2e/sauvegarde-fictive.mjs <fichier.db> [AAAA-MM-JJ]
+// Sauvegardes fictives des parcours de bout en bout (tickets 016 et 030), lancées par scripts/e2e.sh :
+//   node --experimental-transform-types scripts/e2e/sauvegarde-fictive.mjs <dossier> [AAAA-MM-JJ]
+// Écrit dans <dossier> les sauvegardes de la campagne (E2E_FILES de e2eBackup.ts) ; celle des
+// statistiques seulement du 2026-11-25 au 2027-07-31 (STATS_DAYS), sinon un avertissement.
 // Elle réutilise le code de src/data/ tel quel (node:sqlite, comme les tests, ADR-008) : Node 22
 // traduit le TypeScript (l'option est nécessaire : src/ a des propriétés de paramètre), et ce
 // crochet de résolution traduit l'alias « @/ » vers src/.
@@ -31,7 +33,7 @@ nodeModule.registerHooks({
 
 const [target, date] = process.argv.slice(2);
 if (target === undefined) {
-  console.error('Usage : node scripts/e2e/sauvegarde-fictive.mjs <fichier.db> [AAAA-MM-JJ]');
+  console.error('Usage : node scripts/e2e/sauvegarde-fictive.mjs <dossier> [AAAA-MM-JJ]');
   process.exit(2);
 }
 // Sans date : le jour local de la machine. Une date donnée (même vide) doit être AAAA-MM-JJ.
@@ -46,6 +48,12 @@ if (!/^\d{4}-\d{2}-\d{2}$/.test(today)) {
   process.exit(2);
 }
 
-const { writeE2eBackup } = await import('@/__fixtures__/e2eBackup');
-await writeE2eBackup(resolve(target), today);
-console.log(`Sauvegarde fictive écrite : ${target} (${today})`);
+const { E2E_FILES, STATS_DAYS, writeE2eBackups } = await import('@/__fixtures__/e2eBackup');
+const written = await writeE2eBackups(resolve(target), today);
+console.log(`Sauvegardes fictives écrites dans ${target} (${today}) :`);
+for (const name of written) console.log(`  ${name}`);
+if (!written.includes(E2E_FILES.stats))
+  console.warn(
+    `Attention : ${E2E_FILES.stats} non écrite, jour ${today} hors du jeu des statistiques ` +
+      `(du ${STATS_DAYS.first} au ${STATS_DAYS.last}).`,
+  );

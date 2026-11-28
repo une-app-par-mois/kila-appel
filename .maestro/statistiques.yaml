@@ -1,0 +1,75 @@
+# Statistiques (ticket 030, EX-27, RM-01) : le jeu fictif du 023 (`statsSeed`, sauvegarde
+# `kila-e2e-statistiques.db`), dont les taux ont été recalculés à la main ; ils sont écrits ici en
+# clair, période « Saison » seulement. « % » suit une espace insécable (U+00A0, `NBSP` de
+# src/domain/attendanceRate.ts) : chaînes entre guillemets doubles, avec l'échappement \u00a0.
+# Vérifie aussi que le retour ne rouvre pas l'écran Période (`dismissTo`, ticket 024).
+appId: com.jitavision.kila
+# scripts/e2e.sh exclut ce tag quand le jour de l'appareil est hors du jeu du 023.
+tags:
+  - statistiques
+---
+- runFlow:
+    file: sous-parcours/restaurer.yaml
+    env:
+      FICHIER: 'kila-e2e-statistiques.db'
+      RESUME: '8 membres · 5 groupes · 22 séances'
+
+- tapOn: 'Stats'
+- extendedWaitUntil:
+    visible: 'Saison'
+    timeout: 10000
+- tapOn: 'Saison'
+# Saison : 21 séances, 47 présences comptées sur 54, soit 87 %. Chaque chiffre est cherché sous le
+# titre de sa carte et au-dessus de « Par groupe », jamais dans une ligne de groupe. Les cartes
+# `stats-rate` et `stats-sessions` n'ont pas de descendants dans la hiérarchie d'Android (vue
+# aplatie) : `childOf` et `containsDescendants` ne les trouvent pas.
+- extendedWaitUntil:
+    visible: 'Du 01/09/2026 au \d\d/\d\d/\d{4}'
+    timeout: 5000
+- assertVisible:
+    text: "87\u00a0%"
+    below: 'Taux de présence'
+    above: 'PAR GROUPE|Par groupe'
+- assertVisible:
+    text: '21'
+    below: 'Séances'
+    above: 'PAR GROUPE|Par groupe'
+# Lignes des groupes sous la synthèse : hors de l'écran sur un petit téléphone.
+- scrollUntilVisible:
+    element: "Benjamins, 78\u00a0%, .*"
+- scrollUntilVisible:
+    element: "Poussins, 88\u00a0%, .*"
+
+# Groupe Poussins, puis Hugo Moreau : 64 %.
+- tapOn: "Poussins, 88\u00a0%, .*"
+- extendedWaitUntil:
+    visible: "Hugo Moreau, 64\u00a0%"
+    timeout: 5000
+- tapOn: "Hugo Moreau, 64\u00a0%"
+- extendedWaitUntil:
+    visible:
+      text: "64\u00a0%"
+      id: 'member-rate'
+    timeout: 5000
+- assertVisible: 'Hugo Moreau'
+
+# Écran Période : « Appliquer » referme l'écran ; un retour ne le rouvre pas.
+- back
+- back
+# L'onglet garde sa position, en bas de la liste des groupes.
+- scrollUntilVisible:
+    element: 'Dates…'
+    direction: UP
+- tapOn: 'Dates…'
+- extendedWaitUntil:
+    visible: 'Appliquer'
+    timeout: 5000
+- tapOn: 'Appliquer'
+- extendedWaitUntil:
+    visible: 'Du 01/09/2026 au \d\d/\d\d/\d{4}'
+    timeout: 5000
+- assertNotVisible: 'Appliquer'
+- back
+- assertNotVisible: 'Appliquer'
+- assertNotVisible: 'Période'
+- assertVisible: 'Stats'
