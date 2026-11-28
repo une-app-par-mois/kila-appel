@@ -80,11 +80,21 @@ Décisions automatiques de la pré-analyse (état « à relire », `docs/DECISIO
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
+| Codes de journal selon l'usage du sélecteur | Déduits de la limite ; paramètre d'usage | `expoPicker(os, maxBytes = MAX_BACKUP_BYTES, usage: 'restore' \| 'import' = 'restore')` ; la restauration garde sa limite et ses codes | Codes par usage décidés à la séance ; aucun appel existant modifié | à relire |
+| Dossier du sélecteur pour `readFileBytes` | `Platform.OS` seul ; paramètre | `readFileBytes(path, maxBytes, os = Platform.OS)` | Même contrôle de chemin que `expoPicker(os)`, testable pour iOS | à relire |
+| Verrou rendu après une erreur | Laisser chaque appelant faire `acquire`/`release` ; aide commune | `fileLock.run(task, work)` : rien n'est lancé si le verrou est pris, rendu dans un `finally`, erreur remontée ; `acquire`/`release` inchangés | 034, 037 et 040 ne peuvent pas oublier de rendre le verrou | à relire |
+| Erreurs du module natif à la lecture et à l'écriture | Telles quelles ; remplacées | Remplacées par « Lecture du fichier impossible » / « Écriture du fichier impossible » | Elles peuvent citer le chemin, donc le nom du fichier choisi (ABS-04) | à relire |
+| `writeFile` sur un fichier existant | Écraser ; refuser | Refuser (`create()` puis `write()`) | Le sous-dossier est neuf : un second fichier du même nom est une erreur d'appel | à relire |
+| `shareFile` : contrôle du chemin | Type seul ; type et chemin | Même contrôle que `writeFile` (`<cache/exports>/<sous-dossier>/<nom>`), extension égale au type partagé | Aucun fichier hors de `exports/` partagé par cette fonction | à relire |
+| Tests des échanges | Dans `expoFiles.test.ts` ; second fichier | `src/data/expoFilesExchange.test.ts` (test seulement, 9 fichiers en tout) | `expoFiles.test.ts` aurait dépassé 300 lignes | à relire |
+| Découpage de `expoFiles.ts` | Découper (autorisé) ; resserrer | Resserré à 299 lignes (`readHead` et l'effacement de la copie mis en commun) ; pas de découpage, `src/staticChecksFiles.test.ts` inchangé | Le contrôle statique reste tel quel | à relire |
+| Faux sélecteur | — | `fakeDocumentPicker` prend un nom de fichier (`choisi.db` par défaut) ; `FakeFile` gagne `create` et `write` | Copie `.csv` pour l'import ; écriture des exports | à relire |
 
 ## Questions pour le porteur
 
 ## À reporter
 
 - CHANGELOG : rien (aucun changement visible).
-- Architecture : `expoFiles.ts` : `readFileBytes`, `writeFile`, `shareFile`, dossier `cache/exports/` ; `fileLock` : tâches `'import'`, `'csv'`, `'report'` ; `clearCacheCopies` vide `exports/`.
+- Architecture : `expoFiles.ts` : `readFileBytes(path, maxBytes, os)`, `writeFile`, `shareFile(path, 'csv' | 'pdf')`, `expoPicker(os, maxBytes, usage)`, dossier `cache/exports/` ; `fileLock` : tâches `'import'`, `'csv'`, `'report'` et `fileLock.run(task, work)` (verrou rendu même après une erreur) ; `clearCacheCopies` vide `exports/`.
 - SECURITE : SEC-10, les copies des échanges (`exports/`) sont vidées comme celles de la sauvegarde.
+- Non vérifié sur appareil : `File.size` d'une copie absente (0 selon la doc), BOM conservé par `File.write(string)`, `File.create()` puis `write()` dans un sous-dossier neuf, `text/csv` accepté par Drive et Gmail, UTI `public.comma-separated-values-text` et `com.adobe.pdf` sur iOS.
