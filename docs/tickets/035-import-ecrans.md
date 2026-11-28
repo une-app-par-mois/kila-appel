@@ -76,6 +76,26 @@ Reporté du lot J3-2 (2026-11-28, fiche 034) :
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
+| Bouton de l'aperçu quand aucun membre n'est à importer mais que des doublons de l'appli seront inscrits | Désactivé à N = 0 ; actif si N > 0 ou M > 0 | Actif si N > 0 membres à importer, ou si M > 0 doublons de l'appli restent sur « Ignorer » avec un groupe trouvé ; libellé « Importer N membres » si N > 0, sinon « Inscrire M membres à leur groupe » ; désactivé seulement si N = 0 et M = 0 | Réponse du porteur à la séance de lancement du lot J3-3 (écart de maquette) | décidée par le porteur le 2026-11-28 |
+| Phrase du résultat (six compteurs de `confirm`) | Quatre compteurs de la maquette ; six compteurs | Une phrase n'apparaît que si son compteur est non nul, une partie à 0 disparaît ; ex. « 21 membres ajoutés, dont 18 inscrits à leur groupe. 2 doublons ignorés, dont 2 inscrits au groupe du fichier et 1 désarchivé. 1 ligne invalide. » ; `duplicatesIgnored` compte déjà les doublons inscrits : pas de double compte | Réponse du porteur à la séance de lancement du lot J3-3 (écart de maquette) | décidée par le porteur le 2026-11-28 |
+| Liste des membres vide : place du bouton « Importer (CSV) » | Absent ; rangée de deux boutons dans la carte vide | La carte vide contient la même rangée : « Importer (CSV) » en secondaire sur un tiers, « Nouveau membre » sur deux tiers | Réponse du porteur à la séance de lancement du lot J3-3 (écart de maquette) | décidée par le porteur le 2026-11-28 |
+| Colonnes reconnues ou ignorées dans l'aperçu (reporté du lot J3-1) | Les afficher ; rien | Rien d'affiché ; idée notée dans `docs/IDEES.md` | Réponse du porteur à la séance de lancement du lot J3-3 | décidée par le porteur le 2026-11-28 |
+| Textes absents de la maquette | — | Validés tels quels : `EMPTY` « Ce fichier est vide. Rien n'a été importé. » ; en-tête seul « Ce fichier ne contient aucun membre. Rien n'a été importé. » ; aucune saison active « Aucune saison active : les membres seront importés sans groupe. » (une ligne au-dessus des sections) ; doublon gardé au groupe introuvable « « X » introuvable : importé sans groupe » ; doublon archivé « 14/03/2017 · déjà dans l'appli (archivé) » ; doublon dans le fichier « en double dans le fichier » ; titre à `added = 0` « Aucun membre importé » | Réponse du porteur à la séance de lancement du lot J3-3 (écart de maquette) | décidée par le porteur le 2026-11-28 |
+| Navigation entre les écrans | Écran à étapes ; trois routes empilées | Trois routes empilées ; retour depuis l'aperçu = `abandon()` ; le résultat remplace l'aperçu (`router.replace`) ; « Voir les membres » = `dismissTo('/membres')` | Pré-analyse du lot J3-3 ; retour Android naturel | à relire |
+| Propriétaire de la session d'import | — | `owner: true` sur l'écran de choix seulement ; `confirm(aperçu affiché, kept)` | Pré-analyse du lot J3-3 ; contrat du 034 | à relire |
+| Compteurs vers l'écran de résultat | Magasin du module ; paramètres de route | Paramètres de route, relus comme des entiers ≥ 0 | Pré-analyse du lot J3-3 ; aucun nom en paramètre (ABS-04) | à relire |
+| Textes des refus | — | Ceux validés le 2026-11-28 ; `TOO_MANY_ROWS` reprend le texte de `TOO_LARGE` | Pré-analyse du lot J3-3 ; un seul texte annonce les deux limites | à relire |
+| Texte de `stale`, quelle que soit sa cause | — | « Les membres ou les groupes ont changé : recommencez l'import. » | Pré-analyse du lot J3-3 ; texte du 034 | à relire |
+| Texte de `busy` | — | « Une autre opération sur les fichiers est en cours. Réessayez dans un instant. » | Pré-analyse du lot J3-3 | à relire |
+| Texte de `failed` | Un texte ; un par étape | Lecture : « Ce fichier n'a pas pu être lu. Rien n'a été importé. » ; écriture : « L'import n'a pas abouti. Rien n'a été modifié. Réessayez. » | Pré-analyse du lot J3-3 ; l'écriture est une seule transaction | à relire |
+| Retour pendant l'écriture | Permis ; bloqué | Bloqué | Pré-analyse du lot J3-3 ; la session ne doit pas être vidée en pleine transaction | à relire |
+| Textes des lignes invalides | — | Modèle « <Champ> <problème> » (ex. « Prénom manquant ») | Pré-analyse du lot J3-3 ; maquette « Ligne 17 · Prénom manquant » | à relire |
+| Groupe introuvable long | — | Tronqué à 100 points de code avec une ellipse | Pré-analyse du lot J3-3 ; reporté du lot J3-1 | à relire |
+| Section vide de l'aperçu | Affichée vide ; cachée | Cachée | Pré-analyse du lot J3-3 | à relire |
+| Rôle d'accessibilité des bascules | Nouveau composant ; `FilterChip` | `FilterChip` peut prendre le rôle `checkbox`, en option (« Ignorer, coché ») | Pré-analyse du lot J3-3 ; NF-06 | à relire |
+| Clé de libellés | — | Une seule clé `memberImport` | Pré-analyse du lot J3-3 ; NF-07 | à relire |
+| Plafond d'affichage de l'aperçu | Plafond ; aucun | Aucun plafond ; test de volume à 2000 lignes | Pré-analyse du lot J3-3 ; l'import est déjà plafonné à 2 000 lignes | à relire |
+| Taille du ticket | — | 9 fichiers au plus | Pré-analyse du lot J3-3 ; plafond de 10 fichiers | à relire |
 
 ## Questions pour le porteur
 

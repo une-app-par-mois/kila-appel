@@ -60,3 +60,6 @@ Quand un groupe est supprimé, sa ligne de `session_groups` et les inscriptions 
 
 - CHANGELOG : Statistiques et export : une présence d'un groupe supprimé ne compte plus pour l'autre groupe de la séance (RM-03).
 - Architecture : §4.1 (colonne ou table nouvelle), §4.2 (migration), `statsSql.ts` (`credits`).
+- Reporté de la pré-analyse du 039 (lot J3-3) : test « RM-03 Q2 » de `src/data/reportRepo.test.ts` (039) à inverser, comme ceux de `attendanceExportRepo.test.ts`.
+- Reporté de la pré-analyse du 039 (lot J3-3) : requête de la grille du 039b : même règle corrigée de RM-03.
+- Reporté de la pré-analyse du 039 (lot J3-3) : `MEMBER` de `src/data/statsRepo.ts` recopie `x.groups = 1` hors de `credits` : à ramener dans la règle unique.

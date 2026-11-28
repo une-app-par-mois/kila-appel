@@ -68,6 +68,12 @@ Séance de découpage du jalon 3 (2026-11-28), réponses du porteur :
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
+| Police du rapport PDF | IBM Plex en `data:` ; police du système | Police du système pour le PDF seulement : `system-ui, sans-serif`, `font-variant-numeric: tabular-nums` ; SEC-08 inchangée ; exception notée dans `design/CHARTE.md` §4 | Réponse du porteur à la séance de lancement du lot J3-3 ; la CSP du rapport interdit toute police embarquée | décidée par le porteur le 2026-11-28 |
+| Échappement et gabarit | — | `escapeHtml` et un gabarit balisé ; types `SafeHtml` et `ReportHtml` ; `safeHtml.ts` séparé si le fichier dépasse 300 lignes | Pré-analyse du lot J3-3 (D1 à D20, résumé) ; SEC-08 | à relire |
+| CSP et tests de non-présence | — | CSP exacte en premier ; tests de non-présence de `<script`, `<a`, `<link`, `<base`, `<form`, `<iframe`, `<img`, `refresh`, `@import`, `url(`, `http` | Pré-analyse du lot J3-3 ; SEC-08 | à relire |
+| Mise en page | — | Largeurs en entiers et en % ; `print-color-adjust` ; sauts de page ; orientation dans une seule constante | Pré-analyse du lot J3-3 ; repli paysage possible (039b) | à relire |
+| Données du rapport | — | Une requête qui réutilise `credits` ; mêmes groupes et mêmes membres que les écrans de statistiques ; une page par groupe seulement s'il a des séances ; période sans séance : page valide ; `today` en paramètre | Pré-analyse du lot J3-3 ; mêmes nombres que les écrans (EX-32, RM-01) | à relire |
+| Tests de règles | — | Test « RM-03 Q2 » qui fixe le comportement actuel (inversé au 043) ; ABS-03 testé | Pré-analyse du lot J3-3 | à relire |
 
 ## Questions pour le porteur
 

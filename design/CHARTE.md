@@ -61,6 +61,8 @@ Séance **annulée** et **non planifiée** : dans l'historique et la frise, libe
 
 Aucune police chargée depuis Internet (ABS-01).
 
+Exception — PDF : police du système (décision du porteur du 2026-11-28 ; la CSP du rapport interdit toute police embarquée) : `system-ui, sans-serif`, chiffres en `font-variant-numeric: tabular-nums`.
+
 | Rôle | Taille (pt) | Graisse | Approche |
 | --- | --- | --- | --- |
 | Titre d'écran | 30 | 700 | −0,02 em |

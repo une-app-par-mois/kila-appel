@@ -61,3 +61,4 @@ Séance de découpage du jalon 3 (2026-11-28), réponses du porteur :
 
 - CHANGELOG : Statistiques : rapport PDF A4 (synthèse de la période, puis une page par groupe avec le taux de chaque membre), partagé par le système (F-09, EX-32).
 - Architecture : `src/app/stats/rapport.tsx`.
+- Reporté de la pré-analyse du 039 (lot J3-3) : vérifier qu'il y a des séances du groupe choisi avant de produire le rapport.
