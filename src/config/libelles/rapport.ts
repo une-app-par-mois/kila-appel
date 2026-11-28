@@ -2,9 +2,17 @@
 // générateur `src/domain/reportHtml.ts`, qui échappe chacun (SEC-08) : le domaine n'importe pas
 // la configuration. Couleurs tirées du thème et noms des statuts de `commun`, aucune valeur
 // recopiée (CONV-16, NF-07).
+import { SHARE_ORDER } from '@/domain/attendanceRate';
 import { theme } from '../theme';
 import { commun } from './commun';
 import { plural } from './outils';
+
+const letters = { present: 'P', late: 'R', excused: 'E', absent: 'A' } as const;
+
+/** « P : présent · R : retard · E : excusé · A : absent » (CONV-16 : aucune recopie). */
+const gridKeys = SHARE_ORDER.map(
+  (s) => `${letters[s]} : ${commun.statuses[s].toLocaleLowerCase('fr-FR')}`,
+).join(' · ');
 
 export const rapport = {
   report: {
@@ -22,7 +30,7 @@ export const rapport = {
     archived: 'Archivé',
     statuses: commun.statuses,
     /** Colonnes du tableau des membres ; la légende les écrit en entier (NF-06). */
-    letters: { present: 'P', late: 'R', excused: 'E', absent: 'A' },
+    letters,
     legend: 'P : présent · R : retard · E : excusé · A : absent. « — » : aucune séance comptée.',
     /** « 13 séances · taux de présence 88 % ». */
     groupSummary: (sessions: number, rate: string) =>
@@ -31,6 +39,11 @@ export const rapport = {
     /** Séances sans présence comptée (rapport filtré, RM-03) : le taux « — » s'explique. */
     noAttendance: 'Aucune présence comptée sur la période.',
     noMember: 'Aucun membre sur la période.',
+    /** Titre d'un bloc de la grille (039b) : « Poussins · séances du 02/09/2026 au 17/02/2027 ». */
+    gridTitle: (group: string, from: string, to: string) =>
+      `${group} · séances du ${from} au ${to}`,
+    /** Légende sous chaque bloc de la grille (maquette), tirée des lettres et des statuts. */
+    gridLegend: `${gridKeys}. Case vide : hors inscription ou sans statut.`,
   },
 } as const;
 
