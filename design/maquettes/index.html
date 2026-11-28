@@ -346,7 +346,8 @@ aside.relecture label{color:#333}aside.relecture textarea{width:100%;height:120p
 <h3 class="section">Saisons</h3><div class="carte "><p>Aucune saison. Créez-en une pour y ranger vos groupes et vos appels.</p><button class="btn-p" data-go="saison-edition">Nouvelle saison</button></div>
 <h3 class="section">Groupes</h3><div class="carte "><p>Aucun groupe dans cette saison.</p><button class="btn-p" data-go="groupe-nouveau">Créer un groupe</button></div>
 <h3 class="section">Groupe sans membre</h3><div class="carte "><p>Personne n'est encore inscrit à ce groupe.</p><button class="btn-p" data-go="inscription">Ajouter des membres</button></div>
-<h3 class="section">Membres</h3><div class="carte "><p>Aucun membre pour l'instant.</p><button class="btn-p" data-go="membre-nouveau">Nouveau membre</button></div>
+<h3 class="section">Membres</h3><div class="carte "><p>Aucun membre pour l'instant.</p><div class="duo"><button class="btn-s tiers" data-go="import">Importer (CSV)</button><button class="btn-p deuxtiers" data-go="membre-nouveau">Nouveau membre</button></div></div>
+<p class="note">Liste des membres vide : même rangée de deux boutons que la liste (décision du porteur du 2026-11-28, ticket 035).</p>
 <h3 class="section">Créneaux</h3><div class="carte "><p>Aucun créneau. Déclarez quand vos groupes se réunissent pour que l'appli propose l'appel au bon moment.</p><button class="btn-p" data-go="creneau">Nouveau créneau</button></div>
 <h3 class="section">Historique</h3><div class="carte "><p>Aucun appel enregistré. Votre premier appel apparaîtra ici.</p><button class="btn-p" data-go="appel">Faire l'appel</button></div>
 <h3 class="section">Recherche sans résultat</h3><div class="carte "><p>Aucun membre ne correspond à « xyz ».</p><p class="l-sous">Vérifiez l'orthographe, ou cherchez par le prénom.</p></div>
@@ -426,11 +427,15 @@ aside.relecture label{color:#333}aside.relecture textarea{width:100%;height:120p
 <h3 class="section">Groupe introuvable</h3>
 <div class="carte "><div class="rang"><div><div class="l-titre">Ligne 12</div><div class="l-sous">« Poussin mercredi » : importé sans groupe</div></div></div></div>
 <button class="btn-p" data-go="import-resultat">Importer 21 membres</button>
+<h3 class="section">Aucun membre à importer, doublons inscrits</h3>
+<button class="btn-p" data-go="import-resultat">Inscrire 2 membres à leur groupe</button>
+<p class="note">Bouton actif si N &gt; 0 membres à importer, ou si M &gt; 0 doublons de l'appli restent sur « Ignorer » avec un groupe trouvé : « Importer N membres » si N &gt; 0, sinon « Inscrire M membres à leur groupe » ; désactivé seulement si N = 0 et M = 0 (décision du porteur du 2026-11-28, ticket 035).</p>
 <p class="note">Rien n'est écrit avant ce bouton. Doublon ignoré inscrit au groupe du fichier et désarchivé, sans réécrire nom, date ni contact ; sans groupe trouvé, rien ne change : décisions du porteur du 2026-11-28 (tickets 032, 034).</p></div></section>
 <section class="ecran" id="e-import-resultat" hidden><div class="colonne">
 <div class="entete"><button class="retour" data-go="membres">‹</button><h1>21 membres importés</h1></div>
-<div class="carte "><p>21 membres ajoutés, dont 18 inscrits à leur groupe. 2 doublons ignorés, 1 ligne invalide.</p></div>
-<button class="btn-p" data-go="membres">Voir les membres</button></div></section>
+<div class="carte "><p>21 membres ajoutés, dont 18 inscrits à leur groupe. 2 doublons ignorés, dont 2 inscrits au groupe du fichier et 1 désarchivé. 1 ligne invalide.</p></div>
+<button class="btn-p" data-go="membres">Voir les membres</button>
+<p class="note">Une phrase n'apparaît que si son compteur est non nul ; une partie dont le compte est nul disparaît. Titre « Aucun membre importé » quand aucun membre n'est ajouté (décision du porteur du 2026-11-28, ticket 035).</p></div></section>
 <section class="ecran" id="e-import-erreur" hidden><div class="colonne">
 <div class="entete"><button class="retour" data-go="import">‹</button><h1>Fichier non reconnu</h1></div>
 <div class="carte bandeau"><p>Ce fichier ne contient pas de colonnes « nom » et « prenom ». Rien n'a été importé.</p></div>
@@ -446,7 +451,19 @@ aside.relecture label{color:#333}aside.relecture textarea{width:100%;height:120p
 <label>Groupe</label><div class="champ">Tous les groupes ▾</div>
 <div class="deux"><div><label>Du</label><div class="champ mono">01/09/2026</div></div><div><label>Au</label><div class="champ mono">26/11/2026</div></div></div>
 <div class="carte bandeau"><p>Le fichier contient les noms des membres et leurs présences, <b>en clair</b>. Partagez-le seulement avec qui doit le recevoir.</p></div>
-<button class="btn-p" data-go="export-csv">Exporter (2 418 lignes)</button></div></section>
+<button class="btn-p" data-go="export-csv">Exporter (2 418 lignes)</button>
+<h3 class="section">Pendant l'export</h3>
+<button class="btn-p" disabled style="opacity:.45">Export en cours…</button>
+<h3 class="section">Échec</h3>
+<p class="rouge">Le fichier n'a pas pu être exporté. Réessayez.</p>
+<h3 class="section">Plafond (50 000 lignes)</h3>
+<div class="carte bandeau"><p>Le fichier contient les noms des membres et leurs présences, <b>en clair</b>. Partagez-le seulement avec qui doit le recevoir.</p></div>
+<p class="rouge">Trop de lignes : réduisez la période ou choisissez un groupe</p>
+<button class="btn-p" disabled style="opacity:.45">Exporter (63 240 lignes)</button>
+<h3 class="section">Groupe archivé, date erronée</h3>
+<label>Groupe</label><div class="champ">Minimes 2025 · Archivé ▾</div>
+<label>Au</label><div class="champ mono">31/08/2026</div><p class="rouge">La fin doit tomber le jour du début ou après.</p>
+<p class="note">Bandeau SEC-09 jamais réduit, présent dans tous les états. Plafond de 50 000 lignes : export refusé, bouton désactivé, compteur affiché ; textes des états : décisions du porteur du 2026-11-28 (ticket 037).</p></div></section>
 <section class="ecran" id="e-rapport" hidden><div class="colonne">
 <div class="entete"><button class="retour" data-go="stats">‹</button><h1>Rapport PDF</h1></div>
 <label>Période</label><div class="champ">Saison 2026-2027 ▾</div>

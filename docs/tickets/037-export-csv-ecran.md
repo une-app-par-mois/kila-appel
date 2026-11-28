@@ -70,6 +70,17 @@ Reporté du lot J3-2 (2026-11-28, fiche 036) :
 
 | Question | Options | Choix | Raison | État |
 | --- | --- | --- | --- | --- |
+| Plafond de lignes de l'export (reporté du lot J3-2) | Aucun ; plafond | 50 000 lignes, constante nommée testée à 50 000 et 50 001 ; au-delà, export refusé : « Trop de lignes : réduisez la période ou choisissez un groupe », bouton désactivé, compteur affiché | Réponse du porteur à la séance de lancement du lot J3-3 (écart de maquette) | décidée par le porteur le 2026-11-28 |
+| États absents de la maquette | — | « Export en cours… » sur le bouton désactivé ; « Le fichier n'a pas pu être exporté. Réessayez. » en cas d'échec ; « · Archivé » après un groupe archivé de la liste ; erreur de date sous le champ, textes de `periode.tsx` | Réponse du porteur à la séance de lancement du lot J3-3 (écart de maquette) | décidée par le porteur le 2026-11-28 |
+| Bouton « Exporter (CSV) » de Stats | Toujours ; selon les séances | Seulement s'il y a des séances et une période valide ; premier tiers de la rangée | Pré-analyse du lot J3-3 | à relire |
+| Période transmise | — | Comme à l'ouverture d'un groupe ; modifier Du ou Au rend la période libre | Pré-analyse du lot J3-3 ; `statsPeriodParams` | à relire |
+| Lecture de `count` et `groups` | — | Seulement si les dates sont valides ; « Du » après « Au » : `END_BEFORE_START` | Pré-analyse du lot J3-3 | à relire |
+| Groupe reçu qui n'existe plus | — | Retour à « Tous les groupes » | Pré-analyse du lot J3-3 | à relire |
+| Export à 0 ligne | — | « Aucune présence sur cette période : rien à exporter. », bandeau gardé | Pré-analyse du lot J3-3 ; maquette « États vides » ; SEC-09 | à relire |
+| Libellé du bouton | — | « Exporter (N lignes) », N formaté en fr-FR | Pré-analyse du lot J3-3 ; maquette | à relire |
+| Bandeau SEC-09 | — | Texte de la maquette au caractère près, testé | Pré-analyse du lot J3-3 ; SEC-09 | à relire |
+| Place des textes | — | Textes de l'écran dans `exports.ts` ; ceux du fichier restent dans `stats.csv` ; `labels.weekdays` passé tel quel | Pré-analyse du lot J3-3 ; NF-07 | à relire |
+| Cycle de l'export | — | `fileLock.run('csv')` ; `clear` ; `newDir` ; `writeFile` vers `kila-presences-AAAA-MM-JJ.csv` ; `shareFile` ; `removeDir` dans un `finally` ; codes `CSV_*` ; aucun message de réussite ; bouton désactivé sous le verrou | Pré-analyse du lot J3-3 ; modèle `useBackupExport`, SEC-10 | à relire |
 
 ## Questions pour le porteur
 

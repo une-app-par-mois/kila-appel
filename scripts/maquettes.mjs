@@ -376,7 +376,8 @@ ${titre('États vides')}
 ${section('Saisons')}${carte(`<p>Aucune saison. Créez-en une pour y ranger vos groupes et vos appels.</p>${go('saison-edition', 'Nouvelle saison')}`)}
 ${section('Groupes')}${carte(`<p>Aucun groupe dans cette saison.</p>${go('groupe-nouveau', 'Créer un groupe')}`)}
 ${section('Groupe sans membre')}${carte(`<p>Personne n'est encore inscrit à ce groupe.</p>${go('inscription', 'Ajouter des membres')}`)}
-${section('Membres')}${carte(`<p>Aucun membre pour l'instant.</p>${go('membre-nouveau', 'Nouveau membre')}`)}
+${section('Membres')}${carte(`<p>Aucun membre pour l'instant.</p><div class="duo">${go('import', 'Importer (CSV)', 'btn-s tiers')}${go('membre-nouveau', 'Nouveau membre', 'btn-p deuxtiers')}</div>`)}
+<p class="note">Liste des membres vide : même rangée de deux boutons que la liste (décision du porteur du 2026-11-28, ticket 035).</p>
 ${section('Créneaux')}${carte(`<p>Aucun créneau. Déclarez quand vos groupes se réunissent pour que l'appli propose l'appel au bon moment.</p>${go('creneau', 'Nouveau créneau')}`)}
 ${section('Historique')}${carte(`<p>Aucun appel enregistré. Votre premier appel apparaîtra ici.</p>${go('appel', "Faire l'appel")}`)}
 ${section('Recherche sans résultat')}${carte(`<p>Aucun membre ne correspond à « xyz ».</p><p class="l-sous">Vérifiez l'orthographe, ou cherchez par le prénom.</p>`)}
@@ -484,12 +485,16 @@ ${carte(`<div class="rang"><div><div class="l-titre">Ligne 17</div><div class="l
 ${section('Groupe introuvable')}
 ${carte(`<div class="rang"><div><div class="l-titre">Ligne 12</div><div class="l-sous">« Poussin mercredi » : importé sans groupe</div></div></div>`)}
 ${go('import-resultat', 'Importer 21 membres')}
+${section('Aucun membre à importer, doublons inscrits')}
+${go('import-resultat', 'Inscrire 2 membres à leur groupe')}
+<p class="note">Bouton actif si N &gt; 0 membres à importer, ou si M &gt; 0 doublons de l'appli restent sur « Ignorer » avec un groupe trouvé : « Importer N membres » si N &gt; 0, sinon « Inscrire M membres à leur groupe » ; désactivé seulement si N = 0 et M = 0 (décision du porteur du 2026-11-28, ticket 035).</p>
 <p class="note">Rien n'est écrit avant ce bouton. Doublon ignoré inscrit au groupe du fichier et désarchivé, sans réécrire nom, date ni contact ; sans groupe trouvé, rien ne change : décisions du porteur du 2026-11-28 (tickets 032, 034).</p>`);
 
 ecran('import-resultat', 2, 'Import CSV : résultat', 'EX-30', 'parametres', `
 ${titre('21 membres importés', 'membres')}
-${carte(`<p>21 membres ajoutés, dont 18 inscrits à leur groupe. 2 doublons ignorés, 1 ligne invalide.</p>`)}
-${go('membres', 'Voir les membres')}`);
+${carte(`<p>21 membres ajoutés, dont 18 inscrits à leur groupe. 2 doublons ignorés, dont 2 inscrits au groupe du fichier et 1 désarchivé. 1 ligne invalide.</p>`)}
+${go('membres', 'Voir les membres')}
+<p class="note">Une phrase n'apparaît que si son compteur est non nul ; une partie dont le compte est nul disparaît. Titre « Aucun membre importé » quand aucun membre n'est ajouté (décision du porteur du 2026-11-28, ticket 035).</p>`);
 
 ecran('import-erreur', 2, 'Import CSV : fichier illisible', 'EX-30', 'parametres', `
 ${titre('Fichier non reconnu', 'import')}
@@ -508,7 +513,19 @@ ${titre('Exporter les présences', 'stats')}
 <label>Groupe</label><div class="champ">Tous les groupes ▾</div>
 <div class="deux"><div><label>Du</label><div class="champ mono">01/09/2026</div></div><div><label>Au</label><div class="champ mono">26/11/2026</div></div></div>
 ${carte(`<p>Le fichier contient les noms des membres et leurs présences, <b>en clair</b>. Partagez-le seulement avec qui doit le recevoir.</p>`, 'bandeau')}
-${go('export-csv', 'Exporter (2 418 lignes)')}`);
+${go('export-csv', 'Exporter (2 418 lignes)')}
+${section('Pendant l\'export')}
+<button class="btn-p" disabled style="opacity:.45">Export en cours…</button>
+${section('Échec')}
+<p class="rouge">Le fichier n'a pas pu être exporté. Réessayez.</p>
+${section('Plafond (50 000 lignes)')}
+${carte(`<p>Le fichier contient les noms des membres et leurs présences, <b>en clair</b>. Partagez-le seulement avec qui doit le recevoir.</p>`, 'bandeau')}
+<p class="rouge">Trop de lignes : réduisez la période ou choisissez un groupe</p>
+<button class="btn-p" disabled style="opacity:.45">Exporter (63 240 lignes)</button>
+${section('Groupe archivé, date erronée')}
+<label>Groupe</label><div class="champ">Minimes 2025 · Archivé ▾</div>
+<label>Au</label><div class="champ mono">31/08/2026</div><p class="rouge">La fin doit tomber le jour du début ou après.</p>
+<p class="note">Bandeau SEC-09 jamais réduit, présent dans tous les états. Plafond de 50 000 lignes : export refusé, bouton désactivé, compteur affiché ; textes des états : décisions du porteur du 2026-11-28 (ticket 037).</p>`);
 
 ecran('rapport', 2, 'Rapport PDF', 'EX-32', 'stats', `
 ${titre('Rapport PDF', 'stats')}
