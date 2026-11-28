@@ -14,8 +14,8 @@ import {
   isTime,
   validateComment,
   validateContact,
+  validateGroupName,
   validateMember,
-  validateName,
   validateSeason,
 } from '@/domain/validation';
 
@@ -47,8 +47,6 @@ const stamp = (value: Cell) => {
 };
 /** Valeur que l'appli écrirait : la sortie du validateur, égale à la valeur stockée. */
 const same = (written: string | null, stored: Cell) => ensure(written === stored);
-/** Nom écrit par l'appli : nettoyé, non vide (validateName). */
-const name = (value: Cell) => same(validateName(text(value)), value);
 /** Lieu ou nom de créneau (EX-07) : texte nettoyé non vide, ou NULL. */
 const optionalLabel = (value: Cell) =>
   ensure(value === null || (text(value).trim() === value && value !== ''));
@@ -113,10 +111,11 @@ const RULES: Rule[] = [
     },
   },
   {
+    // SEC-06, SEC-10 (ticket 044) : même règle qu'à la saisie, sauvegarde refusée en entier.
     table: 'groups',
     columns: 'id, season_id, name, archived_at',
     check: (r) => {
-      name(r.name);
+      same(validateGroupName(text(r.name)), r.name);
       optionalDate(r.archived_at);
     },
   },

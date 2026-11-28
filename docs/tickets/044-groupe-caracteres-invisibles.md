@@ -57,6 +57,8 @@ Créé le 2026-11-28 à l'intégration du lot J3-3 (« À reporter » de la fich
 | D5 : écrans du groupe | `maxLength` ou contrôle local ; erreur du dépôt | Pas de `maxLength` ni de contrôle local ; l'erreur s'affiche sous le champ ; un test d'écran | La règle reste dans le domaine | à relire |
 | D6 : longueur maximale | 100 ; aucune | Pas de longueur maximale | Hors périmètre du ticket, non demandée | à relire |
 | D7 : tests du domaine | `validation.test.ts` ; nouveau fichier | Nouveau fichier de test du domaine ; ABS-04 vérifié (aucun nom dans l'erreur ni le journal) ; 7 fichiers ; `isInvisible` et l'ordre des contrôles de `validateMemberName` inchangés | `validation.test.ts` déjà long ; aucune régression sur les membres | à relire |
+| D8 : aide `name` de `backupRows.ts` | La garder ; la retirer | Retirée avec l'import de `validateName` : les groupes étaient ses seuls appelants | Pas de code mort (CLAUDE.md) | à relire |
+| D9 : test d'écran | Un test pour les deux écrans ; un test par écran | Deux tests dans `src/appTests/groups.test.tsx` (création, renommage) ; 8 fichiers au lieu de 7 | Un seul rendu par test, comme les autres tests d'écran | à relire |
 
 ## Questions pour le porteur
 
